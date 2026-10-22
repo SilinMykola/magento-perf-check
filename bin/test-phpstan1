@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Runs the test suite against PHPStan 1.12 in a throwaway copy of the repository,
+# so the working tree keeps its PHPStan 2.x install.
+set -euo pipefail
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+work="$(mktemp -d "${TMPDIR:-/tmp}/magento-perf-rules-phpstan1.XXXXXX")"
+trap 'rm -rf "$work"' EXIT
+
+rsync -a --exclude /vendor --exclude /composer.lock --exclude /.phpunit.cache --exclude /.git "$root/" "$work/"
+cd "$work"
+composer require --no-interaction --no-progress --quiet --with-all-dependencies 'phpstan/phpstan:~1.12.0'
+echo "PHPStan: $(vendor/bin/phpstan --version)"
+vendor/bin/phpunit "$@"

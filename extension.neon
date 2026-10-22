@@ -1,0 +1,28 @@
+parameters:
+    magentoPerf:
+        # Set by magento-perf-check to count getFirstItem() calls it could not type.
+        reportUntypedReceivers: false
+
+parametersSchema:
+    magentoPerf: structure([
+        reportUntypedReceivers: bool()
+    ])
+
+services:
+    -
+        class: MagentoPerfRules\PhpStan\LoopContextVisitor
+        tags:
+            - phpstan.parser.richParserNodeVisitor
+    -
+        class: MagentoPerfRules\PhpStan\CollectionLimitVisitor
+        tags:
+            - phpstan.parser.richParserNodeVisitor
+    -
+        class: MagentoPerfRules\PhpStan\Rule\GetFirstItemWithoutLimitRule
+        arguments:
+            reportUntypedReceivers: %magentoPerf.reportUntypedReceivers%
+        tags:
+            - phpstan.rules.rule
+
+rules:
+    - MagentoPerfRules\PhpStan\Rule\ModelLoadInLoopRule

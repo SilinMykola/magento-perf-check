@@ -1,0 +1,18 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Installed as a dependency: <project>/vendor/<vendor>/<package>/bin; in this repository: ./bin.
+foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../vendor/autoload.php'] as $autoload) {
+    if (is_file($autoload)) {
+        require $autoload;
+        break;
+    }
+}
+if (!class_exists(MagentoPerfRules\Cli\Application::class)) {
+    fwrite(STDERR, "magento-perf-check: run composer install first.\n");
+    exit(2);
+}
+
+exit((new MagentoPerfRules\Cli\Application())->run(array_slice($argv, 1), (string) getcwd()));

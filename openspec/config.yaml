@@ -1,0 +1,48 @@
+schema: spec-driven
+
+context: |
+  Source of truth: docs/SPEC.md (rule catalog, architecture, milestones M0-M5).
+  Each SPEC milestone is delivered as one OpenSpec change (m0-..., m1-..., ...).
+  Architectural decisions are recorded as ADRs in docs/adr/NNNN-title.md; design.md
+  links to them instead of duplicating them.
+  Source policy (SPEC section 2): a rule enters the default set only with a level A
+  (official Adobe/Hyva docs) or B (Magento core pinned to a commit, or a magento/magento2
+  issue with measurements) source. Level C is supplementary only. Never invent facts,
+  versions or links; mark unverified items as such.
+  Every rule ships with positive and negative fixtures and docs/rules/<ID>.md with a
+  Basis section. Do not reimplement magento/magento-coding-standard checks (SPEC 4.9).
+  Must support PHPStan 1.12 (Magento 2.4.9 pins phpstan/phpstan ^1.9, 1.12.33 locked).
+  Host: macOS, PHP 8.5, Composer 2.10. Test Magento at ~/projects/magento-2.4.9.ddev is
+  read-only: run the tool against it with --project, never install into it.
+  All artifacts, code and docs in English.
+
+# Project context (optional)
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
+# Example:
+#   context: |
+#     Designs and tasks must cover Windows, macOS, and Linux
+#     Write all artifacts in Spanish
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

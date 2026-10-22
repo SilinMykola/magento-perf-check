@@ -1,0 +1,62 @@
+{
+    "name": "magento-perf-rules/magento-perf-rules",
+    "description": "Static analysis for Magento 2 and Mage-OS performance and Full Page Cache anti-patterns: PHPStan rules plus XML checks.",
+    "type": "phpstan-extension",
+    "keywords": [
+        "magento",
+        "mage-os",
+        "phpstan",
+        "performance",
+        "full-page-cache",
+        "static-analysis"
+    ],
+    "require": {
+        "php": "^8.1",
+        "ext-dom": "*",
+        "ext-json": "*",
+        "ext-libxml": "*",
+        "phpstan/phpstan": "^1.12 || ^2.0"
+    },
+    "require-dev": {
+        "phpstan/extension-installer": "^1.4",
+        "phpunit/phpunit": "^10.5"
+    },
+    "suggest": {
+        "bitexpert/phpstan-magento": "Resolves types of generated factories and proxies when generated/code is not available"
+    },
+    "autoload": {
+        "psr-4": {
+            "MagentoPerfRules\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MagentoPerfRules\\Tests\\": "tests/"
+        },
+        "classmap": [
+            "tests/PhpStan/Stubs/",
+            "tests/PhpStan/Fixtures/",
+            "tests/Integration/Fixtures/phpstan-cli/"
+        ]
+    },
+    "bin": [
+        "bin/magento-perf-check"
+    ],
+    "extra": {
+        "phpstan": {
+            "includes": [
+                "extension.neon"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "analyse": "phpstan analyse --configuration=phpstan.neon.dist"
+    }
+}

@@ -1,0 +1,7 @@
+[
+    {"file": "app/code/Acme/Promo/view/base/layout/catalog_category_view.xml", "line": 4, "severity": "error"},
+    {"file": "app/code/Acme/Promo/view/frontend/layout/catalog_product_view.xml", "line": 4, "severity": "error"},
+    {"file": "app/code/Acme/Promo/view/frontend/layout/contact_index_index.xml", "line": 4, "severity": "warning"},
+    {"file": "app/code/Acme/Promo/view/frontend/layout/default.xml", "line": 5, "severity": "error"},
+    {"file": "app/design/frontend/Acme/shop/Magento_Cms/layout/cms_index_index.xml", "line": 4, "severity": "error"}
+]

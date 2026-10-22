@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="content">
+            <block class="Magento\Framework\View\Element\Template" name="promo.banner" cacheable="false" template="Acme_Promo::banner.phtml"/>
+            <block class="Magento\Framework\View\Element\Template" name="promo.cacheable" cacheable="true"/>
+            <block class="Magento\Framework\View\Element\Template" name="promo.plain"/>
+            <!-- <block name="promo.commented" cacheable="false"/> -->
+            <block class="Magento\Framework\View\Element\Template" name="promo.with.argument">
+                <arguments>
+                    <argument name="note" xsi:type="string">cacheable="false"</argument>
+                </arguments>
+            </block>
+            <referenceBlock name="header.links" cacheable="false"/>
+        </referenceContainer>
+    </body>
+</page>
