@@ -34,8 +34,34 @@ namespace Magento\Framework\Model\ResourceModel\Db {
 }
 
 namespace Magento\Framework\Data {
-    class Collection
+    /**
+     * @implements \IteratorAggregate<int, \Magento\Framework\DataObject>
+     */
+    class Collection implements \IteratorAggregate, \Countable
     {
+        /** @return \ArrayIterator<int, \Magento\Framework\DataObject> */
+        public function getIterator(): \ArrayIterator
+        {
+            return new \ArrayIterator([]);
+        }
+
+        public function count(): int
+        {
+            return 0;
+        }
+
+        /** @return list<\Magento\Framework\DataObject> */
+        public function getItems(): array
+        {
+            return [];
+        }
+
+        /** @return int */
+        public function getSize()
+        {
+            return 0;
+        }
+
         /** @return $this */
         public function load(bool $printQuery = false, bool $logQuery = false)
         {
@@ -95,6 +121,11 @@ namespace Magento\Framework\DB {
 namespace Magento\Framework {
     class DataObject
     {
+        /** @return mixed */
+        public function getId()
+        {
+            return null;
+        }
     }
 }
 

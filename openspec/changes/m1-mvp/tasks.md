@@ -47,11 +47,11 @@ Each group may be committed on its own once its tasks are done.
 
 ## 6. Collection rules
 
-- [ ] 6.1 Replace `CollectionLimitVisitor` with `CollectionStateVisitor`, which tracks limited, loaded and unique-filter state (design D5). Apply it to P-COL-02. Verify:
+- [x] 6.1 Replace `CollectionLimitVisitor` with `CollectionStateVisitor`, which tracks limited, loaded and unique-filter state (design D5). Apply it to P-COL-02. Verify:
   - every scenario of the modified "P-COL-02 scope" requirement passes;
   - the M0 P-COL-02 tests still pass;
   - P-COL-02 FP 6 and 10 from `docs/runs/m0-core.md` (count before getFirstItem) are reproduced as negative fixtures.
-- [ ] 6.2 Implement P-COL-01. Verify: per definition of done.
+- [x] 6.2 Implement P-COL-01. Verify: per definition of done.
 
 ## 7. Loop rules
 

@@ -39,6 +39,23 @@ namespace Magento\Catalog\Model\ResourceModel {
 namespace Magento\Catalog\Model\ResourceModel\Product {
     class Collection extends \Magento\Framework\Data\Collection\AbstractDb
     {
+        /**
+         * @param mixed $condition
+         * @return $this
+         */
+        public function addAttributeToFilter(string $attribute, $condition = null)
+        {
+            return $this;
+        }
+
+        /**
+         * @param int|list<int> $productId
+         * @return $this
+         */
+        public function addIdFilter($productId)
+        {
+            return $this;
+        }
     }
 
     class CollectionFactory

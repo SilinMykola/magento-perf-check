@@ -21,7 +21,7 @@ services:
         tags:
             - phpstan.parser.richParserNodeVisitor
     -
-        class: MagentoPerfRules\PhpStan\CollectionLimitVisitor
+        class: MagentoPerfRules\PhpStan\CollectionStateVisitor
         tags:
             - phpstan.parser.richParserNodeVisitor
     -
@@ -33,3 +33,4 @@ services:
 
 rules:
     - MagentoPerfRules\PhpStan\Rule\ModelLoadInLoopRule
+    - MagentoPerfRules\PhpStan\Rule\CollectionCountRule

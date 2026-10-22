@@ -40,4 +40,8 @@ return [
         $b('lib/internal/Magento/Framework/Data/Collection.php#L305-L315', 'getFirstItem() calls load() and returns the first loaded item; it adds no LIMIT.'),
         $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L756-L763', '_renderLimit() applies limitPage() only when a page size is set.'),
     ], ['magentoPerf.getFirstItemWithoutLimit' => null]),
+    new RuleDefinition('P-COL-01', 'count() on a database collection instead of getSize()', Severity::Warning, RuleStatus::Default, [
+        $b('lib/internal/Magento/Framework/Data/Collection.php#L858-L862', 'Collection::count() calls load() before counting the items.'),
+        $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L433-L441', 'AbstractDb::getSize() runs a COUNT query without loading items.'),
+    ], ['magentoPerf.collectionCount' => null]),
 ];

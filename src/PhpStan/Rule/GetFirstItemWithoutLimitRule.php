@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MagentoPerfRules\PhpStan\Rule;
 
-use MagentoPerfRules\PhpStan\CollectionLimitVisitor;
+use MagentoPerfRules\PhpStan\CollectionStateVisitor;
 use MagentoPerfRules\Report\NoticePrefix;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -45,7 +45,9 @@ final class GetFirstItemWithoutLimitRule implements Rule
     {
         if (!$node->name instanceof Node\Identifier
             || $node->name->toLowerString() !== 'getfirstitem'
-            || $node->getAttribute(CollectionLimitVisitor::LIMITED) === true
+            || $node->getAttribute(CollectionStateVisitor::LIMITED) === true
+            || $node->getAttribute(CollectionStateVisitor::LOADED) === true
+            || $node->getAttribute(CollectionStateVisitor::UNIQUE_FILTER) === true
         ) {
             return [];
         }
