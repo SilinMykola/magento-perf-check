@@ -35,6 +35,14 @@ final class Example
         return sizeof($collection);
     }
 
+    /**
+     * After is_array() PHPStan narrows an object to "never"; that must not match.
+     */
+    public function arrayCheckOnObject(Collection $collection): int
+    {
+        return is_array($collection) ? count($collection) : 0;
+    }
+
     public function getSizeIsFine(Collection $collection): int
     {
         return $collection->getSize();

@@ -51,6 +51,24 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             return null;
         }
 
+        // "$c = <chain>": $c is a new collection; it inherits only what the chain establishes.
+        if ($node instanceof Expr\Assign && $node->var instanceof Expr\Variable && is_string($node->var->name)
+            && $node->expr instanceof Expr\MethodCall
+        ) {
+            $key = '$' . $node->var->name;
+            // "$c = $c->addFieldToFilter(...)" keeps working on the same collection.
+            if ($this->rootKey($node->expr) !== $key) {
+                unset($this->frames[count($this->frames) - 1][$key]);
+            }
+            foreach ([self::LIMITED, self::UNIQUE_FILTER] as $fact) {
+                if ($this->chainHas($node->expr, $fact)) {
+                    $this->record($key, $fact);
+                }
+            }
+
+            return null;
+        }
+
         if ($node instanceof Stmt\Foreach_) {
             $this->record($this->rootKey($node->expr), self::LOADED);
 

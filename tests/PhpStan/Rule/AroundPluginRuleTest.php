@@ -31,7 +31,7 @@ final class AroundPluginRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/../Fixtures/around-plugin.php'], [
             ['[P-PLG-01] Acme\Promo\Plugin\PricePlugin::aroundGetPrice() calls $proceed' . $suffix, 10],
             ['[P-PLG-01] Acme\Promo\Plugin\PricePlugin::aroundGetFinalPrice() calls $proceed' . $suffix, 17],
-            ['[P-PLG-01] Acme\Promo\Model\PriceModifier::aroundGetPrice() calls $proceed' . $suffix, 69],
+            ['[P-PLG-01] Acme\Promo\Model\PriceModifier::aroundGetPrice() calls $proceed' . $suffix, 79],
         ]);
     }
 }

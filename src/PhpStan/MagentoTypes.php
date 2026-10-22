@@ -30,11 +30,17 @@ final class MagentoTypes
      */
     public function subtypeOf(Type $type, string $class): ?string
     {
-        if (!(new ObjectType($class))->isSuperTypeOf($type)->yes()) {
-            return null;
-        }
+        return self::isObjectOf($type, $class) ? $type->getObjectClassNames()[0] : null;
+    }
 
-        return $type->getObjectClassNames()[0] ?? $class;
+    /**
+     * True when $type is an object of $class. A type without object classes never
+     * matches: this excludes "never", which PHPStan infers for impossible branches
+     * (e.g. an object after is_array()) and which is formally a subtype of every class.
+     */
+    public static function isObjectOf(Type $type, string $class): bool
+    {
+        return $type->getObjectClassNames() !== [] && (new ObjectType($class))->isSuperTypeOf($type)->yes();
     }
 
     /**

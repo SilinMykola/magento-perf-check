@@ -26,10 +26,10 @@ final class CacheCleanRuleTest extends RuleTestCase
     public function testFixture(): void
     {
         $this->analyse([__DIR__ . '/../Fixtures/fpc.php'], [
-            ['[P-FPC-09] cleanType(\'full_page\') empties the whole full page cache (with Varnish: a full purge). Clean the cache tags of the changed entities instead.', 181],
-            ['[P-FPC-09] cleanType(\'full_page\') empties the whole full page cache (with Varnish: a full purge). Clean the cache tags of the changed entities instead.', 182],
-            ['[P-FPC-09] clean() without tags cleans every cache frontend. Pass the cache tags of the changed entities.', 184],
-            ['[P-FPC-09] clean() without tags cleans every cache frontend. Pass the cache tags of the changed entities.', 185],
+            ['[P-FPC-09] cleanType(\'full_page\') empties the whole full page cache (with Varnish: a full purge). Clean the cache tags of the changed entities instead.', 197],
+            ['[P-FPC-09] cleanType(\'full_page\') empties the whole full page cache (with Varnish: a full purge). Clean the cache tags of the changed entities instead.', 198],
+            ['[P-FPC-09] clean() without tags cleans every cache frontend. Pass the cache tags of the changed entities.', 200],
+            ['[P-FPC-09] clean() without tags cleans every cache frontend. Pass the cache tags of the changed entities.', 201],
         ]);
     }
 }

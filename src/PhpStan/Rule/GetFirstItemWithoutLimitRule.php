@@ -12,7 +12,7 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
-use PHPStan\Type\ObjectType;
+use MagentoPerfRules\PhpStan\MagentoTypes;
 
 /**
  * P-COL-02: getFirstItem() loads the whole collection; without setPageSize()
@@ -53,7 +53,7 @@ final class GetFirstItemWithoutLimitRule implements Rule
         }
         $type = $scope->getType($node->var);
 
-        if (!(new ObjectType(self::DB_COLLECTION))->isSuperTypeOf($type)->yes()) {
+        if (!MagentoTypes::isObjectOf($type, self::DB_COLLECTION)) {
             if ($this->reportUntypedReceivers && $this->isUntyped($type->getObjectClassNames())) {
                 return [
                     RuleErrorBuilder::message(self::UNTYPED_NOTICE_PREFIX . ' getFirstItem() on a receiver of unknown type')

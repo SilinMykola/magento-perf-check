@@ -26,9 +26,9 @@ final class NoCacheHeadersRuleTest extends RuleTestCase
     public function testFixture(): void
     {
         $this->analyse([__DIR__ . '/../Fixtures/fpc.php'], [
-            ['[P-FPC-05] setNoCacheHeaders() in Acme\\Promo\\Controller\\Promo\\Add makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 72],
-            ['[P-FPC-05] setHeader() in Acme\\Promo\\Controller\\Promo\\Legacy makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 118],
-            ['[P-FPC-05] setHeader() in Acme\\Promo\\Model\\Resolver\\Banners makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 157],
+            ['[P-FPC-05] setNoCacheHeaders() in Acme\\Promo\\Controller\\Promo\\Add makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 88],
+            ['[P-FPC-05] setHeader() in Acme\\Promo\\Controller\\Promo\\Legacy makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 134],
+            ['[P-FPC-05] setHeader() in Acme\\Promo\\Model\\Resolver\\Banners makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 173],
         ]);
     }
 }

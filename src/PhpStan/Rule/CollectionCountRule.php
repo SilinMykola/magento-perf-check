@@ -10,7 +10,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
-use PHPStan\Type\ObjectType;
+use MagentoPerfRules\PhpStan\MagentoTypes;
 
 /**
  * P-COL-01: count($collection) loads every row, while getSize() runs a COUNT query.
@@ -42,7 +42,7 @@ final class CollectionCountRule implements Rule
             return [];
         }
         $type = $scope->getType($argument->value);
-        if (!(new ObjectType(self::DB_COLLECTION))->isSuperTypeOf($type)->yes()) {
+        if (!MagentoTypes::isObjectOf($type, self::DB_COLLECTION)) {
             return [];
         }
 

@@ -59,7 +59,10 @@ final class AroundPluginRule implements Rule
         if (!$call instanceof Expr\FuncCall) {
             return [];
         }
-        if (!$this->isAtTopLevel($node->stmts, $call, $finder) || !$this->passesArgumentsThrough($node, $call)) {
+        if (!$this->isAtTopLevel($node->stmts, $call, $finder)
+            || $this->returnsBefore($node->stmts, $call, $finder)
+            || !$this->passesArgumentsThrough($node, $call)
+        ) {
             return [];
         }
 
@@ -112,6 +115,26 @@ final class AroundPluginRule implements Rule
             }
 
             return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * A return reached before $proceed (e.g. "if (!$enabled) { return $x; }") skips the
+     * original method conditionally, which only an around plugin can do.
+     *
+     * @param Stmt[] $statements
+     */
+    private function returnsBefore(array $statements, Expr\FuncCall $call, NodeFinder $finder): bool
+    {
+        $callStart = $call->getStartFilePos();
+        foreach ($finder->findInstanceOf($statements, Stmt\Return_::class) as $return) {
+            if ($return->getStartFilePos() < $callStart
+                && $finder->findFirst([$return], static fn (Node $n): bool => $n === $call) === null
+            ) {
+                return true;
+            }
         }
 
         return false;

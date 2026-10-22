@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MagentoPerfRules\PhpStan\Rule;
 
-use MagentoPerfRules\PhpStan\MagentoTypes;
 use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
@@ -36,7 +35,9 @@ final class ScopePrivateRule implements Rule
             && $node->var instanceof Node\Expr\PropertyFetch
             && $node->var->name instanceof Node\Identifier
             && $node->var->name->toString() === self::PROPERTY;
-        if ((!$declares && !$assigns) || !MagentoTypes::extends($scope->getClassReflection(), self::ABSTRACT_BLOCK)) {
+        // AbstractBlock itself declares the (deprecated) property; only subclasses use it.
+        $class = $scope->getClassReflection();
+        if ((!$declares && !$assigns) || $class === null || !$class->isSubclassOf(self::ABSTRACT_BLOCK)) {
             return [];
         }
 

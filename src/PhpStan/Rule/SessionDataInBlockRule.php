@@ -27,6 +27,7 @@ final class SessionDataInBlockRule implements Rule
     private const SESSION = 'Magento\Framework\Session\SessionManagerInterface';
     private const ABSTRACT_BLOCK = 'Magento\Framework\View\Element\AbstractBlock';
     private const VIEW_MODEL = 'Magento\Framework\View\Element\Block\ArgumentInterface';
+    private const COLLECTION = 'Magento\Framework\Data\Collection';
 
     private readonly MagentoTypes $types;
 
@@ -46,7 +47,9 @@ final class SessionDataInBlockRule implements Rule
             return [];
         }
         $class = $scope->getClassReflection();
-        if (!MagentoTypes::extends($class, self::ABSTRACT_BLOCK) && !MagentoTypes::implements($class, self::VIEW_MODEL)) {
+        // Collections implement ArgumentInterface (through CollectionDataSourceInterface) but are not view models.
+        $viewModel = MagentoTypes::implements($class, self::VIEW_MODEL) && !MagentoTypes::extends($class, self::COLLECTION);
+        if (!MagentoTypes::extends($class, self::ABSTRACT_BLOCK) && !$viewModel) {
             return [];
         }
         $session = $this->types->subtypeOf($scope->getType($node->var), self::SESSION);

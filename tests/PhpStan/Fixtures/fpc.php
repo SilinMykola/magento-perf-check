@@ -46,6 +46,22 @@ namespace Acme\Promo\ViewModel {
     }
 }
 
+namespace Acme\Promo\Model\ResourceModel\Promo {
+    use Magento\Customer\Model\Session;
+
+    final class Collection extends \Magento\Framework\Data\Collection implements \Magento\Framework\View\Element\Block\ArgumentInterface
+    {
+        public function __construct(private readonly Session $customerSession)
+        {
+        }
+
+        public function forCustomer(): int
+        {
+            return (int) $this->customerSession->getCustomerId();
+        }
+    }
+}
+
 namespace Acme\Promo\Controller\Promo {
     use Magento\Catalog\Api\ProductRepositoryInterface;
     use Magento\Catalog\Model\Product;

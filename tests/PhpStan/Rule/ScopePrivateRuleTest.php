@@ -25,7 +25,8 @@ final class ScopePrivateRuleTest extends RuleTestCase
 
     public function testFixture(): void
     {
-        $this->analyse([__DIR__ . '/../Fixtures/fpc.php'], [
+        // The stub of AbstractBlock declares the property itself and must not be reported.
+        $this->analyse([__DIR__ . '/../Fixtures/fpc.php', __DIR__ . '/../Stubs/fpc.php'], [
             ['[P-FPC-01] $_isScopePrivate is obsolete and does not work properly. Load private data through customer data sections instead.', 11],
             ['[P-FPC-01] $_isScopePrivate is obsolete and does not work properly. Load private data through customer data sections instead.', 19],
         ]);

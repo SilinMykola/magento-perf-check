@@ -56,6 +56,16 @@ namespace Acme\Promo\Plugin {
             return $call();
         }
 
+        public function aroundEarlyReturn(object $subject, callable $proceed, int $qty): int
+        {
+            if (!$this->enabled) {
+                return 0;
+            }
+            $result = $proceed($qty);
+
+            return $result;
+        }
+
         private function aroundPrivate(object $subject, callable $proceed): mixed
         {
             return $proceed();

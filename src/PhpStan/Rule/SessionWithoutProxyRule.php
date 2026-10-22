@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MagentoPerfRules\PhpStan\Rule;
 
+use MagentoPerfRules\PhpStan\MagentoTypes;
 use MagentoPerfRules\PhpStan\ProjectIndexProvider;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -62,9 +63,9 @@ final class SessionWithoutProxyRule implements Rule
             if ($typeName === null || str_ends_with($typeName, '\\Proxy')) {
                 continue;
             }
-            if ((new ObjectType(self::SESSION))->isSuperTypeOf($type)->yes()) {
+            if (MagentoTypes::isObjectOf($type, self::SESSION)) {
                 $identifier = self::IDENTIFIER_SESSION;
-            } elseif ((new ObjectType(self::COOKIE_MANAGER))->isSuperTypeOf($type)->yes()) {
+            } elseif (MagentoTypes::isObjectOf($type, self::COOKIE_MANAGER)) {
                 $identifier = self::IDENTIFIER_COOKIE;
             } else {
                 continue;

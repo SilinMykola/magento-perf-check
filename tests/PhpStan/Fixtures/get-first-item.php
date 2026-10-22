@@ -118,6 +118,28 @@ final class Example
         $collection->addFieldToFilter('sku', ['like' => 'A%'])->getFirstItem();
     }
 
+    public function limitInAssignedChain(): void
+    {
+        $collection = $this->collectionFactory->create()
+            ->addFieldToFilter('type_id', 'simple')
+            ->setPageSize(1);
+        $collection->getFirstItem();
+    }
+
+    public function reassignmentStartsOver(Collection $collection): void
+    {
+        $collection->setPageSize(1);
+        $collection = $this->collectionFactory->create();
+        $collection->getFirstItem();
+    }
+
+    public function reassignmentFromItself(Collection $collection): void
+    {
+        $collection->setPageSize(1);
+        $collection = $collection->addFieldToFilter('type_id', 'simple');
+        $collection->getFirstItem();
+    }
+
     public function unrelatedClass(Unrelated $unrelated): void
     {
         $unrelated->getFirstItem();
