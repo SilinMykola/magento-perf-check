@@ -74,4 +74,30 @@ return [
     new RuleDefinition('P-DI-06', 'Direct ObjectManager::getInstance() in PHP classes', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/components/object-manager/', 'Usage rules: do not call the object manager directly, except in factories, proxies, the constructor backward-compatibility fallback and __wakeup/__sleep.'),
     ], ['magentoPerf.objectManagerUsage' => null]),
+    new RuleDefinition('P-FPC-01', '$_isScopePrivate in a block', Severity::Error, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/cache/page/private-content', 'Do not use the $_isScopePrivate property: it is obsolete and will not work properly.'),
+        $b('lib/internal/Magento/Framework/View/Element/AbstractBlock.php#L158-L166', 'AbstractBlock marks $_isScopePrivate as @deprecated.'),
+    ], ['magentoPerf.isScopePrivate' => null]),
+    new RuleDefinition('P-FPC-02', 'Block or view model reads customer data from the session', Severity::Warning, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 9.4: server-rendered HTML must not contain user-specific data.'),
+        $b('app/code/Magento/Customer/Model/Layout/DepersonalizePlugin.php#L101-L112', 'On cacheable GET pages the customer session is cleared after layout generation.'),
+    ], ['magentoPerf.sessionDataInBlock' => null]),
+    new RuleDefinition('P-FPC-05', 'No-cache or private headers on cacheable requests', Severity::Warning, RuleStatus::Default, [
+        $b('app/code/Magento/PageCache/etc/varnish6.vcl#L191-L200', 'Varnish does not cache responses marked no-cache or private.'),
+        $b('lib/internal/Magento/Framework/App/PageCache/Kernel.php#L154-L183', 'The built-in page cache stores only responses with public cache headers.'),
+        $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', 'Shows no-cache headers as the way to disable caching for a page on purpose.'),
+    ], ['magentoPerf.noCacheHeaders' => null]),
+    new RuleDefinition('P-FPC-06', 'State change in a GET-only controller', Severity::Error, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Use only HTTP POST or PUT methods to change state."'),
+        $a('https://developer.adobe.com/commerce/php/development/cache/page/private-content', '"Use only HTTP POST or PUT methods to change state."'),
+    ], ['magentoPerf.stateChangeOnGet' => null]),
+    new RuleDefinition('P-FPC-09', 'Full page cache or all caches cleaned from code', Severity::Error, RuleStatus::Default, [
+        $b('lib/internal/Magento/Framework/App/Cache.php#L96-L111', 'clean() without tags cleans every cache frontend.'),
+        $b('app/code/Magento/PageCache/Model/Cache/Type.php#L51-L55', 'Cleaning the full_page type dispatches the full page cache clean event.'),
+        $b('app/code/Magento/CacheInvalidate/etc/events.xml#L27-L29', 'That event triggers a full Varnish purge.'),
+    ], ['magentoPerf.cacheClean' => null]),
+    new RuleDefinition('P-FPC-10', 'reindexAll() in an observer, plugin or controller', Severity::Error, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/components/indexing/', 'Update on Save indexers reindex the changed entities through plugins or events.'),
+        $b('app/code/Magento/Indexer/Model/Indexer.php#L452-L494', 'reindexAll() rebuilds the whole index synchronously.'),
+    ], ['magentoPerf.fullReindex' => null]),
 ];

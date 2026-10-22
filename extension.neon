@@ -45,3 +45,9 @@ rules:
     - MagentoPerfRules\PhpStan\Rule\ConstructorWorkRule
     - MagentoPerfRules\PhpStan\Rule\DispatchInConstructorRule
     - MagentoPerfRules\PhpStan\Rule\ObjectManagerUsageRule
+    - MagentoPerfRules\PhpStan\Rule\ScopePrivateRule
+    - MagentoPerfRules\PhpStan\Rule\SessionDataInBlockRule
+    - MagentoPerfRules\PhpStan\Rule\NoCacheHeadersRule
+    - MagentoPerfRules\PhpStan\Rule\StateChangeOnGetRule
+    - MagentoPerfRules\PhpStan\Rule\CacheCleanRule
+    - MagentoPerfRules\PhpStan\Rule\FullReindexRule

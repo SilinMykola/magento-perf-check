@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MagentoPerfRules\PhpStan;
 
+use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
@@ -58,5 +59,15 @@ final class MagentoTypes
         }
 
         return null;
+    }
+
+    public static function implements(?ClassReflection $class, string $interface): bool
+    {
+        return $class !== null && $class->implementsInterface($interface);
+    }
+
+    public static function extends(?ClassReflection $class, string $parent): bool
+    {
+        return $class !== null && ($class->getName() === $parent || $class->isSubclassOf($parent));
     }
 }

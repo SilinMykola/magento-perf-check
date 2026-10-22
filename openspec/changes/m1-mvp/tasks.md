@@ -68,12 +68,12 @@ Each group may be committed on its own once its tasks are done.
 
 ## 9. FPC rules
 
-- [ ] 9.1 Implement P-FPC-01. Verify: per definition of done.
-- [ ] 9.2 Implement P-FPC-02. Verify: per definition of done.
-- [ ] 9.3 Implement P-FPC-05 with its scope (GET-capable frontend controllers, GraphQL resolvers). Verify: per definition of done.
-- [ ] 9.4 Implement P-FPC-06. Verify: per definition of done.
-- [ ] 9.5 Implement P-FPC-09. Verify: per definition of done.
-- [ ] 9.6 Implement P-FPC-10, with plugin detection through the project index only. Verify: per definition of done.
+- [x] 9.1 Implement P-FPC-01. Verify: per definition of done.
+- [x] 9.2 Implement P-FPC-02. Verify: per definition of done.
+- [x] 9.3 Implement P-FPC-05 with its scope (GET-capable frontend controllers, GraphQL resolvers). Verify: per definition of done.
+- [x] 9.4 Implement P-FPC-06. Verify: per definition of done.
+- [x] 9.5 Implement P-FPC-09. Verify: per definition of done.
+- [x] 9.6 Implement P-FPC-10, with plugin detection through the project index only. Verify: per definition of done.
 
 ## 10. Plugins, templates, setup
 
