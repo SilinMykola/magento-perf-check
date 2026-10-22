@@ -22,6 +22,8 @@ final class AnalysisResult
         public readonly string $projectRoot,
         public readonly array $paths,
         public readonly float $durationSeconds,
+        public readonly ?int $baselineHidden = null,
+        public readonly ?int $baselineUnmatched = null,
     ) {
         usort(
             $findings,

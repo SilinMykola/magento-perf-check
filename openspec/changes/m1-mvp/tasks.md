@@ -37,8 +37,8 @@ Each group may be committed on its own once its tasks are done.
 
 ## 4. Baseline
 
-- [ ] 4.1 Implement `--generate-baseline` and `--baseline` (design D10). Order: configuration, then baseline, then `--fail-on`. Count hidden findings and unmatched entries. Verify: tests cover every scenario in `specs/baseline/spec.md`; with counts ignored, the "Second occurrence" test fails.
-- [ ] 4.2 Document the baseline workflow in `README.md`. Verify: the documented commands run against the fixture project.
+- [x] 4.1 Implement `--generate-baseline` and `--baseline` (design D10). Order: configuration, then baseline, then `--fail-on`. Count hidden findings and unmatched entries. Verify: tests cover every scenario in `specs/baseline/spec.md`; with counts ignored, the "Second occurrence" test fails.
+- [x] 4.2 Document the baseline workflow in `README.md`. Verify: the documented commands run against the fixture project.
 
 ## 5. Output formats
 

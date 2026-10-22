@@ -10,5 +10,9 @@ trap 'rm -rf "$work"' EXIT
 rsync -a --exclude /vendor --exclude /composer.lock --exclude /.phpunit.cache --exclude /.git "$root/" "$work/"
 cd "$work"
 composer require --no-interaction --no-progress --quiet --with-all-dependencies 'phpstan/phpstan:~1.12.0'
+# PHPUnit pulls in nikic/php-parser; with v5 next to PHPStan 1.12 (which bundles v4)
+# RuleTestCase can load parser classes from both and die with a fatal error, depending
+# on test order. A real PHPStan 1.12 run is not affected: it starts from its own binary.
+composer require --dev --no-interaction --no-progress --quiet --with-all-dependencies 'nikic/php-parser:^4.18'
 echo "PHPStan: $(vendor/bin/phpstan --version)"
 vendor/bin/phpunit "$@"

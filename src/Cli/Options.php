@@ -27,6 +27,8 @@ final class Options
         public readonly bool $help = false,
         public readonly bool $pathsGiven = false,
         public readonly ?string $configFile = null,
+        public readonly ?string $baselineFile = null,
+        public readonly ?string $generateBaselineFile = null,
     ) {
     }
 
@@ -44,7 +46,7 @@ final class Options
                 $values['include-tests'] = '1';
                 continue;
             }
-            if (preg_match('/^--(project|paths|format|fail-on|memory-limit|config)=(.*)$/s', $argument, $m) !== 1) {
+            if (preg_match('/^--(project|paths|format|fail-on|memory-limit|config|baseline|generate-baseline)=(.*)$/s', $argument, $m) !== 1) {
                 throw new UsageException(sprintf('Unknown argument "%s". Run with --help for usage.', $argument));
             }
             $values[$m[1]] = $m[2];
@@ -80,6 +82,16 @@ final class Options
             throw new UsageException('--memory-limit must look like 512M, 2G or -1.');
         }
 
+        $inCwd = static fn (string $file): string => str_starts_with($file, '/') ? $file : $cwd . '/' . $file;
+        foreach (['baseline', 'generate-baseline'] as $key) {
+            if (isset($values[$key]) && $values[$key] === '') {
+                throw new UsageException(sprintf('--%s needs a file name.', $key));
+            }
+        }
+        if (isset($values['baseline'], $values['generate-baseline'])) {
+            throw new UsageException('--baseline and --generate-baseline cannot be used together.');
+        }
+
         return new self(
             $project,
             $paths,
@@ -90,6 +102,8 @@ final class Options
             false,
             isset($values['paths']),
             $configFile,
+            isset($values['baseline']) ? $inCwd($values['baseline']) : null,
+            isset($values['generate-baseline']) ? $inCwd($values['generate-baseline']) : null,
         );
     }
 
@@ -173,6 +187,10 @@ final class Options
                                     error (default), warning or info.
               --config=<file>       Configuration file (default: magento-perf-rules.neon in the
                                     project root, when it exists).
+              --generate-baseline=<file>
+                                    Write all current findings to <file> (relative to the
+                                    current directory) and exit with 0.
+              --baseline=<file>     Report only findings that are not in <file>.
               --include-tests       Also analyze test code (Test/ and dev/tests/ directories),
                                     which is skipped by default.
               --memory-limit=<v>    Memory limit for PHPStan (default: 2G).

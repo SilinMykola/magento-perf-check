@@ -225,4 +225,29 @@ final class ApplicationTest extends TestCase
 
         self::assertSame(['app/code/Acme/Warn'], $this->json($stdout)['summary']['paths']);
     }
+
+    public function testBaselineHidesKnownFindings(): void
+    {
+        $file = sys_get_temp_dir() . '/mpr-app-baseline-' . bin2hex(random_bytes(4)) . '.json';
+        [$exitCode, $stdout] = $this->runCommand(['--generate-baseline=' . $file]);
+
+        self::assertSame(Application::EXIT_CLEAN, $exitCode);
+        self::assertStringContainsString('Baseline with 3 finding(s) written to ' . $file, $stdout);
+
+        [$exitCode, $stdout] = $this->runCommand(['--format=json', '--baseline=' . $file]);
+        unlink($file);
+
+        self::assertSame(Application::EXIT_CLEAN, $exitCode);
+        $report = $this->json($stdout);
+        self::assertSame([], $report['findings']);
+        self::assertSame(['hidden' => 3, 'unmatched' => 0], $report['summary']['baseline']);
+    }
+
+    public function testMissingBaselineExitsWithTwo(): void
+    {
+        [$exitCode, , $stderr] = $this->runCommand(['--baseline=/nonexistent/baseline.json']);
+
+        self::assertSame(Application::EXIT_ERROR, $exitCode);
+        self::assertStringContainsString('does not exist', $stderr);
+    }
 }

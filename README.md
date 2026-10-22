@@ -68,6 +68,19 @@ magentoPerf:
 
 The tool rejects unknown keys, unknown rule IDs and invalid values with exit code 2, so a typo never silently changes the analysis. Disabled rules and severity overrides apply to XML and PHP findings alike, and to the `--fail-on` decision.
 
+### Baseline for existing projects
+
+To adopt the tool on a project with many existing findings, record them once and fail only on new ones:
+
+```sh
+php bin/magento-perf-check --project=/path/to/magento --generate-baseline=perf-baseline.json
+php bin/magento-perf-check --project=/path/to/magento --baseline=perf-baseline.json
+```
+
+The file is written to the current directory, never into the analyzed project. Commit it next to your CI configuration.
+
+A finding is matched by rule, file and message, not by line, so moving code does not resurface it. A second identical finding in the same file is new and gets reported. The summary shows how many findings the baseline hid, and how many entries matched nothing because those issues were fixed. Regenerate the file to drop those entries.
+
 ### Inside an existing PHPStan setup
 
 The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) they are picked up automatically; otherwise include `extension.neon` in your `phpstan.neon`. They report at every level. To suppress one finding, use its identifier and give a reason:

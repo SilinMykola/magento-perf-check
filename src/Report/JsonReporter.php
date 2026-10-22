@@ -39,6 +39,10 @@ final class JsonReporter implements Reporter
                 'byRule' => (object) $result->countByRule(),
                 'notices' => (object) $result->countNoticesBySource(),
                 'durationSeconds' => round($result->durationSeconds, 2),
+                'baseline' => $result->baselineHidden === null ? null : [
+                    'hidden' => $result->baselineHidden,
+                    'unmatched' => $result->baselineUnmatched,
+                ],
             ],
             'findings' => $findings,
             'notices' => $notices,

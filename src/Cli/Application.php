@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MagentoPerfRules\Cli;
 
+use MagentoPerfRules\Baseline\Baseline;
 use MagentoPerfRules\Config\ConfigLoader;
 use MagentoPerfRules\PhpStan\Runner\PhpStanRunner;
 use MagentoPerfRules\Project\ProjectIndexBuilder;
@@ -53,7 +54,18 @@ final class Application
 
                 return self::EXIT_CLEAN;
             }
+            // Fail on a broken baseline before spending minutes on analysis.
+            if ($options->baselineFile !== null) {
+                Baseline::load($options->baselineFile);
+            }
             $result = $this->analyze($options);
+            if ($options->generateBaselineFile !== null) {
+                $baseline = Baseline::fromFindings($result->findings);
+                $baseline->write($options->generateBaselineFile);
+                fwrite($this->stdout, sprintf("Baseline with %d finding(s) written to %s.\n", $baseline->size(), $options->generateBaselineFile));
+
+                return self::EXIT_CLEAN;
+            }
         } catch (UsageException $e) {
             fwrite($this->stderr, 'magento-perf-check: ' . $e->getMessage() . "\n");
 
@@ -91,12 +103,23 @@ final class Application
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
             ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests);
 
+        // Configuration first, then the baseline; --fail-on looks at what is left.
+        $findings = $config->apply([...$xml->findings, ...$php->findings]);
+        $hidden = null;
+        $unmatched = null;
+        if ($options->baselineFile !== null) {
+            $filtered = Baseline::load($options->baselineFile)->filter($findings);
+            [$findings, $hidden, $unmatched] = [$filtered->findings, $filtered->hidden, $filtered->unmatched];
+        }
+
         return new AnalysisResult(
-            $config->apply([...$xml->findings, ...$php->findings]),
+            $findings,
             [...$xml->notices, ...$php->notices],
             $options->projectRoot,
             $paths,
             microtime(true) - $started,
+            $hidden,
+            $unmatched,
         );
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MagentoPerfRules\PhpStan\Rule;
 
 use MagentoPerfRules\PhpStan\CollectionLimitVisitor;
+use MagentoPerfRules\Report\NoticePrefix;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
@@ -25,7 +26,7 @@ final class GetFirstItemWithoutLimitRule implements Rule
     public const IDENTIFIER = 'magentoPerf.getFirstItemWithoutLimit';
 
     /** Prefix of the notice reported for receivers whose type is unknown, when enabled. */
-    public const UNTYPED_NOTICE_PREFIX = '[notice:P-COL-02]';
+    public const UNTYPED_NOTICE_PREFIX = NoticePrefix::UNTYPED_RECEIVER;
 
     private const DB_COLLECTION = 'Magento\Framework\Data\Collection\AbstractDb';
 

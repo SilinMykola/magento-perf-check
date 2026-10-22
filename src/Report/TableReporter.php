@@ -43,6 +43,14 @@ final class TableReporter implements Reporter
             implode(', ', $result->paths),
             $result->durationSeconds,
         );
+        if ($result->baselineHidden !== null) {
+            $out .= sprintf(
+                "Baseline hid %d known finding(s); %d baseline entr%s matched nothing and can be removed by regenerating it.\n",
+                $result->baselineHidden,
+                (int) $result->baselineUnmatched,
+                $result->baselineUnmatched === 1 ? 'y' : 'ies',
+            );
+        }
         $notices = $result->countNoticesBySource();
         if ($notices !== []) {
             $parts = [];

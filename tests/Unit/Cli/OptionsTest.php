@@ -76,4 +76,11 @@ final class OptionsTest extends TestCase
 
         self::assertSame(['vendor', 'app/code'], $options->paths);
     }
+
+    public function testBaselineFileIsRelativeToWorkingDirectory(): void
+    {
+        $options = Options::fromArgv(['--project=' . $this->project(), '--generate-baseline=perf-baseline.json'], '/work/dir');
+
+        self::assertSame('/work/dir/perf-baseline.json', $options->generateBaselineFile);
+    }
 }

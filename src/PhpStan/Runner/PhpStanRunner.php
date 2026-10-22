@@ -7,10 +7,10 @@ namespace MagentoPerfRules\PhpStan\Runner;
 use Composer\InstalledVersions;
 use JsonException;
 use MagentoPerfRules\Cli\UsageException;
-use MagentoPerfRules\PhpStan\Rule\GetFirstItemWithoutLimitRule;
 use MagentoPerfRules\Project\TestCode;
 use MagentoPerfRules\Report\Finding;
 use MagentoPerfRules\Report\Notice;
+use MagentoPerfRules\Report\NoticePrefix;
 use MagentoPerfRules\Rule\RuleRegistry;
 
 /**
@@ -249,7 +249,7 @@ final class PhpStanRunner
                 $match = $this->ruleFor($message['identifier'] ?? null, $text);
                 if ($match !== null) {
                     $findings[] = new Finding($match[0]->id, $match[1], $relative, $line, $text);
-                } elseif (str_starts_with($text, GetFirstItemWithoutLimitRule::UNTYPED_NOTICE_PREFIX)) {
+                } elseif (str_starts_with($text, NoticePrefix::UNTYPED_RECEIVER)) {
                     $notices[] = new Notice('untyped-receiver', $text, $relative, $line);
                 } else {
                     $notices[] = new Notice('phpstan', $text, $relative, $line);
