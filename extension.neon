@@ -34,3 +34,6 @@ services:
 rules:
     - MagentoPerfRules\PhpStan\Rule\ModelLoadInLoopRule
     - MagentoPerfRules\PhpStan\Rule\CollectionCountRule
+    - MagentoPerfRules\PhpStan\Rule\CollectionInLoopRule
+    - MagentoPerfRules\PhpStan\Rule\SaveInLoopRule
+    - MagentoPerfRules\PhpStan\Rule\CompositeTypeInLoopRule

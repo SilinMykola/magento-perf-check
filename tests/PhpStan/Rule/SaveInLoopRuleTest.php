@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MagentoPerfRules\Tests\PhpStan\Rule;
+
+use MagentoPerfRules\PhpStan\Rule\SaveInLoopRule;
+use PHPStan\Rules\Rule;
+use PHPStan\Testing\RuleTestCase;
+
+/**
+ * @extends RuleTestCase<SaveInLoopRule>
+ */
+final class SaveInLoopRuleTest extends RuleTestCase
+{
+    protected function getRule(): Rule
+    {
+        return new SaveInLoopRule($this->createReflectionProvider());
+    }
+
+    public static function getAdditionalConfigFiles(): array
+    {
+        return [__DIR__ . '/../../../extension.neon'];
+    }
+
+    public function testFixture(): void
+    {
+        $this->analyse([__DIR__ . '/../Fixtures/save-in-loop.php'], [
+            ['[P-LOOP-03] Magento\Catalog\Api\ProductRepositoryInterface::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 28],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 32],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::delete() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 33],
+            ['[P-LOOP-03] Magento\Catalog\Model\ResourceModel\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 34],
+            ['[P-LOOP-03] Magento\Catalog\Api\ProductRepositoryInterface::deleteById() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 38],
+        ]);
+    }
+}

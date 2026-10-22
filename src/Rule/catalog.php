@@ -44,4 +44,20 @@ return [
         $b('lib/internal/Magento/Framework/Data/Collection.php#L858-L862', 'Collection::count() calls load() before counting the items.'),
         $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L433-L441', 'AbstractDb::getSize() runs a COUNT query without loading items.'),
     ], ['magentoPerf.collectionCount' => null]),
+    new RuleDefinition('P-LOOP-02', 'Collection created and loaded inside a loop', Severity::Error, RuleStatus::Default, [
+        $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),
+        $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L813-L836', 'AbstractDb::load() runs the select and builds every item.'),
+        $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L433-L441', 'getSize() runs its own COUNT query.'),
+    ], ['magentoPerf.loopCollectionLoad' => null]),
+    new RuleDefinition('P-LOOP-03', 'save() or delete() of a model or repository inside a loop', Severity::Warning, RuleStatus::Default, [
+        $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),
+        $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 6.4.3.2: service contracts SHOULD support batch data processing.'),
+        $b('lib/internal/Magento/Framework/Model/AbstractModel.php#L680-L684', 'AbstractModel::save() delegates to the resource model: one write per call.'),
+        $b('lib/internal/Magento/Framework/Model/AbstractModel.php#L881-L885', 'AbstractModel::delete() delegates to the resource model: one write per call.'),
+    ], ['magentoPerf.loopSave' => null]),
+    new RuleDefinition('P-LOOP-07', 'Composite product type methods inside a loop', Severity::Warning, RuleStatus::Default, [
+        $b('app/code/Magento/ConfigurableProduct/Model/Product/Type/Configurable.php#L1411-L1420', 'Configurable::getUsedProducts() loads a child collection for each product.'),
+        $b('app/code/Magento/ConfigurableProduct/Model/ResourceModel/Product/Type/Configurable.php#L159-L208', 'getChildrenIds() and getParentIdsByChild() run a query per call and accept arrays.'),
+        $b('app/code/Magento/GroupedProduct/Model/Product/Type/Grouped.php#L203-L237', 'Grouped::getAssociatedProducts() loads a collection per product.'),
+    ], ['magentoPerf.loopCompositeType' => null]),
 ];

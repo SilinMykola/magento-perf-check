@@ -9,6 +9,12 @@ namespace Magento\Catalog\Model {
         {
             return '';
         }
+
+        /** @return int|false */
+        public function getIdBySku(string $sku)
+        {
+            return false;
+        }
     }
 
     class ProductRepository implements \Magento\Catalog\Api\ProductRepositoryInterface
@@ -27,12 +33,77 @@ namespace Magento\Catalog\Model {
         {
             throw new \LogicException();
         }
+
+        public function save(Product $product): Product
+        {
+            return $product;
+        }
+
+        public function delete(Product $product): bool
+        {
+            return true;
+        }
+
+        public function deleteById(string $sku): bool
+        {
+            return true;
+        }
     }
 }
 
 namespace Magento\Catalog\Model\ResourceModel {
     class Product extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
     {
+        /** @return int|false */
+        public function getIdBySku(string $sku)
+        {
+            return false;
+        }
+    }
+}
+
+namespace Magento\Catalog\Model\Product\Type {
+    abstract class AbstractType
+    {
+        /** @return array<int, array<int, int>> */
+        public function getChildrenIds(int $parentId, bool $required = true): array
+        {
+            return [];
+        }
+
+        /**
+         * @param int|list<int> $childId
+         * @return list<int>
+         */
+        public function getParentIdsByChild($childId): array
+        {
+            return [];
+        }
+    }
+}
+
+namespace Magento\ConfigurableProduct\Model\Product\Type {
+    class Configurable extends \Magento\Catalog\Model\Product\Type\AbstractType
+    {
+        /** @return list<\Magento\Catalog\Model\Product> */
+        public function getUsedProducts(\Magento\Catalog\Model\Product $product): array
+        {
+            return [];
+        }
+    }
+}
+
+namespace Magento\ConfigurableProduct\Model\ResourceModel\Product\Type {
+    class Configurable extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
+    {
+        /**
+         * @param int|list<int> $childId
+         * @return list<int>
+         */
+        public function getParentIdsByChild($childId): array
+        {
+            return [];
+        }
     }
 }
 
@@ -75,6 +146,12 @@ namespace Magento\Catalog\Api {
         public function getById(int $productId): \Magento\Catalog\Model\Product;
 
         public function getList(\Magento\Framework\Api\SearchCriteriaInterface $criteria): \Magento\Catalog\Api\Data\ProductSearchResultsInterface;
+
+        public function save(\Magento\Catalog\Model\Product $product): \Magento\Catalog\Model\Product;
+
+        public function delete(\Magento\Catalog\Model\Product $product): bool;
+
+        public function deleteById(string $sku): bool;
     }
 }
 

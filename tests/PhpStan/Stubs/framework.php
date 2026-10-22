@@ -16,6 +16,18 @@ namespace Magento\Framework\Model {
         {
             return $this;
         }
+
+        /** @return $this */
+        public function save()
+        {
+            return $this;
+        }
+
+        /** @return $this */
+        public function delete()
+        {
+            return $this;
+        }
     }
 }
 
@@ -27,6 +39,18 @@ namespace Magento\Framework\Model\ResourceModel\Db {
          * @return $this
          */
         public function load(\Magento\Framework\Model\AbstractModel $object, $value, ?string $field = null)
+        {
+            return $this;
+        }
+
+        /** @return $this */
+        public function save(\Magento\Framework\Model\AbstractModel $object)
+        {
+            return $this;
+        }
+
+        /** @return $this */
+        public function delete(\Magento\Framework\Model\AbstractModel $object)
         {
             return $this;
         }

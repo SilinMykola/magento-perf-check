@@ -55,9 +55,9 @@ Each group may be committed on its own once its tasks are done.
 
 ## 7. Loop rules
 
-- [ ] 7.1 Track collections created inside loop bodies (design D6), and implement P-LOOP-02. Verify: per definition of done.
-- [ ] 7.2 Implement P-LOOP-03. Verify: per definition of done.
-- [ ] 7.3 Implement P-LOOP-07, including `getIdBySku` on the product model and resource model. Verify: per definition of done.
+- [x] 7.1 Track collections created inside loop bodies (design D6), and implement P-LOOP-02. Verify: per definition of done.
+- [x] 7.2 Implement P-LOOP-03. Verify: per definition of done.
+- [x] 7.3 Implement P-LOOP-07, including `getIdBySku` on the product model and resource model. Verify: per definition of done.
 
 ## 8. DI rules
 
