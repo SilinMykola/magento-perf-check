@@ -60,4 +60,18 @@ return [
         $b('app/code/Magento/ConfigurableProduct/Model/ResourceModel/Product/Type/Configurable.php#L159-L208', 'getChildrenIds() and getParentIdsByChild() run a query per call and accept arrays.'),
         $b('app/code/Magento/GroupedProduct/Model/Product/Type/Grouped.php#L203-L237', 'Grouped::getAssociatedProducts() loads a collection per product.'),
     ], ['magentoPerf.loopCompositeType' => null]),
+    new RuleDefinition('P-DI-01', 'Session or cookie manager injected without a Proxy', Severity::Error, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 9.10: Request, Session and Cookie objects must not be injected into constructors.'),
+        $b('lib/internal/Magento/Framework/Session/SessionManager.php#L100-L125', 'SessionManager::__construct() calls start().'),
+        $b('lib/internal/Magento/Framework/Session/SessionManager.php#L162-L208', 'start() calls session_start() outside CLI.'),
+    ], ['magentoPerf.sessionWithoutProxy' => Severity::Error, 'magentoPerf.cookieManagerWithoutProxy' => Severity::Warning]),
+    new RuleDefinition('P-DI-02', 'Constructor does more than assign dependencies', Severity::Warning, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 2.3: constructors may only assign dependencies and validate arguments.'),
+    ], ['magentoPerf.constructorWork' => null]),
+    new RuleDefinition('P-DI-03', 'Event dispatched in a constructor', Severity::Error, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 2.3.2: events must not be triggered in constructors.'),
+    ], ['magentoPerf.dispatchInConstructor' => null]),
+    new RuleDefinition('P-DI-06', 'Direct ObjectManager::getInstance() in PHP classes', Severity::Warning, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/components/object-manager/', 'Usage rules: do not call the object manager directly, except in factories, proxies, the constructor backward-compatibility fallback and __wakeup/__sleep.'),
+    ], ['magentoPerf.objectManagerUsage' => null]),
 ];

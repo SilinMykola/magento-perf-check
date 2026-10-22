@@ -21,6 +21,10 @@ services:
         tags:
             - phpstan.parser.richParserNodeVisitor
     -
+        class: MagentoPerfRules\PhpStan\ObjectManagerFallbackVisitor
+        tags:
+            - phpstan.parser.richParserNodeVisitor
+    -
         class: MagentoPerfRules\PhpStan\CollectionStateVisitor
         tags:
             - phpstan.parser.richParserNodeVisitor
@@ -37,3 +41,7 @@ rules:
     - MagentoPerfRules\PhpStan\Rule\CollectionInLoopRule
     - MagentoPerfRules\PhpStan\Rule\SaveInLoopRule
     - MagentoPerfRules\PhpStan\Rule\CompositeTypeInLoopRule
+    - MagentoPerfRules\PhpStan\Rule\SessionWithoutProxyRule
+    - MagentoPerfRules\PhpStan\Rule\ConstructorWorkRule
+    - MagentoPerfRules\PhpStan\Rule\DispatchInConstructorRule
+    - MagentoPerfRules\PhpStan\Rule\ObjectManagerUsageRule

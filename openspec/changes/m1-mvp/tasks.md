@@ -61,10 +61,10 @@ Each group may be committed on its own once its tasks are done.
 
 ## 8. DI rules
 
-- [ ] 8.1 Implement P-DI-01 with the project index and two identifiers (session → error, cookie manager → warning). Verify: per definition of done, including a fixture whose Proxy is configured only in `etc/frontend/di.xml` of another module.
-- [ ] 8.2 Implement P-DI-02. Verify: per definition of done.
-- [ ] 8.3 Implement P-DI-03. Verify: per definition of done.
-- [ ] 8.4 Implement P-DI-06 with the documented exceptions. Verify: per definition of done.
+- [x] 8.1 Implement P-DI-01 with the project index and two identifiers (session → error, cookie manager → warning). Verify: per definition of done, including a fixture whose Proxy is configured only in `etc/frontend/di.xml` of another module.
+- [x] 8.2 Implement P-DI-02. Verify: per definition of done.
+- [x] 8.3 Implement P-DI-03. Verify: per definition of done.
+- [x] 8.4 Implement P-DI-06 with the documented exceptions. Verify: per definition of done.
 
 ## 9. FPC rules
 

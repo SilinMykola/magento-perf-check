@@ -33,4 +33,13 @@ final class RuleRegistryTest extends TestCase
     {
         self::assertStringEndsWith('docs/rules/P-COL-02.md', (new RuleRegistry())->docUrl('P-COL-02'));
     }
+
+    public function testIdentifierVariantsCarryTheirSeverity(): void
+    {
+        $registry = new RuleRegistry();
+
+        self::assertSame(\MagentoPerfRules\Rule\Severity::Error, $registry->findByIdentifier('magentoPerf.sessionWithoutProxy')[1] ?? null);
+        self::assertSame(\MagentoPerfRules\Rule\Severity::Warning, $registry->findByIdentifier('magentoPerf.cookieManagerWithoutProxy')[1] ?? null);
+        self::assertNull($registry->findByIdentifier('magentoPerf.unknown'));
+    }
 }

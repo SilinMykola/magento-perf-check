@@ -6,6 +6,10 @@
          colors="true"
          failOnRisky="true"
          failOnWarning="true">
+    <php>
+        <!-- Each RuleTestCase with its own config files keeps a PHPStan container in memory. -->
+        <ini name="memory_limit" value="1G"/>
+    </php>
     <testsuites>
         <testsuite name="default">
             <directory>tests</directory>
