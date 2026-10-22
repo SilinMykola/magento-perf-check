@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<config>
+    <topic name="acme.export" schema="Acme\Rules\Api\ExportInterface::run"/>
+    <topic name="acme.export.async" schema="Acme\Rules\Api\ExportInterface::run" is_synchronous="false"/>
+    <topic name="acme.rpc" request="string" response="bool"/>
+    <topic name="acme.request.only" request="string"/>
+</config>

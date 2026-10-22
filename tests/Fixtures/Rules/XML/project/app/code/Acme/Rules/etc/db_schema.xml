@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <table name="sales_order" resource="sales">
+        <column xsi:type="int" name="acme_gift_id" nullable="true"/>
+    </table>
+    <table name="acme_log" resource="default">
+        <column xsi:type="int" name="log_id" nullable="false"/>
+    </table>
+    <table name="acme_old" resource="default" disabled="true"/>
+</schema>

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<config>
+    <event name="core_layout_render_element">
+        <observer name="pagecache" instance="Magento\PageCache\Observer\ProcessLayoutRenderElement"/>
+    </event>
+</config>

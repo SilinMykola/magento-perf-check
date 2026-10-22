@@ -23,14 +23,29 @@ final class NonCacheableBlockRule implements XmlRule
     /** Handles shared by many or high-traffic pages. */
     private const ERROR_HANDLE_PREFIXES = ['catalog_', 'cms_'];
 
-    /** Personal pages that are not meant to be served from FPC. */
+    /**
+     * Personal pages that are not meant to be served from FPC. The list extends the
+     * SPEC default with the handles Magento core itself makes uncacheable
+     * (docs/runs/m0-core.md).
+     */
     private const DEFAULT_ALLOWLIST = [
+        // customer
+        'customer_',
+        'loginascustomer_',
+        'newsletter_manage_',
+        'review_customer_',
+        'downloadable_customer_',
+        // checkout and sales
         'checkout_',
-        'customer_account_',
-        'sales_',
-        'wishlist_',
         'multishipping_',
+        'sales_',
+        // payment
         'paypal_',
+        'vault_',
+        'paymentservicespaypal_vault_',
+        // lists
+        'wishlist_',
+        'catalog_product_compare_',
     ];
 
     /** @var list<string> */

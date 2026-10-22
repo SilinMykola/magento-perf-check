@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<config>
+    <view id="acme_promo_rule" class="Acme\Other\Model\Indexer\Rule" group="indexer"/>
+</config>

@@ -83,13 +83,13 @@ Each group may be committed on its own once its tasks are done.
 
 ## 11. Layout and XML configuration rules
 
-- [ ] 11.1 Extend the X-LAY-01 default allowlist and make it configurable. Verify: every scenario of the modified "X-LAY-01 default allowlist" requirement passes, and `docs/rules/X-LAY-01.md` lists the new handles with their source (`docs/runs/m0-core.md`).
-- [ ] 11.2 Implement X-LAY-02. Verify: per definition of done.
-- [ ] 11.3 Implement X-EVT-01, X-EVT-02 and X-EVT-03, including the "Event rule findings" requirement. Verify: per definition of done for each rule.
-- [ ] 11.4 Implement X-SEC-01. Verify: per definition of done.
-- [ ] 11.5 Implement X-MQ-01. Verify: per definition of done.
-- [ ] 11.6 Implement X-IDX-01 with the project index. Verify: per definition of done.
-- [ ] 11.7 Implement X-DB-01 with the project index. Verify: per definition of done, including the "Extending a core table" scenario against a fixture `vendor/magento` module.
+- [x] 11.1 Extend the X-LAY-01 default allowlist and make it configurable. Verify: every scenario of the modified "X-LAY-01 default allowlist" requirement passes, and `docs/rules/X-LAY-01.md` lists the new handles with their source (`docs/runs/m0-core.md`).
+- [x] 11.2 Implement X-LAY-02. Verify: per definition of done.
+- [x] 11.3 Implement X-EVT-01, X-EVT-02 and X-EVT-03, including the "Event rule findings" requirement. Verify: per definition of done for each rule.
+- [x] 11.4 Implement X-SEC-01. Verify: per definition of done.
+- [x] 11.5 Implement X-MQ-01. Verify: per definition of done.
+- [x] 11.6 Implement X-IDX-01 with the project index. Verify: per definition of done.
+- [x] 11.7 Implement X-DB-01 with the project index. Verify: per definition of done, including the "Extending a core table" scenario against a fixture `vendor/magento` module.
 
 ## 12. GraphQL
 

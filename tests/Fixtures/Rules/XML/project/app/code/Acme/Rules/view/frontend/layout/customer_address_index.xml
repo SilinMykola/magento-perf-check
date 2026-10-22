@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<page>
+    <body>
+        <block class="Acme\Rules\Block\Address" name="address" cacheable="false"/>
+    </body>
+</page>

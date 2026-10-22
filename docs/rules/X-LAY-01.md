@@ -14,7 +14,13 @@ A `<block>` with `cacheable="false"` in a frontend layout file. This includes mo
 
 When a layout contains a non-cacheable block, Magento treats the whole page as non-cacheable. No cached copy is stored in Varnish or the built-in Full Page Cache, so every request for every page that uses the handle renders the full page in PHP. In `default.xml` that means every page of the store. In `catalog_*` and `cms_*` handles it hits the highest-traffic pages, which Adobe says must stay cacheable.
 
-The rule does not report handles that are personal by nature and not meant to be cached: `checkout_*`, `customer_account_*`, `sales_*`, `wishlist_*`, `multishipping_*`, `paypal_*`.
+The rule does not report handles that are personal by nature and not meant to be cached. Default allowlist (handle prefixes):
+- Customer: `customer_`, `loginascustomer_`, `newsletter_manage_`, `review_customer_`, `downloadable_customer_`.
+- Checkout and sales: `checkout_`, `multishipping_`, `sales_`.
+- Payment: `paypal_`, `vault_`, `paymentservicespaypal_vault_`.
+- Lists: `wishlist_`, `catalog_product_compare_`.
+
+The SPEC started with six of these. The rest are the handles that Magento 2.4.9 core itself makes uncacheable, found in the M0 core run ([docs/runs/m0-core.md](../runs/m0-core.md)). `catalog_product_compare_` is allowed even though `catalog_` handles otherwise give an `error`: the compare page is per customer. Add your own prefixes, or replace the list, in `magento-perf-rules.neon` (`layout.allowlistHandles`, `layout.replaceAllowlist`).
 
 ## Example
 
@@ -43,7 +49,7 @@ The template renders a placeholder, and a JS component fills it from the `cart` 
 
 If a page is meant to be uncacheable (for example a payment return page under a handle the allowlist does not cover), keep the attribute and record the reason.
 
-- **Command line:** `magento-perf-check` in M0 has no suppression or configuration yet. The XML comment `<!-- perf-ignore X-LAY-01: reason -->` and a configurable allowlist are planned for M1 (docs/SPEC.md section 3.3).
+- **Command line:** put `<!-- perf-ignore X-LAY-01: reason -->` directly before the block. A comment without a reason suppresses nothing and is reported as a notice. To allow a whole handle, add its prefix to `layout.allowlistHandles` in `magento-perf-rules.neon`.
 - **PHPStan:** this is an XML rule, so `@phpstan-ignore` does not apply.
 
 ## Known false positives

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<config>
+    <action name="*">
+        <section name="cart"/>
+    </action>
+    <action name="acme/wishlist/share">
+        <section name="*"/>
+    </action>
+    <action name="acme/cart/sync"/>
+    <action name="customer/account/loginPost">
+        <section name="*"/>
+    </action>
+    <action name="acme/cart/add">
+        <section name="cart"/>
+        <section name="checkout-data"/>
+    </action>
+</config>

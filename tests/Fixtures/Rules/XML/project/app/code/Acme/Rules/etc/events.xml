@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<config>
+    <event name="model_load_after">
+        <observer name="acme_any_load" instance="Acme\Rules\Observer\AnyLoad"/>
+        <observer name="acme_disabled" instance="Acme\Rules\Observer\Disabled" disabled="true"/>
+    </event>
+    <event name="catalog_product_load_after">
+        <observer name="acme_product_load" instance="Acme\Rules\Observer\ProductLoad"/>
+    </event>
+    <event name="model_save_after">
+        <observer name="acme_any_save" instance="Acme\Rules\Observer\AnySave"/>
+    </event>
+    <event name="catalog_product_save_after">
+        <observer name="acme_product_save" instance="Acme\Rules\Observer\ProductSave"/>
+    </event>
+    <event name="view_block_abstract_to_html_after">
+        <observer name="acme_block_html" instance="Acme\Rules\Observer\BlockHtml"/>
+    </event>
+</config>

@@ -110,4 +110,39 @@ return [
         $a('https://developer.adobe.com/commerce/php/development/prepare/extension-lifecycle', 'The Recurring schema class runs after every schema installation or upgrade stage; RecurringData after every data stage.'),
         $b('setup/src/Magento/Setup/Model/Installer.php#L1159-L1174', 'The installer runs the Recurring script of every module.'),
     ], ['magentoPerf.heavyRecurringSetup' => null]),
+    new RuleDefinition('X-LAY-02', 'ESI ttl on a block in an entity-specific handle', Severity::Error, RuleStatus::Default, [
+        $b('app/code/Magento/PageCache/Model/Layout/MergePlugin.php#L42-L54', 'Throws a LogicException for ttl blocks in handles that contain an entity ID.'),
+        $b('lib/internal/Magento/Framework/View/Result/Page.php#L236-L252', 'Entity-specific handles are the *_id_* and *_sku_* ones.'),
+        $a('https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/cache/varnish/use-varnish-esi', 'How ESI blocks with ttl are rendered by Varnish.'),
+    ]),
+    new RuleDefinition('X-EVT-01', 'Observer on model_load_after or <entity>_load_after', Severity::Warning, RuleStatus::Default, [
+        $b('lib/internal/Magento/Framework/Model/AbstractModel.php#L590-L609', 'AbstractModel::_afterLoad() dispatches model_load_after and the entity-specific load_after event on every load.'),
+        $a('https://developer.adobe.com/commerce/php/best-practices/extensions/observers', 'Observers should be lightweight; they run every time their event fires.'),
+    ]),
+    new RuleDefinition('X-EVT-02', 'Observer on generic model save/delete events', Severity::Warning, RuleStatus::Default, [
+        $b('lib/internal/Magento/Framework/Model/AbstractModel.php#L691-L730', 'model_save_before/after are dispatched for every model.'),
+        $b('lib/internal/Magento/Framework/Model/AbstractModel.php#L893-L930', 'model_delete_* are dispatched for every model.'),
+    ]),
+    new RuleDefinition('X-EVT-03', 'Observer on per-block render events', Severity::Warning, RuleStatus::Default, [
+        $b('lib/internal/Magento/Framework/View/Layout.php#L555-L571', 'core_layout_render_element is dispatched for every rendered layout element.'),
+        $b('lib/internal/Magento/Framework/View/Element/AbstractBlock.php#L666-L692', 'view_block_abstract_to_html_before/after are dispatched for every block.'),
+        $a('https://developer.adobe.com/commerce/php/best-practices/extensions/observers', 'Observers should be lightweight; they run every time their event fires.'),
+    ]),
+    new RuleDefinition('X-SEC-01', 'sections.xml invalidates all sections or on every POST', Severity::Error, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/cache/page/private-content', 'Explains action-to-section invalidation in sections.xml.'),
+        $b('app/code/Magento/Customer/view/frontend/web/js/section-config.js#L37-L54', 'Sections configured for "*" are invalidated on every POST; "*" as section means all sections.'),
+        $b('app/code/Magento/Customer/CustomerData/SectionConfigConverter.php#L18-L35', 'An action without sections is converted to "invalidate all".'),
+    ]),
+    new RuleDefinition('X-MQ-01', 'Message queue topic synchronous by default', Severity::Warning, RuleStatus::Default, [
+        $b('lib/internal/Magento/Framework/Communication/Config/Reader/XmlReader/Converter.php#L127-L153', 'Topics are synchronous unless is_synchronous="false".'),
+        $b('lib/internal/Magento/Framework/MessageQueue/Rpc/Publisher.php#L105-L125', 'The AMQP RPC publisher waits for the reply.'),
+        $a('https://developer.adobe.com/commerce/php/development/components/message-queues/configuration', 'Documents is_synchronous on topics.'),
+    ]),
+    new RuleDefinition('X-IDX-01', 'Indexer without an mview subscription', Severity::Warning, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/components/indexing/custom-indexer', 'A custom indexer declares its mview view to support Update by Schedule.'),
+        $b('lib/internal/Magento/Framework/Mview/View.php#L185-L189', 'Loading a view that is not declared throws an exception.'),
+    ]),
+    new RuleDefinition('X-DB-01', 'db_schema.xml table without a primary key', Severity::Error, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/best-practices/extensions/security', 'Tables must have a primary key.'),
+    ]),
 ];

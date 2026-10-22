@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<config>
+    <indexer id="acme_missing" view_id="acme_missing" class="Acme\Rules\Model\Indexer\Missing"/>
+    <indexer id="acme_promo_rule" view_id="acme_promo_rule" class="Acme\Rules\Model\Indexer\Rule"/>
+</config>

@@ -15,7 +15,13 @@ use MagentoPerfRules\Report\SarifReporter;
 use MagentoPerfRules\Report\TableReporter;
 use MagentoPerfRules\Rule\RuleRegistry;
 use MagentoPerfRules\Xml\FileDiscovery;
+use MagentoPerfRules\Xml\Rule\EntityHandleTtlRule;
+use MagentoPerfRules\Xml\Rule\IndexerWithoutMviewRule;
 use MagentoPerfRules\Xml\Rule\NonCacheableBlockRule;
+use MagentoPerfRules\Xml\Rule\ObserverEventRule;
+use MagentoPerfRules\Xml\Rule\SectionInvalidationRule;
+use MagentoPerfRules\Xml\Rule\SynchronousTopicRule;
+use MagentoPerfRules\Xml\Rule\TableWithoutPrimaryKeyRule;
 use MagentoPerfRules\Xml\XmlAnalyzer;
 use Throwable;
 
@@ -103,9 +109,19 @@ final class Application
         $includeTests = $options->includeTests || ($config->includeTests ?? false);
 
         // Built once here; PHPStan workers then read the cached index.
-        (new ProjectIndexBuilder())->build($options->projectRoot);
+        $index = (new ProjectIndexBuilder())->build($options->projectRoot);
 
-        $xmlRules = [new NonCacheableBlockRule($config->allowlistHandles, $config->replaceAllowlist)];
+        $xmlRules = [
+            new NonCacheableBlockRule($config->allowlistHandles, $config->replaceAllowlist),
+            new EntityHandleTtlRule(),
+            ObserverEventRule::loadAfter(),
+            ObserverEventRule::genericModelEvents(),
+            ObserverEventRule::renderEvents(),
+            new SectionInvalidationRule(),
+            new SynchronousTopicRule(),
+            new IndexerWithoutMviewRule($index),
+            new TableWithoutPrimaryKeyRule($index),
+        ];
         $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests), $xmlRules))->analyze($paths);
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
             ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests);
