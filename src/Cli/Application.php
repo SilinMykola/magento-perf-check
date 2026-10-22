@@ -9,7 +9,9 @@ use MagentoPerfRules\Config\ConfigLoader;
 use MagentoPerfRules\PhpStan\Runner\PhpStanRunner;
 use MagentoPerfRules\Project\ProjectIndexBuilder;
 use MagentoPerfRules\Report\AnalysisResult;
+use MagentoPerfRules\Report\CheckstyleReporter;
 use MagentoPerfRules\Report\JsonReporter;
+use MagentoPerfRules\Report\SarifReporter;
 use MagentoPerfRules\Report\TableReporter;
 use MagentoPerfRules\Rule\RuleRegistry;
 use MagentoPerfRules\Xml\FileDiscovery;
@@ -77,7 +79,12 @@ final class Application
         }
 
         $registry = new RuleRegistry();
-        $reporter = $options->format === 'json' ? new JsonReporter($registry) : new TableReporter($registry);
+        $reporter = match ($options->format) {
+            'json' => new JsonReporter($registry),
+            'sarif' => new SarifReporter($registry),
+            'checkstyle' => new CheckstyleReporter(),
+            default => new TableReporter($registry),
+        };
         fwrite($this->stdout, $reporter->render($result));
 
         return $result->hasFindingsAtLeast($options->failOn) ? self::EXIT_FINDINGS : self::EXIT_CLEAN;

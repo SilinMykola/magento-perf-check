@@ -42,8 +42,8 @@ Each group may be committed on its own once its tasks are done.
 
 ## 5. Output formats
 
-- [ ] 5.1 Implement the SARIF 2.1.0 reporter (design D13). Verify: the "SARIF output" scenario test passes, and the output validates against the SARIF 2.1.0 JSON schema, a test fixture downloaded once and stored with its source URL.
-- [ ] 5.2 Implement the Checkstyle reporter. Verify: the "Checkstyle output" scenario test passes, and the XML is well-formed with escaped messages.
+- [x] 5.1 Implement the SARIF 2.1.0 reporter (design D13). Verify: the "SARIF output" scenario test passes, and the output validates against the SARIF 2.1.0 JSON schema, a test fixture downloaded once and stored with its source URL.
+- [x] 5.2 Implement the Checkstyle reporter. Verify: the "Checkstyle output" scenario test passes, and the XML is well-formed with escaped messages.
 
 ## 6. Collection rules
 

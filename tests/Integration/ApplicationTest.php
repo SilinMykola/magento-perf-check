@@ -117,7 +117,7 @@ final class ApplicationTest extends TestCase
 
         self::assertSame(Application::EXIT_ERROR, $exitCode);
         self::assertSame('', $stdout);
-        self::assertStringContainsString('Supported formats: table, json.', $stderr);
+        self::assertStringContainsString('Supported formats: table, json, sarif, checkstyle.', $stderr);
     }
 
     public function testPhpStanCrashExitsWithTwo(): void
@@ -249,5 +249,19 @@ final class ApplicationTest extends TestCase
 
         self::assertSame(Application::EXIT_ERROR, $exitCode);
         self::assertStringContainsString('does not exist', $stderr);
+    }
+
+    public function testSarifAndCheckstyleOnStdout(): void
+    {
+        [$exitCode, $stdout] = $this->runCommand(['--format=sarif']);
+        self::assertSame(Application::EXIT_FINDINGS, $exitCode);
+        $sarif = json_decode($stdout, true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($sarif);
+        self::assertSame('2.1.0', $sarif['version']);
+
+        [, $stdout] = $this->runCommand(['--format=checkstyle']);
+        $document = new \DOMDocument();
+        self::assertTrue($document->loadXML($stdout));
+        self::assertSame(3, $document->getElementsByTagName('error')->length);
     }
 }
