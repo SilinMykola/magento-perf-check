@@ -145,4 +145,9 @@ return [
     new RuleDefinition('X-DB-01', 'db_schema.xml table without a primary key', Severity::Error, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/best-practices/extensions/security', 'Tables must have a primary key.'),
     ]),
+    new RuleDefinition('X-GQL-01', 'GraphQL Query field with @cache but no cacheIdentity', Severity::Error, RuleStatus::Default, [
+        $b('app/code/Magento/GraphQlCache/Model/CacheableQueryHandler.php#L59-L85', 'A field with @cache but without cacheIdentity marks the whole query as not cacheable.'),
+        $b('app/code/Magento/GraphQlCache/Model/Plugin/Query/Resolver.php#L43-L82', 'The resolver plugin collects cache tags only through the field\'s identity class.'),
+        $a('https://developer.adobe.com/commerce/webapi/graphql/develop/identity-class', 'Cacheable queries need an identity class that returns the cache tags.'),
+    ]),
 ];

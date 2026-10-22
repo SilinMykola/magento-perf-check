@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace MagentoPerfRules\Xml;
 
 use DOMComment;
+use GraphQL\Error\SyntaxError;
+use GraphQL\Language\AST\DocumentNode;
+use GraphQL\Language\Parser;
 use DOMDocument;
 use DOMText;
 use MagentoPerfRules\Report\Finding;
@@ -13,7 +16,7 @@ use MagentoPerfRules\Report\Notice;
 final class XmlAnalyzer
 {
     /**
-     * @param list<XmlRule> $rules
+     * @param list<XmlRule|GraphQlRule> $rules
      */
     public function __construct(
         private readonly FileDiscovery $discovery,
@@ -30,7 +33,21 @@ final class XmlAnalyzer
         $notices = [];
         $analyzed = 0;
         foreach ($this->discovery->discover($paths) as $file) {
-            $rules = array_values(array_filter($this->rules, static fn (XmlRule $rule): bool => $rule->appliesTo($file)));
+            if ($file->kind === XmlFile::KIND_GRAPHQL) {
+                $graphQlRules = array_values(array_filter($this->rules, static fn ($rule): bool => $rule instanceof GraphQlRule));
+                $schema = $graphQlRules === [] ? null : $this->parseSchema($file, $notices);
+                if ($schema !== null) {
+                    ++$analyzed;
+                    foreach ($graphQlRules as $rule) {
+                        array_push($findings, ...$rule->check($file, $schema));
+                    }
+                }
+                continue;
+            }
+            $rules = array_values(array_filter(
+                $this->rules,
+                static fn ($rule): bool => $rule instanceof XmlRule && $rule->appliesTo($file),
+            ));
             if ($rules === []) {
                 continue;
             }
@@ -49,6 +66,27 @@ final class XmlAnalyzer
         }
 
         return new XmlAnalysisResult($findings, $notices, $analyzed);
+    }
+
+    /**
+     * @param list<Notice> $notices
+     */
+    private function parseSchema(XmlFile $file, array &$notices): ?DocumentNode
+    {
+        $content = @file_get_contents($file->absolutePath);
+        if ($content === false) {
+            $notices[] = new Notice('graphql', 'File is not readable', $file->relativePath);
+
+            return null;
+        }
+        try {
+            return Parser::parse($content);
+        } catch (SyntaxError $e) {
+            $location = $e->getLocations()[0] ?? null;
+            $notices[] = new Notice('graphql', $e->getMessage(), $file->relativePath, $location?->line);
+
+            return null;
+        }
     }
 
     /**

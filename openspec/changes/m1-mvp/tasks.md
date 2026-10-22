@@ -93,8 +93,8 @@ Each group may be committed on its own once its tasks are done.
 
 ## 12. GraphQL
 
-- [ ] 12.1 Implement GraphQL schema loading with webonyx (design D12), with notices for unparsable files. Implement X-GQL-01 (the `cacheIdentity` half). Verify: per definition of done, plus the "Unparsable schema files" scenario.
-- [ ] 12.2 Write ADR 0006 (GraphQL parser dependency). Verify: the file exists and cites the per-version webonyx constraints from design.md.
+- [x] 12.1 Implement GraphQL schema loading with webonyx (design D12), with notices for unparsable files. Implement X-GQL-01 (the `cacheIdentity` half). Verify: per definition of done, plus the "Unparsable schema files" scenario.
+- [x] 12.2 Write ADR 0006 (GraphQL parser dependency). Verify: the file exists and cites the per-version webonyx constraints from design.md.
 
 ## 13. Catalog and README
 

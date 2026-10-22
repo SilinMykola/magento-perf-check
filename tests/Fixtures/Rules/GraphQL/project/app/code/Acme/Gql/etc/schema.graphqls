@@ -1,0 +1,20 @@
+type Query {
+    promoBanners(
+        pageSize: Int = 10
+    ): [PromoBanner] @resolver(class: "Acme\\Gql\\Model\\Resolver\\Banners") @cache(cacheTag: "promo")
+    promoBanner(id: Int!): PromoBanner @resolver(class: "Acme\\Gql\\Model\\Resolver\\Banner") @cache(cacheIdentity: "Acme\\Gql\\Model\\Resolver\\Identity")
+    promoPreview: PromoBanner @resolver(class: "Acme\\Gql\\Model\\Resolver\\Preview") @cache(cacheable: false)
+    promoCount: Int @resolver(class: "Acme\\Gql\\Model\\Resolver\\Count")
+}
+
+extend type Query {
+    promoTags: [String] @cache(cacheTag: "promo_tags")
+}
+
+type Mutation {
+    applyPromo(code: String!): Boolean @cache(cacheTag: "promo")
+}
+
+type PromoBanner {
+    title: String @cache(cacheTag: "promo_title")
+}

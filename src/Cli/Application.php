@@ -15,6 +15,7 @@ use MagentoPerfRules\Report\SarifReporter;
 use MagentoPerfRules\Report\TableReporter;
 use MagentoPerfRules\Rule\RuleRegistry;
 use MagentoPerfRules\Xml\FileDiscovery;
+use MagentoPerfRules\Xml\Rule\CacheIdentityRule;
 use MagentoPerfRules\Xml\Rule\EntityHandleTtlRule;
 use MagentoPerfRules\Xml\Rule\IndexerWithoutMviewRule;
 use MagentoPerfRules\Xml\Rule\NonCacheableBlockRule;
@@ -121,6 +122,7 @@ final class Application
             new SynchronousTopicRule(),
             new IndexerWithoutMviewRule($index),
             new TableWithoutPrimaryKeyRule($index),
+            new CacheIdentityRule(),
         ];
         $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests), $xmlRules))->analyze($paths);
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
