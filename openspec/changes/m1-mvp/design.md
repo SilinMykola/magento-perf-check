@@ -119,6 +119,7 @@ The owner confirmed this on 2026-10-22. The other half becomes a separate experi
 ### D12. GraphQL schemas parsed with webonyx/graphql-php
 - **Dependency:** `^14.11 || ^15.0`, matching every Magento 2.4.4–2.4.9 constraint.
 - **Parsing:** `GraphQL\Language\Parser::parse()` parses SDL fragments with `extend type Query` and custom directives without schema validation. Lines come from the field node's `loc`.
+- **Magento's dialect (found in the M1 acceptance run):** 14 core schemas did not parse as plain SDL, because they use empty types and enums (`enum X {}`) and comma-separated interfaces (`implements A, B`). Magento's own `GraphQlReader` preprocesses both. `SchemaPreprocessor` does the same before parsing, without changing line numbers. All 61 non-test core schemas then parse.
 
 Alternative considered: a regex scan. Rejected: multi-line field definitions and nested arguments make it fragile.
 

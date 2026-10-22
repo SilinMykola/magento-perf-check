@@ -108,7 +108,7 @@ Each group may be committed on its own once its tasks are done.
 
 ## 14. Acceptance
 
-- [ ] 14.1 Run `magento-perf-check` on `~/projects/magento-2.4.9.ddev` twice: with default paths, and with `--paths=vendor/magento` (cold cache). Record findings per rule, notices, wall time and peak RSS in `docs/runs/m1-core.md`. Verify: exit code 0 or 1, and the test project is unchanged.
+- [x] 14.1 Run `magento-perf-check` on `~/projects/magento-2.4.9.ddev` twice: with default paths, and with `--paths=vendor/magento` (cold cache). Record findings per rule, notices, wall time and peak RSS in `docs/runs/m1-core.md`. Verify: exit code 0 or 1, and the test project is unchanged.
 - [ ] 14.2 Spot-check up to 10 core findings per new rule, and again 10 for P-COL-02 after the fixes. Mark each TP or FP with a reason in `docs/runs/m1-core.md`, and list the rules that need a fix or a severity change before M2. Verify: every rule with findings has a spot-check table.
 - [ ] 14.3 Run the full check: `composer test`, `bin/test-phpstan1`, `composer analyse`, and `openspec validate m1-mvp --strict`. Verify: all exit 0.
 

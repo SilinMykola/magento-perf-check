@@ -80,7 +80,7 @@ final class XmlAnalyzer
             return null;
         }
         try {
-            return Parser::parse($content);
+            return Parser::parse(SchemaPreprocessor::normalize($content));
         } catch (SyntaxError $e) {
             $location = $e->getLocations()[0] ?? null;
             $notices[] = new Notice('graphql', $e->getMessage(), $file->relativePath, $location?->line);

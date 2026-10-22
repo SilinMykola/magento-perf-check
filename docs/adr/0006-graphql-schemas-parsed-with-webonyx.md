@@ -21,6 +21,7 @@ Magento itself parses these files with `webonyx/graphql-php`. Its constraint in 
 - The package requires `webonyx/graphql-php: ^14.11 || ^15.0`, which is compatible with every Magento version above.
 - Schemas are parsed with `GraphQL\Language\Parser::parse()`. It accepts SDL fragments with custom directives and type extensions without schema validation.
 - Rules read the AST nodes (`ObjectTypeDefinitionNode`, `ObjectTypeExtensionNode`, field directives and arguments). These exist with the same API in 14.11 and 15.x.
+- Before parsing, `SchemaPreprocessor` brings Magento's dialect to standard SDL, as `Magento\Framework\GraphQlSchemaStitching\GraphQlReader` does: empty types and enums get a placeholder member, and `implements A, B` becomes `implements A & B`. Line numbers are preserved. Without this, 14 core schemas of Magento 2.4.9 did not parse.
 - A file that does not parse is skipped and reported as a `graphql` analysis notice.
 
 ## Consequences
