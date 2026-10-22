@@ -40,6 +40,34 @@ Exit codes:
 
 Some files cannot be analyzed, such as XML that does not parse or PHP with syntax errors. They are skipped and counted as analysis notices in the summary; `--format=json` lists them.
 
+### Configuration file
+
+Put `magento-perf-rules.neon` in the project root, or pass another file with `--config=<file>`. All keys are optional:
+
+```neon
+magentoPerf:
+    # Paths to analyze, relative to the project. --paths on the command line wins.
+    paths:
+        - app/code
+        - app/design
+    # Also analyze Test/ and dev/tests/ directories. --include-tests turns it on too.
+    includeTests: false
+    rules:
+        # Turn a rule off, or change its severity (error, warning, info).
+        P-COL-02:
+            enabled: false
+        X-LAY-01:
+            severity: warning
+    layout:
+        # Extra handle prefixes that X-LAY-01 must not report.
+        allowlistHandles:
+            - acme_account_
+        # true: use only the prefixes above instead of adding them to the default list.
+        replaceAllowlist: false
+```
+
+The tool rejects unknown keys, unknown rule IDs and invalid values with exit code 2, so a typo never silently changes the analysis. Disabled rules and severity overrides apply to XML and PHP findings alike, and to the `--fail-on` decision.
+
 ### Inside an existing PHPStan setup
 
 The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) they are picked up automatically; otherwise include `extension.neon` in your `phpstan.neon`. They report at every level. To suppress one finding, use its identifier and give a reason:

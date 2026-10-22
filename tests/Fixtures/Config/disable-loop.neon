@@ -1,0 +1,4 @@
+magentoPerf:
+    rules:
+        P-LOOP-01:
+            enabled: false

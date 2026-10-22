@@ -1,0 +1,4 @@
+magentoPerf:
+    rules:
+        X-LAY-99:
+            enabled: false

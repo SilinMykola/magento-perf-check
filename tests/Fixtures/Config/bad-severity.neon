@@ -1,0 +1,4 @@
+magentoPerf:
+    rules:
+        X-LAY-01:
+            severity: fatal

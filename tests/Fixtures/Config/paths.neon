@@ -1,0 +1,2 @@
+magentoPerf:
+    paths: [app/code]

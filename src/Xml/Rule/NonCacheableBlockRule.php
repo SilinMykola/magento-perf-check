@@ -33,6 +33,18 @@ final class NonCacheableBlockRule implements XmlRule
         'paypal_',
     ];
 
+    /** @var list<string> */
+    private readonly array $allowlist;
+
+    /**
+     * @param list<string> $extraAllowlist handle prefixes from the configuration file
+     * @param bool $replaceAllowlist use only $extraAllowlist instead of adding it to the default
+     */
+    public function __construct(array $extraAllowlist = [], bool $replaceAllowlist = false)
+    {
+        $this->allowlist = $replaceAllowlist ? $extraAllowlist : [...self::DEFAULT_ALLOWLIST, ...$extraAllowlist];
+    }
+
     public function ruleId(): string
     {
         return self::ID;
@@ -43,7 +55,7 @@ final class NonCacheableBlockRule implements XmlRule
         return $file->kind === XmlFile::KIND_LAYOUT
             && in_array($file->area, ['frontend', 'base'], true)
             && $file->handle !== null
-            && !$this->startsWithAny($file->handle, self::DEFAULT_ALLOWLIST);
+            && !$this->startsWithAny($file->handle, $this->allowlist);
     }
 
     public function check(XmlFile $file, DOMDocument $document): array

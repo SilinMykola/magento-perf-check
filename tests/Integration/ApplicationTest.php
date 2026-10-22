@@ -196,4 +196,33 @@ final class ApplicationTest extends TestCase
             'X-LAY-01 app/code/Acme/Promo/Test/Integration/_files/view/frontend/layout/default.xml:4',
         ], $this->findings(['--paths=app/code/Acme/Promo/Test']));
     }
+
+    public function testDisabledPhpRuleReportsNothing(): void
+    {
+        $findings = $this->findings(['--config=' . __DIR__ . '/../Fixtures/Config/disable-loop.neon']);
+
+        self::assertSame([], array_values(array_filter($findings, static fn (string $f): bool => str_starts_with($f, 'P-LOOP-01'))));
+        self::assertNotSame([], $findings);
+    }
+
+    public function testDowngradedRuleDoesNotFailTheRun(): void
+    {
+        [$exitCode, $stdout] = $this->runCommand(['--format=json', '--config=' . __DIR__ . '/../Fixtures/Config/downgrade-layout.neon']);
+
+        self::assertSame(Application::EXIT_CLEAN, $exitCode);
+        $report = $this->json($stdout);
+        self::assertSame(['error' => 0, 'warning' => 1, 'info' => 0], $report['summary']['bySeverity']);
+        self::assertSame('X-LAY-01', $report['findings'][0]['ruleId']);
+    }
+
+    public function testCommandLinePathsWinOverConfiguration(): void
+    {
+        [, $stdout] = $this->runCommand([
+            '--format=json',
+            '--config=' . __DIR__ . '/../Fixtures/Config/paths.neon',
+            '--paths=app/code/Acme/Warn',
+        ]);
+
+        self::assertSame(['app/code/Acme/Warn'], $this->json($stdout)['summary']['paths']);
+    }
 }

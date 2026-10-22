@@ -31,9 +31,9 @@ Each group may be committed on its own once its tasks are done.
 
 ## 3. Configuration
 
-- [ ] 3.1 Implement the loader and validator for `magento-perf-rules.neon` and `--config` (design D2). Verify: tests cover every scenario of "Configuration file location", "Configuration keys" and "Invalid configuration rejected" in `specs/configuration/spec.md`.
-- [ ] 3.2 Apply rule settings to the merged findings (design D3), and give command-line options precedence. Verify: tests cover "Rule settings apply to every analyzer" and "Command line overrides configuration"; with the severity override removed, the "Downgraded rule" test fails.
-- [ ] 3.3 Write ADR 0005 (configuration format), and document the file and its keys in `README.md`. Verify: the README example config passes the loader in a test.
+- [x] 3.1 Implement the loader and validator for `magento-perf-rules.neon` and `--config` (design D2). Verify: tests cover every scenario of "Configuration file location", "Configuration keys" and "Invalid configuration rejected" in `specs/configuration/spec.md`.
+- [x] 3.2 Apply rule settings to the merged findings (design D3), and give command-line options precedence. Verify: tests cover "Rule settings apply to every analyzer" and "Command line overrides configuration"; with the severity override removed, the "Downgraded rule" test fails.
+- [x] 3.3 Write ADR 0005 (configuration format), and document the file and its keys in `README.md`. Verify: the README example config passes the loader in a test.
 
 ## 4. Baseline
 

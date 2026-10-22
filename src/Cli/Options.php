@@ -10,9 +10,12 @@ final class Options
 {
     public const DEFAULT_PATHS = ['app/code', 'app/design'];
     public const FORMATS = ['table', 'json'];
+    public const CONFIG_FILE = 'magento-perf-rules.neon';
 
     /**
      * @param list<string> $paths relative to the project root
+     * @param bool $pathsGiven whether --paths was on the command line (it then wins over the configuration file)
+     * @param ?string $configFile absolute path of the configuration file to read, if any
      */
     public function __construct(
         public readonly string $projectRoot,
@@ -22,6 +25,8 @@ final class Options
         public readonly string $memoryLimit,
         public readonly bool $includeTests = false,
         public readonly bool $help = false,
+        public readonly bool $pathsGiven = false,
+        public readonly ?string $configFile = null,
     ) {
     }
 
@@ -39,7 +44,7 @@ final class Options
                 $values['include-tests'] = '1';
                 continue;
             }
-            if (preg_match('/^--(project|paths|format|fail-on|memory-limit)=(.*)$/s', $argument, $m) !== 1) {
+            if (preg_match('/^--(project|paths|format|fail-on|memory-limit|config)=(.*)$/s', $argument, $m) !== 1) {
                 throw new UsageException(sprintf('Unknown argument "%s". Run with --help for usage.', $argument));
             }
             $values[$m[1]] = $m[2];
@@ -47,20 +52,17 @@ final class Options
 
         $project = self::resolveProject($values['project'] ?? $cwd, $cwd);
         $paths = isset($values['paths'])
-            ? array_values(array_filter(array_map(static fn (string $p): string => trim($p, " /"), explode(',', $values['paths'])), static fn (string $p): bool => $p !== ''))
-            : self::DEFAULT_PATHS;
-        if ($paths === []) {
-            throw new UsageException('--paths is empty.');
-        }
-        if (isset($values['paths'])) {
-            foreach ($paths as $path) {
-                if (!file_exists($project . '/' . $path)) {
-                    throw new UsageException(sprintf('Path "%s" does not exist in project %s.', $path, $project));
-                }
+            ? self::resolvePaths($project, explode(',', $values['paths']), '--paths')
+            : self::defaultPaths($project);
+
+        $configFile = null;
+        if (isset($values['config'])) {
+            $configFile = str_starts_with($values['config'], '/') ? $values['config'] : $cwd . '/' . $values['config'];
+            if (!is_file($configFile)) {
+                throw new UsageException(sprintf('Configuration file %s does not exist.', $configFile));
             }
-        } else {
-            // Default paths that a project does not have (e.g. no app/design) are skipped.
-            $paths = array_values(array_filter($paths, static fn (string $p): bool => is_dir($project . '/' . $p)));
+        } elseif (is_file($project . '/' . self::CONFIG_FILE)) {
+            $configFile = $project . '/' . self::CONFIG_FILE;
         }
 
         $format = $values['format'] ?? 'table';
@@ -78,7 +80,51 @@ final class Options
             throw new UsageException('--memory-limit must look like 512M, 2G or -1.');
         }
 
-        return new self($project, $paths, $format, $failOn, $memoryLimit, isset($values['include-tests']));
+        return new self(
+            $project,
+            $paths,
+            $format,
+            $failOn,
+            $memoryLimit,
+            isset($values['include-tests']),
+            false,
+            isset($values['paths']),
+            $configFile,
+        );
+    }
+
+    /**
+     * Normalizes and checks paths given on the command line or in the configuration file.
+     *
+     * @param list<string> $paths
+     * @return list<string>
+     */
+    public static function resolvePaths(string $project, array $paths, string $origin): array
+    {
+        $paths = array_values(array_filter(
+            array_map(static fn (string $p): string => trim($p, " /"), $paths),
+            static fn (string $p): bool => $p !== '',
+        ));
+        if ($paths === []) {
+            throw new UsageException($origin . ' is empty.');
+        }
+        foreach ($paths as $path) {
+            if (!file_exists($project . '/' . $path)) {
+                throw new UsageException(sprintf('Path "%s" (%s) does not exist in project %s.', $path, $origin, $project));
+            }
+        }
+
+        return $paths;
+    }
+
+    /**
+     * Default paths that a project does not have (e.g. no app/design) are skipped.
+     *
+     * @return list<string>
+     */
+    private static function defaultPaths(string $project): array
+    {
+        return array_values(array_filter(self::DEFAULT_PATHS, static fn (string $p): bool => is_dir($project . '/' . $p)));
     }
 
     private static function resolveProject(string $project, string $cwd): string
@@ -125,6 +171,8 @@ final class Options
               --format=<format>     table (default) or json.
               --fail-on=<severity>  Exit with 1 when a finding has at least this severity:
                                     error (default), warning or info.
+              --config=<file>       Configuration file (default: magento-perf-rules.neon in the
+                                    project root, when it exists).
               --include-tests       Also analyze test code (Test/ and dev/tests/ directories),
                                     which is skipped by default.
               --memory-limit=<v>    Memory limit for PHPStan (default: 2G).

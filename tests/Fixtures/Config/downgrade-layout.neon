@@ -1,0 +1,5 @@
+magentoPerf:
+    paths: [app/code/Acme/Promo/view]
+    rules:
+        X-LAY-01:
+            severity: warning

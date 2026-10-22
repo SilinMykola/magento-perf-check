@@ -43,7 +43,7 @@ final class OptionsTest extends TestCase
     public function testMissingPath(): void
     {
         $this->expectException(UsageException::class);
-        $this->expectExceptionMessageMatches('/Path "app\/nowhere" does not exist/');
+        $this->expectExceptionMessageMatches('/Path "app\/nowhere" \(--paths\) does not exist/');
 
         Options::fromArgv(['--project=' . $this->project(), '--paths=app/code,app/nowhere'], __DIR__);
     }

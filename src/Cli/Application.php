@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MagentoPerfRules\Cli;
 
+use MagentoPerfRules\Config\ConfigLoader;
 use MagentoPerfRules\PhpStan\Runner\PhpStanRunner;
 use MagentoPerfRules\Project\ProjectIndexBuilder;
 use MagentoPerfRules\Report\AnalysisResult;
@@ -74,19 +75,27 @@ final class Application
     {
         $started = microtime(true);
         $registry = new RuleRegistry();
+        $config = (new ConfigLoader($registry))->load($options->configFile);
+
+        // Command-line options win over the configuration file.
+        $paths = $options->pathsGiven || $config->paths === null
+            ? $options->paths
+            : Options::resolvePaths($options->projectRoot, $config->paths, 'magentoPerf.paths in ' . $options->configFile);
+        $includeTests = $options->includeTests || ($config->includeTests ?? false);
+
         // Built once here; PHPStan workers then read the cached index.
         (new ProjectIndexBuilder())->build($options->projectRoot);
 
-        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $options->includeTests), [new NonCacheableBlockRule()]))
-            ->analyze($options->paths);
+        $xmlRules = [new NonCacheableBlockRule($config->allowlistHandles, $config->replaceAllowlist)];
+        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests), $xmlRules))->analyze($paths);
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
-            ->run($options->projectRoot, $options->paths, $options->memoryLimit, $options->includeTests);
+            ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests);
 
         return new AnalysisResult(
-            [...$xml->findings, ...$php->findings],
+            $config->apply([...$xml->findings, ...$php->findings]),
             [...$xml->notices, ...$php->notices],
             $options->projectRoot,
-            $options->paths,
+            $paths,
             microtime(true) - $started,
         );
     }
