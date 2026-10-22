@@ -98,13 +98,13 @@ Each group may be committed on its own once its tasks are done.
 
 ## 13. Catalog and README
 
-- [ ] 13.1 In `docs/SPEC.md`:
+- [x] 13.1 In `docs/SPEC.md`:
   - split X-GQL-01 into X-GQL-01 (`cacheIdentity`, ✅) and X-GQL-04 (Query field without `@cache`, 🧪);
   - add to the X-LAY-01 row the handles allowed by default;
   - recount the totals.
 
   Verify: a recount of the catalog rows matches the "Итого" line.
-- [ ] 13.2 Update `README.md`: the rule table with all 29 default rules and their source levels; options `--config`, `--baseline`, `--generate-baseline` and the new formats; disabling rules in a project's own PHPStan setup through `ignoreErrors`. Verify: every rule ID in the README links to an existing page.
+- [x] 13.2 Update `README.md`: the rule table with all 29 default rules and their source levels; options `--config`, `--baseline`, `--generate-baseline` and the new formats; disabling rules in a project's own PHPStan setup through `ignoreErrors`. Verify: every rule ID in the README links to an existing page.
 
 ## 14. Acceptance
 

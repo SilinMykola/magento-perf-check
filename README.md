@@ -2,7 +2,7 @@
 
 Static analysis for Magento 2 and Mage-OS performance and Full Page Cache anti-patterns. It combines type-aware PHPStan rules with checks for layout XML. Later milestones add `sections.xml`, `events.xml`, `di.xml`, GraphQL schemas, message queues and indexers.
 
-**Status:** milestone M0 (skeleton). Three rules work end to end; the full catalog and the roadmap are in [`docs/SPEC.md`](docs/SPEC.md). The package is not on Packagist yet.
+**Status:** milestone M1. All 29 rules of the default set are implemented; precision calibration (M2) is still ahead. The full catalog and the roadmap are in [`docs/SPEC.md`](docs/SPEC.md). The package is not on Packagist yet.
 
 ## Requirements
 
@@ -89,15 +89,54 @@ The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer
 // @phpstan-ignore magentoPerf.loopModelLoad (the caller passes at most 3 ids)
 ```
 
+To turn a rule off in your own PHPStan setup, ignore its identifier (the identifiers are listed on the rule pages):
+
+```neon
+parameters:
+    ignoreErrors:
+        -
+            identifier: magentoPerf.loopSave
+```
+
+The XML rules and `magento-perf-rules.neon` only apply when you run `magento-perf-check`. To analyze templates in your own setup, add `phtml` to PHPStan's `fileExtensions`.
+
 PHPStan types collections created through generated factories only when `generated/code` exists or [bitexpert/phpstan-magento](https://github.com/bitExpert/phpstan-magento) is installed. Without either, such calls are skipped rather than reported ([ADR 2](docs/adr/0002-bitexpert-phpstan-magento-as-suggestion.md)).
 
 ## Rules
 
+All 29 rules of the default set (✅ in the [SPEC catalog](docs/SPEC.md)). Each links to its page with examples, suppression and the sources it rests on. Rules marked ⏳ (after calibration) and 🧪 (experimental) in the catalog are not implemented yet.
+
 | ID | Finds | Severity | Sources |
 |---|---|---|---|
-| [X-LAY-01](docs/rules/X-LAY-01.md) | `cacheable="false"` on a frontend layout block: every page with that handle bypasses Full Page Cache | error (`default`, `catalog_*`, `cms_*`), warning (other handles) | A, B |
-| [P-COL-02](docs/rules/P-COL-02.md) | `getFirstItem()` on a DB collection without `setPageSize()`: the query has no `LIMIT` | error | B |
-| [P-LOOP-01](docs/rules/P-LOOP-01.md) | Model `load()` or repository `get()`/`getById()` inside a loop | error | A, B |
+| [X-LAY-01](docs/rules/X-LAY-01.md) | Block with cacheable="false" in a frontend layout | error (`default`, `catalog_*`, `cms_*`), warning (other handles) | A, B |
+| [X-LAY-02](docs/rules/X-LAY-02.md) | ESI ttl on a block in an entity-specific handle | error | A, B |
+| [P-LOOP-01](docs/rules/P-LOOP-01.md) | Model load() or repository get()/getById() inside a loop | error | A, B |
+| [P-LOOP-02](docs/rules/P-LOOP-02.md) | Collection created and loaded inside a loop | error | A, B |
+| [P-LOOP-03](docs/rules/P-LOOP-03.md) | save() or delete() of a model or repository inside a loop | warning | A, B |
+| [P-LOOP-07](docs/rules/P-LOOP-07.md) | Composite product type methods inside a loop | warning | B |
+| [P-COL-01](docs/rules/P-COL-01.md) | count() on a database collection instead of getSize() | warning | B |
+| [P-COL-02](docs/rules/P-COL-02.md) | getFirstItem() on a database collection without setPageSize() | error | B |
+| [P-DI-01](docs/rules/P-DI-01.md) | Session or cookie manager injected without a Proxy | error (session), warning (cookie manager) | A, B |
+| [P-DI-02](docs/rules/P-DI-02.md) | Constructor does more than assign dependencies | warning | A |
+| [P-DI-03](docs/rules/P-DI-03.md) | Event dispatched in a constructor | error | A |
+| [P-DI-06](docs/rules/P-DI-06.md) | Direct ObjectManager::getInstance() in PHP classes | warning | A |
+| [P-FPC-01](docs/rules/P-FPC-01.md) | $_isScopePrivate in a block | error | A, B |
+| [P-FPC-02](docs/rules/P-FPC-02.md) | Block or view model reads customer data from the session | warning | A, B |
+| [P-FPC-05](docs/rules/P-FPC-05.md) | No-cache or private headers on cacheable requests | warning | A, B |
+| [P-FPC-06](docs/rules/P-FPC-06.md) | State change in a GET-only controller | error | A |
+| [P-FPC-09](docs/rules/P-FPC-09.md) | Full page cache or all caches cleaned from code | error | B |
+| [P-FPC-10](docs/rules/P-FPC-10.md) | reindexAll() in an observer, plugin or controller | error | A, B |
+| [P-PLG-01](docs/rules/P-PLG-01.md) | around plugin where before/after would do | warning | A |
+| [T-01](docs/rules/T-01.md) | getLayout()->createBlock() in a template | warning | A |
+| [X-EVT-01](docs/rules/X-EVT-01.md) | Observer on model_load_after or <entity>_load_after | warning | A, B |
+| [X-EVT-02](docs/rules/X-EVT-02.md) | Observer on generic model save/delete events | warning | B |
+| [X-EVT-03](docs/rules/X-EVT-03.md) | Observer on per-block render events | warning | A, B |
+| [X-SEC-01](docs/rules/X-SEC-01.md) | sections.xml invalidates all sections or on every POST | error (`name="*"`), warning (all sections) | A, B |
+| [X-GQL-01](docs/rules/X-GQL-01.md) | GraphQL Query field with @cache but no cacheIdentity | error | A, B |
+| [X-MQ-01](docs/rules/X-MQ-01.md) | Message queue topic synchronous by default | warning | A, B |
+| [X-IDX-01](docs/rules/X-IDX-01.md) | Indexer without an mview subscription | warning | A, B |
+| [X-SETUP-01](docs/rules/X-SETUP-01.md) | Heavy work in Setup/Recurring or RecurringData | warning | A, B |
+| [X-DB-01](docs/rules/X-DB-01.md) | db_schema.xml table without a primary key | error | A |
 
 ## What our rules are based on
 
