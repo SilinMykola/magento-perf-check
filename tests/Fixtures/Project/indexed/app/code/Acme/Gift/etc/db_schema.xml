@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="sales_order" resource="sales">
+        <column xsi:type="int" name="gift_id" nullable="true"/>
+    </table>
+    <table name="acme_gift_log" resource="default">
+        <column xsi:type="int" name="log_id" nullable="false"/>
+    </table>
+</schema>

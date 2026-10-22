@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MagentoPerfRules\Cli;
 
 use MagentoPerfRules\PhpStan\Runner\PhpStanRunner;
+use MagentoPerfRules\Project\ProjectIndexBuilder;
 use MagentoPerfRules\Report\AnalysisResult;
 use MagentoPerfRules\Report\JsonReporter;
 use MagentoPerfRules\Report\TableReporter;
@@ -73,6 +74,8 @@ final class Application
     {
         $started = microtime(true);
         $registry = new RuleRegistry();
+        // Built once here; PHPStan workers then read the cached index.
+        (new ProjectIndexBuilder())->build($options->projectRoot);
 
         $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $options->includeTests), [new NonCacheableBlockRule()]))
             ->analyze($options->paths);

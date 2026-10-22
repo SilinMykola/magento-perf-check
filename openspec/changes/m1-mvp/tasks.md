@@ -18,16 +18,16 @@ Each group may be committed on its own once its tasks are done.
 
 ## 2. Project index
 
-- [ ] 2.1 Implement `ProjectIndex` (design D1):
+- [x] 2.1 Implement `ProjectIndex` (design D1):
   - module discovery from `app/code` and `vendor/composer/installed.json`;
   - DI proxies per class argument, including virtual types and parent-class arguments;
   - plugin classes, observers per event, mview view IDs, and tables with a primary key;
   - fingerprinted cache in the temp directory.
 
   Verify: unit tests on a fixture project cover every scenario in `specs/project-index/spec.md`, including the cache rebuild after a `di.xml` change.
-- [ ] 2.2 Expose the index to PHP rules through the `magentoPerf.projectRoot` parameter and a lazily loaded service. The runner builds the index before PHPStan starts. Verify: tests cover both "Project index available to PHP rules" scenarios in `specs/phpstan-extension/spec.md`.
-- [ ] 2.3 Time the index build on `~/projects/magento-2.4.9.ddev`, cold and cached. Verify: both times are recorded for `docs/runs/m1-core.md`, and the test project is unchanged (`find -newer` marker).
-- [ ] 2.4 Write ADR 0004 (project index). Verify: the file exists with Context, Decision and Consequences, and cites the measured build time.
+- [x] 2.2 Expose the index to PHP rules through the `magentoPerf.projectRoot` parameter and a lazily loaded service. The runner builds the index before PHPStan starts. Verify: tests cover both "Project index available to PHP rules" scenarios in `specs/phpstan-extension/spec.md`.
+- [x] 2.3 Time the index build on `~/projects/magento-2.4.9.ddev`, cold and cached. Verify: both times are recorded for `docs/runs/m1-core.md`, and the test project is unchanged (`find -newer` marker).
+- [x] 2.4 Write ADR 0004 (project index). Verify: the file exists with Context, Decision and Consequences, and cites the measured build time.
 
 ## 3. Configuration
 

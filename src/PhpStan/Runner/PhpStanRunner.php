@@ -146,7 +146,7 @@ final class PhpStanRunner
             'scanDirectories' => $scanDirectories,
             'tmpDir' => $cacheDir,
             'reportUnmatchedIgnoredErrors' => false,
-            'magentoPerf' => ['reportUntypedReceivers' => true],
+            'magentoPerf' => ['reportUntypedReceivers' => true, 'projectRoot' => $projectRoot],
         ];
 
         // NEON is a superset of JSON for these values.

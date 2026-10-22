@@ -2,13 +2,20 @@ parameters:
     magentoPerf:
         # Set by magento-perf-check to count getFirstItem() calls it could not type.
         reportUntypedReceivers: false
+        # Magento project whose configuration (di.xml, events.xml, ...) rules may consult.
+        projectRoot: %currentWorkingDirectory%
 
 parametersSchema:
     magentoPerf: structure([
         reportUntypedReceivers: bool()
+        projectRoot: string()
     ])
 
 services:
+    -
+        class: MagentoPerfRules\PhpStan\ProjectIndexProvider
+        arguments:
+            projectRoot: %magentoPerf.projectRoot%
     -
         class: MagentoPerfRules\PhpStan\LoopContextVisitor
         tags:

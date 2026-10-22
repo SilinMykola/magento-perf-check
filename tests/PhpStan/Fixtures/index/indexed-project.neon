@@ -1,0 +1,3 @@
+parameters:
+    magentoPerf:
+        projectRoot: %rootDir%/../../../tests/Fixtures/Project/indexed
