@@ -1,0 +1,9 @@
+<?php
+/** @var \Magento\Framework\View\Element\Template $block */
+?>
+<ul>
+    <?php foreach ($block->getItems() as $item): ?>
+        <li><?= $item->load($item->getId())->getName() ?></li>
+    <?php endforeach; ?>
+</ul>
+<?= $block->getLayout()->createBlock(\Acme\Tpl\Block\Footer::class)->toHtml() ?>

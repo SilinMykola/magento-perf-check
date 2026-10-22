@@ -77,9 +77,9 @@ Each group may be committed on its own once its tasks are done.
 
 ## 10. Plugins, templates, setup
 
-- [ ] 10.1 Implement P-PLG-01 and plugin class detection. Verify: per definition of done.
-- [ ] 10.2 Add `phtml` to the runner's `fileExtensions` (design D8), and implement T-01. Verify: per definition of done, plus both "Template analysis" scenarios in `specs/phpstan-extension/spec.md`.
-- [ ] 10.3 Implement X-SETUP-01. Verify: per definition of done.
+- [x] 10.1 Implement P-PLG-01 and plugin class detection. Verify: per definition of done.
+- [x] 10.2 Add `phtml` to the runner's `fileExtensions` (design D8), and implement T-01. Verify: per definition of done, plus both "Template analysis" scenarios in `specs/phpstan-extension/spec.md`.
+- [x] 10.3 Implement X-SETUP-01. Verify: per definition of done.
 
 ## 11. Layout and XML configuration rules
 

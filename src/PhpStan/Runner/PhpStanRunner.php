@@ -140,6 +140,8 @@ final class PhpStanRunner
         $parameters = [
             // Only this package's rules run; PHPStan's built-in level rules stay off.
             'customRulesetUsed' => true,
+            // Templates are analyzed too (T-01 and every rule that applies to code in them).
+            'fileExtensions' => ['php', 'phtml'],
             'paths' => $paths,
             'excludePaths' => ['analyse' => $excludePaths],
             'bootstrapFiles' => [$projectRoot . '/vendor/autoload.php'],

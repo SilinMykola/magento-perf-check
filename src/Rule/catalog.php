@@ -100,4 +100,14 @@ return [
         $a('https://developer.adobe.com/commerce/php/development/components/indexing/', 'Update on Save indexers reindex the changed entities through plugins or events.'),
         $b('app/code/Magento/Indexer/Model/Indexer.php#L452-L494', 'reindexAll() rebuilds the whole index synchronously.'),
     ], ['magentoPerf.fullReindex' => null]),
+    new RuleDefinition('P-PLG-01', 'around plugin where before/after would do', Severity::Warning, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/components/plugins', 'Avoid using around method plugins when they are not required, because they increase stack traces and affect performance.'),
+    ], ['magentoPerf.unnecessaryAroundPlugin' => null]),
+    new RuleDefinition('T-01', 'getLayout()->createBlock() in a template', Severity::Warning, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 6.2.6: "Templates MUST NOT instantiate objects. All objects MUST be passed from the Block objects."'),
+    ], ['magentoPerf.createBlockInTemplate' => null]),
+    new RuleDefinition('X-SETUP-01', 'Heavy work in Setup/Recurring or RecurringData', Severity::Warning, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/prepare/extension-lifecycle', 'The Recurring schema class runs after every schema installation or upgrade stage; RecurringData after every data stage.'),
+        $b('setup/src/Magento/Setup/Model/Installer.php#L1159-L1174', 'The installer runs the Recurring script of every module.'),
+    ], ['magentoPerf.heavyRecurringSetup' => null]),
 ];

@@ -1,0 +1,7 @@
+<?php
+/** @var \Magento\Framework\View\Element\Template $block */
+?>
+<div class="promo">
+    <?= $block->getLayout()->createBlock(\Acme\Promo\Block\Badge::class)->toHtml() ?>
+    <?= $block->getChildHtml('badge') ?>
+</div>

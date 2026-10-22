@@ -51,3 +51,6 @@ rules:
     - MagentoPerfRules\PhpStan\Rule\StateChangeOnGetRule
     - MagentoPerfRules\PhpStan\Rule\CacheCleanRule
     - MagentoPerfRules\PhpStan\Rule\FullReindexRule
+    - MagentoPerfRules\PhpStan\Rule\AroundPluginRule
+    - MagentoPerfRules\PhpStan\Rule\CreateBlockInTemplateRule
+    - MagentoPerfRules\PhpStan\Rule\RecurringSetupRule

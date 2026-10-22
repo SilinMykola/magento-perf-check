@@ -264,4 +264,24 @@ final class ApplicationTest extends TestCase
         self::assertTrue($document->loadXML($stdout));
         self::assertSame(3, $document->getElementsByTagName('error')->length);
     }
+
+    public function testTemplatesAreAnalyzed(): void
+    {
+        $stdout = fopen('php://memory', 'w+');
+        $stderr = fopen('php://memory', 'w+');
+        self::assertIsResource($stdout);
+        self::assertIsResource($stderr);
+        $project = realpath(__DIR__ . '/../Fixtures/Project/templates');
+        self::assertIsString($project);
+
+        (new Application(null, $stdout, $stderr))->run(['--project=' . $project, '--format=json'], __DIR__);
+        rewind($stdout);
+        $report = $this->json((string) stream_get_contents($stdout));
+
+        // T-01 runs on templates; the untyped $item->load() inside the loop is not reported.
+        self::assertSame(
+            ['T-01 app/code/Acme/Tpl/view/frontend/templates/list.phtml:9'],
+            array_map(static fn (array $f): string => sprintf('%s %s:%d', $f['ruleId'], $f['file'], $f['line']), $report['findings']),
+        );
+    }
 }

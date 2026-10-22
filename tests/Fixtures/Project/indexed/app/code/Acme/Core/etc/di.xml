@@ -13,5 +13,6 @@
     </virtualType>
     <type name="Magento\Checkout\Model\Cart">
         <plugin name="acme_cart" type="Acme\Promo\Plugin\CartPlugin"/>
+        <plugin name="acme_price" type="Acme\Promo\Model\PriceModifier"/>
     </type>
 </config>
