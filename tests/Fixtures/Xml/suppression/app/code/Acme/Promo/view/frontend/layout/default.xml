@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<page>
+    <body>
+        <!-- perf-ignore X-LAY-01: payment return page must not be cached -->
+        <block class="Magento\Framework\View\Element\Template" name="suppressed" cacheable="false"/>
+
+        <!-- perf-ignore X-LAY-02: unrelated rule -->
+        <block class="Magento\Framework\View\Element\Template" name="other.rule" cacheable="false"/>
+
+        <!-- perf-ignore X-LAY-01 -->
+        <block class="Magento\Framework\View\Element\Template" name="no.reason" cacheable="false"/>
+
+        <!-- perf-ignore X-LAY-01: not adjacent -->
+        <container name="between"/>
+        <block class="Magento\Framework\View\Element\Template" name="not.adjacent" cacheable="false"/>
+
+        <!-- perf-ignore X-LAY-02: first of two -->
+        <!-- perf-ignore X-LAY-01: two comments in a row -->
+        <block class="Magento\Framework\View\Element\Template" name="two.comments" cacheable="false"/>
+    </body>
+</page>

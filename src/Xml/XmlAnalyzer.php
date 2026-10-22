@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace MagentoPerfRules\Xml;
 
+use DOMComment;
 use DOMDocument;
+use DOMText;
+use MagentoPerfRules\Report\Finding;
 use MagentoPerfRules\Report\Notice;
 
 final class XmlAnalyzer
@@ -37,7 +40,11 @@ final class XmlAnalyzer
             }
             ++$analyzed;
             foreach ($rules as $rule) {
-                array_push($findings, ...$rule->check($file, $document));
+                foreach ($rule->check($file, $document) as $finding) {
+                    if (!$this->isSuppressed($finding, $notices)) {
+                        $findings[] = $finding;
+                    }
+                }
             }
         }
 
@@ -75,5 +82,44 @@ final class XmlAnalyzer
         }
 
         return $document;
+    }
+
+    /**
+     * True when the element is directly preceded (ignoring whitespace and other
+     * perf-ignore comments) by "<!-- perf-ignore RULE-ID: reason -->". A matching
+     * comment without a reason suppresses nothing and is recorded as a notice.
+     *
+     * @param list<Notice> $notices
+     */
+    private function isSuppressed(Finding $finding, array &$notices): bool
+    {
+        $node = $finding->element?->previousSibling;
+        while ($node !== null) {
+            if ($node instanceof DOMText && trim($node->data) === '') {
+                $node = $node->previousSibling;
+                continue;
+            }
+            if (!$node instanceof DOMComment
+                || preg_match('/^\s*perf-ignore\s+([A-Z]-[A-Z]+-\d+)\s*(?::\s*(.*?))?\s*$/s', $node->data, $m) !== 1
+            ) {
+                return false;
+            }
+            if ($m[1] === $finding->ruleId) {
+                if (($m[2] ?? '') !== '') {
+                    return true;
+                }
+                $notices[] = new Notice(
+                    'suppression',
+                    sprintf('perf-ignore %s without a reason; the finding is still reported', $m[1]),
+                    $finding->file,
+                    $node->getLineNo(),
+                );
+
+                return false;
+            }
+            $node = $node->previousSibling;
+        }
+
+        return false;
     }
 }

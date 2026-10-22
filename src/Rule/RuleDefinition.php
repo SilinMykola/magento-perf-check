@@ -8,6 +8,7 @@ final class RuleDefinition
 {
     /**
      * @param non-empty-list<Source> $sources
+     * @param array<string, Severity|null> $identifiers PHPStan identifiers of a PHP rule; null means the rule's severity
      */
     public function __construct(
         public readonly string $id,
@@ -15,6 +16,7 @@ final class RuleDefinition
         public readonly Severity $severity,
         public readonly RuleStatus $status,
         public readonly array $sources,
+        public readonly array $identifiers = [],
     ) {
     }
 

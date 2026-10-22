@@ -246,9 +246,9 @@ final class PhpStanRunner
                     $unparsable[$this->stripContext($file)][] = new Notice('phpstan-parse', $text, $relative, $line);
                     continue;
                 }
-                $rule = preg_match('/^\[([A-Z]-[A-Z]+-\d+)\] /', $text, $m) === 1 ? $this->registry->find($m[1]) : null;
-                if ($rule !== null) {
-                    $findings[] = new Finding($rule->id, $rule->severity, $relative, $line, $text);
+                $match = $this->ruleFor($message['identifier'] ?? null, $text);
+                if ($match !== null) {
+                    $findings[] = new Finding($match[0]->id, $match[1], $relative, $line, $text);
                 } elseif (str_starts_with($text, GetFirstItemWithoutLimitRule::UNTYPED_NOTICE_PREFIX)) {
                     $notices[] = new Notice('untyped-receiver', $text, $relative, $line);
                 } else {
@@ -261,6 +261,29 @@ final class PhpStanRunner
         }
 
         return ['findings' => $findings, 'notices' => $notices, 'unparsable' => $unparsable];
+    }
+
+    /**
+     * By identifier (which also gives the severity of a variant), falling back to the
+     * "[RULE-ID]" message prefix.
+     *
+     * @return array{\MagentoPerfRules\Rule\RuleDefinition, \MagentoPerfRules\Rule\Severity}|null
+     */
+    private function ruleFor(?string $identifier, string $text): ?array
+    {
+        if ($identifier !== null) {
+            $match = $this->registry->findByIdentifier($identifier);
+            if ($match !== null) {
+                return $match;
+            }
+        }
+        if (preg_match('/^\[([A-Z]-[A-Z]+-\d+)\] /', $text, $m) === 1) {
+            $rule = $this->registry->find($m[1]);
+
+            return $rule !== null ? [$rule, $rule->severity] : null;
+        }
+
+        return null;
     }
 
     private function relative(string $file, string $projectRoot): string

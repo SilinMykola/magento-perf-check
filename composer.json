@@ -15,7 +15,9 @@
         "ext-dom": "*",
         "ext-json": "*",
         "ext-libxml": "*",
-        "phpstan/phpstan": "^1.12 || ^2.0"
+        "nette/neon": "^3.4",
+        "phpstan/phpstan": "^1.12 || ^2.0",
+        "webonyx/graphql-php": "^14.11 || ^15.0"
     },
     "require-dev": {
         "phpstan/extension-installer": "^1.4",

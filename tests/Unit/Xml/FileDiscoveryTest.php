@@ -115,4 +115,21 @@ final class FileDiscoveryTest extends TestCase
             self::assertStringStartsWith('app/', $path);
         }
     }
+
+    public function testGraphQlSchema(): void
+    {
+        $file = $this->discover(['app/code'])['app/code/Acme/Promo/etc/schema.graphqls'];
+
+        self::assertSame(XmlFile::KIND_GRAPHQL, $file->kind);
+        self::assertSame('graphql', $file->area);
+        self::assertSame('Acme_Promo', $file->module);
+    }
+
+    public function testFrontendSections(): void
+    {
+        $file = $this->discover(['app/code'])['app/code/Acme/Promo/etc/frontend/sections.xml'];
+
+        self::assertSame(XmlFile::KIND_CONFIG, $file->kind);
+        self::assertSame('frontend', $file->area);
+    }
 }

@@ -8,6 +8,7 @@ final class XmlFile
 {
     public const KIND_LAYOUT = 'layout';
     public const KIND_CONFIG = 'config';
+    public const KIND_GRAPHQL = 'graphql';
 
     /**
      * @param self::KIND_* $kind

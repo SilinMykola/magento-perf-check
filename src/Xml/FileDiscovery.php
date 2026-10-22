@@ -81,7 +81,7 @@ final class FileDiscovery
     private function xmlFilesUnder(string $absolute): iterable
     {
         if (is_file($absolute)) {
-            if (str_ends_with($absolute, '.xml')) {
+            if (str_ends_with($absolute, '.xml') || str_ends_with($absolute, '.graphqls')) {
                 yield $absolute;
             }
 
@@ -95,7 +95,7 @@ final class FileDiscovery
         );
         /** @var SplFileInfo $info */
         foreach ($iterator as $info) {
-            if ($info->isFile() && $info->getExtension() === 'xml') {
+            if ($info->isFile() && in_array($info->getExtension(), ['xml', 'graphqls'], true)) {
                 yield $info->getPathname();
             }
         }
@@ -125,6 +125,18 @@ final class FileDiscovery
             }
 
             return new XmlFile($absolute, $relative, XmlFile::KIND_LAYOUT, $area, $m[2], $handle);
+        }
+
+        // GraphQL schema: <module>/etc/<file>.graphqls
+        if (preg_match('#/etc/[^/]+\.graphqls$#', $absolute) === 1) {
+            $module = $this->moduleFromModuleXml(dirname($absolute, 2));
+
+            return $module === null
+                ? null
+                : new XmlFile($absolute, $relative, XmlFile::KIND_GRAPHQL, 'graphql', $module, null);
+        }
+        if (str_ends_with($absolute, '.graphqls')) {
+            return null;
         }
 
         // Module config: <module>/etc/<file>.xml or <module>/etc/<area>/<file>.xml

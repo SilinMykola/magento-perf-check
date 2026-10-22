@@ -71,6 +71,7 @@ final class NonCacheableBlockRule implements XmlRule
                     $name !== '' ? $name : $block->getAttribute('class'),
                     $handle,
                 ),
+                $block,
             );
         }
 
