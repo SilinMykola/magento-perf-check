@@ -1,0 +1,88 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Draws up to 30 findings per default rule from docs/calibration/runs/*.json and writes
+ * one grading file per rule to docs/calibration/graded/<RULE>.md (design D2).
+ * Existing grading files are kept unless --force is given.
+ */
+
+require __DIR__ . '/../../vendor/autoload.php';
+
+use MagentoPerfRules\Rule\RuleRegistry;
+use MagentoPerfRules\Rule\RuleStatus;
+
+const ROOT = __DIR__ . '/../..';
+const SEED = 20261023;
+const SAMPLE_SIZE = 30;
+const RECHECK = 3;
+const CONTEXT_LINES = 6;
+
+$force = in_array('--force', $argv, true);
+$runsDir = ROOT . '/docs/calibration/runs';
+$gradedDir = ROOT . '/docs/calibration/graded';
+if (!is_dir($gradedDir)) {
+    mkdir($gradedDir, 0777, true);
+}
+
+$findings = [];
+foreach (glob($runsDir . '/*.json') ?: [] as $file) {
+    if (str_ends_with($file, '.meta.json')) {
+        continue;
+    }
+    $run = basename($file, '.json');
+    $meta = json_decode((string) file_get_contents($runsDir . '/' . $run . '.meta.json'), true, 512, JSON_THROW_ON_ERROR);
+    $report = json_decode((string) file_get_contents($file), true, 512, JSON_THROW_ON_ERROR);
+    foreach ($report['findings'] as $finding) {
+        if (str_contains($finding['file'], '-sample-data/')) {
+            continue;
+        }
+        $finding['run'] = $run;
+        $finding['project'] = ROOT . '/' . $meta['project'];
+        $findings[$finding['ruleId']][] = $finding;
+    }
+}
+
+$registry = new RuleRegistry();
+$written = 0;
+foreach ($registry->all() as $rule) {
+    if ($rule->status !== RuleStatus::Default || !isset($findings[$rule->id])) {
+        continue;
+    }
+    $target = $gradedDir . '/' . $rule->id . '.md';
+    if (is_file($target) && !$force) {
+        continue;
+    }
+    $all = $findings[$rule->id];
+    usort($all, static fn (array $a, array $b): int => [$a['run'], $a['file'], $a['line'], $a['message']] <=> [$b['run'], $b['file'], $b['line'], $b['message']]);
+    // Seeded Fisher-Yates shuffle: the same runs and seed always give the same sample.
+    mt_srand(SEED);
+    for ($i = count($all) - 1; $i > 0; --$i) {
+        $j = mt_rand(0, $i);
+        [$all[$i], $all[$j]] = [$all[$j], $all[$i]];
+    }
+    $sample = array_slice($all, 0, SAMPLE_SIZE);
+
+    $out = sprintf("# %s: calibration sample\n\n", $rule->id);
+    $out .= sprintf("%d of %d findings (seed %d). Verdicts: TP, TP-low, FP, unclear. ", count($sample), count($all), SEED);
+    $out .= sprintf("Rows marked `re-check` are for the owner: put `✓` in the owner column, or `was <verdict>` after changing the verdict.\n\n");
+    foreach ($sample as $n => $finding) {
+        $out .= sprintf("## %d. `%s:%d` (%s)\n\n%s\n\n", $n + 1, $finding['file'], $finding['line'], $finding['run'], $finding['message']);
+        $lines = @file($finding['project'] . '/' . $finding['file']) ?: [];
+        $from = max(0, $finding['line'] - 1 - CONTEXT_LINES);
+        $excerpt = '';
+        for ($l = $from; $l < min(count($lines), $finding['line'] + CONTEXT_LINES); ++$l) {
+            $excerpt .= sprintf("%s%5d  %s", $l + 1 === $finding['line'] ? '>' : ' ', $l + 1, rtrim($lines[$l]) . "\n");
+        }
+        $out .= "```\n" . $excerpt . "```\n\n";
+    }
+    $out .= "## Grades\n\n| # | location | verdict | reason | recheck | owner |\n|---|---|---|---|---|---|\n";
+    foreach ($sample as $n => $finding) {
+        $out .= sprintf("| %d | `%s:%d` |  |  | %s |  |\n", $n + 1, $finding['file'], $finding['line'], $n < RECHECK ? 're-check' : '');
+    }
+    file_put_contents($target, $out);
+    ++$written;
+}
+echo "wrote $written grading files to docs/calibration/graded\n";

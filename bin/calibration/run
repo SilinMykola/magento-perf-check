@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Runs magento-perf-check on the three parts of the calibration corpus and stores the
+# JSON reports, with the tool commit, wall time and peak RSS, in docs/calibration/runs/.
+# Usage: run [core] [packagist] [mage-os]   (no argument: all three)
+set -euo pipefail
+
+root="$(cd "$(dirname "$0")/../.." && pwd)"
+out="$root/docs/calibration/runs"
+mkdir -p "$out"
+commit="$(git -C "$root" rev-parse --short HEAD)"
+
+# name|project|paths
+runs=(
+    "core|var/corpus/magento|vendor/magento"
+    "packagist|var/corpus/magento|app/code"
+    "mage-os|var/corpus/mage-os|vendor/mage-os"
+)
+
+# Optional arguments select runs by name, e.g. "run core packagist".
+selected=" $* "
+for run in "${runs[@]}"; do
+    IFS='|' read -r name project paths <<< "$run"
+    if [ $# -gt 0 ] && [[ "$selected" != *" $name "* ]]; then
+        continue
+    fi
+    start=$(date +%s)
+    php "$root/bin/magento-perf-check" --project="$root/$project" --paths="$paths" --format=json > "$out/$name.json" &
+    pid=$!
+    peak=0
+    # Sum the RSS of the command and its children (PHPStan workers) once per second.
+    while kill -0 "$pid" 2>/dev/null; do
+        pids="$pid $(pgrep -P "$pid" | tr '\n' ' ')"
+        for child in $(pgrep -P "$pid"); do pids="$pids $(pgrep -P "$child" | tr '\n' ' ')"; done
+        rss=$(ps -o rss= -p "$(echo $pids | tr ' ' ',')" 2>/dev/null | awk '{s+=$1} END {print s+0}')
+        [ "$rss" -gt "$peak" ] && peak=$rss
+        sleep 1
+    done
+    set +e; wait "$pid"; code=$?; set -e
+    if [ "$code" -gt 1 ]; then
+        echo "run $name failed with exit code $code" >&2
+        exit 2
+    fi
+    printf '{"run": "%s", "project": "%s", "paths": "%s", "toolCommit": "%s", "exitCode": %d, "wallSeconds": %d, "peakRssMb": %d, "date": "%s"}\n' \
+        "$name" "$project" "$paths" "$commit" "$code" $(( $(date +%s) - start )) $(( peak / 1024 )) "$(date +%F)" > "$out/$name.meta.json"
+    cat "$out/$name.meta.json"
+done

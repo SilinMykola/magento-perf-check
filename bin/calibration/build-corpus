@@ -1,0 +1,346 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Builds the calibration corpus under var/corpus/ (change m2-calibration, design D1).
+ *
+ *   build-corpus magento     copy of the test Magento project (read-only source)
+ *   build-corpus packagist   the 25 most-downloaded installable magento2-module packages
+ *   build-corpus mage-os     composer install of mage-os/project-community-edition
+ *   build-corpus --clean     remove var/corpus
+ *   build-corpus pick <name> show which version of a package would be taken, and why
+ *
+ * docs/calibration/corpus.json records what was built.
+ */
+
+require __DIR__ . '/../../vendor/autoload.php';
+
+use Composer\Semver\Semver;
+use Composer\Semver\VersionParser;
+
+const ROOT = __DIR__ . '/../..';
+const CORPUS = ROOT . '/var/corpus';
+const MANIFEST = ROOT . '/docs/calibration/corpus.json';
+const SOURCE_PROJECT = '/Users/mykola/projects/magento-2.4.9.ddev';
+const MODULE_COUNT = 25;
+const TARGET_PHP = '8.4.0';
+
+function fail(string $message): never
+{
+    fwrite(STDERR, "build-corpus: $message\n");
+    exit(1);
+}
+
+function run(array $command, ?string $cwd = null): string
+{
+    $process = proc_open($command, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $cwd);
+    if (!is_resource($process)) {
+        fail('cannot start ' . $command[0]);
+    }
+    $out = (string) stream_get_contents($pipes[1]);
+    $err = (string) stream_get_contents($pipes[2]);
+    if (proc_close($process) !== 0) {
+        fail(implode(' ', $command) . " failed:\n" . trim($err . "\n" . $out));
+    }
+
+    return $out;
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function manifest(): array
+{
+    if (!is_file(MANIFEST)) {
+        return ['description' => 'Calibration corpus (change m2-calibration). Rebuild with bin/calibration/build-corpus.'];
+    }
+
+    return json_decode((string) file_get_contents(MANIFEST), true, 512, JSON_THROW_ON_ERROR);
+}
+
+/**
+ * @param array<string, mixed> $manifest
+ */
+function saveManifest(array $manifest): void
+{
+    if (!is_dir(dirname(MANIFEST))) {
+        mkdir(dirname(MANIFEST), 0777, true);
+    }
+    file_put_contents(MANIFEST, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n");
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function fetchJson(string $url): array
+{
+    $context = stream_context_create(['http' => ['timeout' => 60, 'user_agent' => 'magento-perf-rules calibration']]);
+    $body = @file_get_contents($url, false, $context);
+    if ($body === false) {
+        fail("cannot fetch $url");
+    }
+
+    return json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+}
+
+/**
+ * Package name => version, from the copy's composer.lock (what modules must be compatible with).
+ *
+ * @return array<string, string>
+ */
+function installedVersions(): array
+{
+    $lock = json_decode((string) file_get_contents(CORPUS . '/magento/composer.lock'), true, 512, JSON_THROW_ON_ERROR);
+    $versions = [];
+    foreach ([...$lock['packages'], ...$lock['packages-dev']] as $package) {
+        $versions[$package['name']] = $package['version'];
+    }
+
+    return $versions;
+}
+
+function buildMagento(): void
+{
+    $marker = tempnam(sys_get_temp_dir(), 'corpus-marker');
+    if (!is_dir(CORPUS)) {
+        mkdir(CORPUS, 0777, true);
+    }
+    run([
+        'rsync', '-a', '--delete',
+        '--exclude', '/var/', '--exclude', '/pub/static/', '--exclude', '/pub/media/', '--exclude', '/.ddev/',
+        '--exclude', '/app/code/',
+        SOURCE_PROJECT . '/', CORPUS . '/magento/',
+    ]);
+    mkdir(CORPUS . '/magento/app/code', 0777, true);
+    $changed = trim(run(['find', SOURCE_PROJECT, '-newer', (string) $marker]));
+    unlink((string) $marker);
+    if ($changed !== '') {
+        fail("the source project changed during the copy:\n$changed");
+    }
+    $base = json_decode((string) file_get_contents(SOURCE_PROJECT . '/vendor/magento/magento2-base/composer.json'), true);
+    $manifest = manifest();
+    $manifest['magento'] = [
+        'source' => 'copy of ' . SOURCE_PROJECT . ' (app/code of the source left out)',
+        'version' => $base['version'] ?? 'unknown',
+        'paths' => ['vendor/magento'],
+    ];
+    saveManifest($manifest);
+    echo "magento: copied to var/corpus/magento\n";
+}
+
+/**
+ * Newest stable version of a package whose requirements the corpus satisfies.
+ *
+ * @param array<string, string> $installed
+ * @return array{0: ?array<string, mixed>, 1: string} version data or null, and the reason when null
+ */
+function pickVersion(string $name, array $installed): array
+{
+    $data = fetchJson('https://repo.packagist.org/p2/' . $name . '.json');
+    $versions = $data['packages'][$name] ?? [];
+    $parser = new VersionParser();
+    $last = 'no stable version';
+    foreach ($versions as $version) {
+        if (VersionParser::parseStability($version['version']) !== 'stable') {
+            continue;
+        }
+        if (($version['type'] ?? '') !== 'magento2-module') {
+            $last = 'type ' . ($version['type'] ?? 'none');
+            continue;
+        }
+        $unmet = [];
+        foreach ($version['require'] ?? [] as $dependency => $constraint) {
+            if ($dependency === 'php') {
+                if (!Semver::satisfies(TARGET_PHP, $constraint)) {
+                    $unmet[] = "php $constraint";
+                }
+                continue;
+            }
+            if (str_starts_with($dependency, 'ext-') || str_starts_with($dependency, 'lib-')) {
+                continue;
+            }
+            if (str_starts_with($dependency, 'magento/') || str_starts_with($dependency, 'laminas/') || str_starts_with($dependency, 'symfony/')) {
+                if (!isset($installed[$dependency]) || !Semver::satisfies($parser->normalize($installed[$dependency]), $constraint)) {
+                    $unmet[] = "$dependency $constraint";
+                }
+            }
+        }
+        if ($unmet === []) {
+            return [$version, ''];
+        }
+        $last = 'requires ' . implode(', ', array_slice($unmet, 0, 3));
+    }
+
+    return [null, $last];
+}
+
+/**
+ * @return array{name: string, reason: string}
+ */
+function skip(string $name, string $reason): array
+{
+    fwrite(STDERR, "skip $name: $reason\n");
+
+    return ['name' => $name, 'reason' => $reason];
+}
+
+function moduleName(string $dir): ?string
+{
+    $moduleXml = $dir . '/etc/module.xml';
+    if (!is_file($moduleXml)) {
+        return null;
+    }
+
+    return preg_match('#<module\s[^>]*name\s*=\s*"([A-Za-z0-9]+_[A-Za-z0-9]+)"#', (string) file_get_contents($moduleXml), $m) === 1 ? $m[1] : null;
+}
+
+function buildPackagist(): void
+{
+    if (!is_dir(CORPUS . '/magento')) {
+        fail('run "build-corpus magento" first');
+    }
+    $installed = installedVersions();
+    $candidates = [];
+    for ($page = 1; $page <= 130; ++$page) {
+        $result = fetchJson('https://packagist.org/search.json?type=magento2-module&per_page=100&page=' . $page);
+        foreach ($result['results'] ?? [] as $package) {
+            $candidates[] = $package;
+        }
+        if (!isset($result['next'])) {
+            break;
+        }
+    }
+    usort($candidates, static fn (array $a, array $b): int => $b['downloads'] <=> $a['downloads']);
+
+    $modules = [];
+    $skipped = [];
+    $work = sys_get_temp_dir() . '/corpus-dist-' . getmypid();
+    mkdir($work);
+    foreach ($candidates as $candidate) {
+        if (count($modules) >= MODULE_COUNT) {
+            break;
+        }
+        $name = $candidate['name'];
+        if (($candidate['abandoned'] ?? false) !== false) {
+            $skipped[] = skip($name, 'abandoned');
+            continue;
+        }
+        if (str_starts_with($name, 'hyva-themes/') || str_starts_with($name, 'magento/')) {
+            $skipped[] = skip($name, str_starts_with($name, 'magento/') ? 'Magento core package' : 'needs the Hyvä theme stack');
+            continue;
+        }
+        [$version, $reason] = pickVersion($name, $installed);
+        if ($version === null || !isset($version['dist']['url'])) {
+            $skipped[] = skip($name, $reason !== '' ? $reason : 'no dist archive');
+            continue;
+        }
+        $zip = $work . '/' . str_replace('/', '_', $name) . '.zip';
+        $archive = @file_get_contents($version['dist']['url'], false, stream_context_create([
+            // GitHub's zipball API rejects requests without a User-Agent.
+            'http' => ['timeout' => 120, 'user_agent' => 'magento-perf-rules calibration', 'follow_location' => 1],
+        ]));
+        if ($archive === false) {
+            $skipped[] = skip($name, 'download failed');
+            continue;
+        }
+        file_put_contents($zip, $archive);
+        $published = $version['dist']['shasum'] ?? '';
+        if ($published !== '' && sha1_file($zip) !== $published) {
+            $skipped[] = skip($name, 'SHA-1 mismatch');
+            continue;
+        }
+        $extract = $work . '/' . str_replace('/', '_', $name);
+        run(['unzip', '-q', '-o', $zip, '-d', $extract]);
+        $entries = array_values(array_diff(scandir($extract) ?: [], ['.', '..']));
+        $root = count($entries) === 1 && is_dir($extract . '/' . $entries[0]) ? $extract . '/' . $entries[0] : $extract;
+        // Some packages keep the module in src/.
+        if (moduleName($root) === null && moduleName($root . '/src') !== null) {
+            $root .= '/src';
+        }
+        $module = moduleName($root);
+        if ($module === null) {
+            $skipped[] = skip($name, 'no etc/module.xml at the package root');
+            continue;
+        }
+        [$vendor, $short] = explode('_', $module, 2);
+        $target = CORPUS . '/magento/app/code/' . $vendor . '/' . $short;
+        if (is_dir($target)) {
+            $skipped[] = skip($name, "module $module already present");
+            continue;
+        }
+        if (!is_dir(dirname($target))) {
+            mkdir(dirname($target), 0777, true);
+        }
+        run(['cp', '-R', $root, $target]);
+        $modules[] = [
+            'name' => $name,
+            'version' => $version['version'],
+            'module' => $module,
+            'downloads' => $candidate['downloads'],
+            'sha256' => hash_file('sha256', $zip),
+        ];
+        echo sprintf("packagist: %-45s %-10s %s\n", $name, $version['version'], $module);
+    }
+    run(['rm', '-rf', $work]);
+    if (count($modules) < MODULE_COUNT) {
+        fail(sprintf('only %d installable modules found', count($modules)));
+    }
+    $manifest = manifest();
+    $manifest['packagist'] = [
+        'selection' => sprintf('first %d packages of type magento2-module by downloads that are not abandoned and whose magento/*, laminas/*, symfony/* and php requirements the Magento copy satisfies (PHP %s)', MODULE_COUNT, TARGET_PHP),
+        'date' => date('Y-m-d'),
+        'path' => 'app/code',
+        'modules' => $modules,
+        'skipped' => $skipped,
+    ];
+    saveManifest($manifest);
+}
+
+function buildMageOs(): void
+{
+    $target = CORPUS . '/mage-os';
+    if (is_dir($target)) {
+        run(['rm', '-rf', $target]);
+    }
+    // Fewer parallel downloads: with the default, an install from repo.mage-os.org once hung on
+    // stalled connections for two hours.
+    putenv('COMPOSER_MAX_PARALLEL_HTTP=4');
+    run([
+        'composer', 'create-project', '--no-interaction', '--no-progress', '--no-scripts',
+        '--ignore-platform-req=php', '--repository-url=https://repo.mage-os.org/',
+        'mage-os/project-community-edition', $target,
+    ]);
+    if (!is_dir($target . '/app/etc')) {
+        mkdir($target . '/app/etc', 0777, true);
+    }
+    $lock = json_decode((string) file_get_contents($target . '/composer.lock'), true, 512, JSON_THROW_ON_ERROR);
+    $version = 'unknown';
+    foreach ($lock['packages'] as $package) {
+        if ($package['name'] === 'mage-os/magento2-base') {
+            $version = $package['version'];
+        }
+    }
+    $manifest = manifest();
+    $manifest['mage-os'] = [
+        'source' => 'composer create-project mage-os/project-community-edition from https://repo.mage-os.org/ (--no-scripts, --ignore-platform-req=php)',
+        'version' => $version,
+        'paths' => ['vendor/mage-os'],
+    ];
+    saveManifest($manifest);
+    echo "mage-os: $version in var/corpus/mage-os\n";
+}
+
+$command = $argv[1] ?? '';
+match ($command) {
+    'magento' => buildMagento(),
+    'packagist' => buildPackagist(),
+    'mage-os' => buildMageOs(),
+    '--clean' => run(['rm', '-rf', CORPUS]),
+    'pick' => (static function () use ($argv): void {
+        [$version, $reason] = pickVersion($argv[2] ?? fail('pick needs a package name'), installedVersions());
+        echo $version !== null ? $version['version'] . "\n" : "none: $reason\n";
+    })(),
+    default => fail('usage: build-corpus magento|packagist|mage-os|--clean'),
+};
