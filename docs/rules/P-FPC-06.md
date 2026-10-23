@@ -8,9 +8,13 @@
 
 ## What it catches
 
-In `execute()` of a controller that implements `HttpGetActionInterface` and not `HttpPostActionInterface`, a call to either:
+In `execute()` of a frontend controller (not under `Controller\Adminhtml`) that implements `HttpGetActionInterface` and not `HttpPostActionInterface`, a call to either:
 - `save()`, `delete()` or `deleteById()` on a model, resource model or repository;
 - `addProduct()` on `Magento\Checkout\Model\Cart` or `Magento\Quote\Model\Quote`.
+
+Not reported:
+- admin controllers, which are never page-cached;
+- actions whose every `return` gives a redirect or forward, recognized by `setPath`/`setUrl`/`setRefererUrl`/`setRefererOrBaseUrl`, `_redirect()`/`_forward()`, or `create()` on a redirect or forward result factory. Varnish and the built-in page cache store only 200 and 404 responses, so these are never served from cache.
 
 ## Why it hurts performance
 

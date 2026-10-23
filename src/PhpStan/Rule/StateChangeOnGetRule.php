@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MagentoPerfRules\PhpStan\Rule;
 
+use MagentoPerfRules\PhpStan\ControllerResultVisitor;
 use MagentoPerfRules\PhpStan\MagentoTypes;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -46,6 +47,8 @@ final class StateChangeOnGetRule implements Rule
             || strtolower((string) $scope->getFunctionName()) !== 'execute'
             || !MagentoTypes::implements($class, self::GET_ACTION)
             || MagentoTypes::implements($class, self::POST_ACTION)
+            || str_contains((string) $class?->getName(), '\\Controller\\Adminhtml\\')
+            || $node->getAttribute(ControllerResultVisitor::IN_REDIRECT_ONLY_EXECUTE) === true
         ) {
             return [];
         }

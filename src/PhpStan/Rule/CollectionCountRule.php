@@ -34,6 +34,7 @@ final class CollectionCountRule implements Rule
         if (!$node->name instanceof Node\Name
             || !in_array($node->name->toLowerString(), ['count', 'sizeof'], true)
             || $node->getAttribute(CollectionStateVisitor::LOADED) === true
+            || $node->getAttribute(CollectionStateVisitor::ROWS_USED_ELSEWHERE) === true
         ) {
             return [];
         }

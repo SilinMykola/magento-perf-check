@@ -23,7 +23,11 @@ final class SessionDataInBlockRule implements Rule
     public const ID = 'P-FPC-02';
     public const IDENTIFIER = 'magentoPerf.sessionDataInBlock';
 
-    private const METHODS = ['getcustomer', 'getcustomerid', 'getcustomergroupid', 'getquote'];
+    /**
+     * getCustomerGroupId() is left out: depersonalization keeps the customer group, and the
+     * group is part of the page cache key.
+     */
+    private const METHODS = ['getcustomer', 'getcustomerid', 'getquote'];
     private const SESSION = 'Magento\Framework\Session\SessionManagerInterface';
     private const ABSTRACT_BLOCK = 'Magento\Framework\View\Element\AbstractBlock';
     private const VIEW_MODEL = 'Magento\Framework\View\Element\Block\ArgumentInterface';
@@ -49,7 +53,9 @@ final class SessionDataInBlockRule implements Rule
         $class = $scope->getClassReflection();
         // Collections implement ArgumentInterface (through CollectionDataSourceInterface) but are not view models.
         $viewModel = MagentoTypes::implements($class, self::VIEW_MODEL) && !MagentoTypes::extends($class, self::COLLECTION);
-        if (!MagentoTypes::extends($class, self::ABSTRACT_BLOCK) && !$viewModel) {
+        $frontendBlock = MagentoTypes::extends($class, self::ABSTRACT_BLOCK)
+            && !str_contains((string) $class?->getName(), '\\Block\\Adminhtml\\');
+        if (!$frontendBlock && !$viewModel) {
             return [];
         }
         $session = $this->types->subtypeOf($scope->getType($node->var), self::SESSION);

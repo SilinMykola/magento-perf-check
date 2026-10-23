@@ -70,6 +70,21 @@ final class Allowed extends Base
     }
 }
 
+final class MoreAllowed
+{
+    private int $prefetchCount;
+
+    private object $resolver;
+
+    public function __construct(int|string $prefetchCount, ?object $resolver = null, ?object $formatter = null)
+    {
+        $this->prefetchCount = (int) $prefetchCount;
+        $resolver = $resolver ?? ObjectManager::getInstance()->get(\stdClass::class);
+        $this->resolver = $resolver;
+        $formatter = $formatter ?: new \ArrayObject();
+    }
+}
+
 final class Dispatching
 {
     public function __construct(private readonly ManagerInterface $eventManager)

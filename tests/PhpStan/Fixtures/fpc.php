@@ -237,3 +237,192 @@ namespace Acme\Promo\Model {
         }
     }
 }
+
+namespace Acme\Promo\Block\Group {
+    use Magento\Customer\Model\Session;
+    use Magento\Framework\View\Element\AbstractBlock;
+
+    final class GroupPrice extends AbstractBlock
+    {
+        public function __construct(private readonly Session $customerSession)
+        {
+        }
+
+        public function getGroup(): int
+        {
+            return $this->customerSession->getCustomerGroupId();
+        }
+    }
+}
+
+namespace Acme\Promo\Block\Adminhtml\Order {
+    use Magento\Checkout\Model\Session;
+    use Magento\Framework\View\Element\AbstractBlock;
+
+    final class Totals extends AbstractBlock
+    {
+        public function __construct(private readonly Session $quoteSession)
+        {
+        }
+
+        public function getQuote(): object
+        {
+            return $this->quoteSession->getQuote();
+        }
+    }
+}
+
+namespace Acme\Promo\Controller\Download {
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+    use Magento\Framework\App\Response\Http;
+
+    final class Link implements HttpGetActionInterface
+    {
+        public function __construct(private readonly Http $response)
+        {
+        }
+
+        public function execute(): mixed
+        {
+            $this->response->setHeader('Pragma', 'public', true);
+            $this->response->setHeader('Pragma', 'no-cache')->setHeader('Cache-Control', 'no-store');
+
+            return null;
+        }
+    }
+}
+
+namespace Magento\Customer\Controller\Section {
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+    use Magento\Framework\App\Response\Http;
+
+    final class Load implements HttpGetActionInterface
+    {
+        public function __construct(private readonly Http $response)
+        {
+        }
+
+        public function execute(): mixed
+        {
+            $this->response->setNoCacheHeaders();
+
+            return null;
+        }
+    }
+}
+
+namespace Acme\Promo\Controller\Wishlist {
+    use Magento\Catalog\Api\ProductRepositoryInterface;
+    use Magento\Catalog\Model\Product;
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+
+    final class Remove implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $resultRedirectFactory,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            $this->productRepository->save($this->product);
+            $resultRedirect = $this->resultRedirectFactory->create();
+
+            return $resultRedirect->setPath('wishlist');
+        }
+    }
+
+    final class Touch implements HttpGetActionInterface
+    {
+        public function __construct(private readonly ProductRepositoryInterface $productRepository, private readonly Product $product)
+        {
+        }
+
+        public function execute(): mixed
+        {
+            $this->productRepository->save($this->product);
+            if ($this->product->getSku() === '') {
+                return $this->_redirect('*/*');
+            }
+
+            return null;
+        }
+
+        private function _redirect(string $path): mixed
+        {
+            return $path;
+        }
+    }
+}
+
+namespace Acme\Promo\Controller\Adminhtml\Rule {
+    use Magento\Catalog\Api\ProductRepositoryInterface;
+    use Magento\Catalog\Model\Product;
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+
+    final class Apply implements HttpGetActionInterface
+    {
+        public function __construct(private readonly ProductRepositoryInterface $productRepository, private readonly Product $product)
+        {
+        }
+
+        public function execute(): mixed
+        {
+            $this->productRepository->save($this->product);
+
+            return null;
+        }
+    }
+}
+
+namespace Acme\Promo\Console\Command {
+    use Magento\Framework\App\Cache\TypeListInterface;
+    use Symfony\Component\Console\Command\Command;
+
+    final class FlushPromo extends Command
+    {
+        public function __construct(private readonly TypeListInterface $typeList)
+        {
+        }
+
+        public function run(): void
+        {
+            $this->typeList->cleanType('full_page');
+        }
+    }
+}
+
+namespace Acme\Promo\Model\Config\Backend {
+    use Magento\Framework\App\Cache\TypeListInterface;
+    use Magento\Framework\App\Config\Value;
+
+    final class StoreCodeInUrl extends Value
+    {
+        public function __construct(private readonly TypeListInterface $typeList)
+        {
+        }
+
+        public function afterSave(): void
+        {
+            $this->typeList->cleanType('full_page');
+        }
+    }
+}
+
+namespace Acme\Promo\Setup\Patch\Data {
+    use Magento\Framework\App\CacheInterface;
+
+    final class Install
+    {
+        public function __construct(private readonly CacheInterface $cache)
+        {
+        }
+
+        public function apply(): void
+        {
+            $this->cache->clean();
+        }
+    }
+}

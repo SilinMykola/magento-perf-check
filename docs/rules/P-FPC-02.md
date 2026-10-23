@@ -8,7 +8,11 @@
 
 ## What it catches
 
-A call to `getCustomer()`, `getCustomerId()`, `getCustomerGroupId()` or `getQuote()` on a session (`SessionManagerInterface` subtype), made in a block (`AbstractBlock` subclass) or a view model (implements `ArgumentInterface`).
+A call to `getCustomer()`, `getCustomerId()` or `getQuote()` on a session (`SessionManagerInterface` subtype), made in a frontend block (`AbstractBlock` subclass outside `Block\Adminhtml`) or a view model (implements `ArgumentInterface`; collections, which implement it too, are not view models).
+
+Not reported:
+- `getCustomerGroupId()`: page cache depersonalization keeps the customer group, and the group is part of the cache key;
+- admin blocks: the admin is never page-cached.
 
 ## Why it hurts performance
 

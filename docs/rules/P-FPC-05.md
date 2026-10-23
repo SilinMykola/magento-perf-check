@@ -8,9 +8,15 @@
 
 ## What it catches
 
-A call to `setNoCacheHeaders()`, `setPrivateHeaders()`, or `setHeader()` with a literal `Cache-Control` or `Pragma` name. It is reported in:
+A statement that disables caching, with one finding per statement however many headers it sets:
+- `setNoCacheHeaders()` or `setPrivateHeaders()`;
+- `setHeader()` with a literal `Cache-Control` or `Pragma` name and a value that contains `no-cache`, `no-store` or `private`, or is computed at run time. `Pragma: public` is not reported.
+
+The rule applies in two kinds of classes:
 - a frontend controller that can answer GET (it implements `HttpGetActionInterface`, or no HTTP method interface at all, and is not under `Controller\Adminhtml`);
 - a GraphQL resolver.
+
+Core endpoints that are private by design are not reported: `Magento\Customer\Controller\Section\Load`, `Magento\PageCache\Controller\Block\Render` and the controllers under `Magento\Downloadable\Controller\Download`.
 
 ## Why it hurts performance
 

@@ -30,6 +30,8 @@ final class CollectionCountRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/../Fixtures/collection-count.php'], [
             ['[P-COL-01] count()' . $suffix, 13],
             ['[P-COL-01] sizeof()' . $suffix, 35],
+            // The first of two counts loads the rows only to count them; the second is free.
+            ['[P-COL-01] count()' . $suffix, 60],
         ]);
     }
 }

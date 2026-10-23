@@ -16,4 +16,10 @@
     <event name="view_block_abstract_to_html_after">
         <observer name="acme_block_html" instance="Acme\Rules\Observer\BlockHtml"/>
     </event>
+    <event name="catalog_product_collection_load_after">
+        <observer name="acme_collection_load" instance="Acme\Rules\Observer\CollectionLoad"/>
+    </event>
+    <event name="magento_catalog_api_data_productinterface_load_after">
+        <observer name="legacy_model_load" instance="Magento\Framework\EntityManager\Observer\AfterEntityLoad"/>
+    </event>
 </config>

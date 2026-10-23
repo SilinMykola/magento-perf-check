@@ -25,6 +25,10 @@ services:
         tags:
             - phpstan.parser.richParserNodeVisitor
     -
+        class: MagentoPerfRules\PhpStan\ControllerResultVisitor
+        tags:
+            - phpstan.parser.richParserNodeVisitor
+    -
         class: MagentoPerfRules\PhpStan\CollectionStateVisitor
         tags:
             - phpstan.parser.richParserNodeVisitor

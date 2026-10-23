@@ -25,9 +25,12 @@ final class RecurringSetupRuleTest extends RuleTestCase
 
     public function testFixture(): void
     {
-        $this->analyse([__DIR__ . '/../Fixtures/recurring-setup.php'], [[
-            '[X-SETUP-01] Recurring::install() does heavy work (loops, loading, saving or reindexing); it runs on every setup:upgrade. Move one-time work to a data or schema patch.',
-            17,
-        ]]);
+        $message = 'install() does heavy work (loading, saving or reindexing); it runs on every setup:upgrade. Move one-time work to a data or schema patch.';
+
+        $this->analyse([__DIR__ . '/../Fixtures/recurring-setup.php'], [
+            ['[X-SETUP-01] Recurring::' . $message, 17],
+            // A save() inside a loop is heavy; the loop over table names in Acme\Other\Setup\Recurring is not.
+            ['[X-SETUP-01] RecurringData::' . $message, 83],
+        ]);
     }
 }

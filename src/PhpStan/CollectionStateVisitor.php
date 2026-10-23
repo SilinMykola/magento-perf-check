@@ -8,6 +8,7 @@ use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt;
+use PhpParser\NodeFinder;
 use PhpParser\NodeVisitorAbstract;
 
 /**
@@ -24,6 +25,12 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     public const LOADED = 'magentoPerfCollectionLoaded';
     public const UNIQUE_FILTER = 'magentoPerfCollectionUniqueFilter';
 
+    /** Set on count() when the same function uses the collection's rows elsewhere. */
+    public const ROWS_USED_ELSEWHERE = 'magentoPerfCollectionRowsUsedElsewhere';
+
+    /** Uses that need the rows themselves, not just their number. */
+    private const ROW_USING_METHODS = ['load', 'getitems', 'getfirstitem', 'getlastitem'];
+
     /** Columns that identify at most one row. */
     private const UNIQUE_COLUMNS = ['entity_id', 'sku', 'increment_id', 'username'];
 
@@ -33,12 +40,16 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     /** @var list<array<string, array<string, true>>> root key => facts, one frame per function */
     private array $frames = [];
 
+    /** @var list<array<string, int>> root key => number of row-using operations, one frame per function */
+    private array $rowUses = [];
+
     /**
      * @param Node[] $nodes
      */
     public function beforeTraverse(array $nodes): ?array
     {
         $this->frames = [[]];
+        $this->rowUses = [$this->countRowUses($nodes)];
 
         return null;
     }
@@ -47,6 +58,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     {
         if ($node instanceof FunctionLike && !$node instanceof Expr\ArrowFunction) {
             $this->frames[] = [];
+            $this->rowUses[] = $this->countRowUses($node->getStmts() ?? []);
 
             return null;
         }
@@ -80,6 +92,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         ) {
             $key = $this->rootKey($node->getArgs()[0]->value ?? null);
             $this->mark($node, $key);
+            if ($key !== null && ($this->rowUses[count($this->rowUses) - 1][$key] ?? 0) > 0) {
+                $node->setAttribute(self::ROWS_USED_ELSEWHERE, true);
+            }
             $this->record($key, self::LOADED);
 
             return null;
@@ -115,9 +130,39 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     {
         if ($node instanceof FunctionLike && !$node instanceof Expr\ArrowFunction) {
             array_pop($this->frames);
+            array_pop($this->rowUses);
         }
 
         return null;
+    }
+
+    /**
+     * Counts, per collection, the operations in these statements that need its rows:
+     * iterating it, or load()/getItems()/getFirstItem()/getLastItem(). Nested functions
+     * are counted too; they usually run in the same request.
+     *
+     * @param Node[] $statements
+     * @return array<string, int>
+     */
+    private function countRowUses(array $statements): array
+    {
+        $uses = [];
+        $finder = new NodeFinder();
+        foreach ($finder->find($statements, static fn (Node $n): bool => $n instanceof Stmt\Foreach_ || $n instanceof Expr\MethodCall) as $node) {
+            $key = null;
+            if ($node instanceof Stmt\Foreach_) {
+                $key = $this->rootKey($node->expr);
+            } elseif ($node instanceof Expr\MethodCall && $node->name instanceof Node\Identifier
+                && in_array($node->name->toLowerString(), self::ROW_USING_METHODS, true)
+            ) {
+                $key = $this->rootKey($node->var);
+            }
+            if ($key !== null) {
+                $uses[$key] = ($uses[$key] ?? 0) + 1;
+            }
+        }
+
+        return $uses;
     }
 
     /**

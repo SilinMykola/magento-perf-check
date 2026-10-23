@@ -26,7 +26,7 @@ final class DispatchInConstructorRuleTest extends RuleTestCase
     public function testFixture(): void
     {
         $this->analyse([__DIR__ . '/../Fixtures/constructor-work.php'], [
-            ['[P-DI-03] An event is dispatched in the constructor of ConstructorWorkFixture\\Dispatching: its observers run every time the object is created. Dispatch it from the method where the event happens.', 77],
+            ['[P-DI-03] An event is dispatched in the constructor of ConstructorWorkFixture\\Dispatching: its observers run every time the object is created. Dispatch it from the method where the event happens.', 92],
         ]);
     }
 }

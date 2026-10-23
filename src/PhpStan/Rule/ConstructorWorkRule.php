@@ -29,7 +29,9 @@ final class ConstructorWorkRule implements Rule
 
     public function processNode(Node $node, Scope $scope): array
     {
-        if ($node->name->toLowerString() !== '__construct' || $node->stmts === null || $scope->getClassReflection() === null) {
+        if ($node->name->toLowerString() !== '__construct' || $node->stmts === null || $scope->getClassReflection() === null
+            || $this->isOutsideObjectManager($scope->getFile())
+        ) {
             return [];
         }
         foreach ($node->stmts as $statement) {
@@ -46,6 +48,41 @@ final class ConstructorWorkRule implements Rule
         }
 
         return [];
+    }
+
+    /** @var array<string, bool> directory => whether code there is outside the object manager */
+    private array $outsideByDirectory = [];
+
+    /**
+     * Composer plugins and the coding standard are never built by the object manager,
+     * so its construction rules do not apply to them.
+     */
+    private function isOutsideObjectManager(string $file): bool
+    {
+        if (str_contains($file, '/magento/magento-coding-standard/')) {
+            return true;
+        }
+        $dir = dirname($file);
+        $visited = [];
+        $outside = false;
+        while ($dir !== dirname($dir)) {
+            if (isset($this->outsideByDirectory[$dir])) {
+                $outside = $this->outsideByDirectory[$dir];
+                break;
+            }
+            $visited[] = $dir;
+            if (is_file($dir . '/composer.json')) {
+                $data = json_decode((string) @file_get_contents($dir . '/composer.json'), true);
+                $outside = is_array($data) && ($data['type'] ?? null) === 'composer-plugin';
+                break;
+            }
+            $dir = dirname($dir);
+        }
+        foreach ($visited as $visitedDir) {
+            $this->outsideByDirectory[$visitedDir] = $outside;
+        }
+
+        return $outside;
     }
 
     private function isAllowed(Stmt $statement): bool
@@ -67,9 +104,12 @@ final class ConstructorWorkRule implements Rule
             return true;
         }
 
+        $target = $expr instanceof Expr\Assign ? $expr->var : null;
+        $toProperty = $target instanceof Expr\PropertyFetch
+            && $target->var instanceof Expr\Variable && $target->var->name === 'this';
+
         return $expr instanceof Expr\Assign
-            && $expr->var instanceof Expr\PropertyFetch
-            && $expr->var->var instanceof Expr\Variable && $expr->var->var->name === 'this'
+            && ($toProperty || $target instanceof Expr\Variable)
             && $this->isPlainValue($expr->expr);
     }
 
@@ -125,6 +165,9 @@ final class ConstructorWorkRule implements Rule
         ) {
             return true;
         }
+        if ($expr instanceof Expr\Cast) {
+            return $this->isPlainValue($expr->expr);
+        }
         if ($expr instanceof Expr\Array_) {
             foreach ($expr->items as $item) {
                 // @phpstan-ignore identical.alwaysFalse (php-parser 4, bundled with PHPStan 1.12, allows null items)
@@ -147,7 +190,7 @@ final class ConstructorWorkRule implements Rule
         if (!$this->isPlainValue($value)) {
             return false;
         }
-        if ($this->isPlainValue($default)) {
+        if ($this->isPlainValue($default) || $default instanceof Expr\New_) {
             return true;
         }
         while ($default instanceof Expr\MethodCall) {

@@ -8,8 +8,8 @@
 
 ## What it catches
 
-- `<action name="*">`: its sections are invalidated after every POST request. Reported as `error`.
-- An action that invalidates all sections, either with `<section name="*"/>` or with no `<section>` at all. Reported as `warning`, except for the four actions core itself configures this way: `customer/account/logout`, `loginPost`, `createPost` and `editPost`.
+- `<action name="*">`: its sections are invalidated after every POST request. Reported as `error`, unless its only section is `messages`, which is how core shows flash messages after a POST.
+- An action that invalidates all sections, either with `<section name="*"/>` or with no `<section>` at all. Reported as `warning`, except for actions that change the customer, store or currency, which core itself configures this way: `customer/account/logout`, `loginPost`, `createPost`, `editPost`, `stores/store/switch`, `stores/store/switchrequest` and `directory/currency/switch`.
 
 ## Why it hurts performance
 

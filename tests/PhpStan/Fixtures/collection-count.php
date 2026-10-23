@@ -43,6 +43,23 @@ final class Example
         return is_array($collection) ? count($collection) : 0;
     }
 
+    public function iteratedAfterCount(Collection $collection): int
+    {
+        if (count($collection) === 0) {
+            return 0;
+        }
+        foreach ($collection as $item) {
+            $item->getId();
+        }
+
+        return 1;
+    }
+
+    public function countedTwice(Collection $collection): int
+    {
+        return count($collection) + count($collection);
+    }
+
     public function getSizeIsFine(Collection $collection): int
     {
         return $collection->getSize();

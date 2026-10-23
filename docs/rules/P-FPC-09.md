@@ -11,6 +11,8 @@
 - `cleanType('full_page')` on `Magento\Framework\App\Cache\TypeListInterface` (also with `Type::TYPE_IDENTIFIER`);
 - `clean()` without tags or with an empty array on `Magento\Framework\App\CacheInterface`.
 
+Not reported where a full flush is the intended action: CLI commands (Symfony `Command` subclasses), setup code (a `Setup` namespace, or files under `setup/`), deployment configuration importers (`DeploymentConfig\ImporterInterface`) and configuration backend models (`App\Config\Value` subclasses).
+
 ## Why it hurts performance
 
 Cleaning the `full_page` type throws away every cached page. With Varnish configured, it triggers a full purge, so every following request is rendered by PHP until the cache is warm again. `clean()` without tags empties every cache frontend: configuration, layout and blocks too. Called from an observer or a save handler, this happens on routine admin actions and imports. Tag-based cleaning (`clean(['catalog_product_42'])`) removes only the pages that show the changed entity.
@@ -40,7 +42,7 @@ $this->eventManager->dispatch('clean_cache_by_tags', ['object' => $product]);
 
 ## Known false positives
 
-- Admin actions whose purpose is to flush the cache.
+- Admin actions whose purpose is to flush the cache, when they are not one of the contexts above.
 
 ## Basis
 

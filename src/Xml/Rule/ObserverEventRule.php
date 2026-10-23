@@ -36,21 +36,31 @@ final class ObserverEventRule implements XmlRule
     /**
      * @param callable(string): ?string $explain message for an event, or null when the event is not reported
      * @param list<string> $exemptModules modules whose observers are not reported
+     * @param list<string> $exemptClassPrefixes observer classes (prefixes) that are not reported
      */
     private function __construct(
         private readonly string $id,
         private $explain,
         private readonly array $exemptModules = [],
+        private readonly array $exemptClassPrefixes = [],
     ) {
     }
 
     public static function loadAfter(): self
     {
-        return new self('X-EVT-01', static fn (string $event): ?string => match (true) {
-            $event === 'model_load_after' => 'runs after loading any model, of any entity type',
-            str_ends_with($event, '_load_after') => 'runs on every load of this entity type',
-            default => null,
-        });
+        return new self(
+            'X-EVT-01',
+            static fn (string $event): ?string => match (true) {
+                $event === 'model_load_after' => 'runs after loading any model, of any entity type',
+                // Collection events fire once per collection, not per entity.
+                str_ends_with($event, '_collection_load_after') => null,
+                str_ends_with($event, '_load_after') => 'runs on every load of this entity type',
+                default => null,
+            },
+            [],
+            // Core plumbing that maps entity data and runs no query.
+            ['Magento\\Framework\\EntityManager\\Observer\\'],
+        );
     }
 
     public static function genericModelEvents(): self
@@ -89,7 +99,7 @@ final class ObserverEventRule implements XmlRule
         foreach (XPath::elements($document, '/config/event/observer') as $observer) {
             $event = $observer->parentNode instanceof DOMElement ? $observer->parentNode->getAttribute('name') : '';
             $explanation = ($this->explain)($event);
-            if ($explanation === null || $observer->getAttribute('disabled') === 'true') {
+            if ($explanation === null || $observer->getAttribute('disabled') === 'true' || $this->isExemptClass($observer->getAttribute('instance'))) {
                 continue;
             }
             $findings[] = new Finding(
@@ -109,5 +119,17 @@ final class ObserverEventRule implements XmlRule
         }
 
         return $findings;
+    }
+
+    private function isExemptClass(string $instance): bool
+    {
+        $instance = ltrim($instance, '\\');
+        foreach ($this->exemptClassPrefixes as $prefix) {
+            if (str_starts_with($instance, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

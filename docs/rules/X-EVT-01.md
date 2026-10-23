@@ -10,6 +10,10 @@
 
 An `<observer>` (not `disabled="true"`) on `model_load_after`, or on any event ending in `_load_after`, such as `catalog_product_load_after`.
 
+Not reported:
+- `*_collection_load_after` events, which fire once per collection, not per entity;
+- observers in `Magento\Framework\EntityManager\Observer`, which core registers on `*_api_data_*interface_load_after` events to map entity data, without running a query.
+
 ## Why it hurts performance
 
 `AbstractModel::_afterLoad()` dispatches `model_load_after` after loading any model of any type, and the entity-specific `<prefix>_load_after` after every load of that entity type. An observer there runs on every model load in every request: product pages, carts, admin grids, imports. Even a cheap observer adds up; one that queries the database turns every load into two.

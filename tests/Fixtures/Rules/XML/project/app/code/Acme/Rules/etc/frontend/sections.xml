@@ -14,4 +14,10 @@
         <section name="cart"/>
         <section name="checkout-data"/>
     </action>
+    <action name="*">
+        <section name="messages"/>
+    </action>
+    <action name="directory/currency/switch">
+        <section name="*"/>
+    </action>
 </config>

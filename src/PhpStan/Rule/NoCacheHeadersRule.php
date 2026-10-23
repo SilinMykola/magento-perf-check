@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace MagentoPerfRules\PhpStan\Rule;
 
-use MagentoPerfRules\PhpStan\MagentoTypes;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Stmt;
+use PhpParser\NodeFinder;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Rules\Rule;
@@ -14,8 +15,9 @@ use PHPStan\Rules\RuleErrorBuilder;
 
 /**
  * P-FPC-05: no-cache or private headers set where the response could otherwise be cached.
+ * One finding per statement, however many headers the statement sets.
  *
- * @implements Rule<MethodCall>
+ * @implements Rule<Stmt>
  */
 final class NoCacheHeadersRule implements Rule
 {
@@ -29,14 +31,28 @@ final class NoCacheHeadersRule implements Rule
         'Magento\Framework\GraphQl\Query\Resolver\BatchResolverInterface',
     ];
 
+    /** Core endpoints that are private by design (class name prefixes). */
+    private const PRIVATE_ENDPOINTS = [
+        'Magento\Customer\Controller\Section\Load',
+        'Magento\PageCache\Controller\Block\Render',
+        'Magento\Downloadable\Controller\Download\\',
+    ];
+
     public function getNodeType(): string
     {
-        return MethodCall::class;
+        return Stmt::class;
     }
 
     public function processNode(Node $node, Scope $scope): array
     {
-        if (!$node->name instanceof Node\Identifier || !$this->setsNoCache($node)) {
+        if (!$node instanceof Stmt\Expression && !$node instanceof Stmt\Return_) {
+            return [];
+        }
+        $call = (new NodeFinder())->findFirst(
+            [$node],
+            fn (Node $n): bool => $n instanceof MethodCall && $this->setsNoCache($n),
+        );
+        if (!$call instanceof MethodCall || !$call->name instanceof Node\Identifier) {
             return [];
         }
         $class = $scope->getClassReflection();
@@ -48,7 +64,7 @@ final class NoCacheHeadersRule implements Rule
             RuleErrorBuilder::message(sprintf(
                 '[%s] %s() in %s makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.',
                 self::ID,
-                $node->name->toString(),
+                $call->name->toString(),
                 $class->getName(),
             ))->identifier(self::IDENTIFIER)->build(),
         ];
@@ -60,15 +76,28 @@ final class NoCacheHeadersRule implements Rule
         if ($name === 'setnocacheheaders' || $name === 'setprivateheaders') {
             return true;
         }
-        $header = $call->getArgs()[0]->value ?? null;
+        $args = $call->getArgs();
+        $header = $args[0]->value ?? null;
+        if ($name !== 'setheader'
+            || !$header instanceof Node\Scalar\String_
+            || !in_array(strtolower($header->value), ['cache-control', 'pragma'], true)
+        ) {
+            return false;
+        }
+        $value = $args[1]->value ?? null;
 
-        return $name === 'setheader'
-            && $header instanceof Node\Scalar\String_
-            && in_array(strtolower($header->value), ['cache-control', 'pragma'], true);
+        // A computed value may disable caching; a literal one only when it says so.
+        return !$value instanceof Node\Scalar\String_
+            || preg_match('/no-cache|no-store|private/i', $value->value) === 1;
     }
 
     private function servesCacheableRequests(ClassReflection $class): bool
     {
+        foreach (self::PRIVATE_ENDPOINTS as $prefix) {
+            if (str_starts_with($class->getName(), $prefix)) {
+                return false;
+            }
+        }
         foreach (self::RESOLVERS as $resolver) {
             if ($class->implementsInterface($resolver)) {
                 return true;

@@ -118,3 +118,21 @@ namespace Magento\Checkout\Model {
         }
     }
 }
+
+namespace Symfony\Component\Console\Command {
+    class Command
+    {
+    }
+}
+
+namespace Magento\Framework\App\DeploymentConfig {
+    interface ImporterInterface
+    {
+    }
+}
+
+namespace Magento\Framework\App\Config {
+    class Value
+    {
+    }
+}

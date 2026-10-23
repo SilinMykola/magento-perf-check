@@ -9,7 +9,8 @@
 ## What it catches
 
 A `__construct` with a statement other than:
-- assigning a parameter, a literal, a constant, or the backward-compatible fallback `$param ?: ObjectManager::getInstance()->get(...)` (or `??`) to a property;
+- assigning, to a property or a local variable, a parameter, a literal, a constant, or a cast of one of these;
+- the same with a `??` or `?:` fallback whose default is such a value, a `new` expression, or `ObjectManager::getInstance()->get(...)` (the documented backward-compatible fallback);
 - calling `parent::__construct(...)`;
 - argument validation: `if` or `foreach` blocks that contain nothing but throwing an exception.
 
@@ -49,9 +50,11 @@ private function isEnabled(): bool
 // @phpstan-ignore magentoPerf.constructorWork (value object built from trusted input)
 ```
 
+Classes in Composer packages of type `composer-plugin` and in `magento/magento-coding-standard` are skipped: the object manager never builds them.
+
 ## Known false positives
 
-- Cheap statements that are not in the allowed list, such as `$this->items = new \ArrayObject()` or string concatenation of parameters. The guideline still forbids them; the cost is small.
+- Cheap statements that are not in the allowed list, such as `$this->items = new \ArrayObject()`, `$this->setType(...)` or string concatenation of parameters. The guideline still forbids them; the cost is small.
 - Data objects and value objects that are not created by the object manager.
 
 ## Basis

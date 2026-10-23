@@ -19,12 +19,18 @@ final class SectionInvalidationRule implements XmlRule
 {
     public const ID = 'X-SEC-01';
 
-    /** Actions core itself configures to reload all sections (Magento_Customer etc/frontend/sections.xml). */
+    /**
+     * Actions that change the customer, store or currency, which core itself configures to
+     * reload all sections (Magento_Customer, Magento_Store, Magento_Directory sections.xml).
+     */
     private const CORE_ALL_SECTION_ACTIONS = [
         'customer/account/logout',
         'customer/account/loginpost',
         'customer/account/createpost',
         'customer/account/editpost',
+        'stores/store/switch',
+        'stores/store/switchrequest',
+        'directory/currency/switch',
     ];
 
     public function ruleId(): string
@@ -42,6 +48,11 @@ final class SectionInvalidationRule implements XmlRule
         $findings = [];
         foreach (XPath::elements($document, '/config/action') as $action) {
             $name = $action->getAttribute('name');
+            $sectionNames = array_map(static fn ($s): string => $s->getAttribute('name'), XPath::elements($document, 'section', $action));
+            // Core reloads only the "messages" section after every POST to show flash messages.
+            if ($name === '*' && $sectionNames === ['messages']) {
+                continue;
+            }
             if ($name === '*') {
                 $findings[] = new Finding(self::ID, Severity::Error, $file->relativePath, $action->getLineNo(), sprintf(
                     '[%s] <action name="*"> invalidates customer data sections on every POST request. List the actions that change the data.',

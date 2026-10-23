@@ -55,3 +55,33 @@ namespace Acme\Promo\Model {
         }
     }
 }
+
+namespace Acme\Other\Setup {
+    final class Recurring
+    {
+        public function install(object $setup, object $context): void
+        {
+            $tables = ['acme_promo_rule', 'acme_promo_rule_store'];
+            foreach ($tables as $table) {
+                $setup->getConnection()->addForeignKey('FK_' . $table, $table, 'rule_id', 'acme_promo', 'rule_id');
+            }
+        }
+    }
+}
+
+namespace Acme\Third\Setup {
+    final class RecurringData
+    {
+        /** @param list<object> $items */
+        public function __construct(private readonly array $items)
+        {
+        }
+
+        public function install(object $setup, object $context): void
+        {
+            foreach ($this->items as $item) {
+                $item->save();
+            }
+        }
+    }
+}

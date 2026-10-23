@@ -8,12 +8,11 @@
 
 ## What it catches
 
-In the `install()` method of a class named `Recurring` or `RecurringData` in a `Setup` namespace, any of:
-- a loop;
-- a call to `load()`, `getItems()`, `getSize()` or `save()`;
+In the `install()` method of a class named `Recurring` or `RecurringData` in a `Setup` namespace, a call to:
+- `load()`, `getItems()`, `getSize()` or `save()`;
 - `reindexAll()`, `reindexList()` or `reindexRow()`.
 
-One finding per method points at the first such statement.
+These calls are found inside loops too. A loop on its own is not heavy work: core loops over lists of table names to add foreign keys, which is cheap. One finding per method points at the first heavy call.
 
 ## Why it hurts performance
 
@@ -43,7 +42,7 @@ Good: a data patch (`Setup/Patch/Data/...` implementing `DataPatchInterface`), o
 
 ## Known false positives
 
-- Small loops over a fixed handful of items, such as store views, cost little.
+- Heavy calls over a fixed handful of items, such as saving one setting per store view, cost little.
 
 ## Basis
 

@@ -24,6 +24,9 @@ final class CacheCleanRule implements Rule
 
     private const TYPE_LIST = 'Magento\Framework\App\Cache\TypeListInterface';
     private const CACHE = 'Magento\Framework\App\CacheInterface';
+    private const CLI_COMMAND = 'Symfony\Component\Console\Command\Command';
+    private const CONFIG_IMPORTER = 'Magento\Framework\App\DeploymentConfig\ImporterInterface';
+    private const CONFIG_VALUE = 'Magento\Framework\App\Config\Value';
 
     private readonly MagentoTypes $types;
 
@@ -39,7 +42,7 @@ final class CacheCleanRule implements Rule
 
     public function processNode(Node $node, Scope $scope): array
     {
-        if (!$node->name instanceof Node\Identifier) {
+        if (!$node->name instanceof Node\Identifier || $this->isFlushContext($scope)) {
             return [];
         }
         $method = $node->name->toLowerString();
@@ -60,6 +63,26 @@ final class CacheCleanRule implements Rule
         }
 
         return [];
+    }
+
+    /**
+     * Places where flushing everything is the intended action: CLI commands, setup code,
+     * deployment config importers and configuration backend models.
+     */
+    private function isFlushContext(Scope $scope): bool
+    {
+        $class = $scope->getClassReflection();
+        if (str_contains($scope->getFile(), '/setup/')) {
+            return true;
+        }
+        if ($class === null) {
+            return false;
+        }
+
+        return preg_match('/\\\\Setup(\\\\|$)/', $class->getName()) === 1
+            || MagentoTypes::extends($class, self::CLI_COMMAND)
+            || MagentoTypes::implements($class, self::CONFIG_IMPORTER)
+            || MagentoTypes::extends($class, self::CONFIG_VALUE);
     }
 
     private function error(string $text): \PHPStan\Rules\IdentifierRuleError

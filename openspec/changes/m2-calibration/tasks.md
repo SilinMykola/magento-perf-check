@@ -16,15 +16,15 @@ Groups may be committed one at a time.
 
 ## 2. Rule fixes from the M1 spot checks
 
-- [ ] 2.1 P-COL-01: a collection loaded later in the same function counts as loaded. Verify: per definition of done.
-- [ ] 2.2 P-DI-02: casts, fallbacks to `new`/ObjectManager, assignments to locals; skip composer-plugin packages and `magento/magento-coding-standard`. Verify: per definition of done.
-- [ ] 2.3 P-FPC-02: drop `getCustomerGroupId()` and skip Adminhtml blocks. Verify: per definition of done.
-- [ ] 2.4 P-FPC-05: statement-level finding, header value check, allowlisted core endpoints. Verify: per definition of done.
-- [ ] 2.5 P-FPC-06: skip Adminhtml controllers and redirect-only `execute()`. Verify: per definition of done.
-- [ ] 2.6 P-FPC-09: skip CLI commands, setup code, config importers and config backend models. Verify: per definition of done.
-- [ ] 2.7 X-SEC-01: store and currency switch actions; `name="*"` with only `messages`. Verify: per definition of done.
-- [ ] 2.8 X-EVT-01: skip `*_collection_load_after` and EntityManager observers. Verify: per definition of done.
-- [ ] 2.9 X-SETUP-01: loops count only through heavy calls inside. Verify: per definition of done.
+- [x] 2.1 P-COL-01: a collection loaded later in the same function counts as loaded. Verify: per definition of done.
+- [x] 2.2 P-DI-02: casts, fallbacks to `new`/ObjectManager, assignments to locals; skip composer-plugin packages and `magento/magento-coding-standard`. Verify: per definition of done.
+- [x] 2.3 P-FPC-02: drop `getCustomerGroupId()` and skip Adminhtml blocks. Verify: per definition of done.
+- [x] 2.4 P-FPC-05: statement-level finding, header value check, allowlisted core endpoints. Verify: per definition of done.
+- [x] 2.5 P-FPC-06: skip Adminhtml controllers and redirect-only `execute()`. Verify: per definition of done.
+- [x] 2.6 P-FPC-09: skip CLI commands, setup code, config importers and config backend models. Verify: per definition of done.
+- [x] 2.7 X-SEC-01: store and currency switch actions; `name="*"` with only `messages`. Verify: per definition of done.
+- [x] 2.8 X-EVT-01: skip `*_collection_load_after` and EntityManager observers. Verify: per definition of done.
+- [x] 2.9 X-SETUP-01: loops count only through heavy calls inside. Verify: per definition of done.
 
 ## 3. Corpus
 
