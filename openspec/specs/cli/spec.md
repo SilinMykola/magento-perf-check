@@ -60,7 +60,13 @@ The command SHALL run both the XML and the PHP analysis and report their finding
 - **AND** the summary shows how many such analysis notices were dropped
 
 ### Requirement: Output formats
-The command SHALL support `--format=table` (default) and `--format=json`. JSON output SHALL be a single valid JSON document on stdout containing the list of findings and a summary with counts per severity and run duration.
+The command SHALL support these formats on stdout:
+- `--format=table` (default).
+- `--format=json`: one JSON document with the findings and a summary of counts per severity and run duration.
+- `--format=sarif`: one SARIF 2.1.0 log.
+- `--format=checkstyle`: one Checkstyle XML document.
+
+Machine formats SHALL contain nothing else on stdout.
 
 #### Scenario: Table output
 - **WHEN** the command runs without `--format`
@@ -69,6 +75,15 @@ The command SHALL support `--format=table` (default) and `--format=json`. JSON o
 #### Scenario: JSON output
 - **WHEN** the command runs with `--format=json`
 - **THEN** stdout parses as JSON with `findings` and `summary` keys and contains no other text
+
+#### Scenario: SARIF output
+- **WHEN** the command runs with `--format=sarif`
+- **THEN** stdout is a SARIF 2.1.0 log with one run whose `tool.driver.rules` lists every reported rule ID with its documentation link as `helpUri`
+- **AND** each finding is a result with `ruleId`, `level` (`error`, `warning` or `note` for info), message, and a location with the file path relative to the project and the line
+
+#### Scenario: Checkstyle output
+- **WHEN** the command runs with `--format=checkstyle`
+- **THEN** stdout is a `<checkstyle>` document with one `<file>` per file and one `<error>` per finding carrying `line`, `severity`, `message` and `source` set to the rule ID
 
 #### Scenario: Unknown format
 - **WHEN** the command runs with `--format=xml`
