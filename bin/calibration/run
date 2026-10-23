@@ -29,9 +29,11 @@ for run in "${runs[@]}"; do
     peak=0
     # Sum the RSS of the command and its children (PHPStan workers) once per second.
     while kill -0 "$pid" 2>/dev/null; do
-        pids="$pid $(pgrep -P "$pid" | tr '\n' ' ')"
-        for child in $(pgrep -P "$pid"); do pids="$pids $(pgrep -P "$child" | tr '\n' ' ')"; done
-        rss=$(ps -o rss= -p "$(echo $pids | tr ' ' ',')" 2>/dev/null | awk '{s+=$1} END {print s+0}')
+        # pgrep exits with 1 when a process has no children; that must not end the script.
+        children="$(pgrep -P "$pid" || true)"
+        pids="$pid $children"
+        for child in $children; do pids="$pids $(pgrep -P "$child" || true)"; done
+        rss=$(ps -o rss= -p "$(echo $pids | tr ' \n' ',,')" 2>/dev/null | awk '{s+=$1} END {print s+0}' || true)
         [ "$rss" -gt "$peak" ] && peak=$rss
         sleep 1
     done

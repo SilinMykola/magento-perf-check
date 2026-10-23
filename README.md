@@ -102,6 +102,12 @@ The XML rules and `magento-perf-rules.neon` only apply when you run `magento-per
 
 PHPStan types collections created through generated factories only when `generated/code` exists or [bitexpert/phpstan-magento](https://github.com/bitExpert/phpstan-magento) is installed. Without either, such calls are skipped rather than reported ([ADR 2](docs/adr/0002-bitexpert-phpstan-magento-as-suggestion.md)).
 
+## CI and Git hooks
+
+- **GitHub Actions:** copy [`docs/ci/github-actions.yml`](docs/ci/github-actions.yml) to `.github/workflows/`. It uploads SARIF to code scanning and annotates pull requests through `--format=github`. Actions are pinned to commit SHAs. The repo.magento.com credentials go into a `COMPOSER_AUTH` secret.
+- **GrumPHP:** merge [`docs/ci/grumphp.yml`](docs/ci/grumphp.yml) into your `grumphp.yml`. It is a plain `shell` task: the commit fails when a finding reaches `--fail-on` (default `error`). GrumPHP runs it on the files tracked by git. Checked with GrumPHP 2.26.0: the task fails on a project with findings and passes on a clean one.
+- **Other CI:** use `--format=checkstyle` or `--format=sarif` and the exit codes (0 clean, 1 findings, 2 tool error).
+
 ## Rules
 
 All 29 rules of the default set (✅ in the [SPEC catalog](docs/SPEC.md)). Each links to its page with examples, suppression and the sources it rests on. Rules marked ⏳ (after calibration) and 🧪 (experimental) in the catalog are not implemented yet.

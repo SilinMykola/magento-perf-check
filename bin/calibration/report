@@ -1,0 +1,223 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Computes precision from the graded samples in docs/calibration/graded/ and writes
+ * docs/calibration.md (change m2-calibration, design D3).
+ *
+ *   report           write docs/calibration.md and print the decisions
+ *   report --check   only validate the grading tables
+ */
+
+require __DIR__ . '/../../vendor/autoload.php';
+
+use MagentoPerfRules\Rule\RuleRegistry;
+use MagentoPerfRules\Rule\RuleStatus;
+use MagentoPerfRules\Rule\Severity;
+
+const ROOT = __DIR__ . '/../..';
+const VERDICTS = ['TP', 'TP-low', 'FP', 'unclear'];
+const MIN_GRADED = 10;
+
+/**
+ * @return array{rows: list<array{n: int, location: string, verdict: string, reason: string, recheck: bool, owner: string}>, total: int}
+ */
+function parseGrades(string $file): array
+{
+    $content = (string) file_get_contents($file);
+    $total = preg_match('/^(\d+) of (\d+) findings/m', $content, $m) === 1 ? (int) $m[2] : 0;
+    $section = substr($content, (int) strpos($content, "## Grades"));
+    $rows = [];
+    foreach (explode("\n", $section) as $line) {
+        if (preg_match('/^\|\s*(\d+)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|$/', $line, $c) !== 1) {
+            continue;
+        }
+        $rows[] = [
+            'n' => (int) $c[1],
+            'location' => $c[2],
+            'verdict' => $c[3],
+            'reason' => $c[4],
+            'recheck' => $c[5] === 're-check',
+            'owner' => $c[6],
+        ];
+    }
+
+    return ['rows' => $rows, 'total' => $total];
+}
+
+/**
+ * @return list<string> problems in a grading table
+ */
+function problems(string $id, array $rows): array
+{
+    $problems = [];
+    foreach ($rows as $row) {
+        if (!in_array($row['verdict'], VERDICTS, true)) {
+            $problems[] = sprintf('%s #%d: verdict "%s" is not one of %s', $id, $row['n'], $row['verdict'], implode(', ', VERDICTS));
+        }
+        if ($row['reason'] === '') {
+            $problems[] = sprintf('%s #%d: no reason', $id, $row['n']);
+        }
+        if ($row['owner'] !== '' && $row['owner'] !== '✓' && preg_match('/^was (TP|TP-low|FP|unclear)$/', $row['owner']) !== 1) {
+            $problems[] = sprintf('%s #%d: owner column must be empty, ✓ or "was <verdict>"', $id, $row['n']);
+        }
+    }
+
+    return $problems;
+}
+
+/**
+ * Thresholds from the calibration spec.
+ */
+function decide(Severity $severity, int $graded, ?float $precision): string
+{
+    if ($graded < MIN_GRADED || $precision === null) {
+        return 'insufficient data';
+    }
+
+    return match ($severity) {
+        Severity::Error => $precision >= 0.90 ? 'kept' : ($precision >= 0.75 ? 'downgraded to warning' : 'experimental'),
+        Severity::Warning => $precision >= 0.75 ? 'kept' : 'experimental',
+        Severity::Info => 'kept (no threshold)',
+    };
+}
+
+$check = in_array('--check', $argv, true);
+$registry = new RuleRegistry();
+$results = [];
+$allProblems = [];
+foreach ($registry->all() as $rule) {
+    if ($rule->status !== RuleStatus::Default) {
+        continue;
+    }
+    $file = ROOT . '/docs/calibration/graded/' . $rule->id . '.md';
+    if (!is_file($file)) {
+        $results[$rule->id] = ['rule' => $rule, 'total' => 0, 'counts' => array_fill_keys(VERDICTS, 0), 'rechecked' => 0, 'changed' => 0, 'graded' => 0, 'precision' => null];
+        continue;
+    }
+    $parsed = parseGrades($file);
+    array_push($allProblems, ...problems($rule->id, $parsed['rows']));
+    $counts = array_fill_keys(VERDICTS, 0);
+    $rechecked = 0;
+    $changed = 0;
+    foreach ($parsed['rows'] as $row) {
+        if (isset($counts[$row['verdict']])) {
+            ++$counts[$row['verdict']];
+        }
+        if ($row['owner'] !== '') {
+            ++$rechecked;
+            $changed += str_starts_with($row['owner'], 'was ') ? 1 : 0;
+        }
+        if ($row['recheck'] && $row['owner'] === '' && !$check) {
+            $allProblems[] = sprintf('%s #%d: marked for owner re-check but not re-checked', $rule->id, $row['n']);
+        }
+    }
+    $graded = $counts['TP'] + $counts['TP-low'] + $counts['FP'];
+    $results[$rule->id] = [
+        'rule' => $rule,
+        'total' => $parsed['total'],
+        'counts' => $counts,
+        'rechecked' => $rechecked,
+        'changed' => $changed,
+        'graded' => $graded,
+        'precision' => $graded > 0 ? ($counts['TP'] + $counts['TP-low']) / $graded : null,
+    ];
+}
+
+if ($allProblems !== []) {
+    fwrite(STDERR, implode("\n", $allProblems) . "\n");
+    exit(1);
+}
+if ($check) {
+    echo "grading tables are complete\n";
+    exit(0);
+}
+
+$corpus = json_decode((string) file_get_contents(ROOT . '/docs/calibration/corpus.json'), true, 512, JSON_THROW_ON_ERROR);
+$metas = [];
+foreach (glob(ROOT . '/docs/calibration/runs/*.meta.json') ?: [] as $metaFile) {
+    $metas[] = json_decode((string) file_get_contents($metaFile), true, 512, JSON_THROW_ON_ERROR);
+}
+
+$rows = '';
+$decisions = [];
+foreach ($results as $id => $r) {
+    $decision = $r['total'] === 0 ? 'no findings in the corpus' : decide($r['rule']->severity, $r['graded'], $r['precision']);
+    $decisions[$id] = $decision;
+    $rows .= sprintf(
+        "| [%s](rules/%s.md) | %s | %d | %d | %d | %d | %d | %d | %s | %d (%d changed) | %s |\n",
+        $id,
+        $id,
+        $r['rule']->severity->value,
+        $r['total'],
+        array_sum($r['counts']),
+        $r['counts']['TP'],
+        $r['counts']['TP-low'],
+        $r['counts']['FP'],
+        $r['counts']['unclear'],
+        $r['precision'] === null ? '–' : sprintf('%.0f %%', $r['precision'] * 100),
+        $r['rechecked'],
+        $r['changed'],
+        $decision,
+    );
+}
+
+$runs = '';
+foreach ($metas as $meta) {
+    $runs .= sprintf("| %s | `%s` | `--paths=%s` | %d s | %d MB | %s |\n", $meta['run'], $meta['project'], $meta['paths'], $meta['wallSeconds'], $meta['peakRssMb'], $meta['toolCommit']);
+}
+
+$modules = count($corpus['packagist']['modules'] ?? []);
+$report = <<<MD
+    # Calibration
+
+    How precise is each rule of the default set on real Magento code? This page is generated by `bin/calibration/report` from the graded samples in [`calibration/graded/`](calibration/graded/); do not edit it by hand.
+
+    ## Corpus
+
+    Defined in [`calibration/corpus.json`](calibration/corpus.json), with versions and archive checksums:
+
+    - Magento {$corpus['magento']['version']} core (`vendor/magento`)
+    - {$modules} most-downloaded `magento2-module` packages from Packagist that install on that version (`app/code` of the corpus copy)
+    - Mage-OS {$corpus['mage-os']['version']} (`vendor/mage-os`)
+
+    Test code is excluded (the tool's default), and so are `*-sample-data` modules at sampling time.
+
+    | Run | Project | Paths | Wall time | Peak RSS | Tool commit |
+    |---|---|---|---|---|---|
+    {$runs}
+    ## Method
+
+    1. Every default rule ran on the corpus. Up to 30 findings per rule were drawn with a fixed seed (20261023, `bin/calibration/sample`).
+    2. Each sampled finding was graded by reading the code around it:
+       - `TP`: the rule's claim holds;
+       - `TP-low`: it holds, but the impact is negligible;
+       - `FP`: the claim does not hold;
+       - `unclear`.
+    3. The grading was done by a single grader. The owner re-checked a share of every rule's sample; the table shows how many verdicts the owner re-checked, and how many of those were changed.
+    4. Precision = (TP + TP-low) / (TP + TP-low + FP). `unclear` findings are excluded.
+    5. Thresholds (SPEC section 7):
+       - `error` stays at ≥ 90 %, becomes `warning` at 75–90 %, and moves to experimental below;
+       - `warning` stays at ≥ 75 % and moves to experimental below;
+       - with fewer than 10 graded findings, the rule keeps its severity and is marked "insufficient data".
+
+    ## Results
+
+    | Rule | Severity | Findings | Sampled | TP | TP-low | FP | Unclear | Precision | Owner re-checked | Decision |
+    |---|---|---|---|---|---|---|---|---|---|---|
+    {$rows}
+    ## Limitations
+
+    - With up to 30 findings per rule, precision has a wide margin of error. Read it together with the counts, not as an exact figure.
+    - Only reported findings are judged. Missed findings (recall) are not measured.
+    - `TP-low` is a judgement about impact without measuring time or memory.
+    - The corpus is open-source code. Project code may use patterns the corpus does not contain.
+
+    MD;
+file_put_contents(ROOT . '/docs/calibration.md', $report);
+
+foreach ($decisions as $id => $decision) {
+    echo sprintf("%-10s %s\n", $id, $decision);
+}

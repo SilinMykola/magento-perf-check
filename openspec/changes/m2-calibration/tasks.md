@@ -56,9 +56,9 @@ Groups may be committed one at a time.
 
 ## 7. CI integration
 
-- [ ] 7.1 Write `docs/ci/github-actions.yml` (SARIF upload plus GitHub annotations), with actions pinned to SHAs looked up through `gh api`. Verify: the test for "GitHub Actions example for projects" passes.
+- [x] 7.1 Write `docs/ci/github-actions.yml` (SARIF upload plus GitHub annotations), with actions pinned to SHAs looked up through `gh api`. Verify: the test for "GitHub Actions example for projects" passes.
 - [ ] 7.2 Write `.github/workflows/ci.yml` (PHP 8.1–8.5, PHPStan 1.12 job, self-analysis, `openspec validate --specs`). Verify: the "Repository CI" test passes, and `actionlint` passes if the owner agrees to install it.
-- [ ] 7.3 Write `docs/ci/grumphp.yml` and check it in a scratch copy with `phpro/grumphp` (design D8). Document both integrations in `README.md`. Verify: GrumPHP fails on the fixture with findings and passes on a clean one.
+- [x] 7.3 Write `docs/ci/grumphp.yml` and check it in a scratch copy with `phpro/grumphp` (design D8). Document both integrations in `README.md`. Verify: GrumPHP fails on the fixture with findings and passes on a clean one.
 
 ## 8. Final check
 

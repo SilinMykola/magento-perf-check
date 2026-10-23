@@ -1,0 +1,45 @@
+# Example workflow for a Magento project: copy it to .github/workflows/magento-perf.yml.
+# It reports findings to GitHub code scanning (SARIF) and as annotations on pull requests.
+# Actions are pinned to commit SHAs; the version tag is in the comment.
+name: Magento performance checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  magento-perf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      # repo.magento.com needs credentials: store them as the COMPOSER_AUTH secret.
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+
+      - name: Analyze (SARIF)
+        # Exit code 1 means findings; upload them anyway. Exit code 2 is a tool error and fails the step.
+        run: vendor/bin/magento-perf-check --format=sarif > magento-perf.sarif || [ $? -eq 1 ]
+
+      - name: Upload to code scanning
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: magento-perf.sarif
+          category: magento-perf-rules
+
+      - name: Annotate the pull request
+        run: vendor/bin/magento-perf-check --format=github

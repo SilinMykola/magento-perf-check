@@ -1,0 +1,8 @@
+# Example GrumPHP configuration: merge the shell task into your project's grumphp.yml.
+# magento-perf-check exits with 1 when a finding reaches --fail-on, which fails the commit.
+grumphp:
+  tasks:
+    shell:
+      scripts:
+        - ['-c', 'vendor/bin/magento-perf-check --fail-on=error']
+      triggered_by: [php, phtml, xml, graphqls]

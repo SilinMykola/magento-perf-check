@@ -1,0 +1,1 @@
+{"run": "packagist", "project": "var/corpus/magento", "paths": "app/code", "toolCommit": "9ce4258", "exitCode": 1, "wallSeconds": 11, "peakRssMb": 2814, "date": "2026-10-23"}
