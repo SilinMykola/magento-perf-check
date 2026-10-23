@@ -1,0 +1,85 @@
+# Spec Delta
+
+## Purpose
+
+Measures the precision of every default rule on a fixed, reproducible corpus of real Magento code. Publishes the results, and applies the thresholds that decide whether a rule stays in the default set and at which severity.
+
+## ADDED Requirements
+
+### Requirement: Fixed corpus
+The calibration corpus SHALL consist of three parts, each pinned to a version:
+- Magento 2.4.9 core;
+- the 25 most-downloaded Packagist packages of type `magento2-module` that install on Magento 2.4.9;
+- Mage-OS (`mage-os/project-community-edition`).
+
+`docs/calibration/corpus.json` SHALL list each part with its name, version and, for downloaded archives, the SHA-256 of the archive. This lets anyone rebuild the same corpus.
+
+#### Scenario: Corpus manifest
+- **WHEN** the corpus is built
+- **THEN** `docs/calibration/corpus.json` names every package with its version and checksum
+
+#### Scenario: Skipped package
+- **WHEN** a top-downloaded package does not install on Magento 2.4.9, or is a metapackage without code
+- **THEN** the manifest records it as skipped with the reason, and the next package by downloads takes its place
+
+### Requirement: Corpus is built without touching the test project
+The corpus SHALL be built under `var/corpus/` in this repository, a git-ignored directory. The Magento 2.4.9 part is a copy of `~/projects/magento-2.4.9.ddev`, and that project SHALL NOT be written to.
+
+#### Scenario: Source project unchanged
+- **WHEN** the corpus build finishes
+- **THEN** no file under `~/projects/magento-2.4.9.ddev` is newer than the start of the build
+
+### Requirement: Sampling
+For each default rule, up to 30 findings SHALL be sampled from the corpus run with a fixed, recorded seed, after test code and sample-data modules are excluded. If a rule has 30 findings or fewer, all of them are graded. The sample SHALL be stored in `docs/calibration/`.
+
+#### Scenario: Reproducible sample
+- **WHEN** the sampling script runs twice on the same corpus run with the same seed
+- **THEN** it selects the same findings
+
+### Requirement: Grading
+Every sampled finding SHALL be graded by reading the code:
+- `TP`: the rule's claim holds;
+- `TP-low`: it holds, but the impact is negligible;
+- `FP`: the claim does not hold;
+- `unclear`.
+
+Each verdict has a one-line reason. The owner SHALL re-check at least 3 graded findings per rule that has findings. Each re-checked finding is marked as re-checked, and every changed verdict is recorded with the original one.
+
+#### Scenario: Owner correction
+- **WHEN** the owner changes a verdict from TP to FP
+- **THEN** the table shows the final verdict, the original verdict and that the owner changed it
+- **AND** precision is computed from the final verdicts
+
+### Requirement: Precision and thresholds
+Precision SHALL be (TP + TP-low) / (TP + TP-low + FP); `unclear` findings are excluded and counted. Thresholds:
+- `error` rules SHALL stay `error` at ≥ 90 %, become `warning` at 75–90 %, and move to experimental below 75 %;
+- `warning` rules SHALL stay `warning` at ≥ 75 % and move to experimental below;
+- `info` rules have no threshold;
+- a rule with fewer than 10 graded findings keeps its severity and is marked "insufficient data".
+
+#### Scenario: Error rule at 80 %
+- **WHEN** an `error` rule reaches 80 % after its fixes
+- **THEN** its severity becomes `warning`
+
+#### Scenario: Warning rule at 60 %
+- **WHEN** a `warning` rule reaches 60 % after its fixes
+- **THEN** it moves to experimental and is off by default
+
+### Requirement: Fix before demotion
+For a rule whose M1 spot checks showed a recurring false-positive pattern, the fix SHALL be implemented and the rule measured after the fix. Demotion SHALL be decided on the measurement after the fix.
+
+#### Scenario: Fixed rule passes
+- **WHEN** a rule's fix removes its false-positive pattern and the measured precision meets its threshold
+- **THEN** the rule keeps its severity
+
+### Requirement: Published calibration report
+`docs/calibration.md` SHALL state:
+- the corpus (link to the manifest), the tool version and the date;
+- for each default rule: the number of findings, sample size, TP, TP-low, FP, unclear, precision, how many verdicts the owner re-checked, and the decision (kept, downgraded, experimental, insufficient data);
+- the limitations of the method.
+
+The README section "What our rules are based on" SHALL link it. The rule registry and the SPEC catalog SHALL reflect every decision.
+
+#### Scenario: Catalog matches the report
+- **WHEN** the report says a rule moved to experimental
+- **THEN** the rule's status in the registry is experimental, the SPEC catalog shows 🧪, and the README rule table no longer lists it in the default set
