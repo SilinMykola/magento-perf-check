@@ -9,7 +9,7 @@ use MagentoPerfRules\Rule\Severity;
 final class Options
 {
     public const DEFAULT_PATHS = ['app/code', 'app/design'];
-    public const FORMATS = ['table', 'json', 'sarif', 'checkstyle'];
+    public const FORMATS = ['table', 'json', 'sarif', 'checkstyle', 'github'];
     public const CONFIG_FILE = 'magento-perf-rules.neon';
 
     /**
@@ -182,7 +182,8 @@ final class Options
                                     Nothing is written into the project.
               --paths=<p1,p2>       Paths relative to the project (default: app/code,app/design).
                                     Explicit paths are analyzed even under vendor/.
-              --format=<format>     table (default), json, sarif (SARIF 2.1.0) or checkstyle.
+              --format=<format>     table (default), json, sarif (SARIF 2.1.0), checkstyle or
+                                    github (GitHub Actions annotations).
               --fail-on=<severity>  Exit with 1 when a finding has at least this severity:
                                     error (default), warning or info.
               --config=<file>       Configuration file (default: magento-perf-rules.neon in the

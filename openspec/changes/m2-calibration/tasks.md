@@ -10,9 +10,9 @@ Groups may be committed one at a time.
 
 ## 1. Spec hygiene and experimental rules
 
-- [ ] 1.1 Confirm that the split requirements (X-LAY-01 allowlist, P-COL-02 scope) keep their meaning. Verify: the existing X-LAY-01 and P-COL-02 tests pass unchanged, and `openspec validate m2-calibration --strict` passes.
-- [ ] 1.2 Turn experimental rules off by default (design D5): filter in `Configuration::apply()`, and add an empty `extension-experimental.neon` that the runner includes. Verify: tests cover both "Experimental rules are off by default" scenarios with a registry entry switched to experimental in the test.
-- [ ] 1.3 Add `--format=github` (design D7). Verify: the "GitHub output" scenario test passes, including the escaping of `%`, line breaks, `:` and `,`.
+- [x] 1.1 Confirm that the split requirements (X-LAY-01 allowlist, P-COL-02 scope) keep their meaning. Verify: the existing X-LAY-01 and P-COL-02 tests pass unchanged, and `openspec validate m2-calibration --strict` passes.
+- [x] 1.2 Turn experimental rules off by default (design D5): filter in `Configuration::apply()`, and add an empty `extension-experimental.neon` that the runner includes. Verify: tests cover both "Experimental rules are off by default" scenarios with a registry entry switched to experimental in the test.
+- [x] 1.3 Add `--format=github` (design D7). Verify: the "GitHub output" scenario test passes, including the escaping of `%`, line breaks, `:` and `,`.
 
 ## 2. Rule fixes from the M1 spot checks
 

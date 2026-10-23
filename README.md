@@ -27,7 +27,7 @@ The tool reads the project and never writes into it. It needs the project's `ven
 | `--project=<path>` | Magento project to analyze. Default: the current directory. |
 | `--paths=<p1,p2>` | Paths relative to the project. Default: `app/code,app/design`. Paths under `vendor/magento` or `vendor/mage-os` are analyzed only when given here, for example `--paths=vendor/magento`. |
 | `--include-tests` | Also analyze test code. By default `Test/` and `dev/tests/` directories below the analyzed paths are skipped. A path given in `--paths` that is itself test code is always analyzed. |
-| `--format=table\|json\|sarif\|checkstyle` | Output format. Default: `table`. `sarif` is SARIF 2.1.0 (GitHub code scanning); `checkstyle` suits Jenkins and similar tools. |
+| `--format=table\|json\|sarif\|checkstyle\|github` | Output format. Default: `table`. `sarif` is SARIF 2.1.0 (GitHub code scanning); `checkstyle` suits Jenkins and similar tools; `github` prints GitHub Actions annotations. |
 | `--fail-on=error\|warning\|info` | Lowest severity that makes the command exit with 1. Default: `error`. |
 | `--memory-limit=<value>` | Memory limit for PHPStan. Default: `2G`. |
 

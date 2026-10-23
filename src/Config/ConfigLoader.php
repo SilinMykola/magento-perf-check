@@ -6,6 +6,7 @@ namespace MagentoPerfRules\Config;
 
 use MagentoPerfRules\Cli\UsageException;
 use MagentoPerfRules\Rule\RuleRegistry;
+use MagentoPerfRules\Rule\RuleStatus;
 use MagentoPerfRules\Rule\Severity;
 use Nette\Neon\Exception as NeonException;
 use Nette\Neon\Neon;
@@ -106,7 +107,10 @@ final class ConfigLoader
                     ));
                 }
             }
-            $enabled = isset($settings['enabled']) ? $this->bool($file, 'magentoPerf.rules.' . $id . '.enabled', $settings['enabled']) : true;
+            $rule = $this->registry->find($id);
+            $enabled = isset($settings['enabled'])
+                ? $this->bool($file, 'magentoPerf.rules.' . $id . '.enabled', $settings['enabled'])
+                : $rule?->status !== RuleStatus::Experimental;
             $result[$id] = new RuleSettings($enabled, $severity);
         }
 

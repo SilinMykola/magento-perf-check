@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<page>
+    <body>
+        <block class="Acme\Rules\Block\Cards" name="cards" cacheable="false"/>
+    </body>
+</page>

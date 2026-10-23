@@ -126,7 +126,10 @@ final class PhpStanRunner
      */
     private function config(string $projectRoot, array $paths, array $excludePaths, string $cacheDir): string
     {
-        $includes = [realpath(self::PACKAGE_ROOT . '/extension.neon') ?: self::PACKAGE_ROOT . '/extension.neon'];
+        $includes = [];
+        foreach (['extension.neon', 'extension-experimental.neon'] as $file) {
+            $includes[] = realpath(self::PACKAGE_ROOT . '/' . $file) ?: self::PACKAGE_ROOT . '/' . $file;
+        }
         $bitExpert = $this->installPath('bitexpert/phpstan-magento');
         if ($bitExpert !== null && is_file($bitExpert . '/extension.neon')) {
             $includes[] = $bitExpert . '/extension.neon';

@@ -117,7 +117,7 @@ final class ApplicationTest extends TestCase
 
         self::assertSame(Application::EXIT_ERROR, $exitCode);
         self::assertSame('', $stdout);
-        self::assertStringContainsString('Supported formats: table, json, sarif, checkstyle.', $stderr);
+        self::assertStringContainsString('Supported formats: table, json, sarif, checkstyle, github.', $stderr);
     }
 
     public function testPhpStanCrashExitsWithTwo(): void

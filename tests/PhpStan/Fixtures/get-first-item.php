@@ -140,6 +140,12 @@ final class Example
         $collection->getFirstItem();
     }
 
+    public function alreadyLoadedByGetItems(Collection $collection): void
+    {
+        $items = $collection->getItems();
+        $collection->getFirstItem();
+    }
+
     public function unrelatedClass(Unrelated $unrelated): void
     {
         $unrelated->getFirstItem();

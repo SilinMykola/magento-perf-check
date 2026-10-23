@@ -19,9 +19,12 @@ final class RuleRegistry
     /** @var array<string, RuleDefinition> */
     private array $rules = [];
 
-    public function __construct()
+    /**
+     * @param ?list<RuleDefinition> $definitions defaults to the catalog in catalog.php
+     */
+    public function __construct(?array $definitions = null)
     {
-        foreach (self::definitions() as $rule) {
+        foreach ($definitions ?? self::definitions() as $rule) {
             $this->rules[$rule->id] = $rule;
         }
     }

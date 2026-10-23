@@ -10,6 +10,7 @@ use MagentoPerfRules\PhpStan\Runner\PhpStanRunner;
 use MagentoPerfRules\Project\ProjectIndexBuilder;
 use MagentoPerfRules\Report\AnalysisResult;
 use MagentoPerfRules\Report\CheckstyleReporter;
+use MagentoPerfRules\Report\GithubReporter;
 use MagentoPerfRules\Report\JsonReporter;
 use MagentoPerfRules\Report\SarifReporter;
 use MagentoPerfRules\Report\TableReporter;
@@ -90,6 +91,7 @@ final class Application
             'json' => new JsonReporter($registry),
             'sarif' => new SarifReporter($registry),
             'checkstyle' => new CheckstyleReporter(),
+            'github' => new GithubReporter(),
             default => new TableReporter($registry),
         };
         fwrite($this->stdout, $reporter->render($result));
@@ -129,7 +131,7 @@ final class Application
             ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests);
 
         // Configuration first, then the baseline; --fail-on looks at what is left.
-        $findings = $config->apply([...$xml->findings, ...$php->findings]);
+        $findings = $config->apply([...$xml->findings, ...$php->findings], $registry);
         $hidden = null;
         $unmatched = null;
         if ($options->baselineFile !== null) {

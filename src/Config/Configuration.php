@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace MagentoPerfRules\Config;
 
 use MagentoPerfRules\Report\Finding;
+use MagentoPerfRules\Rule\RuleRegistry;
+use MagentoPerfRules\Rule\RuleStatus;
 
 /**
  * Settings from magento-perf-rules.neon. Null means "not set in the file".
@@ -26,18 +28,21 @@ final class Configuration
     }
 
     /**
-     * Drops findings of disabled rules and applies severity overrides.
+     * Drops findings of disabled rules (experimental rules are disabled unless enabled
+     * explicitly) and applies severity overrides.
      *
      * @param list<Finding> $findings
      * @return list<Finding>
      */
-    public function apply(array $findings): array
+    public function apply(array $findings, RuleRegistry $registry): array
     {
         $result = [];
         foreach ($findings as $finding) {
             $settings = $this->rules[$finding->ruleId] ?? null;
             if ($settings === null) {
-                $result[] = $finding;
+                if ($registry->find($finding->ruleId)?->status !== RuleStatus::Experimental) {
+                    $result[] = $finding;
+                }
             } elseif ($settings->enabled) {
                 $result[] = $settings->severity !== null ? $finding->withSeverity($settings->severity) : $finding;
             }

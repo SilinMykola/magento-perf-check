@@ -51,7 +51,7 @@ final class OptionsTest extends TestCase
     public function testUnknownFormatListsSupportedOnes(): void
     {
         $this->expectException(UsageException::class);
-        $this->expectExceptionMessage('Unknown format "xml". Supported formats: table, json, sarif, checkstyle.');
+        $this->expectExceptionMessage('Unknown format "xml". Supported formats: table, json, sarif, checkstyle, github.');
 
         Options::fromArgv(['--project=' . $this->project(), '--format=xml'], __DIR__);
     }
