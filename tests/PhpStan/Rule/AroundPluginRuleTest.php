@@ -32,7 +32,7 @@ final class AroundPluginRuleTest extends RuleTestCase
             ['[P-PLG-01] Acme\Promo\Plugin\PricePlugin::aroundGetPrice() calls $proceed' . $suffix, 11],
             ['[P-PLG-01] Acme\Promo\Plugin\PricePlugin::aroundGetFinalPrice() calls $proceed' . $suffix, 18],
             ['[P-PLG-01] Acme\Promo\Plugin\PricePlugin::aroundInCondition() calls $proceed' . $suffix, 85],
-            ['[P-PLG-01] Acme\Promo\Model\PriceModifier::aroundGetPrice() calls $proceed' . $suffix, 100],
+            ['[P-PLG-01] Acme\Promo\Model\PriceModifier::aroundGetPrice() calls $proceed' . $suffix, 114],
         ]);
     }
 }

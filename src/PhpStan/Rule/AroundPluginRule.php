@@ -62,6 +62,7 @@ final class AroundPluginRule implements Rule
         if (!$this->isAtTopLevel($node->stmts, $call, $finder)
             || $this->returnsBefore($node->stmts, $call, $finder)
             || !$this->passesArgumentsThrough($node, $call)
+            || $this->reassignsArguments($node, $call, $finder)
         ) {
             return [];
         }
@@ -156,6 +157,36 @@ final class AroundPluginRule implements Rule
             if ($return->getStartFilePos() < $callStart
                 && $finder->findFirst([$return], static fn (Node $n): bool => $n === $call) === null
             ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * A parameter passed to $proceed but written to before the call ("$prices = f($prices)",
+     * "$parts[0] = 'x'") is a changed argument. Setting a property on an object argument is
+     * not: the same object is passed, as a before plugin would.
+     */
+    private function reassignsArguments(Stmt\ClassMethod $method, Expr\FuncCall $call, NodeFinder $finder): bool
+    {
+        $names = [];
+        foreach (array_slice($method->params, 2) as $param) {
+            if ($param->var instanceof Expr\Variable && is_string($param->var->name)) {
+                $names[$param->var->name] = true;
+            }
+        }
+        $callStart = $call->getStartFilePos();
+        foreach ($finder->find((array) $method->stmts, static fn (Node $n): bool => $n instanceof Expr\Assign || $n instanceof Expr\AssignOp || $n instanceof Expr\AssignRef) as $assign) {
+            if ($assign->getStartFilePos() >= $callStart) {
+                continue;
+            }
+            $target = $assign->var;
+            while ($target instanceof Expr\ArrayDimFetch) {
+                $target = $target->var;
+            }
+            if ($target instanceof Expr\Variable && is_string($target->name) && isset($names[$target->name])) {
                 return true;
             }
         }

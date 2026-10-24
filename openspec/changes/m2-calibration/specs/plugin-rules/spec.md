@@ -5,7 +5,7 @@ P-PLG-01 SHALL report, as `warning`, a public `around*` method of a plugin class
 - `$proceed` is called exactly once;
 - the call is in a top-level statement, not inside `if`, a loop, `try` or a closure;
 - the call is not a branch of a ternary and not the right operand of `&&`, `||`, `and`, `or` or `??`;
-- the arguments are the method's own parameters after `$subject` and `$proceed`, unchanged and in order (or spread with `...`).
+- the arguments are the method's own parameters after `$subject` and `$proceed`, in order (or spread with `...`), and none of them, or an element of one, is assigned before the call.
 
 #### Scenario: Pass-through around
 - **WHEN** `aroundGetPrice($subject, callable $proceed, $qty)` does `$result = $proceed($qty); return $result * 2;`
@@ -25,6 +25,10 @@ P-PLG-01 SHALL report, as `warning`, a public `around*` method of a plugin class
 
 #### Scenario: Changed arguments
 - **WHEN** the method calls `$proceed($qty + 1)`
+- **THEN** P-PLG-01 reports nothing
+
+#### Scenario: Reassigned argument
+- **WHEN** the method does `$qty = max($qty, 1); return $proceed($qty);`
 - **THEN** P-PLG-01 reports nothing
 
 #### Scenario: Exception handling

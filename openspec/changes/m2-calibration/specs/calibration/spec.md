@@ -68,6 +68,17 @@ Precision SHALL be (TP + TP-low) / (TP + TP-low + FP); `unclear` findings are ex
 - **WHEN** a `warning` rule reaches 60 % after its fixes
 - **THEN** it moves to experimental and is off by default
 
+### Requirement: Impact share
+Impact share SHALL be TP / (TP + TP-low). For a rule that stays in the default set with at least 10 graded findings, an impact share below 50 % SHALL lower the severity from the precision thresholds by one step: `error` to `warning`, `warning` to `info`. The report SHALL show the impact share next to precision.
+
+#### Scenario: Correct but mostly negligible
+- **WHEN** an `error` rule has 30 graded findings, 2 TP, 28 TP-low and no FP
+- **THEN** precision is 100 %, impact share is 7 %, and the rule becomes `warning`
+
+#### Scenario: Mostly significant
+- **WHEN** a `warning` rule has 20 TP, 5 TP-low and 2 FP
+- **THEN** precision is 93 %, impact share is 80 %, and the rule stays `warning`
+
 ### Requirement: Fix before demotion
 For a rule whose M1 spot checks showed a recurring false-positive pattern, the fix SHALL be implemented and the rule measured after the fix. Demotion SHALL be decided on the measurement after the fix.
 
@@ -78,7 +89,7 @@ For a rule whose M1 spot checks showed a recurring false-positive pattern, the f
 ### Requirement: Published calibration report
 `docs/calibration.md` SHALL state:
 - the corpus (link to the manifest), the tool version and the date;
-- for each default rule: the number of findings, sample size, TP, TP-low, FP, unclear, precision, how many verdicts the owner re-checked, and the decision (kept, downgraded, experimental, insufficient data);
+- for each default rule: the number of findings, sample size, TP, TP-low, FP, unclear, precision, impact share, how many verdicts the owner re-checked, and the decision (kept, downgraded, experimental, insufficient data);
 - the limitations of the method.
 
 The README section "What our rules are based on" SHALL link it. The rule registry and the SPEC catalog SHALL reflect every decision.
@@ -86,3 +97,10 @@ The README section "What our rules are based on" SHALL link it. The rule registr
 #### Scenario: Catalog matches the report
 - **WHEN** the report says a rule moved to experimental
 - **THEN** the rule's status in the registry is experimental, the SPEC catalog shows 🧪, and the README rule table no longer lists it in the default set
+
+### Requirement: Follow-ups from grading
+Recurring false-positive patterns found during grading that need a rule change beyond this change's specs SHALL be listed in `docs/calibration/follow-ups.md`, per rule, with the graded findings that show them. `docs/calibration.md` SHALL link that list.
+
+#### Scenario: Pattern needs a spec change
+- **WHEN** grading finds that X-LAY-01 reports Hyvä Checkout layouts that are private by design
+- **THEN** `docs/calibration/follow-ups.md` lists the pattern under X-LAY-01 with the findings that show it

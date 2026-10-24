@@ -87,6 +87,20 @@ namespace Acme\Promo\Plugin {
             return $proceed($qty) > 0 ? 1 : 0;
         }
 
+        public function aroundReassigned(object $subject, callable $proceed, int $qty): int
+        {
+            $qty = max($qty, 1);
+
+            return $proceed($qty);
+        }
+
+        public function aroundElementChanged(object $subject, callable $proceed, array $parts): mixed
+        {
+            $parts[0] = 'other';
+
+            return $proceed($parts);
+        }
+
         private function aroundPrivate(object $subject, callable $proceed): mixed
         {
             return $proceed();
