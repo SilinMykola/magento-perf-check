@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace MagentoPerfRules\Tests\Unit\Rule;
 
 use MagentoPerfRules\Rule\RuleRegistry;
+use MagentoPerfRules\Rule\RuleStatus;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The README rule table lists every registered rule, and each link resolves.
+ * The README rule tables list every registered rule, each link resolves, and experimental
+ * rules are listed in their own table.
  */
 final class ReadmeRulesTest extends TestCase
 {
@@ -28,5 +30,27 @@ final class ReadmeRulesTest extends TestCase
         sort($registered);
 
         self::assertSame($registered, $listed);
+    }
+
+    public function testExperimentalRulesHaveTheirOwnTable(): void
+    {
+        $readme = (string) file_get_contents(__DIR__ . '/../../../README.md');
+        $start = strpos($readme, '### Experimental (off by default)');
+        self::assertIsInt($start);
+        $end = strpos($readme, "\n## ", $start);
+        $section = substr($readme, $start, $end === false ? null : $end - $start);
+        preg_match_all('#^\| \[([A-Z0-9-]+)\]\(docs/rules/#m', $section, $matches);
+
+        $experimental = [];
+        foreach ((new RuleRegistry())->all() as $rule) {
+            if ($rule->status === RuleStatus::Experimental) {
+                $experimental[] = $rule->id;
+            }
+        }
+        $listed = $matches[1];
+        sort($listed);
+        sort($experimental);
+
+        self::assertSame($experimental, $listed);
     }
 }

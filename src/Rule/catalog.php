@@ -24,7 +24,7 @@ $extensionPerformance = 'https://developer.adobe.com/commerce/php/best-practices
 $codeReview = 'https://experienceleague.adobe.com/en/docs/commerce-operations/implementation-playbook/best-practices/development/code-review';
 
 return [
-    new RuleDefinition('X-LAY-01', 'Block with cacheable="false" in a frontend layout', Severity::Warning, RuleStatus::Default, [
+    new RuleDefinition('X-LAY-01', 'Block with cacheable="false" in a frontend layout', Severity::Warning, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/php/development/cache/page/', '"If any block in a layout is designated as uncacheable, the entire page is uncacheable."'),
         $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Using cacheable="false" inside the default.xml file disables caching for all pages on the site."'),
         $b('lib/internal/Magento/Framework/View/Layout.php#L1192-L1210', 'Layout::isCacheable() returns false when any <block cacheable="false"> is present in the layout.'),
@@ -36,7 +36,7 @@ return [
         $b('lib/internal/Magento/Framework/Model/AbstractModel.php#L564-L568', 'AbstractModel::load() delegates to the resource model: one database round trip per call.'),
         $b('app/code/Magento/Catalog/Model/ProductRepository.php#L308-L328', 'ProductRepository::getById() loads the product unless that id is already cached.'),
     ], ['magentoPerf.loopModelLoad' => null]),
-    new RuleDefinition('P-COL-02', 'getFirstItem() on a database collection without setPageSize()', Severity::Error, RuleStatus::Default, [
+    new RuleDefinition('P-COL-02', 'getFirstItem() on a database collection without setPageSize()', Severity::Error, RuleStatus::Experimental, [
         $b('lib/internal/Magento/Framework/Data/Collection.php#L305-L315', 'getFirstItem() calls load() and returns the first loaded item; it adds no LIMIT.'),
         $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L756-L763', '_renderLimit() applies limitPage() only when a page size is set.'),
     ], ['magentoPerf.getFirstItemWithoutLimit' => null]),
@@ -49,7 +49,7 @@ return [
         $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L813-L836', 'AbstractDb::load() runs the select and builds every item.'),
         $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L433-L441', 'getSize() runs its own COUNT query.'),
     ], ['magentoPerf.loopCollectionLoad' => null]),
-    new RuleDefinition('P-LOOP-03', 'save() or delete() of a model or repository inside a loop', Severity::Warning, RuleStatus::Default, [
+    new RuleDefinition('P-LOOP-03', 'save() or delete() of a model or repository inside a loop', Severity::Info, RuleStatus::Default, [
         $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 6.4.3.2: service contracts SHOULD support batch data processing.'),
         $b('lib/internal/Magento/Framework/Model/AbstractModel.php#L680-L684', 'AbstractModel::save() delegates to the resource model: one write per call.'),
@@ -60,25 +60,25 @@ return [
         $b('app/code/Magento/ConfigurableProduct/Model/ResourceModel/Product/Type/Configurable.php#L159-L208', 'getChildrenIds() and getParentIdsByChild() run a query per call and accept arrays.'),
         $b('app/code/Magento/GroupedProduct/Model/Product/Type/Grouped.php#L203-L237', 'Grouped::getAssociatedProducts() loads a collection per product.'),
     ], ['magentoPerf.loopCompositeType' => null]),
-    new RuleDefinition('P-DI-01', 'Session or cookie manager injected without a Proxy', Severity::Error, RuleStatus::Default, [
+    new RuleDefinition('P-DI-01', 'Session or cookie manager injected without a Proxy', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 9.10: Request, Session and Cookie objects must not be injected into constructors.'),
         $b('lib/internal/Magento/Framework/Session/SessionManager.php#L100-L125', 'SessionManager::__construct() calls start().'),
         $b('lib/internal/Magento/Framework/Session/SessionManager.php#L162-L208', 'start() calls session_start() outside CLI.'),
-    ], ['magentoPerf.sessionWithoutProxy' => Severity::Error, 'magentoPerf.cookieManagerWithoutProxy' => Severity::Warning]),
-    new RuleDefinition('P-DI-02', 'Constructor does more than assign dependencies', Severity::Warning, RuleStatus::Default, [
+    ], ['magentoPerf.sessionWithoutProxy' => Severity::Warning, 'magentoPerf.cookieManagerWithoutProxy' => Severity::Info]),
+    new RuleDefinition('P-DI-02', 'Constructor does more than assign dependencies', Severity::Warning, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 2.3: constructors may only assign dependencies and validate arguments.'),
     ], ['magentoPerf.constructorWork' => null]),
     new RuleDefinition('P-DI-03', 'Event dispatched in a constructor', Severity::Error, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 2.3.2: events must not be triggered in constructors.'),
     ], ['magentoPerf.dispatchInConstructor' => null]),
-    new RuleDefinition('P-DI-06', 'Direct ObjectManager::getInstance() in PHP classes', Severity::Warning, RuleStatus::Default, [
+    new RuleDefinition('P-DI-06', 'Direct ObjectManager::getInstance() in PHP classes', Severity::Info, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/components/object-manager/', 'Usage rules: do not call the object manager directly, except in factories, proxies, the constructor backward-compatibility fallback and __wakeup/__sleep.'),
     ], ['magentoPerf.objectManagerUsage' => null]),
-    new RuleDefinition('P-FPC-01', '$_isScopePrivate in a block', Severity::Error, RuleStatus::Default, [
+    new RuleDefinition('P-FPC-01', '$_isScopePrivate in a block', Severity::Info, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/cache/page/private-content', 'Do not use the $_isScopePrivate property: it is obsolete and will not work properly.'),
         $b('lib/internal/Magento/Framework/View/Element/AbstractBlock.php#L158-L166', 'AbstractBlock marks $_isScopePrivate as @deprecated.'),
     ], ['magentoPerf.isScopePrivate' => null]),
-    new RuleDefinition('P-FPC-02', 'Block or view model reads customer data from the session', Severity::Warning, RuleStatus::Default, [
+    new RuleDefinition('P-FPC-02', 'Block or view model reads customer data from the session', Severity::Warning, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 9.4: server-rendered HTML must not contain user-specific data.'),
         $b('app/code/Magento/Customer/Model/Layout/DepersonalizePlugin.php#L101-L112', 'On cacheable GET pages the customer session is cleared after layout generation.'),
     ], ['magentoPerf.sessionDataInBlock' => null]),
@@ -100,10 +100,10 @@ return [
         $a('https://developer.adobe.com/commerce/php/development/components/indexing/', 'Update on Save indexers reindex the changed entities through plugins or events.'),
         $b('app/code/Magento/Indexer/Model/Indexer.php#L452-L494', 'reindexAll() rebuilds the whole index synchronously.'),
     ], ['magentoPerf.fullReindex' => null]),
-    new RuleDefinition('P-PLG-01', 'around plugin where before/after would do', Severity::Warning, RuleStatus::Default, [
+    new RuleDefinition('P-PLG-01', 'around plugin where before/after would do', Severity::Warning, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/php/development/components/plugins', 'Avoid using around method plugins when they are not required, because they increase stack traces and affect performance.'),
     ], ['magentoPerf.unnecessaryAroundPlugin' => null]),
-    new RuleDefinition('T-01', 'getLayout()->createBlock() in a template', Severity::Warning, RuleStatus::Default, [
+    new RuleDefinition('T-01', 'getLayout()->createBlock() in a template', Severity::Info, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 6.2.6: "Templates MUST NOT instantiate objects. All objects MUST be passed from the Block objects."'),
     ], ['magentoPerf.createBlockInTemplate' => null]),
     new RuleDefinition('X-SETUP-01', 'Heavy work in Setup/Recurring or RecurringData', Severity::Warning, RuleStatus::Default, [

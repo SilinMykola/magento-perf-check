@@ -2,6 +2,17 @@
 
 ## MODIFIED Requirements
 
+### Requirement: P-FPC-01 $_isScopePrivate
+P-FPC-01 SHALL report, as `info`, a declaration of or assignment to `$_isScopePrivate` in a subclass of `Magento\Framework\View\Element\AbstractBlock`. Calibration lowered it from `error`: precision 87 %, and most correct findings are blocks on pages that are not cached anyway.
+
+#### Scenario: Property declared
+- **WHEN** a block declares `protected $_isScopePrivate = true;`
+- **THEN** P-FPC-01 reports an info finding
+
+#### Scenario: Unrelated class
+- **WHEN** a class that is not a block declares a property with that name
+- **THEN** P-FPC-01 reports nothing
+
 ### Requirement: P-FPC-02 customer data from session in blocks
 P-FPC-02 SHALL report, as `warning`, calls to `getCustomer`, `getCustomerId` or `getQuote` on a subtype of `Magento\Framework\Session\SessionManagerInterface`. The call must be made in a frontend block (an `AbstractBlock` subclass not under a `Block\Adminhtml` namespace) or a view model (implements `Magento\Framework\View\Element\Block\ArgumentInterface` and is not a collection). `getCustomerGroupId()` SHALL NOT be reported: page cache depersonalization keeps the customer group, and it is part of the cache key.
 

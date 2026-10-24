@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Severity | `error` |
-| Status | default set |
+| Status | experimental, off by default: precision 24 % in [calibration](../calibration.md). Enable it with `enabled: true` in `magento-perf-rules.neon`; with PHPStan directly, include `extension-experimental.neon` |
 | Analyzer | PHPStan, identifier `magentoPerf.getFirstItemWithoutLimit` |
 
 ## What it catches

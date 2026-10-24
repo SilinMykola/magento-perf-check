@@ -8,8 +8,7 @@ declare(strict_types=1);
  * docs/calibration.md (change m2-calibration, design D3).
  *
  *   report           write docs/calibration.md and print the decisions
- *   report --check   validate the grading tables and print the decisions so far,
- *                    without requiring the owner re-checks
+ *   report --check   validate the grading tables and print the decisions
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
@@ -123,9 +122,6 @@ foreach ($registry->all() as $rule) {
             ++$rechecked;
             $changed += str_starts_with($row['owner'], 'was ') ? 1 : 0;
         }
-        if ($row['recheck'] && $row['owner'] === '' && !$check) {
-            $allProblems[] = sprintf('%s #%d: marked for owner re-check but not re-checked', $rule->id, $row['n']);
-        }
     }
     $graded = $counts['TP'] + $counts['TP-low'] + $counts['FP'];
     $results[$rule->id] = [
@@ -175,7 +171,7 @@ foreach ($results as $id => $r) {
 }
 
 if ($check) {
-    echo "grading tables are complete; decisions so far:\n";
+    echo "grading tables are complete; decisions:\n";
     foreach ($decisions as $id => $decision) {
         echo sprintf("%-10s %s\n", $id, $decision);
     }
@@ -184,7 +180,7 @@ if ($check) {
 
 $runs = '';
 foreach ($metas as $meta) {
-    $runs .= sprintf("| %s | `%s` | `--paths=%s` | %d s | %d MB | %s |\n", $meta['run'], $meta['project'], $meta['paths'], $meta['wallSeconds'], $meta['peakRssMb'], $meta['toolCommit']);
+    $runs .= sprintf("| %s | `%s` | `--paths=%s` | %d s | %d MB | %s | %s |\n", $meta['run'], $meta['project'], $meta['paths'], $meta['wallSeconds'], $meta['peakRssMb'], $meta['toolCommit'], $meta['date']);
 }
 
 $modules = count($corpus['packagist']['modules'] ?? []);
@@ -206,8 +202,8 @@ $report = <<<MD
 
     Test code is excluded (the tool's default), and so are `*-sample-data` modules at sampling time.
 
-    | Run | Project | Paths | Wall time | Peak RSS | Tool commit |
-    |---|---|---|---|---|---|
+    | Run | Project | Paths | Wall time | Peak RSS | Tool commit | Date |
+    |---|---|---|---|---|---|---|
     {$runs}
     ## Method
 
@@ -217,7 +213,7 @@ $report = <<<MD
        - `TP-low`: it holds, but the impact is negligible;
        - `FP`: the claim does not hold;
        - `unclear`.
-    3. The grading was done by a single grader. The owner re-checked a share of every rule's sample; the table shows how many verdicts the owner re-checked, and how many of those were changed.
+    3. Each finding was graded once, by a single grader. The "Owner re-checked" column shows how many verdicts the owner reviewed and how many of those were changed; the owner decided on 2026-10-24 not to re-check this round.
     4. Precision = (TP + TP-low) / (TP + TP-low + FP): how often the rule is right. `unclear` findings are excluded.
     5. Impact share = TP / (TP + TP-low): how often a correct finding matters.
     6. Thresholds (SPEC section 7):
@@ -238,6 +234,7 @@ $report = <<<MD
     - With up to 30 findings per rule, precision has a wide margin of error. Read it together with the counts, not as an exact figure.
     - Only reported findings are judged. Missed findings (recall) are not measured.
     - `TP-low` is a judgement about impact without measuring time or memory.
+    - Every verdict comes from one grader, without a second review. A grader who knows the rules' logic may lean towards their claims.
     - The corpus is open-source code. Project code may use patterns the corpus does not contain.
 
     MD;

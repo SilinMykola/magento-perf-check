@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Severity | `warning` |
+| Severity | `info`; was `warning` until calibration: most findings are correct but low impact ([calibration](../calibration.md)) |
 | Status | default set |
 | Analyzer | PHPStan, identifier `magentoPerf.loopSave` |
 

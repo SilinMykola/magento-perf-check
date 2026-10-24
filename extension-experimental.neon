@@ -1,4 +1,15 @@
 # PHP rules that calibration (docs/calibration.md) moved to experimental. They are off by
 # default: include this file in your phpstan.neon to opt in. magento-perf-check always
 # includes it and enables these rules only when magento-perf-rules.neon says so.
-rules: []
+services:
+    -
+        class: MagentoPerfRules\PhpStan\Rule\GetFirstItemWithoutLimitRule
+        arguments:
+            reportUntypedReceivers: %magentoPerf.reportUntypedReceivers%
+        tags:
+            - phpstan.rules.rule
+
+rules:
+    - MagentoPerfRules\PhpStan\Rule\ConstructorWorkRule
+    - MagentoPerfRules\PhpStan\Rule\SessionDataInBlockRule
+    - MagentoPerfRules\PhpStan\Rule\AroundPluginRule

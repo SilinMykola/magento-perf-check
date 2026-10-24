@@ -110,30 +110,25 @@ PHPStan types collections created through generated factories only when `generat
 
 ## Rules
 
-All 29 rules of the default set (✅ in the [SPEC catalog](docs/SPEC.md)). Each links to its page with examples, suppression and the sources it rests on. Rules marked ⏳ (after calibration) and 🧪 (experimental) in the catalog are not implemented yet.
+24 rules in the default set and 5 experimental ones, after [calibration](docs/calibration.md) on Magento core and popular modules. Each links to its page with examples, suppression and the sources it rests on. Rules marked ⏳ (after calibration) in the [SPEC catalog](docs/SPEC.md) are not implemented yet.
 
 | ID | Finds | Severity | Sources |
 |---|---|---|---|
-| [X-LAY-01](docs/rules/X-LAY-01.md) | Block with cacheable="false" in a frontend layout | error (`default`, `catalog_*`, `cms_*`), warning (other handles) | A, B |
 | [X-LAY-02](docs/rules/X-LAY-02.md) | ESI ttl on a block in an entity-specific handle | error | A, B |
 | [P-LOOP-01](docs/rules/P-LOOP-01.md) | Model load() or repository get()/getById() inside a loop | error | A, B |
 | [P-LOOP-02](docs/rules/P-LOOP-02.md) | Collection created and loaded inside a loop | error | A, B |
-| [P-LOOP-03](docs/rules/P-LOOP-03.md) | save() or delete() of a model or repository inside a loop | warning | A, B |
+| [P-LOOP-03](docs/rules/P-LOOP-03.md) | save() or delete() of a model or repository inside a loop | info | A, B |
 | [P-LOOP-07](docs/rules/P-LOOP-07.md) | Composite product type methods inside a loop | warning | B |
 | [P-COL-01](docs/rules/P-COL-01.md) | count() on a database collection instead of getSize() | warning | B |
-| [P-COL-02](docs/rules/P-COL-02.md) | getFirstItem() on a database collection without setPageSize() | error | B |
-| [P-DI-01](docs/rules/P-DI-01.md) | Session or cookie manager injected without a Proxy | error (session), warning (cookie manager) | A, B |
-| [P-DI-02](docs/rules/P-DI-02.md) | Constructor does more than assign dependencies | warning | A |
+| [P-DI-01](docs/rules/P-DI-01.md) | Session or cookie manager injected without a Proxy | warning (session), info (cookie manager) | A, B |
 | [P-DI-03](docs/rules/P-DI-03.md) | Event dispatched in a constructor | error | A |
-| [P-DI-06](docs/rules/P-DI-06.md) | Direct ObjectManager::getInstance() in PHP classes | warning | A |
-| [P-FPC-01](docs/rules/P-FPC-01.md) | $_isScopePrivate in a block | error | A, B |
-| [P-FPC-02](docs/rules/P-FPC-02.md) | Block or view model reads customer data from the session | warning | A, B |
+| [P-DI-06](docs/rules/P-DI-06.md) | Direct ObjectManager::getInstance() in PHP classes | info | A |
+| [P-FPC-01](docs/rules/P-FPC-01.md) | $_isScopePrivate in a block | info | A, B |
 | [P-FPC-05](docs/rules/P-FPC-05.md) | No-cache or private headers on cacheable requests | warning | A, B |
 | [P-FPC-06](docs/rules/P-FPC-06.md) | State change in a GET-only controller | error | A |
 | [P-FPC-09](docs/rules/P-FPC-09.md) | Full page cache or all caches cleaned from code | error | B |
 | [P-FPC-10](docs/rules/P-FPC-10.md) | reindexAll() in an observer, plugin or controller | error | A, B |
-| [P-PLG-01](docs/rules/P-PLG-01.md) | around plugin where before/after would do | warning | A |
-| [T-01](docs/rules/T-01.md) | getLayout()->createBlock() in a template | warning | A |
+| [T-01](docs/rules/T-01.md) | getLayout()->createBlock() in a template | info | A |
 | [X-EVT-01](docs/rules/X-EVT-01.md) | Observer on model_load_after or <entity>_load_after | warning | A, B |
 | [X-EVT-02](docs/rules/X-EVT-02.md) | Observer on generic model save/delete events | warning | B |
 | [X-EVT-03](docs/rules/X-EVT-03.md) | Observer on per-block render events | warning | A, B |
@@ -143,6 +138,18 @@ All 29 rules of the default set (✅ in the [SPEC catalog](docs/SPEC.md)). Each 
 | [X-IDX-01](docs/rules/X-IDX-01.md) | Indexer without an mview subscription | warning | A, B |
 | [X-SETUP-01](docs/rules/X-SETUP-01.md) | Heavy work in Setup/Recurring or RecurringData | warning | A, B |
 | [X-DB-01](docs/rules/X-DB-01.md) | db_schema.xml table without a primary key | error | A |
+
+### Experimental (off by default)
+
+Calibration measured these below their precision threshold. Enable one with `enabled: true` in `magento-perf-rules.neon`; with PHPStan directly, also include `extension-experimental.neon`.
+
+| ID | Finds | Severity | Sources |
+|---|---|---|---|
+| [X-LAY-01](docs/rules/X-LAY-01.md) | Block with cacheable="false" in a frontend layout | error (`default`, `catalog_*`, `cms_*`), warning (other handles) | A, B |
+| [P-COL-02](docs/rules/P-COL-02.md) | getFirstItem() on a database collection without setPageSize() | error | B |
+| [P-DI-02](docs/rules/P-DI-02.md) | Constructor does more than assign dependencies | warning | A |
+| [P-FPC-02](docs/rules/P-FPC-02.md) | Block or view model reads customer data from the session | warning | A, B |
+| [P-PLG-01](docs/rules/P-PLG-01.md) | around plugin where before/after would do | warning | A |
 
 ## What our rules are based on
 
@@ -154,7 +161,7 @@ Community sources (**C**) are used only as supplementary explanation. A rule wit
 
 Each rule page ends with a **Basis** section listing its sources, their levels and what each one confirms. The audit of the whole catalog is in [`docs/source-audit.md`](docs/source-audit.md).
 
-Precision has not been measured yet. Calibration on Magento core, Mage-OS and popular open-source modules is milestone M2, and its results will be published in `docs/calibration.md`.
+Precision is measured on Magento 2.4.9 core and the 25 most-downloaded Packagist modules: [`docs/calibration.md`](docs/calibration.md) gives the method, per-rule counts, precision and the decision for each rule. Rules below their threshold were downgraded or made experimental; patterns left to fix are in [`docs/calibration/follow-ups.md`](docs/calibration/follow-ups.md).
 
 Static analysis gives heuristics, not guarantees: treat each finding as a reason to check, not a verdict.
 

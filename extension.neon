@@ -32,12 +32,6 @@ services:
         class: MagentoPerfRules\PhpStan\CollectionStateVisitor
         tags:
             - phpstan.parser.richParserNodeVisitor
-    -
-        class: MagentoPerfRules\PhpStan\Rule\GetFirstItemWithoutLimitRule
-        arguments:
-            reportUntypedReceivers: %magentoPerf.reportUntypedReceivers%
-        tags:
-            - phpstan.rules.rule
 
 rules:
     - MagentoPerfRules\PhpStan\Rule\ModelLoadInLoopRule
@@ -46,15 +40,12 @@ rules:
     - MagentoPerfRules\PhpStan\Rule\SaveInLoopRule
     - MagentoPerfRules\PhpStan\Rule\CompositeTypeInLoopRule
     - MagentoPerfRules\PhpStan\Rule\SessionWithoutProxyRule
-    - MagentoPerfRules\PhpStan\Rule\ConstructorWorkRule
     - MagentoPerfRules\PhpStan\Rule\DispatchInConstructorRule
     - MagentoPerfRules\PhpStan\Rule\ObjectManagerUsageRule
     - MagentoPerfRules\PhpStan\Rule\ScopePrivateRule
-    - MagentoPerfRules\PhpStan\Rule\SessionDataInBlockRule
     - MagentoPerfRules\PhpStan\Rule\NoCacheHeadersRule
     - MagentoPerfRules\PhpStan\Rule\StateChangeOnGetRule
     - MagentoPerfRules\PhpStan\Rule\CacheCleanRule
     - MagentoPerfRules\PhpStan\Rule\FullReindexRule
-    - MagentoPerfRules\PhpStan\Rule\AroundPluginRule
     - MagentoPerfRules\PhpStan\Rule\CreateBlockInTemplateRule
     - MagentoPerfRules\PhpStan\Rule\RecurringSetupRule

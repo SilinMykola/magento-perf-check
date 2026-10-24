@@ -43,29 +43,29 @@ Groups may be committed one at a time.
 - [x] 5.3 Fix the false positives found in grading that the specs already exclude (owner decision, 2026-10-24): P-FPC-06 redirects created with `ResultFactory::TYPE_REDIRECT`; P-PLG-01 `$proceed` in a ternary branch or after `&&`/`||`/`??`, and parameters reassigned before the call. Rerun the corpus, resample the affected rules, keep verdicts of findings still reported and grade the new ones. Verify: per definition of done; other rules' findings are unchanged between the runs.
 - [x] 5.4 Add the impact share TP / (TP + TP-low) to the calibration spec and `bin/calibration/report` (owner decision, 2026-10-24). Verify: `bin/calibration/report --check` prints the decisions with the impact share applied.
 - [x] 5.5 List the recurring false-positive patterns that need spec changes in `docs/calibration/follow-ups.md` and link it from the report. Correct the P-DI-01 page: `ContextPlugin` reads the customer session on every frontend action.
-- [ ] 5.2 Owner re-check: list the marked rows (about 3 per rule) with links to the graded files, and stop until the owner has gone through them in the editor. Verify: every marked row has `✓` or `was <verdict>` in the owner column.
+- [x] 5.2 Owner re-check: list the marked rows (about 3 per rule) with links to the graded files. The owner decided on 2026-10-24 not to re-check this round. Verify: the report shows 0 re-checked verdicts and states the single-grader limitation.
 
 ## 6. Report and decisions
 
-- [ ] 6.1 Write `bin/calibration/report`, which generates `docs/calibration.md` (design D3). Verify: the report lists every default rule with counts, precision, owner re-checks and a decision, and fails on an incomplete table.
-- [ ] 6.2 Apply the decisions:
+- [x] 6.1 Write `bin/calibration/report`, which generates `docs/calibration.md` (design D3). Verify: the report lists every default rule with counts, precision, owner re-checks and a decision, and fails on an incomplete table.
+- [x] 6.2 Apply the decisions:
   - update severity and status in `src/Rule/catalog.php`;
   - move PHP rules that become experimental to `extension-experimental.neon`;
   - update the SPEC catalog with its totals;
   - add MODIFIED requirements to this change's delta specs for every severity or status change.
 
   Verify: the consistency test (design D4) passes, and `openspec validate m2-calibration --strict` passes.
-- [ ] 6.3 Update `README.md`: link `docs/calibration.md` in "What our rules are based on", split the rule table into default and experimental, and remove the "not measured yet" note. Verify: the README tests pass.
+- [x] 6.3 Update `README.md`: link `docs/calibration.md` in "What our rules are based on", split the rule table into default and experimental, and remove the "not measured yet" note. Verify: the README tests pass.
 
 ## 7. CI integration
 
 - [x] 7.1 Write `docs/ci/github-actions.yml` (SARIF upload plus GitHub annotations), with actions pinned to SHAs looked up through `gh api`. Verify: the test for "GitHub Actions example for projects" passes.
-- [ ] 7.2 Write `.github/workflows/ci.yml` (PHP 8.1–8.5, PHPStan 1.12 job, self-analysis, `openspec validate --specs`). Verify: the "Repository CI" test passes, and `actionlint` passes if the owner agrees to install it.
+- [x] 7.2 Write `.github/workflows/ci.yml` (PHP 8.1–8.5, PHPStan 1.12 job, self-analysis, `openspec validate --specs`). Verify: the "Repository CI" test passes, and `actionlint` passes (1.7.12 with shellcheck, installed with the owner's agreement on 2026-10-24).
 - [x] 7.3 Write `docs/ci/grumphp.yml` and check it in a scratch copy with `phpro/grumphp` (design D8). Document both integrations in `README.md`. Verify: GrumPHP fails on the fixture with findings and passes on a clean one.
 
 ## 8. Final check
 
-- [ ] 8.1 Run `composer test`, `bin/test-phpstan1`, `composer analyse`, `openspec validate m2-calibration --strict` and `openspec validate --specs`. Verify: all exit 0.
+- [x] 8.1 Run `composer test`, `bin/test-phpstan1`, `composer analyse`, `openspec validate m2-calibration --strict` and `openspec validate --specs`. Verify: all exit 0.
 
 ## Workflow follow-up
 

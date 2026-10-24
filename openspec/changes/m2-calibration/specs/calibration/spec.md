@@ -46,7 +46,7 @@ Every sampled finding SHALL be graded by reading the code:
 - `FP`: the claim does not hold;
 - `unclear`.
 
-Each verdict has a one-line reason. The owner SHALL re-check at least 3 graded findings per rule that has findings. Each re-checked finding is marked as re-checked, and every changed verdict is recorded with the original one.
+Each verdict has a one-line reason. The owner MAY re-check graded findings; each re-checked finding is marked as re-checked, and every changed verdict is recorded with the original one. The report SHALL state how many verdicts were re-checked per rule, and that unreviewed verdicts had a single grader.
 
 #### Scenario: Owner correction
 - **WHEN** the owner changes a verdict from TP to FP

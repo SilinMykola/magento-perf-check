@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Severity | `error` |
+| Severity | `info`; was `error` until calibration: precision 87 % and most findings low impact ([calibration](../calibration.md)) |
 | Status | default set |
 | Analyzer | PHPStan, identifier `magentoPerf.isScopePrivate` |
 

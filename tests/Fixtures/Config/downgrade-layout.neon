@@ -2,4 +2,5 @@ magentoPerf:
     paths: [app/code/Acme/Promo/view]
     rules:
         X-LAY-01:
+            enabled: true
             severity: warning

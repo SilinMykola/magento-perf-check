@@ -31,6 +31,41 @@ One finding per constructor SHALL point at the first offending statement.
 - **WHEN** a constructor assigns `$resolver = $resolver ?? ObjectManager::getInstance()->get(Resolver::class)` before using it
 - **THEN** P-DI-02 reports nothing for that statement
 
+### Requirement: P-DI-01 session or cookie manager injected without Proxy
+P-DI-01 SHALL report a constructor parameter whose type is a subtype of `Magento\Framework\Session\SessionManagerInterface` (as `warning`) or `Magento\Framework\Stdlib\CookieManagerInterface` (as `info`), unless the project index has a `\Proxy` configured for that class and parameter. The message SHALL advise configuring a Proxy in `di.xml`, not type-hinting `\Proxy`. Calibration lowered both by one step: most correct findings have low impact.
+
+#### Scenario: Customer session in a block
+- **WHEN** a block constructor has `Magento\Customer\Model\Session $customerSession` and no `di.xml` configures a Proxy for it
+- **THEN** P-DI-01 reports a warning
+
+#### Scenario: Proxy configured
+- **WHEN** `etc/frontend/di.xml` sets `<argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>` for that class
+- **THEN** P-DI-01 reports nothing
+
+#### Scenario: Cookie manager
+- **WHEN** a constructor has `CookieManagerInterface $cookieManager` without Proxy
+- **THEN** P-DI-01 reports an info finding
+
+### Requirement: P-DI-06 direct ObjectManager use
+P-DI-06 SHALL report, as `info`, `ObjectManager::getInstance()` in PHP classes, except where Adobe documents it as allowed:
+- the backward-compatible constructor fallback (`$param ?: ObjectManager::getInstance()->get(...)`, `??`);
+- classes whose name ends in `Factory` or `\Proxy`;
+- `__wakeup()` and `__sleep()`.
+
+Calibration lowered it from `warning`: most correct findings are lazy BC getters with low impact.
+
+#### Scenario: Service locator in a method
+- **WHEN** a model method calls `ObjectManager::getInstance()->get(Helper::class)`
+- **THEN** P-DI-06 reports an info finding
+
+#### Scenario: Constructor fallback
+- **WHEN** a constructor uses the `?:` fallback
+- **THEN** P-DI-06 reports nothing
+
+#### Scenario: Factory class
+- **WHEN** `Acme\Promo\Model\ItemFactory::create()` uses the ObjectManager
+- **THEN** P-DI-06 reports nothing
+
 ## ADDED Requirements
 
 ### Requirement: P-DI-02 skips code outside the object manager

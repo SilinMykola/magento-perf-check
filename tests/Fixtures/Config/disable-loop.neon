@@ -2,3 +2,5 @@ magentoPerf:
     rules:
         P-LOOP-01:
             enabled: false
+        X-LAY-01:
+            enabled: true

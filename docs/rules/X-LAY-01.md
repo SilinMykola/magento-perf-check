@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Severity | `error` for the `default` handle and handles starting with `catalog_` or `cms_`; `warning` for other handles |
-| Status | default set |
+| Status | experimental, off by default: precision 20 % in [calibration](../calibration.md). Enable it with `enabled: true` in `magento-perf-rules.neon` |
 | Analyzer | XML (layout files of area `frontend` or `base`) |
 
 ## What it catches

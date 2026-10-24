@@ -215,6 +215,15 @@ final class ApplicationTest extends TestCase
         self::assertSame('X-LAY-01', $report['findings'][0]['ruleId']);
     }
 
+    public function testExperimentalRuleIsOffWithoutOptIn(): void
+    {
+        // paths.neon replaces the fixture project's configuration, which enables X-LAY-01.
+        $findings = $this->findings(['--config=' . __DIR__ . '/../Fixtures/Config/paths.neon']);
+
+        self::assertSame([], array_values(array_filter($findings, static fn (string $f): bool => str_starts_with($f, 'X-LAY-01'))));
+        self::assertNotSame([], $findings);
+    }
+
     public function testCommandLinePathsWinOverConfiguration(): void
     {
         [, $stdout] = $this->runCommand([

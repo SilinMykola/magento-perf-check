@@ -1,0 +1,6 @@
+# X-LAY-01 is experimental since calibration; the fixture project opts in, which also
+# covers enabling an experimental rule end to end.
+magentoPerf:
+    rules:
+        X-LAY-01:
+            enabled: true

@@ -38,8 +38,8 @@ final class RuleRegistryTest extends TestCase
     {
         $registry = new RuleRegistry();
 
-        self::assertSame(\MagentoPerfRules\Rule\Severity::Error, $registry->findByIdentifier('magentoPerf.sessionWithoutProxy')[1] ?? null);
-        self::assertSame(\MagentoPerfRules\Rule\Severity::Warning, $registry->findByIdentifier('magentoPerf.cookieManagerWithoutProxy')[1] ?? null);
+        self::assertSame(\MagentoPerfRules\Rule\Severity::Warning, $registry->findByIdentifier('magentoPerf.sessionWithoutProxy')[1] ?? null);
+        self::assertSame(\MagentoPerfRules\Rule\Severity::Info, $registry->findByIdentifier('magentoPerf.cookieManagerWithoutProxy')[1] ?? null);
         self::assertNull($registry->findByIdentifier('magentoPerf.unknown'));
     }
 }

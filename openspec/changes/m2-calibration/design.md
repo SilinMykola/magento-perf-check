@@ -6,7 +6,7 @@ See proposal.md for motivation, and the specs for the required behaviour. The ru
 
 The owner decided on 2026-10-23:
 - **Corpus:** a copy of the test project in `var/`, Packagist modules in its `app/code`, and a separate Mage-OS install.
-- **Grading:** A single grader grades every sampled finding and the owner re-checks part of them.
+- **Grading:** every sampled finding is graded by reading the code, and the owner re-checks part of them. On 2026-10-24 the owner decided not to re-check this round; the report states that each verdict had a single grader.
 - **Order:** fixes first, then demotion.
 - **GrumPHP:** a documented `shell` task.
 
@@ -98,11 +98,11 @@ To check it, a temporary copy of the fixture project gets `phpro/grumphp` instal
 
 ## Risks / Trade-offs
 
-- **Grading by a single grader can be biased towards the rules' own logic.** The owner re-checks at least 3 findings per rule; every change is recorded, and `docs/calibration.md` states who graded. With about 30 findings per rule, precision has a wide error margin, so the report gives counts next to percentages.
+- **A single grader can be biased towards the rules' own logic.** The owner may re-check findings; every change is recorded, and `docs/calibration.md` states that there was no second review. With about 30 findings per rule, precision has a wide error margin, so the report gives counts next to percentages.
 - **Popular Packagist modules may not install on 2.4.9, or may depend on missing packages.** Skipped packages are recorded with reasons and the next package is taken. Unknown types reduce findings, not precision.
 - **Mage-OS may not install on host PHP 8.5.** `--ignore-platform-req=php`; if dependency resolution still fails, the newest Mage-OS release that does install is used, and its version is recorded.
 - **P-FPC-06 redirect detection is syntactic.** Unusual result types are not recognized, so those controllers stay reported; the trade-off favours fewer findings. Measured in calibration like every other rule.
-- **Labelling volume:** about 25 rules × up to 30 findings is around 600–750 findings. The work is split per rule family across parallel agents as in M1, and every agent writes the shared table format.
+- **Labelling volume:** about 25 rules × up to 30 findings is around 600–750 findings. The work is split per rule family as in M1, and every part uses the shared table format.
 - **Corpus size in `var/`:** a few GB, git-ignored. `bin/calibration/build-corpus --clean` removes it.
 
 ## Migration Plan

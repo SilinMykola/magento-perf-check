@@ -16,14 +16,15 @@ final class PhpStanCliTest extends TestCase
     /**
      * @return list<array{message: string, line: int, identifier?: string}>
      */
-    private function analyse(string $path, int $level): array
+    private function analyse(string $path, int $level, bool $experimental = false): array
     {
         $config = tempnam(sys_get_temp_dir(), 'mpr-neon');
         self::assertIsString($config);
         rename($config, $config .= '.neon');
         file_put_contents($config, sprintf(
-            "includes:\n    - %s/extension.neon\nparameters:\n    level: %d\n    tmpDir: %s\n",
+            "includes:\n    - %s/extension.neon\n%sparameters:\n    level: %d\n    tmpDir: %s\n",
             realpath(self::ROOT),
+            $experimental ? '    - ' . realpath(self::ROOT) . "/extension-experimental.neon\n" : '',
             $level,
             sys_get_temp_dir() . '/mpr-phpstan-test',
         ));
@@ -63,9 +64,15 @@ final class PhpStanCliTest extends TestCase
         self::assertStringStartsWith('[P-LOOP-01]', $messages[0]['message']);
     }
 
+    public function testExperimentalRuleIsOffWithTheMainExtensionOnly(): void
+    {
+        self::assertSame([], $this->analyse('tests/Integration/Fixtures/phpstan-cli/LevelZero.php', 0));
+    }
+
     public function testCollectionRuleReportsAtLevelZero(): void
     {
-        $messages = $this->analyse('tests/Integration/Fixtures/phpstan-cli/LevelZero.php', 0);
+        // P-COL-02 is experimental since calibration: it runs with extension-experimental.neon.
+        $messages = $this->analyse('tests/Integration/Fixtures/phpstan-cli/LevelZero.php', 0, true);
 
         self::assertCount(1, $messages, json_encode($messages, JSON_THROW_ON_ERROR));
         self::assertSame(13, $messages[0]['line']);

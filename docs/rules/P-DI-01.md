@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Severity | `error` for sessions (`magentoPerf.sessionWithoutProxy`), `warning` for the cookie manager (`magentoPerf.cookieManagerWithoutProxy`) |
+| Severity | `warning` for sessions (`magentoPerf.sessionWithoutProxy`), `info` for the cookie manager (`magentoPerf.cookieManagerWithoutProxy`); one step lower than before calibration, because most findings are correct but low impact ([calibration](../calibration.md)) |
 | Status | default set |
 | Analyzer | PHPStan, with the project index of `di.xml` |
 
