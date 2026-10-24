@@ -19,7 +19,13 @@ When the project has no Magento configuration at all, the rule reports nothing.
 
 ## Why it hurts performance
 
-The object manager creates constructor dependencies together with the object. `SessionManager::__construct()` calls `start()`, which calls `session_start()`. A block, view model or plugin that receives the customer session therefore starts a session (session storage read, locking) every time it is built, even when the code path never uses it. On cacheable pages that is work for nothing. The Technical guidelines forbid injecting Request, Session and Cookie objects into constructors at all.
+The object manager creates constructor dependencies together with the object. `SessionManager::__construct()` calls `start()`, which calls `session_start()`. A block, view model or plugin that receives the customer session therefore starts a session (session storage read, locking) every time it is built, even when the code path never uses it. The Technical guidelines forbid injecting Request, Session and Cookie objects into constructors at all.
+
+How much this costs depends on where the object is built:
+- **Frontend actions.** On a page cache miss, the core `Magento\Customer\Model\App\Action\ContextPlugin` (a `beforeExecute` plugin on every frontend `ActionInterface`, declared in `Magento_Customer`'s `etc/frontend/di.xml`) reads the customer session anyway, so one more session dependency in a block or controller adds little.
+- **Before action dispatch, and outside the frontend.** Objects built on the page cache hit path (for example plugins on the front controller), and in GraphQL, REST, cron or CLI, start a session that nothing else would start. There it is real cost.
+
+Calibration on Magento core and popular modules found mostly the first case, so most findings have low impact (see [calibration](../calibration.md)).
 
 ## Example
 

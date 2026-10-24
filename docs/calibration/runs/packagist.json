@@ -4,10 +4,10 @@
         "paths": [
             "app/code"
         ],
-        "findings": 353,
+        "findings": 352,
         "bySeverity": {
             "error": 83,
-            "warning": 270,
+            "warning": 269,
             "info": 0
         },
         "byRule": {
@@ -21,7 +21,7 @@
             "P-LOOP-01": 20,
             "P-LOOP-03": 24,
             "P-LOOP-07": 1,
-            "P-PLG-01": 6,
+            "P-PLG-01": 5,
             "T-01": 7,
             "X-EVT-03": 3,
             "X-LAY-01": 5
@@ -29,7 +29,7 @@
         "notices": {
             "untyped-receiver": 14
         },
-        "durationSeconds": 8.88,
+        "durationSeconds": 12.27,
         "baseline": null
     },
     "findings": [
@@ -2320,14 +2320,6 @@
             "line": 14,
             "message": "[X-EVT-03] Observer \"MagewirephpMagewireViewBlockAbstractToHtmlAfter\" on \"view_block_abstract_to_html_after\" runs for every block or layout element rendered, hundreds of times per page. Observe a more specific event if one exists.",
             "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/X-EVT-03.md"
-        },
-        {
-            "ruleId": "P-PLG-01",
-            "severity": "warning",
-            "file": "app/code/MarkShust/DisableTwoFactorAuth/Plugin/BypassTwoFactorAuthForApiTokenGeneration.php",
-            "line": 66,
-            "message": "[P-PLG-01] MarkShust\\DisableTwoFactorAuth\\Plugin\\BypassTwoFactorAuthForApiTokenGeneration::aroundCreateAdminAccessToken() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.",
-            "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-PLG-01.md"
         },
         {
             "ruleId": "P-DI-01",

@@ -57,8 +57,11 @@ Facts checked on 2026-10-23:
 
 ### D3. Grading format and report generation
 - **Tables:** each graded file has one table row per finding: `| # | location | verdict | reason | owner |`. The `owner` column is empty, `✓` (confirmed), or `was <verdict>` (changed). The owner edits these files in the editor.
-- **Report:** `bin/calibration/report` parses the tables and computes counts and precision. It applies the thresholds from the calibration spec and writes `docs/calibration.md`: the method, a per-rule table and the limitations section. The script fails on rows without a verdict, or with an unknown verdict.
+- **Report:** `bin/calibration/report` parses the tables and computes counts, precision and the impact share TP / (TP + TP-low). The owner decided on 2026-10-24 that TP-low findings count as correct for precision but separately for severity: a rule whose correct findings are mostly negligible goes one severity step lower. It applies the thresholds from the calibration spec and writes `docs/calibration.md`: the method, a per-rule table and the limitations section. The script fails on rows without a verdict, or with an unknown verdict.
 - **Applying decisions:** the report also prints the decisions as a list. The registry (`src/Rule/catalog.php`), the SPEC catalog, the delta specs of the affected rule families and the README are updated by hand from that list. A test (D4) checks that the registry matches the report.
+
+### D3a. Fixes found during grading
+Grading found false positives that the specs already exclude (P-FPC-06 `TYPE_REDIRECT`; P-PLG-01 conditional `$proceed` and reassigned parameters). The owner decided on 2026-10-24 to fix them before the report. After each fix the corpus is run again; the affected rules are resampled with the same seed, verdicts of findings that are still reported are kept, and new findings are graded. Patterns that need a spec change go to `docs/calibration/follow-ups.md` instead.
 
 ### D4. Consistency checks
 - A test reads `docs/calibration.md` and checks, for each rule, that its decision matches the registry: severity, and status ✅/🧪.

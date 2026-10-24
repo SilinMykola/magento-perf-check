@@ -4,10 +4,10 @@
         "paths": [
             "vendor/magento"
         ],
-        "findings": 2698,
+        "findings": 2692,
         "bySeverity": {
-            "error": 773,
-            "warning": 1925,
+            "error": 770,
+            "warning": 1922,
             "info": 0
         },
         "byRule": {
@@ -20,12 +20,11 @@
             "P-FPC-01": 70,
             "P-FPC-02": 37,
             "P-FPC-05": 2,
-            "P-FPC-06": 3,
             "P-LOOP-01": 107,
             "P-LOOP-02": 11,
             "P-LOOP-03": 127,
             "P-LOOP-07": 7,
-            "P-PLG-01": 33,
+            "P-PLG-01": 30,
             "T-01": 17,
             "X-DB-01": 1,
             "X-EVT-01": 2,
@@ -36,7 +35,7 @@
         "notices": {
             "untyped-receiver": 9
         },
-        "durationSeconds": 94.71,
+        "durationSeconds": 126.42,
         "baseline": null
     },
     "findings": [
@@ -7417,14 +7416,6 @@
             "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-DI-01.md"
         },
         {
-            "ruleId": "P-PLG-01",
-            "severity": "warning",
-            "file": "vendor/magento/module-catalog/Model/Plugin/SpecialPricePluginForREST/SpecialPriceStoragePlugin.php",
-            "line": 38,
-            "message": "[P-PLG-01] Magento\\Catalog\\Model\\Plugin\\SpecialPricePluginForREST\\SpecialPriceStoragePlugin::aroundUpdate() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.",
-            "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-PLG-01.md"
-        },
-        {
             "ruleId": "P-DI-06",
             "severity": "warning",
             "file": "vendor/magento/module-catalog/Model/Product.php",
@@ -9959,14 +9950,6 @@
             "line": 42,
             "message": "[P-DI-02] The constructor of Magento\\CustomerImportExport\\Model\\ResourceModel\\Import\\CustomerComposite\\Data does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
             "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-DI-02.md"
-        },
-        {
-            "ruleId": "P-PLG-01",
-            "severity": "warning",
-            "file": "vendor/magento/module-customer-sample-data/Magento/Framework/Mail/Transport/MailPlugin.php",
-            "line": 28,
-            "message": "[P-PLG-01] Magento\\CustomerSampleData\\Magento\\Framework\\Mail\\Transport\\MailPlugin::aroundSendMessage() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.",
-            "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-PLG-01.md"
         },
         {
             "ruleId": "P-DI-02",
@@ -15641,14 +15624,6 @@
             "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-DI-02.md"
         },
         {
-            "ruleId": "P-PLG-01",
-            "severity": "warning",
-            "file": "vendor/magento/module-paypal/Model/Config/StructurePlugin.php",
-            "line": 101,
-            "message": "[P-PLG-01] Magento\\Paypal\\Model\\Config\\StructurePlugin::aroundGetElementByPathParts() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.",
-            "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-PLG-01.md"
-        },
-        {
             "ruleId": "P-DI-02",
             "severity": "warning",
             "file": "vendor/magento/module-paypal/Model/Direct.php",
@@ -16121,14 +16096,6 @@
             "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-DI-01.md"
         },
         {
-            "ruleId": "P-FPC-06",
-            "severity": "error",
-            "file": "vendor/magento/module-product-alert/Controller/Add/Price.php",
-            "line": 100,
-            "message": "[P-FPC-06] Magento\\ProductAlert\\Controller\\Add\\Price handles GET only but calls Magento\\ProductAlert\\Model\\Price::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.",
-            "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-FPC-06.md"
-        },
-        {
             "ruleId": "P-DI-01",
             "severity": "error",
             "file": "vendor/magento/module-product-alert/Controller/Add/Stock.php",
@@ -16145,14 +16112,6 @@
             "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-DI-02.md"
         },
         {
-            "ruleId": "P-FPC-06",
-            "severity": "error",
-            "file": "vendor/magento/module-product-alert/Controller/Add/Stock.php",
-            "line": 98,
-            "message": "[P-FPC-06] Magento\\ProductAlert\\Controller\\Add\\Stock handles GET only but calls Magento\\ProductAlert\\Model\\Stock::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.",
-            "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-FPC-06.md"
-        },
-        {
             "ruleId": "P-DI-01",
             "severity": "error",
             "file": "vendor/magento/module-product-alert/Controller/Unsubscribe/Email.php",
@@ -16167,14 +16126,6 @@
             "line": 34,
             "message": "[P-DI-01] Magento\\ProductAlert\\Controller\\Unsubscribe\\Price receives $customerSession (Magento\\Customer\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Customer\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
             "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-DI-01.md"
-        },
-        {
-            "ruleId": "P-FPC-06",
-            "severity": "error",
-            "file": "vendor/magento/module-product-alert/Controller/Unsubscribe/Price.php",
-            "line": 78,
-            "message": "[P-FPC-06] Magento\\ProductAlert\\Controller\\Unsubscribe\\Price handles GET only but calls Magento\\ProductAlert\\Model\\Price::delete(). Change state only on POST or PUT: GET responses can be cached and served without running this code.",
-            "docUrl": "/Users/mykola/projects/magento-perf-rules/docs/rules/P-FPC-06.md"
         },
         {
             "ruleId": "P-DI-01",

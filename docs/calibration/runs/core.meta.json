@@ -1,1 +1,1 @@
-{"run": "core", "project": "var/corpus/magento", "paths": "vendor/magento", "toolCommit": "21c9347", "exitCode": 1, "wallSeconds": 95, "peakRssMb": 3046, "date": "2026-10-24"}
+{"run": "core", "project": "var/corpus/magento", "paths": "vendor/magento", "toolCommit": "4f32744", "exitCode": 1, "wallSeconds": 128, "peakRssMb": 3627, "date": "2026-10-24"}

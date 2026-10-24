@@ -40,6 +40,9 @@ Groups may be committed one at a time.
 ## 5. Grading
 
 - [x] 5.1 Grade every sampled finding by reading the code, in parallel per rule family, all in the shared table format. Verify: no row without a verdict and reason; `bin/calibration/report --check` passes.
+- [x] 5.3 Fix the false positives found in grading that the specs already exclude (owner decision, 2026-10-24): P-FPC-06 redirects created with `ResultFactory::TYPE_REDIRECT`; P-PLG-01 `$proceed` in a ternary branch or after `&&`/`||`/`??`, and parameters reassigned before the call. Rerun the corpus, resample the affected rules, keep verdicts of findings still reported and grade the new ones. Verify: per definition of done; other rules' findings are unchanged between the runs.
+- [x] 5.4 Add the impact share TP / (TP + TP-low) to the calibration spec and `bin/calibration/report` (owner decision, 2026-10-24). Verify: `bin/calibration/report --check` prints the decisions with the impact share applied.
+- [x] 5.5 List the recurring false-positive patterns that need spec changes in `docs/calibration/follow-ups.md` and link it from the report. Correct the P-DI-01 page: `ContextPlugin` reads the customer session on every frontend action.
 - [ ] 5.2 Owner re-check: list the marked rows (about 3 per rule) with links to the graded files, and stop until the owner has gone through them in the editor. Verify: every marked row has `✓` or `was <verdict>` in the owner column.
 
 ## 6. Report and decisions

@@ -28,7 +28,7 @@ SPEC section 7 makes calibration mandatory before a public release. Each rule's 
 - **Calibration**:
   - Each default rule runs on the corpus, and up to 30 findings per rule are sampled with a fixed seed.
   - A single grader grades every sampled finding by reading the code; the owner re-checks about 3 per rule and corrects the grades.
-  - Precision = TP / (TP + FP); low-impact findings count as TP and are reported separately.
+  - Precision = (TP + TP-low) / (TP + TP-low + FP). Low-impact findings count as correct for precision; the impact share TP / (TP + TP-low) lowers the severity one more step when it is below 50 %.
   - Thresholds (SPEC section 7), applied after the fixes:
     - an `error` rule stays at ≥ 90 %, becomes `warning` at 75–90 %, and moves to 🧪 below 75 %;
     - a `warning` rule stays at ≥ 75 % and moves to 🧪 below;

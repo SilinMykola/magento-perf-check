@@ -8,7 +8,8 @@ declare(strict_types=1);
  * docs/calibration.md (change m2-calibration, design D3).
  *
  *   report           write docs/calibration.md and print the decisions
- *   report --check   only validate the grading tables
+ *   report --check   validate the grading tables and print the decisions so far,
+ *                    without requiring the owner re-checks
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
@@ -20,6 +21,7 @@ use MagentoPerfRules\Rule\Severity;
 const ROOT = __DIR__ . '/../..';
 const VERDICTS = ['TP', 'TP-low', 'FP', 'unclear'];
 const MIN_GRADED = 10;
+const MIN_IMPACT_SHARE = 0.5;
 
 /**
  * @return array{rows: list<array{n: int, location: string, verdict: string, reason: string, recheck: bool, owner: string}>, total: int}
@@ -69,19 +71,30 @@ function problems(string $id, array $rows): array
 }
 
 /**
- * Thresholds from the calibration spec.
+ * Thresholds from the calibration spec: precision decides the status and the severity,
+ * then an impact share below MIN_IMPACT_SHARE lowers the severity by one more step.
  */
-function decide(Severity $severity, int $graded, ?float $precision): string
+function decide(Severity $severity, int $graded, ?float $precision, ?float $impactShare): string
 {
     if ($graded < MIN_GRADED || $precision === null) {
         return 'insufficient data';
     }
-
-    return match ($severity) {
-        Severity::Error => $precision >= 0.90 ? 'kept' : ($precision >= 0.75 ? 'downgraded to warning' : 'experimental'),
-        Severity::Warning => $precision >= 0.75 ? 'kept' : 'experimental',
-        Severity::Info => 'kept (no threshold)',
+    $target = match ($severity) {
+        Severity::Error => $precision >= 0.90 ? Severity::Error : ($precision >= 0.75 ? Severity::Warning : null),
+        Severity::Warning => $precision >= 0.75 ? Severity::Warning : null,
+        Severity::Info => Severity::Info,
     };
+    if ($target === null) {
+        return 'experimental';
+    }
+    if ($impactShare !== null && $impactShare < MIN_IMPACT_SHARE) {
+        $target = match ($target) {
+            Severity::Error => Severity::Warning,
+            Severity::Warning, Severity::Info => Severity::Info,
+        };
+    }
+
+    return $target === $severity ? 'kept' : 'downgraded to ' . $target->value;
 }
 
 $check = in_array('--check', $argv, true);
@@ -94,7 +107,7 @@ foreach ($registry->all() as $rule) {
     }
     $file = ROOT . '/docs/calibration/graded/' . $rule->id . '.md';
     if (!is_file($file)) {
-        $results[$rule->id] = ['rule' => $rule, 'total' => 0, 'counts' => array_fill_keys(VERDICTS, 0), 'rechecked' => 0, 'changed' => 0, 'graded' => 0, 'precision' => null];
+        $results[$rule->id] = ['rule' => $rule, 'total' => 0, 'counts' => array_fill_keys(VERDICTS, 0), 'rechecked' => 0, 'changed' => 0, 'graded' => 0, 'precision' => null, 'impactShare' => null];
         continue;
     }
     $parsed = parseGrades($file);
@@ -123,6 +136,7 @@ foreach ($registry->all() as $rule) {
         'changed' => $changed,
         'graded' => $graded,
         'precision' => $graded > 0 ? ($counts['TP'] + $counts['TP-low']) / $graded : null,
+        'impactShare' => $counts['TP'] + $counts['TP-low'] > 0 ? $counts['TP'] / ($counts['TP'] + $counts['TP-low']) : null,
     ];
 }
 
@@ -130,11 +144,6 @@ if ($allProblems !== []) {
     fwrite(STDERR, implode("\n", $allProblems) . "\n");
     exit(1);
 }
-if ($check) {
-    echo "grading tables are complete\n";
-    exit(0);
-}
-
 $corpus = json_decode((string) file_get_contents(ROOT . '/docs/calibration/corpus.json'), true, 512, JSON_THROW_ON_ERROR);
 $metas = [];
 foreach (glob(ROOT . '/docs/calibration/runs/*.meta.json') ?: [] as $metaFile) {
@@ -144,10 +153,10 @@ foreach (glob(ROOT . '/docs/calibration/runs/*.meta.json') ?: [] as $metaFile) {
 $rows = '';
 $decisions = [];
 foreach ($results as $id => $r) {
-    $decision = $r['total'] === 0 ? 'no findings in the corpus' : decide($r['rule']->severity, $r['graded'], $r['precision']);
+    $decision = $r['total'] === 0 ? 'no findings in the corpus' : decide($r['rule']->severity, $r['graded'], $r['precision'], $r['impactShare']);
     $decisions[$id] = $decision;
     $rows .= sprintf(
-        "| [%s](rules/%s.md) | %s | %d | %d | %d | %d | %d | %d | %s | %d (%d changed) | %s |\n",
+        "| [%s](rules/%s.md) | %s | %d | %d | %d | %d | %d | %d | %s | %s | %d (%d changed) | %s |\n",
         $id,
         $id,
         $r['rule']->severity->value,
@@ -158,10 +167,19 @@ foreach ($results as $id => $r) {
         $r['counts']['FP'],
         $r['counts']['unclear'],
         $r['precision'] === null ? '–' : sprintf('%.0f %%', $r['precision'] * 100),
+        $r['impactShare'] === null ? '–' : sprintf('%.0f %%', $r['impactShare'] * 100),
         $r['rechecked'],
         $r['changed'],
         $decision,
     );
+}
+
+if ($check) {
+    echo "grading tables are complete; decisions so far:\n";
+    foreach ($decisions as $id => $decision) {
+        echo sprintf("%-10s %s\n", $id, $decision);
+    }
+    exit(0);
 }
 
 $runs = '';
@@ -200,17 +218,21 @@ $report = <<<MD
        - `FP`: the claim does not hold;
        - `unclear`.
     3. The grading was done by a single grader. The owner re-checked a share of every rule's sample; the table shows how many verdicts the owner re-checked, and how many of those were changed.
-    4. Precision = (TP + TP-low) / (TP + TP-low + FP). `unclear` findings are excluded.
-    5. Thresholds (SPEC section 7):
-       - `error` stays at ≥ 90 %, becomes `warning` at 75–90 %, and moves to experimental below;
-       - `warning` stays at ≥ 75 % and moves to experimental below;
+    4. Precision = (TP + TP-low) / (TP + TP-low + FP): how often the rule is right. `unclear` findings are excluded.
+    5. Impact share = TP / (TP + TP-low): how often a correct finding matters.
+    6. Thresholds (SPEC section 7):
+       - `error` stays at ≥ 90 % precision, becomes `warning` at 75–90 %, and moves to experimental below;
+       - `warning` stays at ≥ 75 % precision and moves to experimental below;
+       - a rule that stays in the default set with an impact share below 50 % goes one more step down: `error` to `warning`, `warning` to `info`;
        - with fewer than 10 graded findings, the rule keeps its severity and is marked "insufficient data".
 
     ## Results
 
-    | Rule | Severity | Findings | Sampled | TP | TP-low | FP | Unclear | Precision | Owner re-checked | Decision |
-    |---|---|---|---|---|---|---|---|---|---|---|
+    | Rule | Severity | Findings | Sampled | TP | TP-low | FP | Unclear | Precision | Impact share | Owner re-checked | Decision |
+    |---|---|---|---|---|---|---|---|---|---|---|---|
     {$rows}
+    Recurring false-positive patterns that need a rule change are listed in [`calibration/follow-ups.md`](calibration/follow-ups.md).
+
     ## Limitations
 
     - With up to 30 findings per rule, precision has a wide margin of error. Read it together with the counts, not as an exact figure.

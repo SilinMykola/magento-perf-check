@@ -1,28 +1,8 @@
 # P-FPC-06: calibration sample
 
-4 of 4 findings (seed 20261023). Verdicts: TP, TP-low, FP, unclear. Rows marked `re-check` are for the owner: put `✓` in the owner column, or `was <verdict>` after changing the verdict.
+1 of 1 findings (seed 20261023). Verdicts: TP, TP-low, FP, unclear. Rows marked `re-check` are for the owner: put `✓` in the owner column, or `was <verdict>` after changing the verdict.
 
-## 1. `vendor/magento/module-product-alert/Controller/Add/Stock.php:98` (core)
-
-[P-FPC-06] Magento\ProductAlert\Controller\Add\Stock handles GET only but calls Magento\ProductAlert\Model\Stock::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.
-
-```
-    92              /** @var \Magento\ProductAlert\Model\Stock $model */
-    93              $model = $this->_objectManager->create(\Magento\ProductAlert\Model\Stock::class)
-    94                  ->setCustomerId($this->customerSession->getCustomerId())
-    95                  ->setProductId($product->getId())
-    96                  ->setWebsiteId($store->getWebsiteId())
-    97                  ->setStoreId($store->getId());
->   98              $model->save();
-    99              $this->messageManager->addSuccessMessage(__('Alert subscription has been saved.'));
-   100          } catch (NoSuchEntityException $noEntityException) {
-   101              $this->messageManager->addErrorMessage(__('There are not enough parameters.'));
-   102              $this->isInternal($backUrl)
-   103                  ? $resultRedirect->setUrl($backUrl)
-   104                  : $resultRedirect->setPath('/');
-```
-
-## 2. `app/code/Mollie/Payment/Controller/Express/Process.php:58` (packagist)
+## 1. `app/code/Mollie/Payment/Controller/Express/Process.php:58` (packagist)
 
 [P-FPC-06] Mollie\Payment\Controller\Express\Process handles GET only but calls Magento\Quote\Api\CartRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.
 
@@ -42,51 +22,8 @@
     64      {
 ```
 
-## 3. `vendor/magento/module-product-alert/Controller/Add/Price.php:100` (core)
-
-[P-FPC-06] Magento\ProductAlert\Controller\Add\Price handles GET only but calls Magento\ProductAlert\Model\Price::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.
-
-```
-    94              $model = $this->_objectManager->create(\Magento\ProductAlert\Model\Price::class)
-    95                  ->setCustomerId($this->customerSession->getCustomerId())
-    96                  ->setProductId($product->getId())
-    97                  ->setPrice($product->getFinalPrice())
-    98                  ->setWebsiteId($store->getWebsiteId())
-    99                  ->setStoreId($store->getId());
->  100              $model->save();
-   101              $this->messageManager->addSuccessMessage(__('You saved the alert subscription.'));
-   102          } catch (NoSuchEntityException $noEntityException) {
-   103              $this->messageManager->addErrorMessage(__('There are not enough parameters.'));
-   104              if ($this->isInternal($backUrl)) {
-   105                  $resultRedirect->setUrl($backUrl);
-   106              } else {
-```
-
-## 4. `vendor/magento/module-product-alert/Controller/Unsubscribe/Price.php:78` (core)
-
-[P-FPC-06] Magento\ProductAlert\Controller\Unsubscribe\Price handles GET only but calls Magento\ProductAlert\Model\Price::delete(). Change state only on POST or PUT: GET responses can be cached and served without running this code.
-
-```
-    72                      $this->_objectManager->get(\Magento\Store\Model\StoreManagerInterface::class)
-    73                          ->getStore()
-    74                          ->getWebsiteId()
-    75                  )
-    76                  ->loadByParam();
-    77              if ($model->getId()) {
->   78                  $model->delete();
-    79              }
-    80  
-    81              $this->messageManager->addSuccessMessage(__('You deleted the alert subscription.'));
-    82          } catch (NoSuchEntityException $noEntityException) {
-    83              $this->messageManager->addErrorMessage(__("The product wasn't found. Verify the product and try again."));
-    84              $resultRedirect->setPath('customer/account/');
-```
-
 ## Grades
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-product-alert/Controller/Add/Stock.php:98` | FP | Every return path returns the TYPE_REDIRECT result from resultFactory after setPath or setUrl (the catch uses a ternary), so the page cache never stores this response. | re-check |  |
-| 2 | `app/code/Mollie/Payment/Controller/Express/Process.php:58` | TP | On a completed payment the action deactivates the quote and returns a result page whose layout mollie_express_process has no cacheable=false, so a repeat GET of the same token URL can be served from cache without running the save. | re-check |  |
-| 3 | `vendor/magento/module-product-alert/Controller/Add/Price.php:100` | FP | Every return path returns the TYPE_REDIRECT result from resultFactory with setPath or setUrl (the catch uses an if/else around them), so the page cache never stores this response. | re-check |  |
-| 4 | `vendor/magento/module-product-alert/Controller/Unsubscribe/Price.php:78` | FP | Every return path returns the TYPE_REDIRECT result from resultFactory after setPath or setUrl, so the response is a redirect the page cache never stores. |  |  |
+| 1 | `app/code/Mollie/Payment/Controller/Express/Process.php:58` | TP | On a completed payment the action deactivates the quote and returns a result page whose layout mollie_express_process has no cacheable=false, so a repeat GET of the same token URL can be served from cache without running the save. | re-check |  |
