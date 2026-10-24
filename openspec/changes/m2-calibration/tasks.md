@@ -39,7 +39,7 @@ Groups may be committed one at a time.
 
 ## 5. Grading
 
-- [ ] 5.1 Grade every sampled finding by reading the code, in parallel per rule family, all in the shared table format. Verify: no row without a verdict and reason; `bin/calibration/report --check` passes.
+- [x] 5.1 Grade every sampled finding by reading the code, in parallel per rule family, all in the shared table format. Verify: no row without a verdict and reason; `bin/calibration/report --check` passes.
 - [ ] 5.2 Owner re-check: list the marked rows (about 3 per rule) with links to the graded files, and stop until the owner has gone through them in the editor. Verify: every marked row has `✓` or `was <verdict>` in the owner column.
 
 ## 6. Report and decisions
