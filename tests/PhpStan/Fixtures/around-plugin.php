@@ -6,6 +6,7 @@ namespace Acme\Promo\Plugin {
     final class PricePlugin
     {
         private bool $enabled = true;
+        private ?int $cached = null;
 
         public function aroundGetPrice(object $subject, callable $proceed, int $qty): int
         {
@@ -64,6 +65,26 @@ namespace Acme\Promo\Plugin {
             $result = $proceed($qty);
 
             return $result;
+        }
+
+        public function aroundTernary(object $subject, callable $proceed, int $qty): int
+        {
+            return $this->enabled ? $proceed($qty) : 0;
+        }
+
+        public function aroundShortCircuit(object $subject, callable $proceed, int $qty): bool
+        {
+            return $this->enabled && $proceed($qty);
+        }
+
+        public function aroundCoalesce(object $subject, callable $proceed, int $qty): mixed
+        {
+            return $this->cached ?? $proceed($qty);
+        }
+
+        public function aroundInCondition(object $subject, callable $proceed, int $qty): int
+        {
+            return $proceed($qty) > 0 ? 1 : 0;
         }
 
         private function aroundPrivate(object $subject, callable $proceed): mixed

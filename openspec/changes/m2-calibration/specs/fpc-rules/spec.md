@@ -82,6 +82,10 @@ It SHALL NOT report a controller whose `execute()` returns only redirect results
 - **WHEN** a GET-only controller saves a model and every return statement returns a redirect result
 - **THEN** P-FPC-06 reports nothing
 
+#### Scenario: Redirect from the result factory
+- **WHEN** a GET-only controller saves a model, creates its result with `$this->resultFactory->create(ResultFactory::TYPE_REDIRECT)` and returns only that result
+- **THEN** P-FPC-06 reports nothing
+
 ### Requirement: P-FPC-09 cache cleaning in code
 P-FPC-09 SHALL report, as `error`, a call that cleans more cache than needed, in code that runs during requests:
 - `cleanType('full_page')` on `Magento\Framework\App\Cache\TypeListInterface`, with a literal argument or the `Type::TYPE_IDENTIFIER` constant;

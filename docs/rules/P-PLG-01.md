@@ -11,6 +11,7 @@
 A public `around*` method of a plugin class in which all of these hold:
 - `$proceed` is called exactly once;
 - the call is in a statement directly in the method body (an expression or a `return`), not inside `if`, a loop, `try` or a closure;
+- the call is not a branch of a ternary (`?:`) and not the right operand of `&&`, `||`, `and`, `or` or `??`, where it may not run;
 - the arguments are the method's own parameters after `$subject` and `$proceed`, unchanged and in order, or spread with `...`.
 
 A class counts as a plugin class when some `di.xml` in the project declares it as a plugin, or when its name ends in `Plugin`.

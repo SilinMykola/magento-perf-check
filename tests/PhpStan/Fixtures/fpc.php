@@ -355,6 +355,49 @@ namespace Acme\Promo\Controller\Wishlist {
             return $path;
         }
     }
+
+    final class Subscribe implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $resultFactory,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            $resultRedirect = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_REDIRECT);
+            try {
+                $this->productRepository->save($this->product);
+            } catch (\RuntimeException $e) {
+                $this->product->getSku() !== ''
+                    ? $resultRedirect->setUrl('/back')
+                    : $resultRedirect->setPath('/');
+
+                return $resultRedirect;
+            }
+
+            return $resultRedirect->setPath('wishlist');
+        }
+    }
+
+    final class Show implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $resultFactory,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            $this->productRepository->save($this->product);
+
+            return $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_PAGE);
+        }
+    }
 }
 
 namespace Acme\Promo\Controller\Adminhtml\Rule {

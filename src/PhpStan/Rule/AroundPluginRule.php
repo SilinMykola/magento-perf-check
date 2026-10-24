@@ -114,7 +114,30 @@ final class AroundPluginRule implements Rule
                 }
             }
 
-            return true;
+            return !$this->isInConditionalBranch($statement, $call, $finder);
+        }
+
+        return false;
+    }
+
+    /**
+     * The call is a branch of a ternary, or the right operand of &&, ||, and, or, ??, so
+     * it may not run.
+     */
+    private function isInConditionalBranch(Stmt $statement, Expr\FuncCall $call, NodeFinder $finder): bool
+    {
+        $contains = static fn (?Node $branch): bool => $branch !== null
+            && $finder->findFirst([$branch], static fn (Node $n): bool => $n === $call) !== null;
+        foreach ($finder->find([$statement], static fn (Node $n): bool => $n instanceof Expr\Ternary || $n instanceof Expr\BinaryOp) as $expr) {
+            if ($expr instanceof Expr\Ternary && ($contains($expr->if) || $contains($expr->else))) {
+                return true;
+            }
+            if (($expr instanceof Expr\BinaryOp\BooleanAnd || $expr instanceof Expr\BinaryOp\BooleanOr
+                || $expr instanceof Expr\BinaryOp\LogicalAnd || $expr instanceof Expr\BinaryOp\LogicalOr
+                || $expr instanceof Expr\BinaryOp\Coalesce) && $contains($expr->right)
+            ) {
+                return true;
+            }
         }
 
         return false;

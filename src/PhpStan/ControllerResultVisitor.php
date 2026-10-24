@@ -99,7 +99,9 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
                 if (in_array($name, self::REDIRECT_METHODS, true)) {
                     return true;
                 }
-                if ($name === 'create' && preg_match('/redirect|forward/i', $this->receiverName($expr->var)) === 1) {
+                if ($name === 'create'
+                    && (preg_match('/redirect|forward/i', $this->receiverName($expr->var)) === 1 || $this->createsRedirectType($expr))
+                ) {
                     return true;
                 }
             }
@@ -107,6 +109,17 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
         }
 
         return $expr instanceof Expr\Variable && is_string($expr->name) && isset($redirectVariables[$expr->name]);
+    }
+
+    /**
+     * resultFactory->create(ResultFactory::TYPE_REDIRECT) or TYPE_FORWARD, matched by constant name.
+     */
+    private function createsRedirectType(Expr\MethodCall $create): bool
+    {
+        $type = $create->getArgs()[0]->value ?? null;
+
+        return $type instanceof Expr\ClassConstFetch && $type->name instanceof Node\Identifier
+            && in_array($type->name->toString(), ['TYPE_REDIRECT', 'TYPE_FORWARD'], true);
     }
 
     private function receiverName(Expr $expr): string

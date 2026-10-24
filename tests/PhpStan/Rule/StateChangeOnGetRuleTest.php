@@ -29,6 +29,7 @@ final class StateChangeOnGetRuleTest extends RuleTestCase
             ['[P-FPC-06] Acme\\Promo\\Controller\\Promo\\Add handles GET only but calls Magento\\Checkout\\Model\\Cart::addProduct(). Change state only on POST or PUT: GET responses can be cached and served without running this code.', 89],
             ['[P-FPC-06] Acme\\Promo\\Controller\\Promo\\Add handles GET only but calls Magento\\Catalog\\Api\\ProductRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.', 90],
             ['[P-FPC-06] Acme\\Promo\\Controller\\Wishlist\\Touch handles GET only but calls Magento\\Catalog\\Api\\ProductRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.', 345],
+            ['[P-FPC-06] Acme\\Promo\\Controller\\Wishlist\\Show handles GET only but calls Magento\\Catalog\\Api\\ProductRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.', 396],
         ]);
     }
 }
