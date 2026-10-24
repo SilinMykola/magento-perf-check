@@ -6,11 +6,11 @@ Rules on `.phtml` templates that catch logic which belongs in blocks, view model
 ## Requirements
 
 ### Requirement: T-01 createBlock in a template
-T-01 SHALL report, as `warning`, a call chain `->getLayout()->createBlock(...)` in a `.phtml` file, on any receiver. The message SHALL say that the Technical guidelines forbid it and that the block should be declared in layout XML instead.
+T-01 SHALL report, as `info`, a call chain `->getLayout()->createBlock(...)` in a `.phtml` file, on any receiver. The message SHALL say that the Technical guidelines forbid it and that the block should be declared in layout XML instead. Calibration lowered it from `warning`: most correct findings create one block per render of an uncacheable form.
 
 #### Scenario: Block created in template
 - **WHEN** a template contains `$block->getLayout()->createBlock(\Acme\Promo\Block\Badge::class)->toHtml()`
-- **THEN** T-01 reports a warning
+- **THEN** T-01 reports an info finding
 
 #### Scenario: Child block from layout
 - **WHEN** a template calls `$block->getChildHtml('badge')`

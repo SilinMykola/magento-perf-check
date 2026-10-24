@@ -65,6 +65,7 @@ The command SHALL support these formats on stdout:
 - `--format=json`: one JSON document with the findings and a summary of counts per severity and run duration.
 - `--format=sarif`: one SARIF 2.1.0 log.
 - `--format=checkstyle`: one Checkstyle XML document.
+- `--format=github`: GitHub Actions workflow commands, one line per finding.
 
 Machine formats SHALL contain nothing else on stdout.
 
@@ -84,6 +85,11 @@ Machine formats SHALL contain nothing else on stdout.
 #### Scenario: Checkstyle output
 - **WHEN** the command runs with `--format=checkstyle`
 - **THEN** stdout is a `<checkstyle>` document with one `<file>` per file and one `<error>` per finding carrying `line`, `severity`, `message` and `source` set to the rule ID
+
+#### Scenario: GitHub output
+- **WHEN** the command runs with `--format=github`
+- **THEN** each finding is one line `::error file=<path>,line=<line>,title=<RULE-ID>::<message>`, using `::warning` for warnings and `::notice` for info
+- **AND** property values and the message are escaped as GitHub requires (`%`, carriage return and line feed in the message; additionally `:` and `,` in properties)
 
 #### Scenario: Unknown format
 - **WHEN** the command runs with `--format=xml`

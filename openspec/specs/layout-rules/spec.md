@@ -25,13 +25,7 @@ X-LAY-01 SHALL report every `<block>` element with `cacheable="false"` in a layo
 - **THEN** X-LAY-01 reports an `error`
 
 ### Requirement: X-LAY-01 default allowlist
-X-LAY-01 SHALL NOT report blocks in personal handles that are not meant to be served from FPC. The default allowlist is these handle prefixes:
-- Customer: `customer_`, `loginascustomer_`, `newsletter_manage_`, `review_customer_`, `downloadable_customer_`.
-- Checkout and sales: `checkout_`, `multishipping_`, `sales_`.
-- Payment: `paypal_`, `vault_`, `paymentservicespaypal_vault_`.
-- Lists: `wishlist_`, `catalog_product_compare_`.
-
-The configuration file SHALL be able to add prefixes or replace the list.
+X-LAY-01 SHALL NOT report blocks in handles whose name starts with a prefix on the allowlist. These are personal pages that are not meant to be served from FPC.
 
 #### Scenario: Checkout handle
 - **WHEN** `checkout_cart_index.xml` contains a block with `cacheable="false"`
@@ -81,3 +75,21 @@ X-LAY-02 SHALL report, as `error`, a `<block>` with a `ttl` attribute in a front
 #### Scenario: Shared handle
 - **WHEN** `default.xml` contains a block with `ttl="3600"`
 - **THEN** X-LAY-02 reports nothing
+
+### Requirement: X-LAY-01 default allowlist contents
+The default allowlist SHALL be these handle prefixes:
+- Customer: `customer_`, `loginascustomer_`, `newsletter_manage_`, `review_customer_`, `downloadable_customer_`.
+- Checkout and sales: `checkout_`, `multishipping_`, `sales_`.
+- Payment: `paypal_`, `vault_`, `paymentservicespaypal_vault_`.
+- Lists: `wishlist_`, `catalog_product_compare_`.
+
+#### Scenario: Vault handle
+- **WHEN** `vault_cards_listaction.xml` contains a block with `cacheable="false"`
+- **THEN** X-LAY-01 reports nothing
+
+### Requirement: X-LAY-01 configurable allowlist
+The configuration file SHALL be able to add prefixes to the allowlist, or replace the default list with its own.
+
+#### Scenario: Default list replaced
+- **WHEN** the configuration sets `layout.allowlistHandles: [acme_]` and `layout.replaceAllowlist: true`, and `checkout_cart_index.xml` contains a block with `cacheable="false"`
+- **THEN** X-LAY-01 reports it
