@@ -86,7 +86,7 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-product-alert/Controller/Add/Stock.php:98` |  |  | re-check |  |
-| 2 | `app/code/Mollie/Payment/Controller/Express/Process.php:58` |  |  | re-check |  |
-| 3 | `vendor/magento/module-product-alert/Controller/Add/Price.php:100` |  |  | re-check |  |
-| 4 | `vendor/magento/module-product-alert/Controller/Unsubscribe/Price.php:78` |  |  |  |  |
+| 1 | `vendor/magento/module-product-alert/Controller/Add/Stock.php:98` | FP | Every return path returns the TYPE_REDIRECT result from resultFactory after setPath or setUrl (the catch uses a ternary), so the page cache never stores this response. | re-check |  |
+| 2 | `app/code/Mollie/Payment/Controller/Express/Process.php:58` | TP | On a completed payment the action deactivates the quote and returns a result page whose layout mollie_express_process has no cacheable=false, so a repeat GET of the same token URL can be served from cache without running the save. | re-check |  |
+| 3 | `vendor/magento/module-product-alert/Controller/Add/Price.php:100` | FP | Every return path returns the TYPE_REDIRECT result from resultFactory with setPath or setUrl (the catch uses an if/else around them), so the page cache never stores this response. | re-check |  |
+| 4 | `vendor/magento/module-product-alert/Controller/Unsubscribe/Price.php:78` | FP | Every return path returns the TYPE_REDIRECT result from resultFactory after setPath or setUrl, so the response is a redirect the page cache never stores. |  |  |

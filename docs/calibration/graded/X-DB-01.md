@@ -23,4 +23,4 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-message-queue/etc/db_schema.xml:24` |  |  | re-check |  |
+| 1 | `vendor/magento/module-message-queue/etc/db_schema.xml:24` | TP | queue_poison_pill is declared only in module-message-queue db_schema.xml with a single version column and no primary constraint anywhere in the corpus. | re-check |  |

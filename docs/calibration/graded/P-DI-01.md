@@ -606,33 +606,33 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-two-factor-auth/Controller/Adminhtml/U2f/VerifyIdentityPost.php:49` |  |  | re-check |  |
-| 2 | `vendor/magento/module-weee/Plugin/Checkout/CustomerData/Cart.php:41` |  |  | re-check |  |
-| 3 | `vendor/magento/module-inventory-admin-ui/Ui/DataProvider/SourceDataProvider.php:90` |  |  | re-check |  |
-| 4 | `vendor/magento/module-payment-services-paypal/Block/SmartButtons.php:97` |  |  |  |  |
-| 5 | `vendor/magento/framework/App/Request/DataPersistor.php:25` |  |  |  |  |
-| 6 | `vendor/magento/module-checkout/Block/Cart/Grid.php:62` |  |  |  |  |
-| 7 | `vendor/magento/module-multishipping/Model/Checkout/Type/Multishipping/State.php:55` |  |  |  |  |
-| 8 | `app/code/Mageplaza/Smtp/Controller/AbandonedCart/Recover.php:92` |  |  |  |  |
-| 9 | `vendor/magento/module-wishlist/Observer/CustomerLogout.php:27` |  |  |  |  |
-| 10 | `vendor/magento/module-catalog/Controller/Category/View.php:136` |  |  |  |  |
-| 11 | `vendor/magento/module-persistent/Observer/CheckExpirePersistentQuoteObserver.php:101` |  |  |  |  |
-| 12 | `vendor/magento/module-newsletter/Controller/Manage.php:28` |  |  |  |  |
-| 13 | `vendor/magento/module-checkout/Block/Cart.php:46` |  |  |  |  |
-| 14 | `vendor/magento/module-product-alert/Controller/Add/Stock.php:45` |  |  |  |  |
-| 15 | `vendor/magento/module-checkout/Controller/Action.php:41` |  |  |  |  |
-| 16 | `vendor/magento/module-two-factor-auth/Controller/Adminhtml/Tfa/VerifyIdentity.php:44` |  |  |  |  |
-| 17 | `vendor/magento/module-catalog/Block/Product/View.php:89` |  |  |  |  |
-| 18 | `app/code/Mollie/Payment/Service/Mollie/Order/SuccessPageRedirect.php:28` |  |  |  |  |
-| 19 | `vendor/magento/module-catalog/Helper/Data.php:213` |  |  |  |  |
-| 20 | `vendor/magento/module-tax/Block/Checkout/Shipping/Price.php:32` |  |  |  |  |
-| 21 | `vendor/magento/module-reports/Observer/EventSaver.php:42` |  |  |  |  |
-| 22 | `vendor/magento/module-captcha/Model/Customer/Plugin/AjaxLogin.php:53` |  |  |  |  |
-| 23 | `app/code/Ebizmarts/MailChimp/Model/Plugin/AccountManagement.php:44` |  |  |  |  |
-| 24 | `vendor/magento/module-config/Observer/Config/Backend/Admin/AfterCustomUrlChangedObserver.php:52` |  |  |  |  |
-| 25 | `vendor/magento/module-sales/CustomerData/LastOrderedItems.php:101` |  |  |  |  |
-| 26 | `vendor/magento/module-product-alert/Controller/Add/Price.php:46` |  |  |  |  |
-| 27 | `vendor/magento/module-catalog/Plugin/Framework/App/Action/ContextPlugin.php:43` |  |  |  |  |
-| 28 | `vendor/magento/module-paypal/Controller/Express/AbstractExpress/ShippingOptionsCallback.php:39` |  |  |  |  |
-| 29 | `vendor/magento/module-payment-services-paypal/Block/SmartButtons/Review/Details.php:38` |  |  |  |  |
-| 30 | `vendor/magento/module-two-factor-auth/Model/UserConfig/HtmlAreaTokenVerifier.php:71` |  |  |  |  |
+| 1 | `vendor/magento/module-two-factor-auth/Controller/Adminhtml/U2f/VerifyIdentityPost.php:49` | TP-low | No Proxy configured, but this adminhtml POST controller always reads the admin user from the auth session, which every admin request starts anyway. | re-check |  |
+| 2 | `vendor/magento/module-weee/Plugin/Checkout/CustomerData/Cart.php:41` | TP-low | No Proxy configured, but the plugin only runs during customer section load, where the parent Tax cart plugin and the cart section already use the checkout session. | re-check |  |
+| 3 | `vendor/magento/module-inventory-admin-ui/Ui/DataProvider/SourceDataProvider.php:90` | TP-low | No Proxy configured, but this admin source form data provider runs only in adminhtml, where the backend session is already started. | re-check |  |
+| 4 | `vendor/magento/module-payment-services-paypal/Block/SmartButtons.php:97` | TP-low | No Proxy configured, but the block renders only in frontend actions, where Magento\Customer\Model\App\Action\ContextPlugin already starts the session on every dispatch. |  |  |
+| 5 | `vendor/magento/framework/App/Request/DataPersistor.php:25` | TP-low | module-backend di.xml injects the non-proxy Magento\Backend\Model\Session, but DataPersistor is used by admin form controllers and frontend form controllers that already have a started session. |  |  |
+| 6 | `vendor/magento/module-checkout/Block/Cart/Grid.php:62` | TP-low | No Proxy configured, but the cart grid block renders only on the non-cacheable cart page, where the session is in use anyway. |  |  |
+| 7 | `vendor/magento/module-multishipping/Model/Checkout/Type/Multishipping/State.php:55` | TP-low | No Proxy configured, but the state object is used only by multishipping checkout controllers, which always need the checkout session. |  |  |
+| 8 | `app/code/Mageplaza/Smtp/Controller/AbandonedCart/Recover.php:92` | TP-low | No Proxy configured, but this frontend controller sets the recovered quote on the checkout session, and the customer ContextPlugin starts the session on every frontend action. |  |  |
+| 9 | `vendor/magento/module-wishlist/Observer/CustomerLogout.php:27` | TP-low | No Proxy configured, but the observer runs only on frontend customer_logout, where the session is necessarily active. |  |  |
+| 10 | `vendor/magento/module-catalog/Controller/Category/View.php:136` | TP-low | No Proxy configured, but execute() always writes the visited category to the catalog session and the frontend customer ContextPlugin starts the session anyway. |  |  |
+| 11 | `vendor/magento/module-persistent/Observer/CheckExpirePersistentQuoteObserver.php:101` | TP-low | No Proxy configured, but the observer is a frontend controller_action_predispatch observer that reads the checkout session in execute(), and the session is started on every frontend action. |  |  |
+| 12 | `vendor/magento/module-newsletter/Controller/Manage.php:28` | TP-low | No Proxy configured, but dispatch() always calls customerSession->authenticate(), so the session is needed on every request to this controller. |  |  |
+| 13 | `vendor/magento/module-checkout/Block/Cart.php:46` | TP-low | No Proxy configured, but the cart block renders only on the non-cacheable cart page, where the session is in use anyway. |  |  |
+| 14 | `vendor/magento/module-product-alert/Controller/Add/Stock.php:45` | TP-low | No Proxy configured, but this controller always reads the customer id from the session in execute(). |  |  |
+| 15 | `vendor/magento/module-checkout/Controller/Action.php:41` | TP-low | No Proxy configured, but this is the base class of checkout controllers, which always need the customer session. |  |  |
+| 16 | `vendor/magento/module-two-factor-auth/Controller/Adminhtml/Tfa/VerifyIdentity.php:44` | TP-low | No Proxy configured, but this adminhtml controller reads the auth session in _isAllowed() and execute(), and the admin session is started on every admin request. |  |  |
+| 17 | `vendor/magento/module-catalog/Block/Product/View.php:89` | TP-low | No Proxy configured, but the product view block renders only in frontend actions, where the customer ContextPlugin already starts the session on every dispatch. |  |  |
+| 18 | `app/code/Mollie/Payment/Service/Mollie/Order/SuccessPageRedirect.php:28` | TP-low | No Proxy configured, but the service is called only from Mollie frontend checkout controllers, which always write the last order data to the checkout session. |  |  |
+| 19 | `vendor/magento/module-catalog/Helper/Data.php:213` | TP | module-catalog di.xml proxies only catalogSession; customerSession is not proxied, is read only in getTaxPrice(), and the helper is also built in the graphql area, where nothing else starts a session. |  |  |
+| 20 | `vendor/magento/module-tax/Block/Checkout/Shipping/Price.php:32` | TP-low | No Proxy configured, but the checkout shipping price block renders only on non-cacheable checkout and cart pages, where the session is in use anyway. |  |  |
+| 21 | `vendor/magento/module-reports/Observer/EventSaver.php:42` | TP | No Proxy configured, and EventSaver is built by CheckoutCartAddProductObserver on sales_quote_item_save_before in webapi_rest and webapi_soap, even when the report is disabled. |  |  |
+| 22 | `vendor/magento/module-captcha/Model/Customer/Plugin/AjaxLogin.php:53` | TP-low | No Proxy configured, but the plugin wraps only the customer ajax login controller, where the session is always needed. |  |  |
+| 23 | `app/code/Ebizmarts/MailChimp/Model/Plugin/AccountManagement.php:44` | TP-low | No Proxy configured, but the plugin is only instantiated when isEmailAvailable() is called and then reads the quote id from the checkout session whenever email saving is enabled. |  |  |
+| 24 | `vendor/magento/module-config/Observer/Config/Backend/Admin/AfterCustomUrlChangedObserver.php:52` | TP-low | No Proxy configured, but the observer runs only in adminhtml after an admin config save where the admin auth session is already started for the request. |  |  |
+| 25 | `vendor/magento/module-sales/CustomerData/LastOrderedItems.php:101` | TP-low | No Proxy configured, but this customer data section is built only during section load, which always reads the customer id from the session. |  |  |
+| 26 | `vendor/magento/module-product-alert/Controller/Add/Price.php:46` | TP-low | No Proxy configured, but this controller always reads the customer id from the session in execute(). |  |  |
+| 27 | `vendor/magento/module-catalog/Plugin/Framework/App/Action/ContextPlugin.php:43` | TP-low | No Proxy configured for catalogSession of this frontend AbstractAction plugin, but the customer ContextPlugin already starts the session on the same dispatch, so only a namespace object is added. |  |  |
+| 28 | `vendor/magento/module-paypal/Controller/Express/AbstractExpress/ShippingOptionsCallback.php:39` | TP-low | No Proxy configured; this server-to-server callback loads the quote by id and does not need the session, but as a frontend action the customer ContextPlugin starts the session anyway. |  |  |
+| 29 | `vendor/magento/module-payment-services-paypal/Block/SmartButtons/Review/Details.php:38` | TP-low | No Proxy configured, but the review details block renders only on the non-cacheable PayPal review page, where the session is in use anyway. |  |  |
+| 30 | `vendor/magento/module-two-factor-auth/Model/UserConfig/HtmlAreaTokenVerifier.php:71` | TP-low | No Proxy configured, but the verifier is used only by adminhtml 2FA controllers and the predispatch observer, where the backend session is already started. |  |  |

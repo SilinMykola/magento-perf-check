@@ -605,33 +605,33 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-sales/Ui/Component/Listing/Column/Price.php:88` |  |  | re-check |  |
-| 2 | `vendor/magento/module-gift-message/Model/Plugin/OrderGet.php:99` |  |  | re-check |  |
-| 3 | `vendor/magento/module-catalog/Block/Adminhtml/Product/Options/Ajax.php:75` |  |  | re-check |  |
-| 4 | `vendor/magento/module-cms/Controller/Adminhtml/Block/InlineEdit.php:66` |  |  |  |  |
-| 5 | `vendor/magento/module-catalog-url-rewrite/Model/Product/AnchorUrlRewriteGenerator.php:70` |  |  |  |  |
-| 6 | `vendor/magento/module-bundle/Model/Product/SaveHandler.php:205` |  |  |  |  |
-| 7 | `vendor/magento/module-configurable-product/Controller/Adminhtml/Product/Initialization/Helper/Plugin/UpdateConfigurations.php:80` |  |  |  |  |
-| 8 | `vendor/magento/module-media-gallery-catalog-ui/Ui/Component/Listing/Columns/Path.php:79` |  |  |  |  |
-| 9 | `app/code/Algolia/AlgoliaSearch/Controller/Adminhtml/Reindex/Save.php:81` |  |  |  |  |
-| 10 | `vendor/magento/module-sales/CustomerData/LastOrderedItems.php:154` |  |  |  |  |
-| 11 | `vendor/magento/module-sales/Ui/Component/Listing/Column/PurchasedPrice.php:66` |  |  |  |  |
-| 12 | `vendor/magento/module-media-gallery-catalog-ui/Controller/Adminhtml/Product/GetSelected.php:70` |  |  |  |  |
-| 13 | `vendor/magento/module-catalog-url-rewrite/Model/ProductScopeRewriteGenerator.php:195` |  |  |  |  |
-| 14 | `vendor/magento/module-catalog/Model/Indexer/Product/Eav/Plugin/AttributeSet/IndexableAttributeFilter.php:40` |  |  |  |  |
-| 15 | `vendor/magento/module-catalog-url-rewrite/Model/Product/CurrentUrlRewritesRegenerator.php:193` |  |  |  |  |
-| 16 | `vendor/magento/module-search/Model/SynonymGroupRepository.php:155` |  |  |  |  |
-| 17 | `vendor/magento/module-media-gallery-catalog-ui/Ui/Component/Listing/Columns/Thumbnail.php:102` |  |  |  |  |
-| 18 | `vendor/magento/module-catalog/Model/Product/Price/Validation/InvalidSkuProcessor.php:60` |  |  |  |  |
-| 19 | `vendor/magento/module-customer/Controller/Adminhtml/Index/MassSubscribe.php:61` |  |  |  |  |
-| 20 | `vendor/magento/module-customer/Model/Address/DataProvider.php:147` |  |  |  |  |
-| 21 | `vendor/magento/module-catalog/Ui/DataProvider/Product/Form/Modifier/Related.php:220` |  |  |  |  |
-| 22 | `vendor/magento/module-gift-message/Model/Save.php:284` |  |  |  |  |
-| 23 | `app/code/Ebizmarts/MailChimp/Block/Pixel/Order.php:96` |  |  |  |  |
-| 24 | `vendor/magento/module-catalog-inventory-graph-ql/Model/Resolver/StockStatusProvider.php:95` |  |  |  |  |
-| 25 | `vendor/magento/module-inventory-admin-ui/Controller/Adminhtml/Source/InlineEdit.php:81` |  |  |  |  |
-| 26 | `vendor/magento/module-catalog/Model/Product/Price/BasePriceStorage.php:288` |  |  |  |  |
-| 27 | `vendor/magento/module-ui/Model/ResourceModel/BookmarkRepository.php:122` |  |  |  |  |
-| 28 | `vendor/magento/module-newsletter/Model/ResourceModel/Problem/Collection.php:163` |  |  |  |  |
-| 29 | `app/code/Magefan/Community/Model/GetCategoryByProduct.php:73` |  |  |  |  |
-| 30 | `vendor/magento/module-inventory/Model/Source/Command/GetSourcesAssignedToStockOrderedByPriority.php:79` |  |  |  |  |
+| 1 | `vendor/magento/module-sales/Ui/Component/Listing/Column/Price.php:88` | FP | Directory Currency::load() is overridden to only set currency_code in memory, so no database query runs. | re-check |  |
+| 2 | `vendor/magento/module-gift-message/Model/Plugin/OrderGet.php:99` | TP | Gift message repository get() loads the gift message once per order item that has one, on every order get. | re-check |  |
+| 3 | `vendor/magento/module-catalog/Block/Adminhtml/Product/Options/Ajax.php:75` | TP-low | Admin AJAX that imports custom options from a user-selected set of products; one product load each. | re-check |  |
+| 4 | `vendor/magento/module-cms/Controller/Adminhtml/Block/InlineEdit.php:66` | TP-low | Admin inline edit of CMS blocks bounded by the rows edited in the grid at once. |  |  |
+| 5 | `vendor/magento/module-catalog-url-rewrite/Model/Product/AnchorUrlRewriteGenerator.php:70` | TP | Category repository get() per anchor category of every product category during URL rewrite generation on product save and import. |  |  |
+| 6 | `vendor/magento/module-bundle/Model/Product/SaveHandler.php:205` | TP-low | Admin bundle save loads only the options removed in this save, then deletes each. |  |  |
+| 7 | `vendor/magento/module-configurable-product/Controller/Adminhtml/Product/Initialization/Helper/Plugin/UpdateConfigurations.php:80` | TP | One getById() per configurable variation on admin product save; variations can number in the hundreds. |  |  |
+| 8 | `vendor/magento/module-media-gallery-catalog-ui/Ui/Component/Listing/Columns/Path.php:79` | TP-low | Loop bounded by the depth of one category path and the category repository caches by id. |  |  |
+| 9 | `app/code/Algolia/AlgoliaSearch/Controller/Adminhtml/Reindex/Save.php:81` | TP-low | Admin reindex form capped at MAX_SKUS = 10 SKUs. |  |  |
+| 10 | `vendor/magento/module-sales/CustomerData/LastOrderedItems.php:154` | TP-low | Loop capped at SIDEBAR_ORDER_LIMIT = 5 items of the last order. |  |  |
+| 11 | `vendor/magento/module-sales/Ui/Component/Listing/Column/PurchasedPrice.php:66` | FP | Directory Currency::load() is overridden to only set currency_code in memory, so no database query runs. |  |  |
+| 12 | `vendor/magento/module-media-gallery-catalog-ui/Controller/Adminhtml/Product/GetSelected.php:70` | TP-low | Admin AJAX resolving the product ids already selected in a media gallery filter. |  |  |
+| 13 | `vendor/magento/module-catalog-url-rewrite/Model/ProductScopeRewriteGenerator.php:195` | TP-low | Bounded by the store views that override the product URL key; one scoped product load each. |  |  |
+| 14 | `vendor/magento/module-catalog/Model/Indexer/Product/Eav/Plugin/AttributeSet/IndexableAttributeFilter.php:40` | TP | Two attribute loads per attribute of every group in the set on attribute set save; sets hold hundreds of attributes. |  |  |
+| 15 | `vendor/magento/module-catalog-url-rewrite/Model/Product/CurrentUrlRewritesRegenerator.php:193` | TP | Category repository get() per existing category URL rewrite of the product during URL regeneration. |  |  |
+| 16 | `vendor/magento/module-search/Model/SynonymGroupRepository.php:155` | TP-low | Admin synonym group merge over the few matching groups, each loaded and deleted. |  |  |
+| 17 | `vendor/magento/module-media-gallery-catalog-ui/Ui/Component/Listing/Columns/Thumbnail.php:102` | TP | One category repository load per row of the media gallery category grid. |  |  |
+| 18 | `vendor/magento/module-catalog/Model/Product/Price/Validation/InvalidSkuProcessor.php:60` | TP | Product repository get() per bundle SKU in the price storage API, which takes arbitrary SKU lists. |  |  |
+| 19 | `vendor/magento/module-customer/Controller/Adminhtml/Index/MassSubscribe.php:61` | TP | Admin mass subscribe loads every selected customer one by one; selections can be thousands. |  |  |
+| 20 | `vendor/magento/module-customer/Model/Address/DataProvider.php:147` | TP-low | Form data provider whose collection is filtered to the one address being edited. |  |  |
+| 21 | `vendor/magento/module-catalog/Ui/DataProvider/Product/Form/Modifier/Related.php:220` | TP | One product repository get() per related, up-sell or cross-sell link on the admin product form. |  |  |
+| 22 | `vendor/magento/module-gift-message/Model/Save.php:284` | TP | One product getById() per cart item when importing gift message permissions. |  |  |
+| 23 | `app/code/Ebizmarts/MailChimp/Block/Pixel/Order.php:96` | TP | One product getById() per visible order item on the checkout success page. |  |  |
+| 24 | `vendor/magento/module-catalog-inventory-graph-ql/Model/Resolver/StockStatusProvider.php:95` | TP | Stock status repository get() runs resource load() for every bundle selection of a cart item. |  |  |
+| 25 | `vendor/magento/module-inventory-admin-ui/Controller/Adminhtml/Source/InlineEdit.php:81` | TP-low | Admin inline edit of inventory sources bounded by the rows edited at once. |  |  |
+| 26 | `vendor/magento/module-catalog/Model/Product/Price/BasePriceStorage.php:288` | FP | StoreRepository::getById() reads store data from app config and caches it; no database query. |  |  |
+| 27 | `vendor/magento/module-ui/Model/ResourceModel/BookmarkRepository.php:122` | TP-low | getList() reloads each bookmark by id, but one admin user has only a few bookmarks per grid. |  |  |
+| 28 | `vendor/magento/module-newsletter/Model/ResourceModel/Problem/Collection.php:163` | TP | Customer repository getById() per newsletter problem row in the admin problem grid. |  |  |
+| 29 | `app/code/Magefan/Community/Model/GetCategoryByProduct.php:73` | TP | Category repository get() for every category the product is assigned to, per product. |  |  |
+| 30 | `vendor/magento/module-inventory/Model/Source/Command/GetSourcesAssignedToStockOrderedByPriority.php:79` | TP-low | Bounded by the few sources assigned to one stock and the command is wrapped by a caching preference. |  |  |

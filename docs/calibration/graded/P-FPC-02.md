@@ -597,33 +597,33 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `app/code/Adyen/Payment/Block/Form/Moto.php:175` |  |  | re-check |  |
-| 2 | `app/code/Adyen/Payment/Block/Form/PosCloud.php:115` |  |  | re-check |  |
-| 3 | `app/code/Adyen/Payment/Block/Form/Moto.php:197` |  |  | re-check |  |
-| 4 | `vendor/magento/module-checkout/Block/Onepage/Link.php:58` |  |  |  |  |
-| 5 | `vendor/magento/module-payment-services-paypal/Block/SmartButtons.php:165` |  |  |  |  |
-| 6 | `vendor/magento/module-catalog/Block/Product/View.php:347` |  |  |  |  |
-| 7 | `vendor/magento/module-multishipping/Block/Checkout/Addresses.php:166` |  |  |  |  |
-| 8 | `vendor/magento/module-payment-services-paypal/Block/SmartButtons.php:296` |  |  |  |  |
-| 9 | `vendor/magento/module-paypal/Block/Iframe.php:107` |  |  |  |  |
-| 10 | `vendor/magento/module-payment-services-paypal/Block/SmartButtonsCart.php:68` |  |  |  |  |
-| 11 | `app/code/Algolia/AlgoliaSearch/Block/Cart/Recommend.php:38` |  |  |  |  |
-| 12 | `vendor/magento/module-paypal/Block/Express/InContext/Minicart/Button.php:110` |  |  |  |  |
-| 13 | `vendor/magento/module-sales/Block/Order/History.php:99` |  |  |  |  |
-| 14 | `vendor/magento/module-paypal/Block/Express/Review/Shipping.php:171` |  |  |  |  |
-| 15 | `vendor/magento/module-payment/Block/Transparent/Form.php:86` |  |  |  |  |
-| 16 | `vendor/magento/module-paypal/Block/Checkout/Onepage/Success/BillingAgreement.php:59` |  |  |  |  |
-| 17 | `app/code/Mollie/Payment/Block/Applepay/Shortcut/Button.php:47` |  |  |  |  |
-| 18 | `vendor/magento/module-customer/Block/Address/Edit.php:151` |  |  |  |  |
-| 19 | `app/code/Adyen/Payment/Block/Form/PosCloud.php:116` |  |  |  |  |
-| 20 | `vendor/magento/module-paypal/ViewModel/PaypalFundingSourceDataProvider.php:41` |  |  |  |  |
-| 21 | `vendor/magento/module-paypal/Block/Express/Review/Shipping.php:158` |  |  |  |  |
-| 22 | `vendor/magento/module-payment/Block/Transparent/Form.php:68` |  |  |  |  |
-| 23 | `vendor/magento/module-customer/Block/Account/Dashboard.php:82` |  |  |  |  |
-| 24 | `vendor/magento/module-payment-services-paypal/Block/SmartButtonsCart.php:49` |  |  |  |  |
-| 25 | `app/code/Adyen/Payment/Block/Form/PosCloud.php:141` |  |  |  |  |
-| 26 | `vendor/magento/module-payment-services-paypal/Block/SmartButtonsCart.php:59` |  |  |  |  |
-| 27 | `vendor/magento/module-paypal/Block/Billing/Agreements.php:96` |  |  |  |  |
-| 28 | `vendor/magento/module-checkout/Block/Cart/AbstractCart.php:123` |  |  |  |  |
-| 29 | `vendor/magento/module-paypal/Block/Express/InContext/Minicart/SmartButton.php:169` |  |  |  |  |
-| 30 | `app/code/Adyen/Payment/Block/Form/PosCloud.php:142` |  |  |  |  |
+| 1 | `app/code/Adyen/Payment/Block/Form/Moto.php:175` | FP | Admin-only MOTO payment form (adminhtml template, Magento\Backend\Model\Session\Quote) outside the Block\Adminhtml namespace, and the admin is never page-cached. | re-check |  |
+| 2 | `app/code/Adyen/Payment/Block/Form/PosCloud.php:115` | FP | Admin-only POS Cloud payment form reading the backend quote session (adminhtml template), so it never renders on a page-cached request. | re-check |  |
+| 3 | `app/code/Adyen/Payment/Block/Form/Moto.php:197` | FP | Same admin-only MOTO form block reading the backend quote session, never rendered on a cacheable frontend page. | re-check |  |
+| 4 | `vendor/magento/module-checkout/Block/Onepage/Link.php:58` | FP | Onepage checkout link is only placed on checkout_cart_index, which is uncacheable. |  |  |
+| 5 | `vendor/magento/module-payment-services-paypal/Block/SmartButtons.php:165` | TP-low | getComponentParams also runs on cacheable product pages through SmartButtonsProduct, but there its session-based isVirtual is overwritten by the product value, and the minicart and cart variants render in section load or on the uncacheable cart. |  |  |
+| 6 | `vendor/magento/module-catalog/Block/Product/View.php:347` | TP-low | Product view is a cacheable page, but this protected getCustomerId() has no caller in View or its core subclasses, so the session read never happens. |  |  |
+| 7 | `vendor/magento/module-multishipping/Block/Checkout/Addresses.php:166` | FP | Multishipping addresses block is only placed on multishipping_checkout_addresses, which is marked cacheable=false. |  |  |
+| 8 | `vendor/magento/module-payment-services-paypal/Block/SmartButtons.php:296` | FP | doesQuoteExist() is deprecated and has no caller in the corpus, so the session read never runs during rendering. |  |  |
+| 9 | `vendor/magento/module-paypal/Block/Iframe.php:107` | FP | PayPal iframe block is declared cacheable=false on checkout_onepage_review. |  |  |
+| 10 | `vendor/magento/module-payment-services-paypal/Block/SmartButtonsCart.php:68` | FP | SmartButtonsCart is created only for the shopping cart shortcut container, which renders on the uncacheable cart page. |  |  |
+| 11 | `app/code/Algolia/AlgoliaSearch/Block/Cart/Recommend.php:38` | FP | Block\Cart\Recommend is not placed by any Algolia layout (the cart layout uses ViewModel\Recommend\Cart), and the cart page is uncacheable anyway. |  |  |
+| 12 | `vendor/magento/module-paypal/Block/Express/InContext/Minicart/Button.php:110` | FP | InContext Minicart\Button is not referenced by any layout, observer or code in the corpus (the observer adds SmartButton instead). |  |  |
+| 13 | `vendor/magento/module-sales/Block/Order/History.php:99` | FP | Order history block is only on sales_order_history, which is marked cacheable=false. |  |  |
+| 14 | `vendor/magento/module-paypal/Block/Express/Review/Shipping.php:171` | FP | Express\Review\Shipping is not referenced by any layout or code in the corpus, so it never renders. |  |  |
+| 15 | `vendor/magento/module-payment/Block/Transparent/Form.php:86` | FP | Transparent payment form is rendered in checkout payment forms and checkout_onepage_review, which are not page-cached. |  |  |
+| 16 | `vendor/magento/module-paypal/Block/Checkout/Onepage/Success/BillingAgreement.php:59` | FP | Billing agreement success block is on checkout_onepage_success, whose checkout.success block is cacheable=false. |  |  |
+| 17 | `app/code/Mollie/Payment/Block/Applepay/Shortcut/Button.php:47` | FP | The Mollie observer skips catalog product containers, so the Apple Pay button renders only in the cart (uncacheable) and the minicart shortcuts built in customer data section load. |  |  |
+| 18 | `vendor/magento/module-customer/Block/Address/Edit.php:151` | FP | Address edit block is placed on customer_address_form, multishipping address and vault add-card pages, all uncacheable. |  |  |
+| 19 | `app/code/Adyen/Payment/Block/Form/PosCloud.php:116` | FP | Admin-only POS Cloud payment form reading the backend quote session, never on a cacheable page. |  |  |
+| 20 | `vendor/magento/module-paypal/ViewModel/PaypalFundingSourceDataProvider.php:41` | unclear | View model is used on paypal_express_review, whose layout has no cacheable=false in the corpus; whether that token-gated review page is actually stored by the page cache needs a runtime check. |  |  |
+| 21 | `vendor/magento/module-paypal/Block/Express/Review/Shipping.php:158` | FP | Express\Review\Shipping is not referenced by any layout or code in the corpus, so it never renders. |  |  |
+| 22 | `vendor/magento/module-payment/Block/Transparent/Form.php:68` | FP | Transparent payment form is rendered in checkout payment forms and checkout_onepage_review, which are not page-cached. |  |  |
+| 23 | `vendor/magento/module-customer/Block/Account/Dashboard.php:82` | FP | Customer dashboard block is only rendered on customer account pages, which are marked cacheable=false. |  |  |
+| 24 | `vendor/magento/module-payment-services-paypal/Block/SmartButtonsCart.php:49` | FP | SmartButtonsCart is created only for the shopping cart shortcut container on the uncacheable cart page. |  |  |
+| 25 | `app/code/Adyen/Payment/Block/Form/PosCloud.php:141` | FP | Admin-only POS Cloud payment form reading the backend quote session, never on a cacheable page. |  |  |
+| 26 | `vendor/magento/module-payment-services-paypal/Block/SmartButtonsCart.php:59` | FP | SmartButtonsCart is created only for the shopping cart shortcut container on the uncacheable cart page. |  |  |
+| 27 | `vendor/magento/module-paypal/Block/Billing/Agreements.php:96` | FP | Billing agreements block is only on paypal_billing_agreement_index, which is marked cacheable=false. |  |  |
+| 28 | `vendor/magento/module-checkout/Block/Cart/AbstractCart.php:123` | FP | AbstractCart::getQuote() is called by cart-page blocks on uncacheable pages, and the minicart Sidebar subclass does not call it while rendering minicart.phtml. |  |  |
+| 29 | `vendor/magento/module-paypal/Block/Express/InContext/Minicart/SmartButton.php:169` | FP | Minicart SmartButton does not render in catalog product containers (shouldRender requires not getIsInCatalogProduct), so it renders only on the cart page and in section load. |  |  |
+| 30 | `app/code/Adyen/Payment/Block/Form/PosCloud.php:142` | FP | Admin-only POS Cloud payment form reading the backend quote session, never on a cacheable page. |  |  |

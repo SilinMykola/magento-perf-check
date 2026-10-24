@@ -46,5 +46,5 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-cms/Controller/Noroute/Index.php:54` |  |  | re-check |  |
-| 2 | `vendor/magento/module-catalog-search/Controller/Result/Index.php:192` |  |  | re-check |  |
+| 1 | `vendor/magento/module-cms/Controller/Noroute/Index.php:54` | TP | The CMS 404 page sends Cache-Control no-store on every hit, so each request for a missing URL renders a full page in PHP instead of being served from Varnish, which stores 404 responses. | re-check |  |
+| 2 | `vendor/magento/module-catalog-search/Controller/Result/Index.php:192` | TP-low | Deliberate core design: only the getNotCacheableResult branch for non-popular terms sends no-cache to record query popularity, while popular terms take the cacheable branch. | re-check |  |

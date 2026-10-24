@@ -126,9 +126,9 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-catalog/Block/Adminhtml/Product/Attribute/Set/Main.php:243` |  |  | re-check |  |
-| 2 | `vendor/magento/module-catalog/Block/Adminhtml/Product/Attribute/Set/Main.php:241` |  |  | re-check |  |
-| 3 | `vendor/magento/module-catalog/Block/Adminhtml/Product/Attribute/Set/Main.php:237` |  |  | re-check |  |
-| 4 | `vendor/magento/module-catalog-import-export/Model/Import/Product/Type/AbstractType.php:402` |  |  |  |  |
-| 5 | `vendor/magento/module-review/Model/ResourceModel/Rating/Option/Vote/Collection.php:181` |  |  |  |  |
-| 6 | `vendor/magento/module-catalog/Model/ProductLink/CollectionProvider/LinkedMapProvider.php:150` |  |  |  |  |
+| 1 | `vendor/magento/module-catalog/Block/Adminhtml/Product/Attribute/Set/Main.php:243` | FP | getItems() on the collection already loaded at line 239 runs no query; duplicate of finding 3. | re-check |  |
+| 2 | `vendor/magento/module-catalog/Block/Adminhtml/Product/Attribute/Set/Main.php:241` | TP-low | getSize() adds a COUNT query per attribute group, but an attribute set has only a handful of groups on an admin page. | re-check |  |
+| 3 | `vendor/magento/module-catalog/Block/Adminhtml/Product/Attribute/Set/Main.php:237` | TP-low | One attribute collection load per group of a single attribute set on the admin set edit page. | re-check |  |
+| 4 | `vendor/magento/module-catalog-import-export/Model/Import/Product/Type/AbstractType.php:402` | FP | The loop iterates 1000-id chunks with an in filter; this is already the batched pattern. |  |  |
+| 5 | `vendor/magento/module-review/Model/ResourceModel/Rating/Option/Vote/Collection.php:181` | TP-low | Options loaded per vote, but callers pass the votes of one review, bounded by the few configured ratings. |  |  |
+| 6 | `vendor/magento/module-catalog/Model/ProductLink/CollectionProvider/LinkedMapProvider.php:150` | TP-low | Loop over the fixed link types; each collection already takes all product ids of that type. |  |  |

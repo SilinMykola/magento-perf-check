@@ -606,33 +606,33 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-catalog-url-rewrite/Model/Category/ChildrenUrlRewriteGenerator.php:54` |  |  | re-check |  |
-| 2 | `vendor/magento/module-catalog-graph-ql/Model/Config/FilterAttributeReader.php:64` |  |  | re-check |  |
-| 3 | `vendor/magento/zend-log/library/Zend/Log/Writer/Stream.php:57` |  |  | re-check |  |
-| 4 | `vendor/magento/module-catalog-rule/Model/Rule/Condition/Combine.php:31` |  |  |  |  |
-| 5 | `vendor/magento/framework/Image/Adapter/AbstractAdapter.php:287` |  |  |  |  |
-| 6 | `vendor/magento/framework-message-queue/Publisher/Config/PublisherConfigItem/Iterator.php:39` |  |  |  |  |
-| 7 | `vendor/magento/module-widget/Model/ResourceModel/Widget/Instance/Options/ThemeId.php:27` |  |  |  |  |
-| 8 | `vendor/magento/framework/Mail/Template/TransportBuilder.php:165` |  |  |  |  |
-| 9 | `vendor/magento/module-paypal/Model/Report/Settlement.php:203` |  |  |  |  |
-| 10 | `vendor/magento/framework/Jwt/Jwe/Jwe.php:53` |  |  |  |  |
-| 11 | `vendor/magento/module-admin-adobe-ims/ViewModel/LinkViewModel.php:46` |  |  |  |  |
-| 12 | `vendor/magento/module-customer-import-export/Model/Import/Address.php:311` |  |  |  |  |
-| 13 | `vendor/magento/framework/View/Page/Config.php:196` |  |  |  |  |
-| 14 | `vendor/magento/framework/DB/AbstractMapper.php:103` |  |  |  |  |
-| 15 | `vendor/magento/module-eav/Model/Attribute/Data/File.php:71` |  |  |  |  |
-| 16 | `vendor/magento/module-payment-services-paypal/Model/ConfigProvider.php:63` |  |  |  |  |
-| 17 | `vendor/magento/module-customer/Block/Address/Edit.php:99` |  |  |  |  |
-| 18 | `vendor/magento/module-tax-import-export/Model/Rate/CsvImportHandler.php:68` |  |  |  |  |
-| 19 | `vendor/magento/module-config/Model/Config/Structure/Element/Dependency/Field.php:45` |  |  |  |  |
-| 20 | `vendor/magento/framework/Image.php:33` |  |  |  |  |
-| 21 | `vendor/magento/module-checkout/Controller/Cart/UpdatePost.php:49` |  |  |  |  |
-| 22 | `vendor/magento/magento2-functional-testing-framework/src/Magento/FunctionalTestingFramework/Util/ModulePathExtractor.php:29` |  |  |  |  |
-| 23 | `vendor/magento/module-url-rewrite/Model/Exception/UrlAlreadyExistsException.php:32` |  |  |  |  |
-| 24 | `vendor/magento/module-theme/Model/Uploader/Service.php:78` |  |  |  |  |
-| 25 | `vendor/magento/framework/Config/Reader/Filesystem.php:118` |  |  |  |  |
-| 26 | `vendor/magento/module-downloadable-import-export/Model/Import/Product/Type/Downloadable.php:290` |  |  |  |  |
-| 27 | `vendor/magento/module-offline-payments/Model/InstructionsConfigProvider.php:41` |  |  |  |  |
-| 28 | `vendor/magento/module-wishlist/Model/Config.php:54` |  |  |  |  |
-| 29 | `vendor/magento/module-catalog/Ui/DataProvider/Product/Form/Modifier/System.php:57` |  |  |  |  |
-| 30 | `vendor/magento/module-rule/Model/Action/Collection.php:39` |  |  |  |  |
+| 1 | `vendor/magento/module-catalog-url-rewrite/Model/Category/ChildrenUrlRewriteGenerator.php:54` | TP-low | The flagged if-isset block is only a BC fallback, but the constructor also calls mergeDataProviderFactory->create(), which merely instantiates a small MergeDataProvider. | re-check |  |
+| 2 | `vendor/magento/module-catalog-graph-ql/Model/Config/FilterAttributeReader.php:64` | TP-low | array_merge of an injected DI array into a default property is cheap argument merging. | re-check |  |
+| 3 | `vendor/magento/zend-log/library/Zend/Log/Writer/Stream.php:57` | FP | Zend_Log_Writer_Stream is a ZF1 library writer built with new and explicit arguments, not by the Magento object manager, and the flagged statement only defaults the mode argument. | re-check |  |
+| 4 | `vendor/magento/module-catalog-rule/Model/Rule/Condition/Combine.php:31` | TP-low | setType() only stores a class name string in the data array of a rule condition object. |  |  |
+| 5 | `vendor/magento/framework/Image/Adapter/AbstractAdapter.php:287` | TP-low | Filesystem::getDirectoryWrite() returns a cached directory object, so the cost per adapter creation is negligible. |  |  |
+| 6 | `vendor/magento/framework-message-queue/Publisher/Config/PublisherConfigItem/Iterator.php:39` | TP-low | Reading already loaded config data and rewinding happen in an iterator that is created only to be iterated right away. |  |  |
+| 7 | `vendor/magento/module-widget/Model/ResourceModel/Widget/Instance/Options/ThemeId.php:27` | TP-low | A theme collection is instantiated but not loaded in the constructor of an option source that exists only to call toOptionHash(). |  |  |
+| 8 | `vendor/magento/framework/Mail/Template/TransportBuilder.php:165` | FP | The flagged statements are ?: BC fallbacks through the injected objectManager, which is dependency assignment like the allowed ObjectManager::getInstance() fallback. |  |  |
+| 9 | `vendor/magento/module-paypal/Model/Report/Settlement.php:203` | TP-low | getDirectoryWrite(SYS_TMP) returns a cached directory object, and the rest is parent construction and an allowed serializer fallback. |  |  |
+| 10 | `vendor/magento/framework/Jwt/Jwe/Jwe.php:53` | FP | Jwe is a value object built with new by JweFactory and the token Issuer, and array_values() on a parameter only normalizes input. |  |  |
+| 11 | `vendor/magento/module-admin-adobe-ims/ViewModel/LinkViewModel.php:46` | TP | The constructor calls ImsConnection::auth(), which performs a cURL GET to Adobe IMS every time the view model is created. |  |  |
+| 12 | `vendor/magento/module-customer-import-export/Model/Import/Address.php:311` | TP-low | Creating and filtering the attribute collection is real work, but this import entity is built only during a customer address import that needs the collection. |  |  |
+| 13 | `vendor/magento/framework/View/Page/Config.php:196` | TP-low | getLocale() and setting the html lang attribute run once on the shared Page\Config, which is created only for page rendering where it is always used. |  |  |
+| 14 | `vendor/magento/framework/DB/AbstractMapper.php:103` | TP-low | init() is a template method and the only core subclass found, GenericMapper, implements it as empty. |  |  |
+| 15 | `vendor/magento/module-eav/Model/Attribute/Data/File.php:71` | TP-low | getDirectoryWrite(MEDIA) returns a cached directory object, a negligible cost per data model. |  |  |
+| 16 | `vendor/magento/module-payment-services-paypal/Model/ConfigProvider.php:63` | FP | The try block only fetches the optional CspNonceProvider dependency through the object manager for 2.4.6 compatibility, which is dependency assignment (P-DI-06 territory), not work. |  |  |
+| 17 | `vendor/magento/module-customer/Block/Address/Edit.php:99` | FP | The flagged statement is the allowed ?: ObjectManager::getInstance()->get() BC fallback, only assigned to a $data array element instead of a property or variable. |  |  |
+| 18 | `vendor/magento/module-tax-import-export/Model/Rate/CsvImportHandler.php:68` | TP-low | setLoadDefault(false) is a setter on an unloaded store collection, negligible cost. |  |  |
+| 19 | `vendor/magento/module-config/Model/Config/Structure/Element/Dependency/Field.php:45` | TP-low | Parsing the passed fieldData with explode and string concatenation is cheap and the dependency field object exists only to hold this input in admin config. |  |  |
+| 20 | `vendor/magento/framework/Image.php:33` | TP-low | open() decodes the image file in the constructor, but Image\Factory creates the object only when the caller is about to process that file. |  |  |
+| 21 | `vendor/magento/module-checkout/Controller/Cart/UpdatePost.php:49` | FP | The flagged statement is a ?: BC fallback through the inherited _objectManager, which is dependency assignment. |  |  |
+| 22 | `vendor/magento/magento2-functional-testing-framework/src/Magento/FunctionalTestingFramework/Util/ModulePathExtractor.php:29` | FP | ModulePathExtractor belongs to the MFTF test framework and is never built by the Magento object manager at runtime. |  |  |
+| 23 | `vendor/magento/module-url-rewrite/Model/Exception/UrlAlreadyExistsException.php:32` | FP | This is an exception constructed with new, and the flagged statement only defaults the phrase argument before calling the parent. |  |  |
+| 24 | `vendor/magento/module-theme/Model/Uploader/Service.php:78` | TP-low | getDirectoryRead(SYS_TMP) returns a cached directory object and the isset blocks only copy injected upload limits. |  |  |
+| 25 | `vendor/magento/framework/Config/Reader/Filesystem.php:118` | TP-low | array_replace of injected id attributes and getSchema() calls on the schema locator are cheap argument handling. |  |  |
+| 26 | `vendor/magento/module-downloadable-import-export/Model/Import/Product/Type/Downloadable.php:290` | TP-low | getParameters() is a plain getter on the entity model passed in, negligible cost. |  |  |
+| 27 | `vendor/magento/module-offline-payments/Model/InstructionsConfigProvider.php:41` | TP-low | getMethodInstance() for the offline payment codes is real work, but the config provider is built only for checkout config, where getConfig() uses all of these instances. |  |  |
+| 28 | `vendor/magento/module-wishlist/Model/Config.php:54` | TP-low | Two scopeConfig->getValue() reads are in-memory lookups after config is loaded, so the cost per Wishlist Config creation is small. |  |  |
+| 29 | `vendor/magento/module-catalog/Ui/DataProvider/Product/Form/Modifier/System.php:57` | TP-low | array_replace_recursive of an injected DI array into defaults is cheap argument merging. |  |  |
+| 30 | `vendor/magento/module-rule/Model/Action/Collection.php:39` | TP-low | setActions([]) and setType() only set keys in the data array of a rule action collection. |  |  |

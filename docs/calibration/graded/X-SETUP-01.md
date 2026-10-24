@@ -83,7 +83,7 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-data-exporter/Setup/Recurring.php:67` |  |  | re-check |  |
-| 2 | `vendor/magento/module-theme/Setup/RecurringData.php:51` |  |  | re-check |  |
-| 3 | `vendor/magento/module-customer/Setup/RecurringData.php:44` |  |  | re-check |  |
-| 4 | `vendor/magento/module-indexer/Setup/Recurring.php:99` |  |  |  |  |
+| 1 | `vendor/magento/module-data-exporter/Setup/Recurring.php:67` | FP | getItems() loads the config-based indexer list, a fixed few dozen items, only to switch feed indexers to scheduled mode; cheap. | re-check |  |
+| 2 | `vendor/magento/module-theme/Setup/RecurringData.php:51` | TP-low | design_config_grid is reindexed unconditionally on every setup:upgrade, but that grid holds one row per scope, so the cost is small. | re-check |  |
+| 3 | `vendor/magento/module-customer/Setup/RecurringData.php:44` | FP | reindexAll of customer_grid is guarded by isNeedToDoReindex and runs only when the grid table is missing or the index is invalid. | re-check |  |
+| 4 | `vendor/magento/module-indexer/Setup/Recurring.php:99` | FP | The flagged load() runs over the fixed config list of indexers and is cheap; the trigger re-subscribe later in the method is not one of the rule's calls. |  |  |

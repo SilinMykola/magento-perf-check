@@ -592,33 +592,33 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-cron/Observer/ProcessCronQueueObserver.php:660` |  |  | re-check |  |
-| 2 | `vendor/magento/module-payment-services-paypal/Cron/SyncOrderPaymentStatus.php:113` |  |  | re-check |  |
-| 3 | `app/code/Mollie/Payment/Service/Order/DeletePaymentReminder.php:45` |  |  | re-check |  |
-| 4 | `vendor/magento/module-customer/Model/Config/Backend/Show/Customer.php:153` |  |  |  |  |
-| 5 | `vendor/magento/module-customer/Setup/CustomerSetup.php:529` |  |  |  |  |
-| 6 | `vendor/magento/module-sales-rule/Model/Service/CouponManagementService.php:219` |  |  |  |  |
-| 7 | `vendor/magento/module-newsletter/Model/Plugin/CustomerPlugin.php:313` |  |  |  |  |
-| 8 | `app/code/Snowdog/Menu/Service/Menu/SaveRequestProcessor.php:110` |  |  |  |  |
-| 9 | `vendor/magento/module-catalog-rule/Controller/Adminhtml/Promo/Catalog/MassDelete.php:49` |  |  |  |  |
-| 10 | `vendor/magento/magento2-base/setup/src/Magento/Setup/Fixtures/AttributeSet/AttributeSetFixture.php:133` |  |  |  |  |
-| 11 | `vendor/magento/module-customer/Controller/Adminhtml/Index/MassDelete.php:56` |  |  |  |  |
-| 12 | `vendor/magento/module-store/Model/Config/Importer/Processor/Delete.php:186` |  |  |  |  |
-| 13 | `app/code/Adyen/Payment/Cron/StateDataCleanUp.php:57` |  |  |  |  |
-| 14 | `vendor/magento/module-tax/Model/Calculation/Rule.php:143` |  |  |  |  |
-| 15 | `vendor/magento/module-customer/Model/AccountManagement.php:962` |  |  |  |  |
-| 16 | `vendor/magento/module-sales-rule/Model/Coupon/Usage/Processor.php:156` |  |  |  |  |
-| 17 | `app/code/Adyen/Payment/Controller/Webhook/Index.php:95` |  |  |  |  |
-| 18 | `vendor/magento/module-ui/Controller/Adminhtml/Bookmark/Save.php:254` |  |  |  |  |
-| 19 | `app/code/Adyen/Payment/Gateway/Http/Client/TransactionPayment.php:189` |  |  |  |  |
-| 20 | `app/code/Mollie/Payment/Cron/RemoveSentPaymentReminders.php:52` |  |  |  |  |
-| 21 | `app/code/Snowdog/Menu/Controller/Adminhtml/Menu/MassDelete.php:80` |  |  |  |  |
-| 22 | `vendor/magento/module-media-storage/Model/File/Storage.php:280` |  |  |  |  |
-| 23 | `vendor/magento/module-customer/Model/ResourceModel/Customer/Relation.php:39` |  |  |  |  |
-| 24 | `vendor/magento/module-catalog-rule/Controller/Adminhtml/Promo/Catalog/MassActivate.php:48` |  |  |  |  |
-| 25 | `vendor/magento/module-indexer/Setup/Patch/Data/InitializeIndexerState.php:101` |  |  |  |  |
-| 26 | `vendor/magento/magento2-base/setup/src/Magento/Setup/Fixtures/StoresFixture.php:236` |  |  |  |  |
-| 27 | `vendor/magento/magento2-base/setup/src/Magento/Setup/Fixtures/CategoriesFixture.php:143` |  |  |  |  |
-| 28 | `vendor/magento/module-cron/Observer/ProcessCronQueueObserver.php:881` |  |  |  |  |
-| 29 | `vendor/magento/module-quote/Model/ResourceModel/Quote/Address/Rate/Collection.php:145` |  |  |  |  |
-| 30 | `vendor/magento/module-sales/Model/ResourceModel/Order/Invoice/Relation.php:62` |  |  |  |  |
+| 1 | `vendor/magento/module-cron/Observer/ProcessCronQueueObserver.php:660` | TP-low | Cron schedule generation inserts only missing minute slots within schedule_ahead_for per job. | re-check |  |
+| 2 | `vendor/magento/module-payment-services-paypal/Cron/SyncOrderPaymentStatus.php:113` | TP-low | Cron over a capped batch of orders; each save follows a remote payment status call. | re-check |  |
+| 3 | `app/code/Mollie/Payment/Service/Order/DeletePaymentReminder.php:45` | TP-low | Deletes the few reminders matching one email hash. | re-check |  |
+| 4 | `vendor/magento/module-customer/Model/Config/Backend/Show/Customer.php:153` | TP-low | Admin config delete re-saves the couple of customer attributes tied to this setting. |  |  |
+| 5 | `vendor/magento/module-customer/Setup/CustomerSetup.php:529` | TP-low | Setup-only attribute upgrade over a small fixed list. |  |  |
+| 6 | `vendor/magento/module-sales-rule/Model/Service/CouponManagementService.php:219` | TP | Coupon mass delete API calls deleteById() per coupon; requests can hold thousands of codes. |  |  |
+| 7 | `vendor/magento/module-newsletter/Model/Plugin/CustomerPlugin.php:313` | TP-low | Deletes the subscriber rows of one email, at most one per store. |  |  |
+| 8 | `app/code/Snowdog/Menu/Service/Menu/SaveRequestProcessor.php:110` | TP-low | Admin menu save creates each new node individually to get its id; bounded by nodes added. |  |  |
+| 9 | `vendor/magento/module-catalog-rule/Controller/Adminhtml/Promo/Catalog/MassDelete.php:49` | TP-low | Admin mass delete over the few selected catalog price rules. |  |  |
+| 10 | `vendor/magento/magento2-base/setup/src/Magento/Setup/Fixtures/AttributeSet/AttributeSetFixture.php:133` | TP-low | Performance fixture generator in setup, not runtime code. |  |  |
+| 11 | `vendor/magento/module-customer/Controller/Adminhtml/Index/MassDelete.php:56` | TP | Admin mass delete calls deleteById() per customer with events and plugins; selections can be thousands. |  |  |
+| 12 | `vendor/magento/module-store/Model/Config/Importer/Processor/Delete.php:186` | TP-low | Config import deletes the few store groups removed from config. |  |  |
+| 13 | `app/code/Adyen/Payment/Cron/StateDataCleanUp.php:57` | TP | Cron deletes every expired state data row one by one where one DELETE query would do. |  |  |
+| 14 | `vendor/magento/module-tax/Model/Calculation/Rule.php:143` | TP | One tax_calculation row save per class and rate combination where insertMultiple would do. |  |  |
+| 15 | `vendor/magento/module-customer/Model/AccountManagement.php:962` | TP-low | Bounded by the addresses submitted with one new account. |  |  |
+| 16 | `vendor/magento/module-sales-rule/Model/Coupon/Usage/Processor.php:156` | TP-low | Bounded by the few coupons applied to one order. |  |  |
+| 17 | `app/code/Adyen/Payment/Controller/Webhook/Index.php:95` | TP-low | Bounded by notifications in one webhook payload, usually one. |  |  |
+| 18 | `vendor/magento/module-ui/Controller/Adminhtml/Bookmark/Save.php:254` | FP | The loop breaks right after the first current bookmark, so save() runs at most once. |  |  |
+| 19 | `app/code/Adyen/Payment/Gateway/Http/Client/TransactionPayment.php:189` | TP-low | Bounded by the redeemed gift cards of one order; the remote payment call dominates. |  |  |
+| 20 | `app/code/Mollie/Payment/Cron/RemoveSentPaymentReminders.php:52` | TP | Cron deletes old reminders one by one in pages of 10 where one DELETE query would do. |  |  |
+| 21 | `app/code/Snowdog/Menu/Controller/Adminhtml/Menu/MassDelete.php:80` | TP-low | Admin mass delete over a few menus. |  |  |
+| 22 | `vendor/magento/module-media-storage/Model/File/Storage.php:280` | TP | The same sync flag row is saved once per exported file, since files are exported one at a time. |  |  |
+| 23 | `vendor/magento/module-customer/Model/ResourceModel/Customer/Relation.php:39` | TP-low | Only addresses flagged as deleted in one customer save. |  |  |
+| 24 | `vendor/magento/module-catalog-rule/Controller/Adminhtml/Promo/Catalog/MassActivate.php:48` | TP-low | Admin mass activate over the few selected catalog price rules. |  |  |
+| 25 | `vendor/magento/module-indexer/Setup/Patch/Data/InitializeIndexerState.php:101` | TP-low | Setup patch over the fixed list of indexers, run once. |  |  |
+| 26 | `vendor/magento/magento2-base/setup/src/Magento/Setup/Fixtures/StoresFixture.php:236` | TP-low | Performance fixture generator in setup, not runtime code. |  |  |
+| 27 | `vendor/magento/magento2-base/setup/src/Magento/Setup/Fixtures/CategoriesFixture.php:143` | TP-low | Performance fixture generator in setup, not runtime code. |  |  |
+| 28 | `vendor/magento/module-cron/Observer/ProcessCronQueueObserver.php:881` | TP-low | One status save per executed cron job, negligible next to running the job. |  |  |
+| 29 | `vendor/magento/module-quote/Model/ResourceModel/Quote/Address/Rate/Collection.php:145` | TP-low | Bounded by shipping rates of one address and unchanged rates are skipped by the resource model. |  |  |
+| 30 | `vendor/magento/module-sales/Model/ResourceModel/Order/Invoice/Relation.php:62` | TP-low | Bounded by the few comments added to one invoice. |  |  |

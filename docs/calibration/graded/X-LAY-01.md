@@ -185,13 +185,13 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-product-alert/view/frontend/layout/productalert_unsubscribe_email.xml:11` |  |  | re-check |  |
-| 2 | `app/code/Ebizmarts/MailChimp/view/frontend/layout/hyva_checkout_index_index.xml:21` |  |  | re-check |  |
-| 3 | `app/code/Mollie/Payment/view/frontend/layout/mollie_savedcards_index.xml:14` |  |  | re-check |  |
-| 4 | `app/code/Magefan/Blog/view/frontend/layout/blog_non_cacheable.xml:13` |  |  |  |  |
-| 5 | `vendor/magento/module-captcha/view/frontend/layout/contact_index_index.xml:11` |  |  |  |  |
-| 6 | `vendor/magento/module-send-friend/view/frontend/layout/sendfriend_product_send.xml:16` |  |  |  |  |
-| 7 | `app/code/Ebizmarts/MailChimp/view/frontend/layout/mailchimp_cart_loadquote.xml:13` |  |  |  |  |
-| 8 | `vendor/magento/module-shipping/view/frontend/layout/shipping_tracking_popup.xml:11` |  |  |  |  |
-| 9 | `app/code/Ebizmarts/MailChimp/view/frontend/layout/hyva_checkout_success.xml:16` |  |  |  |  |
-| 10 | `vendor/magento/module-search/view/frontend/layout/search_term_popular.xml:14` |  |  |  |  |
+| 1 | `vendor/magento/module-product-alert/view/frontend/layout/productalert_unsubscribe_email.xml:11` | FP | Unsubscribe controller extends ProductAlert Add, which requires customer login; the page is a personal form with a form key. | re-check |  |
+| 2 | `app/code/Ebizmarts/MailChimp/view/frontend/layout/hyva_checkout_index_index.xml:21` | FP | Hyvä checkout page is personal by nature; the allowlist covers checkout_ but not hyva_checkout_. | re-check |  |
+| 3 | `app/code/Mollie/Payment/view/frontend/layout/mollie_savedcards_index.xml:14` | FP | Saved cards page uses the customer_account handle and lists the customer's own cards, personal by nature. | re-check |  |
+| 4 | `app/code/Magefan/Blog/view/frontend/layout/blog_non_cacheable.xml:13` | FP | The blog_non_cacheable handle is added only for blog post preview mode, which must not be cached. |  |  |
+| 5 | `vendor/magento/module-captcha/view/frontend/layout/contact_index_index.xml:11` | TP-low | The public contact page is excluded from FPC by the session-bound captcha block; the claim holds but the page has low traffic. |  |  |
+| 6 | `vendor/magento/module-send-friend/view/frontend/layout/sendfriend_product_send.xml:16` | FP | Send-to-friend form is prefilled from the customer session and requires login unless guests are allowed, personal by nature. |  |  |
+| 7 | `app/code/Ebizmarts/MailChimp/view/frontend/layout/mailchimp_cart_loadquote.xml:13` | FP | Loadquote restores a specific customer's cart from an email link, personal by nature. |  |  |
+| 8 | `vendor/magento/module-shipping/view/frontend/layout/shipping_tracking_popup.xml:11` | FP | Shipping tracking popup shows one order's tracking data, personal by nature. |  |  |
+| 9 | `app/code/Ebizmarts/MailChimp/view/frontend/layout/hyva_checkout_success.xml:16` | FP | Hyvä checkout success page shows the placed order, personal by nature; hyva_checkout_ is not in the allowlist. |  |  |
+| 10 | `vendor/magento/module-search/view/frontend/layout/search_term_popular.xml:14` | TP | Popular search terms page lists the same public terms for everyone, yet the cacheable=false block makes it render in PHP on every request. |  |  |

@@ -64,6 +64,6 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `app/code/Magewirephp/Magewire/etc/events.xml:14` |  |  | re-check |  |
-| 2 | `app/code/Fastly/Cdn/etc/frontend/events.xml:5` |  |  | re-check |  |
-| 3 | `app/code/Magewirephp/Magewire/etc/events.xml:8` |  |  | re-check |  |
+| 1 | `app/code/Magewirephp/Magewire/etc/events.xml:14` | TP-low | Runs per block, but for non-Magewire blocks it only pops the lifecycle stack and fires an internal trigger; the framework needs every block and no narrower event exists. | re-check |  |
+| 2 | `app/code/Fastly/Cdn/etc/frontend/events.xml:5` | FP | Fastly's ESI marker is the page-cache counterpart of the exempted Magento_PageCache observer; it returns early when Fastly is off and otherwise only reads the block TTL. | re-check |  |
+| 3 | `app/code/Magewirephp/Magewire/etc/events.xml:8` | TP-low | Runs per block, but for non-Magewire blocks it only pushes the lifecycle stack and fires an internal trigger; the framework needs every block and no narrower event exists. | re-check |  |

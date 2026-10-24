@@ -86,7 +86,7 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-catalog-rule-configurable/Plugin/CatalogRule/Model/Rule/ConfigurableProductHandler.php:82` |  |  | re-check |  |
-| 2 | `app/code/Algolia/AlgoliaSearch/Helper/Entity/ProductHelper.php:325` |  |  | re-check |  |
-| 3 | `vendor/magento/module-catalog-inventory/Model/StockIndex.php:238` |  |  | re-check |  |
-| 4 | `vendor/magento/module-configurable-product/Model/ResourceModel/Product/Type/Configurable/Attribute/Collection.php:254` |  |  |  |  |
+| 1 | `vendor/magento/module-catalog-rule-configurable/Plugin/CatalogRule/Model/Rule/ConfigurableProductHandler.php:82` | TP | getChildrenIds() per configurable among rule-matched products; the resource method accepts an array. | re-check |  |
+| 2 | `app/code/Algolia/AlgoliaSearch/Helper/Entity/ProductHelper.php:325` | TP-low | Loop over the fixed composite types and each call already passes the whole id array. | re-check |  |
+| 3 | `vendor/magento/module-catalog-inventory/Model/StockIndex.php:238` | TP-low | Loop over the fixed composite types, one query per type for one product. | re-check |  |
+| 4 | `vendor/magento/module-configurable-product/Model/ResourceModel/Product/Type/Configurable/Attribute/Collection.php:254` | TP-low | getUsedProducts() per product holds, but the method is deprecated and has no callers in the corpus. |  |  |

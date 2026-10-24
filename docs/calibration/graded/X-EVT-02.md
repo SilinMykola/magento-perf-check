@@ -26,4 +26,4 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-page-cache/etc/events.xml:49` |  |  | re-check |  |
+| 1 | `vendor/magento/module-page-cache/etc/events.xml:49` | FP | FlushCacheByTags is generic by design: it cleans built-in FPC by the identity tags of any saved model, so no entity-specific event can replace it. | re-check |  |

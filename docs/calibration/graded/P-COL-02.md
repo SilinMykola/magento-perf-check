@@ -416,24 +416,24 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/magento2-base/setup/src/Magento/Setup/Model/FixtureGenerator/CustomerTemplateGenerator.php:155` |  |  | re-check |  |
-| 2 | `vendor/magento/module-catalog/Model/CategoryManagement.php:105` |  |  | re-check |  |
-| 3 | `app/code/Adyen/Payment/view/adminhtml/templates/info/adyen_giftcard.phtml:32` |  |  | re-check |  |
-| 4 | `vendor/magento/module-bundle/Model/LinkManagement.php:380` |  |  |  |  |
-| 5 | `vendor/magento/module-sales/Model/Order.php:1810` |  |  |  |  |
-| 6 | `vendor/magento/module-sales-graph-ql/Model/Resolver/DateOfFirstOrderResolver.php:58` |  |  |  |  |
-| 7 | `vendor/magento/module-integration/Model/AuthorizationService.php:180` |  |  |  |  |
-| 8 | `vendor/magento/module-paypal-graph-ql/Model/Resolver/HostedProUrl.php:94` |  |  |  |  |
-| 9 | `vendor/magento/module-webapi/Model/WebapiRoleLocator.php:50` |  |  |  |  |
-| 10 | `app/code/Adyen/Payment/view/frontend/templates/info/adyen_giftcard.phtml:27` |  |  |  |  |
-| 11 | `vendor/magento/module-bundle/Model/LinkManagement.php:422` |  |  |  |  |
-| 12 | `app/code/Adyen/Payment/Model/ResourceModel/StateData/Collection.php:34` |  |  |  |  |
-| 13 | `vendor/magento/module-theme/Model/ResourceModel/Theme/Collection.php:146` |  |  |  |  |
-| 14 | `vendor/magento/module-configurable-product/Model/Product/Type/Configurable.php:932` |  |  |  |  |
-| 15 | `vendor/magento/module-sales/Model/Order.php:580` |  |  |  |  |
-| 16 | `vendor/magento/module-authorization/Model/Acl/AclRetriever.php:163` |  |  |  |  |
-| 17 | `vendor/magento/module-theme/Model/Theme.php:238` |  |  |  |  |
-| 18 | `vendor/magento/module-security/Model/SecurityChecker/Frequency.php:101` |  |  |  |  |
-| 19 | `vendor/magento/module-paypal-graph-ql/Model/Resolver/PayflowLinkToken.php:116` |  |  |  |  |
-| 20 | `vendor/magento/module-swatches/Helper/Data.php:269` |  |  |  |  |
-| 21 | `vendor/magento/module-bundle/Pricing/Adjustment/DefaultSelectionPriceListProvider.php:152` |  |  |  |  |
+| 1 | `vendor/magento/magento2-base/setup/src/Magento/Setup/Model/FixtureGenerator/CustomerTemplateGenerator.php:155` | TP-low | Loads all directory regions to read one id, but only in the setup fixture generator. | re-check |  |
+| 2 | `vendor/magento/module-catalog/Model/CategoryManagement.php:105` | FP | Filter level = 0 matches only the single tree root category. | re-check |  |
+| 3 | `app/code/Adyen/Payment/view/adminhtml/templates/info/adyen_giftcard.phtml:32` | FP | Guarded by getSize() === 1, so at most one row is loaded. | re-check |  |
+| 4 | `vendor/magento/module-bundle/Model/LinkManagement.php:380` | FP | setIdFilter() filters on option_id, the primary key, so at most one row. |  |  |
+| 5 | `vendor/magento/module-sales/Model/Order.php:1810` | FP | getStatusHistoryCollection() already iterates the collection for saved orders, so it is loaded. |  |  |
+| 6 | `vendor/magento/module-sales-graph-ql/Model/Resolver/DateOfFirstOrderResolver.php:58` | TP | Loads all orders of the customer to read the earliest created_at; setPageSize(1) would do. |  |  |
+| 7 | `vendor/magento/module-integration/Model/AuthorizationService.php:180` | FP | setUserFilter() matches the single role row of one integration user. |  |  |
+| 8 | `vendor/magento/module-paypal-graph-ql/Model/Resolver/HostedProUrl.php:94` | FP | Guarded by getTotalCount() !== 1, so at most one row is loaded. |  |  |
+| 9 | `vendor/magento/module-webapi/Model/WebapiRoleLocator.php:50` | FP | setUserFilter() matches the single role row of the current user. |  |  |
+| 10 | `app/code/Adyen/Payment/view/frontend/templates/info/adyen_giftcard.phtml:27` | FP | Guarded by getSize() === 1, so at most one row is loaded. |  |  |
+| 11 | `vendor/magento/module-bundle/Model/LinkManagement.php:422` | FP | setIdFilter() filters on option_id, the primary key, so at most one row. |  |  |
+| 12 | `app/code/Adyen/Payment/Model/ResourceModel/StateData/Collection.php:34` | TP-low | Loads all state data rows of one quote, usually one or a few. |  |  |
+| 13 | `vendor/magento/module-theme/Model/ResourceModel/Theme/Collection.php:146` | FP | area plus theme_path identifies a single theme. |  |  |
+| 14 | `vendor/magento/module-configurable-product/Model/Product/Type/Configurable.php:932` | TP | Loads every child matching the attributes given; partial attribute sets match many children. |  |  |
+| 15 | `vendor/magento/module-sales/Model/Order.php:580` | FP | getSalesOrderCollection() already calls load() and increment_id with store_id is unique. |  |  |
+| 16 | `vendor/magento/module-authorization/Model/Acl/AclRetriever.php:163` | FP | setUserFilter() matches the single role row of one user. |  |  |
+| 17 | `vendor/magento/module-theme/Model/Theme.php:238` | FP | A theme has at most one staging child of type staging. |  |  |
+| 18 | `vendor/magento/module-security/Model/SecurityChecker/Frequency.php:101` | FP | filterLastItem() applies getSelect()->limit(1) in the helper. |  |  |
+| 19 | `vendor/magento/module-paypal-graph-ql/Model/Resolver/PayflowLinkToken.php:116` | FP | Guarded by getTotalCount() !== 1, so at most one row is loaded. |  |  |
+| 20 | `vendor/magento/module-swatches/Helper/Data.php:269` | TP | Fallback lookup by a partial attribute set loads all matching children of the configurable. |  |  |
+| 21 | `vendor/magento/module-bundle/Pricing/Adjustment/DefaultSelectionPriceListProvider.php:152` | FP | setPage(0, 1) sets a page size of 1 through setPageSize(). |  |  |

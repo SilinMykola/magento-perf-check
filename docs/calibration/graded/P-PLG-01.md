@@ -606,33 +606,33 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-inventory-indexer/Plugin/InventoryApi/ReindexAfterSourceItemsDeletePlugin.php:43` |  |  | re-check |  |
-| 2 | `vendor/magento/module-theme/Model/Indexer/Design/Config/Plugin/Website.php:36` |  |  | re-check |  |
-| 3 | `app/code/Mageplaza/Smtp/Plugin/Model/Resolver/Products/DataProvider/ProductSearch/ProductSearchCriteriaBuilder.php:77` |  |  | re-check |  |
-| 4 | `vendor/magento/module-checkout/Model/Plugin/RecollectQuoteOnCustomerGroupChange.php:83` |  |  |  |  |
-| 5 | `vendor/magento/module-inventory-configuration/Plugin/CatalogInventory/Model/System/Config/Backend/Minqty/AllowNegativeMinQtyInConfigPlugin.php:21` |  |  |  |  |
-| 6 | `vendor/magento/module-login-as-customer-frontend-ui/Plugin/KeepLoginAsCustomerSessionDataPlugin.php:60` |  |  |  |  |
-| 7 | `vendor/magento/module-catalog-search/Model/Attribute/SearchWeight.php:54` |  |  |  |  |
-| 8 | `vendor/magento/module-catalog/Model/Indexer/Product/Price/Plugin/CustomerGroup.php:81` |  |  |  |  |
-| 9 | `app/code/Ebizmarts/MailChimp/Model/Plugin/AccountManagement.php:61` |  |  |  |  |
-| 10 | `vendor/magento/module-persistent/Plugin/AddPersistentRememberMeInitPlugin.php:39` |  |  |  |  |
-| 11 | `vendor/magento/module-inventory-low-quantity-notification/Plugin/InventoryCatalogApi/BulkConfigurationTransferInterfacePlugin.php:54` |  |  |  |  |
-| 12 | `vendor/magento/module-newsletter/Model/Plugin/CustomerPlugin.php:199` |  |  |  |  |
-| 13 | `vendor/magento/module-media-content/Plugin/MediaGalleryAssetDeleteByPath.php:65` |  |  |  |  |
-| 14 | `vendor/magento/module-inventory-bundle-product-indexer/Plugin/Bundle/Model/ResourceModel/Indexer/StockPlugin.php:38` |  |  |  |  |
-| 15 | `vendor/magento/module-grouped-product/Model/ResourceModel/Product/Link/RelationPersister.php:70` |  |  |  |  |
-| 16 | `vendor/magento/module-customer/Plugin/ValidateDobOnSave.php:68` |  |  |  |  |
-| 17 | `vendor/magento/module-inventory-cache/Plugin/InventoryIndexer/Indexer/Stock/Strategy/Sync/CacheFlush.php:51` |  |  |  |  |
-| 18 | `vendor/magento/module-configurable-product/Plugin/Model/ResourceModel/Product.php:196` |  |  |  |  |
-| 19 | `vendor/magento/module-re-captcha-frontend-ui/Plugin/ExcludeFromMinification.php:27` |  |  |  |  |
-| 20 | `app/code/Magefan/Blog/Plugin/Magento/AdminGws/Model/ModelsPlugin.php:19` |  |  |  |  |
-| 21 | `app/code/JustBetter/Sentry/Plugin/CronScheduleCheckIn.php:30` |  |  |  |  |
-| 22 | `vendor/magento/module-configurable-product/Model/Entity/Product/Attribute/Group/AttributeMapper/Plugin.php:48` |  |  |  |  |
-| 23 | `vendor/magento/module-security/Model/Plugin/AdminUserForm.php:59` |  |  |  |  |
-| 24 | `vendor/magento/module-inventory-sales/Plugin/Sales/OrderManagement/DeductSourceItemQuantityOnRefundPlugin.php:98` |  |  |  |  |
-| 25 | `vendor/magento/module-customer/Model/Plugin/CustomerFlushFormKey.php:43` |  |  |  |  |
-| 26 | `vendor/magento/module-re-captcha-webapi-rest/Plugin/RestValidationPlugin.php:81` |  |  |  |  |
-| 27 | `app/code/MarkShust/DisableTwoFactorAuth/Plugin/BypassTwoFactorAuthForApiTokenGeneration.php:66` |  |  |  |  |
-| 28 | `vendor/magento/module-swatches-graph-ql/Plugin/Filters/DataProviderPlugin.php:64` |  |  |  |  |
-| 29 | `vendor/magento/module-media-content/Plugin/MediaGalleryAssetDeleteByDirectoryPath.php:65` |  |  |  |  |
-| 30 | `vendor/magento/module-inventory-sales/Plugin/Store/Model/ResourceModel/Website/UpdateSalesChannelWebsiteCodePlugin.php:56` |  |  |  |  |
+| 1 | `vendor/magento/module-inventory-indexer/Plugin/InventoryApi/ReindexAfterSourceItemsDeletePlugin.php:43` | FP | SKU list is read from the source items before they are deleted and used after the call, so the state must be captured before proceed. | re-check |  |
+| 2 | `vendor/magento/module-theme/Model/Indexer/Design/Config/Plugin/Website.php:36` | FP | isObjectNew is computed from getId() before save and used after it, when the id is already set. | re-check |  |
+| 3 | `app/code/Mageplaza/Smtp/Plugin/Model/Resolver/Products/DataProvider/ProductSearch/ProductSearchCriteriaBuilder.php:77` | TP | All logic runs after proceed and uses only the result and the searchCriteria argument, which an after plugin also receives. | re-check |  |
+| 4 | `vendor/magento/module-checkout/Model/Plugin/RecollectQuoteOnCustomerGroupChange.php:83` | FP | Previous customer data is loaded from the repository before save and compared with the new group after it. |  |  |
+| 5 | `vendor/magento/module-inventory-configuration/Plugin/CatalogInventory/Model/System/Config/Backend/Minqty/AllowNegativeMinQtyInConfigPlugin.php:21` | TP | Only modifies the result of beforeSave after the call, so afterBeforeSave would do the same. |  |  |
+| 6 | `vendor/magento/module-login-as-customer-frontend-ui/Plugin/KeepLoginAsCustomerSessionDataPlugin.php:60` | FP | The admin id must be read before clearStorage wipes the session and restored after it. |  |  |
+| 7 | `vendor/magento/module-catalog-search/Model/Attribute/SearchWeight.php:54` | FP | isObjectNew and dataHasChangedFor are read before save, and save resets them, so the after-logic needs pre-call state. |  |  |
+| 8 | `vendor/magento/module-catalog/Model/Indexer/Product/Price/Plugin/CustomerGroup.php:81` | FP | isGroupNew is computed from the id before save and used after it, when the id is already assigned. |  |  |
+| 9 | `app/code/Ebizmarts/MailChimp/Model/Plugin/AccountManagement.php:61` | TP | All logic runs after proceed using only the arguments, which an after plugin receives too. |  |  |
+| 10 | `vendor/magento/module-persistent/Plugin/AddPersistentRememberMeInitPlugin.php:39` | TP | Calls proceed first and only adds a block afterwards, so afterGenerateElements would do the same. |  |  |
+| 11 | `vendor/magento/module-inventory-low-quantity-notification/Plugin/InventoryCatalogApi/BulkConfigurationTransferInterfacePlugin.php:54` | TP | The pre-call transfer and post-call unassign use only the method arguments, so a before plugin plus an after plugin would do the same without shared state. |  |  |
+| 12 | `vendor/magento/module-newsletter/Model/Plugin/CustomerPlugin.php:199` | FP | The customer is loaded by id before deleteById removes it and is needed after the call. |  |  |
+| 13 | `vendor/magento/module-media-content/Plugin/MediaGalleryAssetDeleteByPath.php:65` | FP | Assets are looked up by path before they are deleted, so their ids are not available in an after plugin. |  |  |
+| 14 | `vendor/magento/module-inventory-bundle-product-indexer/Plugin/Bundle/Model/ResourceModel/Indexer/StockPlugin.php:38` | TP | Table create/prepare before and drop after depend only on the default stock id, which an after plugin can fetch again. |  |  |
+| 15 | `vendor/magento/module-grouped-product/Model/ResourceModel/Product/Link/RelationPersister.php:70` | FP | The link row is loaded before deleteProductLink removes it and its type and product ids are used after. |  |  |
+| 16 | `vendor/magento/module-customer/Plugin/ValidateDobOnSave.php:68` | TP | Only validates and normalizes the dob before an unconditional return of proceed, which a beforeSave plugin can do. |  |  |
+| 17 | `vendor/magento/module-inventory-cache/Plugin/InventoryIndexer/Indexer/Stock/Strategy/Sync/CacheFlush.php:51` | FP | Product ids are collected before and after the reindex and diffed, so the pre-call state is needed. |  |  |
+| 18 | `vendor/magento/module-configurable-product/Plugin/Model/ResourceModel/Product.php:196` | FP | Parent ids of the child must be read before the product is deleted and are reindexed after it. |  |  |
+| 19 | `vendor/magento/module-re-captcha-frontend-ui/Plugin/ExcludeFromMinification.php:27` | TP | Only appends to the result after proceed, depending on the contentType argument, which afterGetExcludes also receives. |  |  |
+| 20 | `app/code/Magefan/Blog/Plugin/Magento/AdminGws/Model/ModelsPlugin.php:19` | TP | Only adjusts the model before an unconditional return of proceed (the captured storeId is unused), so a before plugin would do. |  |  |
+| 21 | `app/code/JustBetter/Sentry/Plugin/CronScheduleCheckIn.php:30` | TP | Only reacts after proceed using the field argument and subject, so afterSetData would do the same, and setData is a hot method. |  |  |
+| 22 | `vendor/magento/module-configurable-product/Model/Entity/Product/Attribute/Group/AttributeMapper/Plugin.php:48` | TP | The attribute set id comes from the registry, which proceed does not change, so an afterMap plugin could read it and modify the result. |  |  |
+| 23 | `vendor/magento/module-security/Model/Plugin/AdminUserForm.php:59` | TP | Adds a field to the form and then returns proceed unconditionally, which beforeGetFormHtml can do. |  |  |
+| 24 | `vendor/magento/module-inventory-sales/Plugin/Sales/OrderManagement/DeductSourceItemQuantityOnRefundPlugin.php:98` | FP | isNewCreditMemo is computed from the entity id before save and used after it, when the id is already set. |  |  |
+| 25 | `vendor/magento/module-customer/Model/Plugin/CustomerFlushFormKey.php:43` | FP | The current form key is captured before the flush regenerates it and compared afterwards. |  |  |
+| 26 | `vendor/magento/module-re-captcha-webapi-rest/Plugin/RestValidationPlugin.php:81` | unclear | The request is cloned before validate and matched after it; whether proceed changes the request so that the clone is needed is not visible here. |  |  |
+| 27 | `app/code/MarkShust/DisableTwoFactorAuth/Plugin/BypassTwoFactorAuthForApiTokenGeneration.php:66` | FP | proceed is called only in one branch of a ternary, otherwise the original is replaced, so this is a conditional around the rule should not report. |  |  |
+| 28 | `vendor/magento/module-swatches-graph-ql/Plugin/Filters/DataProviderPlugin.php:64` | TP | Swatch filters come from the layer filters provider and are only used after proceed, so they could be collected in an afterGetData plugin. |  |  |
+| 29 | `vendor/magento/module-media-content/Plugin/MediaGalleryAssetDeleteByDirectoryPath.php:65` | FP | Asset ids are looked up by directory path before the directories are deleted and are needed after the call. |  |  |
+| 30 | `vendor/magento/module-inventory-sales/Plugin/Store/Model/ResourceModel/Website/UpdateSalesChannelWebsiteCodePlugin.php:56` | FP | The old website code is loaded before save and compared with the new code after it. |  |  |

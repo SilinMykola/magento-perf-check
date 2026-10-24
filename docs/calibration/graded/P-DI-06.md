@@ -598,33 +598,33 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `app/code/Magefan/Blog/Model/ResourceModel/Tag.php:68` |  |  | re-check |  |
-| 2 | `vendor/magento/module-store/App/FrontController/Plugin/RequestPreprocessor.php:111` |  |  | re-check |  |
-| 3 | `app/code/Magefan/Blog/Model/AbstractManagement.php:41` |  |  | re-check |  |
-| 4 | `vendor/magento/framework/Filter/Template.php:146` |  |  |  |  |
-| 5 | `vendor/magento/module-catalog-url-rewrite/Model/ProductScopeRewriteGenerator.php:138` |  |  |  |  |
-| 6 | `vendor/magento/framework-message-queue/Code/Generator/RemoteServiceGenerator.php:252` |  |  |  |  |
-| 7 | `vendor/magento/module-customer/Controller/Account/LoginPost.php:108` |  |  |  |  |
-| 8 | `vendor/magento/module-downloadable/Model/Product/TypeHandler/AbstractTypeHandler.php:205` |  |  |  |  |
-| 9 | `vendor/magento/module-customer/Controller/Account/Confirm.php:144` |  |  |  |  |
-| 10 | `vendor/magento/module-vault/Model/Ui/Adminhtml/TokensConfigProvider.php:291` |  |  |  |  |
-| 11 | `vendor/magento/module-async-config/Model/Consumer.php:65` |  |  |  |  |
-| 12 | `app/code/Mageplaza/Smtp/Model/Log.php:324` |  |  |  |  |
-| 13 | `vendor/magento/module-catalog-rule/Model/Rule.php:926` |  |  |  |  |
-| 14 | `vendor/magento/module-catalog/Model/CategoryManagement.php:90` |  |  |  |  |
-| 15 | `vendor/magento/framework-message-queue/Publisher.php:134` |  |  |  |  |
-| 16 | `vendor/magento/module-cms/Model/BlockRepository.php:222` |  |  |  |  |
-| 17 | `vendor/magento/module-downloadable/Block/Sales/Order/Email/Items/Order/Downloadable.php:121` |  |  |  |  |
-| 18 | `vendor/magento/module-customer/Controller/Ajax/Login.php:117` |  |  |  |  |
-| 19 | `vendor/magento/module-catalog/Model/ProductOptionProcessor.php:141` |  |  |  |  |
-| 20 | `vendor/magento/module-catalog/Ui/DataProvider/Product/Form/Modifier/Categories.php:139` |  |  |  |  |
-| 21 | `vendor/magento/framework/Url.php:1188` |  |  |  |  |
-| 22 | `vendor/magento/module-customer/Controller/Adminhtml/Index/Save.php:157` |  |  |  |  |
-| 23 | `vendor/magento/module-newsletter/Model/Queue.php:171` |  |  |  |  |
-| 24 | `vendor/magento/module-sales/Model/Order/Payment/Transaction/Repository.php:242` |  |  |  |  |
-| 25 | `vendor/magento/module-catalog-inventory/Model/StockIndex.php:284` |  |  |  |  |
-| 26 | `vendor/magento/module-sales/Model/Order/AddressRepository.php:249` |  |  |  |  |
-| 27 | `vendor/magento/module-customer/Controller/Adminhtml/Index/InlineEdit.php:134` |  |  |  |  |
-| 28 | `vendor/magento/module-catalog/Model/Product/Option/Repository.php:254` |  |  |  |  |
-| 29 | `vendor/magento/framework-message-queue/BatchConsumer.php:295` |  |  |  |  |
-| 30 | `vendor/magento/module-sales/Model/Order/Payment/Repository.php:140` |  |  |  |  |
+| 1 | `app/code/Magefan/Blog/Model/ResourceModel/Tag.php:68` | TP | _beforeSave() creates PageIdentifierGenerator through ObjectManager::getInstance()->create() instead of injecting a factory, a hidden dependency in regular module code. | re-check |  |
+| 2 | `vendor/magento/module-store/App/FrontController/Plugin/RequestPreprocessor.php:111` | TP-low | getBaseUrlChecker() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. | re-check |  |
+| 3 | `app/code/Magefan/Blog/Model/AbstractManagement.php:41` | TP | saveFile() pulls the File driver and DirectoryList from ObjectManager::getInstance() instead of constructor injection, a hidden dependency in regular module code. | re-check |  |
+| 4 | `vendor/magento/framework/Filter/Template.php:146` | FP | The calls fill the default directive processors inside if (empty($directiveProcessors)) in the constructor, which is the documented BC fallback for an optional argument written as an if block. |  |  |
+| 5 | `vendor/magento/module-catalog-url-rewrite/Model/ProductScopeRewriteGenerator.php:138` | FP | This is the constructor BC fallback for the optional mergeDataProviderFactory argument written as if (!isset(...)) instead of ?: or ??. |  |  |
+| 6 | `vendor/magento/framework-message-queue/Code/Generator/RemoteServiceGenerator.php:252` | TP-low | getReflectionGenerator() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation, in a code generator that runs only at compile time. |  |  |
+| 7 | `vendor/magento/module-customer/Controller/Account/LoginPost.php:108` | TP-low | getScopeConfig() is a BC getter that falls back to the object manager only when the property was not injected, a design issue without performance cost. |  |  |
+| 8 | `vendor/magento/module-downloadable/Model/Product/TypeHandler/AbstractTypeHandler.php:205` | TP-low | getMetadataPool() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 9 | `vendor/magento/module-customer/Controller/Account/Confirm.php:144` | TP-low | getCookieMetadataFactory() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 10 | `vendor/magento/module-vault/Model/Ui/Adminhtml/TokensConfigProvider.php:291` | TP-low | getPaymentDataHelper() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 11 | `vendor/magento/module-async-config/Model/Consumer.php:65` | TP-low | The consumer constructor deliberately switches to the adminhtml scope to build the Save controller through the object manager, a hidden dependency in a class built once per consumer process. |  |  |
+| 12 | `app/code/Mageplaza/Smtp/Model/Log.php:324` | TP-low | getAttachmentFactory() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 13 | `vendor/magento/module-catalog-rule/Model/Rule.php:926` | TP-low | getRuleConditionConverter() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 14 | `vendor/magento/module-catalog/Model/CategoryManagement.php:90` | TP-low | getScopeResolver() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 15 | `vendor/magento/framework-message-queue/Publisher.php:134` | TP-low | getAmqpConfig() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 16 | `vendor/magento/module-cms/Model/BlockRepository.php:222` | TP-low | getCollectionProcessor() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 17 | `vendor/magento/module-downloadable/Block/Sales/Order/Email/Items/Order/Downloadable.php:121` | TP-low | getFrontendUrlBuilder() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 18 | `vendor/magento/module-customer/Controller/Ajax/Login.php:117` | TP-low | getAccountRedirect() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 19 | `vendor/magento/module-catalog/Model/ProductOptionProcessor.php:141` | TP-low | getUrlBuilder() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 20 | `vendor/magento/module-catalog/Ui/DataProvider/Product/Form/Modifier/Categories.php:139` | TP-low | getCacheManager() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 21 | `vendor/magento/framework/Url.php:1188` | TP-low | getEscaper() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 22 | `vendor/magento/module-customer/Controller/Adminhtml/Index/Save.php:157` | TP | The constructor fetches ValidatorExceptionProcessor unconditionally from ObjectManager::getInstance() with no matching constructor argument, so it is neither the BC fallback nor replaceable through DI. |  |  |
+| 23 | `vendor/magento/module-newsletter/Model/Queue.php:171` | FP | ObjectManager::getInstance() is stored in a local variable and used only in the ?: and ?? constructor fallbacks for the optional timezone and utcConverter arguments, the allowed BC pattern. |  |  |
+| 24 | `vendor/magento/module-sales/Model/Order/Payment/Transaction/Repository.php:242` | TP-low | getCollectionProcessor() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 25 | `vendor/magento/module-catalog-inventory/Model/StockIndex.php:284` | TP-low | getStockStatusResource() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 26 | `vendor/magento/module-sales/Model/Order/AddressRepository.php:249` | TP-low | getCollectionProcessor() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 27 | `vendor/magento/module-customer/Controller/Adminhtml/Index/InlineEdit.php:134` | TP-low | getEmailNotification() is a BC getter that falls back to the object manager only when the property was not injected, a design issue without performance cost. |  |  |
+| 28 | `vendor/magento/module-catalog/Model/Product/Option/Repository.php:254` | TP-low | getHydratorPool() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 29 | `vendor/magento/framework-message-queue/BatchConsumer.php:295` | TP-low | getConsumerConfig() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |
+| 30 | `vendor/magento/module-sales/Model/Order/Payment/Repository.php:140` | TP-low | getCollectionProcessor() is a lazy BC getter that creates the dependency only on first use, so it hides it from DI but adds no early object creation. |  |  |

@@ -42,5 +42,5 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-two-factor-auth/etc/adminhtml/events.xml:18` |  |  | re-check |  |
-| 2 | `vendor/magento/module-catalog-inventory/etc/events.xml:13` |  |  | re-check |  |
+| 1 | `vendor/magento/module-two-factor-auth/etc/adminhtml/events.xml:18` | TP-low | Adminhtml-only observer adds tfa_providers on admin_user load; admin users load about once per admin request, so the extra lookup is negligible. | re-check |  |
+| 2 | `vendor/magento/module-catalog-inventory/etc/events.xml:13` | TP | AddInventoryDataObserver calls assignStatusToProduct, which fetches stock status via stockRegistryProvider on every product model load. | re-check |  |

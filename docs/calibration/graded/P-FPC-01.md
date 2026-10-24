@@ -606,33 +606,33 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-gift-message/Block/Cart/GiftOptions.php:63` |  |  | re-check |  |
-| 2 | `vendor/magento/module-sales/Block/Order/Recent.php:67` |  |  | re-check |  |
-| 3 | `vendor/magento/module-persistent/Block/Header/Additional.php:70` |  |  | re-check |  |
-| 4 | `vendor/magento/module-gift-message/Block/Cart/Item/Renderer/Actions/GiftOptions.php:21` |  |  |  |  |
-| 5 | `vendor/magento/module-paypal/Block/Billing/Agreements.php:63` |  |  |  |  |
-| 6 | `vendor/magento/module-weee/Block/Item/Price/Renderer.php:48` |  |  |  |  |
-| 7 | `vendor/magento/module-sales/Block/Order/Info/Buttons.php:52` |  |  |  |  |
-| 8 | `vendor/magento/module-checkout/Block/Cart/Totals.php:65` |  |  |  |  |
-| 9 | `vendor/magento/module-multishipping/Block/Checkout/Shipping.php:63` |  |  |  |  |
-| 10 | `vendor/magento/module-gift-message/Block/Cart/GiftOptions.php:25` |  |  |  |  |
-| 11 | `vendor/magento/module-paypal/Block/Billing/Agreement/View.php:96` |  |  |  |  |
-| 12 | `vendor/magento/module-checkout/Block/Cart/Crosssell.php:113` |  |  |  |  |
-| 13 | `vendor/magento/module-checkout/Block/Cart/Sidebar.php:64` |  |  |  |  |
-| 14 | `vendor/magento/module-customer/Block/Widget/Gender.php:51` |  |  |  |  |
-| 15 | `vendor/magento/module-captcha/Block/Captcha.php:39` |  |  |  |  |
-| 16 | `vendor/magento/module-checkout/Block/Cart.php:56` |  |  |  |  |
-| 17 | `vendor/magento/module-multishipping/Block/Checkout/Link.php:35` |  |  |  |  |
-| 18 | `vendor/magento/module-checkout/Block/Onepage/Link.php:42` |  |  |  |  |
-| 19 | `vendor/magento/module-reports/Block/Product/AbstractProduct.php:57` |  |  |  |  |
-| 20 | `vendor/magento/module-sales/Block/Order/View.php:59` |  |  |  |  |
-| 21 | `vendor/magento/module-checkout/Block/Cart/Shipping.php:71` |  |  |  |  |
-| 22 | `vendor/magento/module-send-friend/Block/Send.php:74` |  |  |  |  |
-| 23 | `vendor/magento/module-customer/Block/Widget/Name.php:54` |  |  |  |  |
-| 24 | `vendor/magento/module-multishipping/Block/Checkout/Billing/Items.php:43` |  |  |  |  |
-| 25 | `vendor/magento/module-customer/Block/Form/Register.php:90` |  |  |  |  |
-| 26 | `vendor/magento/module-admin-notification/Block/Window.php:68` |  |  |  |  |
-| 27 | `vendor/magento/module-customer/Block/Widget/Company.php:61` |  |  |  |  |
-| 28 | `vendor/magento/module-paypal/Block/Express/Form.php:78` |  |  |  |  |
-| 29 | `vendor/magento/module-checkout/Block/Cart/Item/Renderer.php:136` |  |  |  |  |
-| 30 | `vendor/magento/module-multishipping/Block/Checkout/Address/Select.php:34` |  |  |  |  |
+| 1 | `vendor/magento/module-gift-message/Block/Cart/GiftOptions.php:63` | TP-low | Block only placed on checkout_cart_index, which is uncacheable (checkout.cart has cacheable=false), so the private flag has no effect. | re-check |  |
+| 2 | `vendor/magento/module-sales/Block/Order/Recent.php:67` | TP-low | Recent orders block is only placed on customer_account_index, which is uncacheable by its own cacheable=false blocks. | re-check |  |
+| 3 | `vendor/magento/module-persistent/Block/Header/Additional.php:70` | TP | Persistent Observer adds this block as header.additional via top.links emulation, so it can be rendered into header of cacheable pages for persistent-session visitors. | re-check |  |
+| 4 | `vendor/magento/module-gift-message/Block/Cart/Item/Renderer/Actions/GiftOptions.php:21` | FP | Declares the property as false, the AbstractBlock default, so nothing is marked private. |  |  |
+| 5 | `vendor/magento/module-paypal/Block/Billing/Agreements.php:63` | TP-low | Only placed on paypal_billing_agreement_index, which is marked cacheable=false. |  |  |
+| 6 | `vendor/magento/module-weee/Block/Item/Price/Renderer.php:48` | TP-low | Weee price renderer is used in cart, order view, email and admin item renderers, none of which are page-cached. |  |  |
+| 7 | `vendor/magento/module-sales/Block/Order/Info/Buttons.php:52` | TP-low | Order info buttons only appear on sales order and guest order view pages, which are marked cacheable=false. |  |  |
+| 8 | `vendor/magento/module-checkout/Block/Cart/Totals.php:65` | TP-low | Totals block is used on cart, multishipping overview and PayPal review pages, all uncacheable checkout pages. |  |  |
+| 9 | `vendor/magento/module-multishipping/Block/Checkout/Shipping.php:63` | TP-low | Only placed on multishipping_checkout_shipping, which is marked cacheable=false. |  |  |
+| 10 | `vendor/magento/module-gift-message/Block/Cart/GiftOptions.php:25` | FP | Property declaration with value false is the default and marks nothing private (the true assignment is reported separately as row 1). |  |  |
+| 11 | `vendor/magento/module-paypal/Block/Billing/Agreement/View.php:96` | TP-low | Only placed on paypal_billing_agreement_view, which is marked cacheable=false. |  |  |
+| 12 | `vendor/magento/module-checkout/Block/Cart/Crosssell.php:113` | TP-low | Crosssell block is only placed on the uncacheable cart page. |  |  |
+| 13 | `vendor/magento/module-checkout/Block/Cart/Sidebar.php:64` | FP | Assigns false, so the minicart sidebar is not marked private and the obsolete mechanism is not relied on. |  |  |
+| 14 | `vendor/magento/module-customer/Block/Widget/Gender.php:51` | TP-low | Gender widget is created from register.phtml and edit.phtml, rendered on customer_account_create and edit pages that the Captcha layout makes uncacheable. |  |  |
+| 15 | `vendor/magento/module-captcha/Block/Captcha.php:39` | TP-low | Every core layout that places the captcha block (login, create, forgot password, edit, contact) marks it cacheable=false. |  |  |
+| 16 | `vendor/magento/module-checkout/Block/Cart.php:56` | TP-low | Cart block itself is declared cacheable=false on checkout_cart_index. |  |  |
+| 17 | `vendor/magento/module-multishipping/Block/Checkout/Link.php:35` | TP-low | Multishipping link is only placed on the uncacheable cart page. |  |  |
+| 18 | `vendor/magento/module-checkout/Block/Onepage/Link.php:42` | TP-low | Onepage checkout link is only placed on the uncacheable cart page. |  |  |
+| 19 | `vendor/magento/module-reports/Block/Product/AbstractProduct.php:57` | TP-low | No core layout or widget.xml places the Reports Viewed or Compared blocks any more, so the flag matters only if a project places them itself. |  |  |
+| 20 | `vendor/magento/module-sales/Block/Order/View.php:59` | TP-low | Order view block is only placed on sales order and guest view and reorder pages, which are marked cacheable=false. |  |  |
+| 21 | `vendor/magento/module-checkout/Block/Cart/Shipping.php:71` | TP-low | Cart shipping estimator is only placed on the uncacheable cart page. |  |  |
+| 22 | `vendor/magento/module-send-friend/Block/Send.php:74` | TP-low | Send to friend form is placed on sendfriend_product_send, which is marked cacheable=false. |  |  |
+| 23 | `vendor/magento/module-customer/Block/Widget/Name.php:54` | TP-low | Name widget is created from register, account edit and address templates, all on pages that are uncacheable in core. |  |  |
+| 24 | `vendor/magento/module-multishipping/Block/Checkout/Billing/Items.php:43` | TP-low | Only placed on multishipping_checkout_shipping, which is marked cacheable=false. |  |  |
+| 25 | `vendor/magento/module-customer/Block/Form/Register.php:90` | FP | Assigns false, so the register form is not marked private. |  |  |
+| 26 | `vendor/magento/module-admin-notification/Block/Window.php:68` | TP-low | Admin notification window is only placed in adminhtml default.xml and the admin is never page-cached. |  |  |
+| 27 | `vendor/magento/module-customer/Block/Widget/Company.php:61` | TP-low | Company widget is created from register.phtml and address/edit.phtml, rendered only on uncacheable account pages in core. |  |  |
+| 28 | `vendor/magento/module-paypal/Block/Express/Form.php:78` | TP-low | PayPal Express payment form block is rendered only inside checkout payment forms, which are not page-cached. |  |  |
+| 29 | `vendor/magento/module-checkout/Block/Cart/Item/Renderer.php:136` | TP-low | Cart item renderer is used on cart and onepage review item renderers, both on uncacheable checkout pages. |  |  |
+| 30 | `vendor/magento/module-multishipping/Block/Checkout/Address/Select.php:34` | TP-low | Only placed on multishipping address select pages, which are marked cacheable=false. |  |  |

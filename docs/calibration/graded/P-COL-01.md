@@ -106,8 +106,8 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-security/Block/Adminhtml/Session/Activity.php:78` |  |  | re-check |  |
-| 2 | `vendor/magento/module-downloadable/Model/Product/Type.php:241` |  |  | re-check |  |
-| 3 | `vendor/magento/module-catalog/Model/ResourceModel/Product/Collection.php:729` |  |  | re-check |  |
-| 4 | `app/code/Magefan/Blog/Model/Post.php:770` |  |  |  |  |
-| 5 | `vendor/magento/module-paypal/Model/Billing/Agreement.php:290` |  |  |  |  |
+| 1 | `vendor/magento/module-security/Block/Adminhtml/Session/Activity.php:78` | FP | The collection is memoized and the activity template iterates it, so rows are loaded anyway. | re-check |  |
+| 2 | `vendor/magento/module-downloadable/Model/Product/Type.php:241` | FP | Samples are memoized on the product and samples.phtml iterates them right after hasSamples(). | re-check |  |
+| 3 | `vendor/magento/module-catalog/Model/ResourceModel/Product/Collection.php:729` | FP | count($this) runs in _afterLoad(), when the collection is already loaded. | re-check |  |
+| 4 | `app/code/Magefan/Blog/Model/Post.php:770` | FP | getRelatedTags() is memoized and the post templates iterate the tags right after the count. |  |  |
+| 5 | `vendor/magento/module-paypal/Model/Billing/Agreement.php:290` | TP-low | Rows are loaded only to count, but the filter is the active agreements of one customer, usually none or one. |  |  |

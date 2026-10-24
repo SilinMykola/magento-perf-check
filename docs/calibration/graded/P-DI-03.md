@@ -26,4 +26,4 @@
 
 | # | location | verdict | reason | recheck | owner |
 |---|---|---|---|---|---|
-| 1 | `vendor/magento/module-customer/Model/Session.php:195` |  |  | re-check |  |
+| 1 | `vendor/magento/module-customer/Model/Session.php:195` | TP-low | customer_session_init is dispatched in the constructor, but the session is a shared instance so it fires at most once per request, and no events.xml in the corpus has an observer for it. | re-check |  |
