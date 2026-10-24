@@ -15,12 +15,17 @@ runs=(
     "packagist|var/corpus/magento|app/code"
     "mage-os|var/corpus/mage-os|vendor/mage-os"
 )
+# Mage-OS is not part of the M2 corpus (docs/calibration/corpus.json); run it only when installed.
 
 # Optional arguments select runs by name, e.g. "run core packagist".
 selected=" $* "
 for run in "${runs[@]}"; do
     IFS='|' read -r name project paths <<< "$run"
     if [ $# -gt 0 ] && [[ "$selected" != *" $name "* ]]; then
+        continue
+    fi
+    if [ ! -f "$root/$project/vendor/autoload.php" ]; then
+        echo "skipping $name: $project is not installed" >&2
         continue
     fi
     start=$(date +%s)

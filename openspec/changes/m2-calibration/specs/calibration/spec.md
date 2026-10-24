@@ -7,16 +7,19 @@ Measures the precision of every default rule on a fixed, reproducible corpus of 
 ## ADDED Requirements
 
 ### Requirement: Fixed corpus
-The calibration corpus SHALL consist of three parts, each pinned to a version:
+The calibration corpus SHALL consist of two parts, each pinned to a version:
 - Magento 2.4.9 core;
-- the 25 most-downloaded Packagist packages of type `magento2-module` that install on Magento 2.4.9;
-- Mage-OS (`mage-os/project-community-edition`).
+- the 25 most-downloaded Packagist packages of type `magento2-module` that install on Magento 2.4.9.
 
-`docs/calibration/corpus.json` SHALL list each part with its name, version and, for downloaded archives, the SHA-256 of the archive. This lets anyone rebuild the same corpus.
+`docs/calibration/corpus.json` SHALL list each part with its name, version and, for downloaded archives, the SHA-256 of the archive. This lets anyone rebuild the same corpus. It SHALL also record that Mage-OS, which SPEC section 7 names, is not part of this calibration, and why.
 
 #### Scenario: Corpus manifest
 - **WHEN** the corpus is built
 - **THEN** `docs/calibration/corpus.json` names every package with its version and checksum
+
+#### Scenario: Mage-OS left out
+- **WHEN** the calibration report is generated
+- **THEN** it states that Mage-OS is not in the corpus and gives the reason recorded in the manifest
 
 #### Scenario: Skipped package
 - **WHEN** a top-downloaded package does not install on Magento 2.4.9, or is a metapackage without code

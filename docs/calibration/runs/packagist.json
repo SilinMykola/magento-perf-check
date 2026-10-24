@@ -29,7 +29,7 @@
         "notices": {
             "untyped-receiver": 14
         },
-        "durationSeconds": 9.86,
+        "durationSeconds": 8.88,
         "baseline": null
     },
     "findings": [

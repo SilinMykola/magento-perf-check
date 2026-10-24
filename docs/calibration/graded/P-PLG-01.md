@@ -1,0 +1,638 @@
+# P-PLG-01: calibration sample
+
+30 of 38 findings (seed 20261023). Verdicts: TP, TP-low, FP, unclear. Rows marked `re-check` are for the owner: put `✓` in the owner column, or `was <verdict>` after changing the verdict.
+
+## 1. `vendor/magento/module-inventory-indexer/Plugin/InventoryApi/ReindexAfterSourceItemsDeletePlugin.php:43` (core)
+
+[P-PLG-01] Magento\InventoryIndexer\Plugin\InventoryApi\ReindexAfterSourceItemsDeletePlugin::aroundExecute() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    37       * @param SourceItemsDeleteInterface $subject
+    38       * @param callable $proceed
+    39       * @param SourceItemInterface[] $sourceItems
+    40       * @return void
+    41       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    42       */
+>   43      public function aroundExecute(
+    44          SourceItemsDeleteInterface $subject,
+    45          callable $proceed,
+    46          array $sourceItems
+    47      ) {
+    48          $sourceItemIds = $this->getSourceItemIds->execute($sourceItems);
+    49          $skuListInStockList = $this->getSkuListInStock->execute($sourceItemIds);
+```
+
+## 2. `vendor/magento/module-theme/Model/Indexer/Design/Config/Plugin/Website.php:36` (core)
+
+[P-PLG-01] Magento\Theme\Model\Indexer\Design\Config\Plugin\Website::aroundSave() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    30       *
+    31       * @param StoreWebsite $subject
+    32       * @param \Closure $proceed
+    33       * @return StoreWebsite
+    34       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    35       */
+>   36      public function aroundSave(StoreWebsite $subject, \Closure $proceed)
+    37      {
+    38          $isObjectNew = $subject->getId() == 0;
+    39          $result = $proceed();
+    40          if ($isObjectNew) {
+    41              $this->indexerRegistry->get(Config::DESIGN_CONFIG_GRID_INDEXER_ID)->invalidate();
+    42          }
+```
+
+## 3. `app/code/Mageplaza/Smtp/Plugin/Model/Resolver/Products/DataProvider/ProductSearch/ProductSearchCriteriaBuilder.php:77` (packagist)
+
+[P-PLG-01] Mageplaza\Smtp\Plugin\Model\Resolver\Products\DataProvider\ProductSearch\ProductSearchCriteriaBuilder::aroundBuild() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    71       * @param ProductCollectionSearchCriteriaBuilder $subject
+    72       * @param callable $proceed
+    73       * @param SearchCriteriaInterface $searchCriteria
+    74       *
+    75       * @return SearchCriteria
+    76       */
+>   77      public function aroundBuild(
+    78          ProductCollectionSearchCriteriaBuilder $subject,
+    79          callable $proceed,
+    80          SearchCriteriaInterface $searchCriteria
+    81      ) {
+    82          /** @var SearchCriteria $searchCriteriaForCollection */
+    83          $searchCriteriaForCollection = $proceed($searchCriteria);
+```
+
+## 4. `vendor/magento/module-checkout/Model/Plugin/RecollectQuoteOnCustomerGroupChange.php:83` (core)
+
+[P-PLG-01] Magento\Checkout\Model\Plugin\RecollectQuoteOnCustomerGroupChange::aroundSave() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    77       *
+    78       * @throws LocalizedException
+    79       * @throws NoSuchEntityException
+    80       * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+    81       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    82       */
+>   83      public function aroundSave(
+    84          CustomerResource $subject,
+    85          callable $proceed,
+    86          AbstractModel $customer
+    87      ): CustomerResource {
+    88          $customerId = $customer->getId() ?: $customer->getEntityId();
+    89          /** @var Customer $customer */
+```
+
+## 5. `vendor/magento/module-inventory-configuration/Plugin/CatalogInventory/Model/System/Config/Backend/Minqty/AllowNegativeMinQtyInConfigPlugin.php:21` (core)
+
+[P-PLG-01] Magento\InventoryConfiguration\Plugin\CatalogInventory\Model\System\Config\Backend\Minqty\AllowNegativeMinQtyInConfigPlugin::aroundBeforeSave() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    15       * Allow min_qty to be assigned a value below 0.
+    16       *
+    17       * @param Minqty $subject
+    18       * @param callable $proceed
+    19       * @return mixed
+    20       */
+>   21      public function aroundBeforeSave(
+    22          Minqty $subject,
+    23          callable $proceed
+    24      ) {
+    25          $originalMinQty = $proceed();
+    26          $originalMinQty->setValue($subject->getFieldsetDataValue('min_qty'));
+    27          return $originalMinQty;
+```
+
+## 6. `vendor/magento/module-login-as-customer-frontend-ui/Plugin/KeepLoginAsCustomerSessionDataPlugin.php:60` (core)
+
+[P-PLG-01] Magento\LoginAsCustomerFrontendUi\Plugin\KeepLoginAsCustomerSessionDataPlugin::aroundClearStorage() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    54       * @param SessionManagerInterface $subject
+    55       * @param \Closure $proceed
+    56       * @return SessionManagerInterface
+    57       *
+    58       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    59       */
+>   60      public function aroundClearStorage(
+    61          SessionManagerInterface $subject,
+    62          \Closure $proceed
+    63      ): SessionManagerInterface {
+    64          $enabled = $this->config->isEnabled();
+    65          $adminId = $enabled ? $this->getLoggedAsCustomerAdminId->execute() : null;
+    66          $result = $proceed();
+```
+
+## 7. `vendor/magento/module-catalog-search/Model/Attribute/SearchWeight.php:54` (core)
+
+[P-PLG-01] Magento\CatalogSearch\Model\Attribute\SearchWeight::aroundSave() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    48       * @param \Closure $proceed
+    49       * @param \Magento\Framework\Model\AbstractModel $attribute
+    50       * @return \Magento\Catalog\Model\ResourceModel\Attribute
+    51       *
+    52       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    53       */
+>   54      public function aroundSave(
+    55          \Magento\Catalog\Model\ResourceModel\Attribute $subject,
+    56          \Closure $proceed,
+    57          \Magento\Framework\Model\AbstractModel $attribute
+    58      ) {
+    59          $isNew = $attribute->isObjectNew();
+    60          $isWeightChanged = $attribute->dataHasChangedFor('search_weight');
+```
+
+## 8. `vendor/magento/module-catalog/Model/Indexer/Product/Price/Plugin/CustomerGroup.php:81` (core)
+
+[P-PLG-01] Magento\Catalog\Model\Indexer\Product\Price\Plugin\CustomerGroup::aroundSave() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    75       * @param \Closure $proceed
+    76       * @param GroupInterface $group
+    77       *
+    78       * @return GroupInterface
+    79       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    80       */
+>   81      public function aroundSave(
+    82          GroupRepositoryInterface $subject,
+    83          \Closure $proceed,
+    84          GroupInterface $group
+    85      ) {
+    86          $isGroupNew = $group->getId() === null;
+    87          $group = $proceed($group);
+```
+
+## 9. `app/code/Ebizmarts/MailChimp/Model/Plugin/AccountManagement.php:61` (packagist)
+
+[P-PLG-01] Ebizmarts\MailChimp\Model\Plugin\AccountManagement::aroundIsEmailAvailable() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    55      /**
+    56       * @param \Magento\Customer\Model\AccountManagement $accountManagement
+    57       * @param \Closure $proceed
+    58       * @param $customerEmail
+    59       * @param null $websiteId
+    60       */
+>   61      public function aroundIsEmailAvailable(
+    62          \Magento\Customer\Model\AccountManagement $accountManagement,
+    63          \Closure $proceed,
+    64          $customerEmail,
+    65          $websiteId = null
+    66      ) {
+    67  
+```
+
+## 10. `vendor/magento/module-persistent/Plugin/AddPersistentRememberMeInitPlugin.php:39` (core)
+
+[P-PLG-01] Magento\Persistent\Plugin\AddPersistentRememberMeInitPlugin::aroundGenerateElements() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    33       * Add the RememberMeInit block to the layout.
+    34       *
+    35       * @param Layout $subject
+    36       * @param callable $proceed
+    37       * @return void
+    38       */
+>   39      public function aroundGenerateElements(Layout $subject, callable $proceed)
+    40      {
+    41          $proceed();
+    42  
+    43          if (!$this->customerSession->isLoggedIn()
+    44              && $this->persistentData->isEnabled()
+    45              && $this->persistentData->isRememberMeEnabled()
+```
+
+## 11. `vendor/magento/module-inventory-low-quantity-notification/Plugin/InventoryCatalogApi/BulkConfigurationTransferInterfacePlugin.php:54` (core)
+
+[P-PLG-01] Magento\InventoryLowQuantityNotification\Plugin\InventoryCatalogApi\BulkConfigurationTransferInterfacePlugin::aroundExecute() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    48       * @param string $originSource
+    49       * @param string $destinationSource
+    50       * @param bool $unassignFromOrigin
+    51       * @return bool
+    52       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    53       */
+>   54      public function aroundExecute(
+    55          BulkInventoryTransferInterface $subject,
+    56          callable $proceed,
+    57          array $skus,
+    58          string $originSource,
+    59          string $destinationSource,
+    60          bool $unassignFromOrigin
+```
+
+## 12. `vendor/magento/module-newsletter/Model/Plugin/CustomerPlugin.php:199` (core)
+
+[P-PLG-01] Magento\Newsletter\Model\Plugin\CustomerPlugin::aroundDeleteById() calls $deleteCustomerById once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+   193       *
+   194       * @param CustomerRepositoryInterface $subject
+   195       * @param callable $deleteCustomerById Function we are wrapping around
+   196       * @param int $customerId Input to the function
+   197       * @return bool
+   198       */
+>  199      public function aroundDeleteById(
+   200          CustomerRepositoryInterface $subject,
+   201          callable $deleteCustomerById,
+   202          $customerId
+   203      ) {
+   204          $customer = $subject->getById($customerId);
+   205          $result = $deleteCustomerById($customerId);
+```
+
+## 13. `vendor/magento/module-media-content/Plugin/MediaGalleryAssetDeleteByPath.php:65` (core)
+
+[P-PLG-01] Magento\MediaContent\Plugin\MediaGalleryAssetDeleteByPath::aroundExecute() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    59       * @throws CouldNotDeleteException
+    60       * @throws LocalizedException
+    61       * @return void
+    62       *
+    63       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    64       */
+>   65      public function aroundExecute(
+    66          DeleteAssetsByPathsInterface $subject,
+    67          \Closure $proceed,
+    68          array $paths
+    69      ) : void {
+    70          $assets = $this->getByPaths->execute($paths);
+    71  
+```
+
+## 14. `vendor/magento/module-inventory-bundle-product-indexer/Plugin/Bundle/Model/ResourceModel/Indexer/StockPlugin.php:38` (core)
+
+[P-PLG-01] Magento\InventoryBundleProductIndexer\Plugin\Bundle\Model\ResourceModel\Indexer\StockPlugin::aroundReindexEntity() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    32       * @param Stock $subject
+    33       * @param callable $proceed
+    34       * @param array|int $entityIds
+    35       * @return void
+    36       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    37       */
+>   38      public function aroundReindexEntity(Stock $subject, callable $proceed, $entityIds = []): void
+    39      {
+    40          $stockId = $this->defaultStockProvider->getId();
+    41          $this->reservationsIndexTable->createTable($stockId);
+    42          $this->prepareReservationsIndexData->execute($stockId);
+    43          $proceed($entityIds);
+    44          $this->reservationsIndexTable->dropTable($stockId);
+```
+
+## 15. `vendor/magento/module-grouped-product/Model/ResourceModel/Product/Link/RelationPersister.php:70` (core)
+
+[P-PLG-01] Magento\GroupedProduct\Model\ResourceModel\Product\Link\RelationPersister::aroundDeleteProductLink() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    64       *
+    65       * @param Link $subject
+    66       * @param \Closure $proceed
+    67       * @param int $linkId
+    68       * @return Link
+    69       */
+>   70      public function aroundDeleteProductLink(Link $subject, \Closure $proceed, $linkId)
+    71      {
+    72          /** @var \Magento\Catalog\Model\ProductLink\Link $link */
+    73          $link = $this->linkFactory->create();
+    74          $subject->load($link, $linkId, $subject->getIdFieldName());
+    75          $result = $proceed($linkId);
+    76          if ($link->getLinkTypeId() == GroupedLink::LINK_TYPE_GROUPED) {
+```
+
+## 16. `vendor/magento/module-customer/Plugin/ValidateDobOnSave.php:68` (core)
+
+[P-PLG-01] Magento\Customer\Plugin\ValidateDobOnSave::aroundSave() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    62       * @throws InputException
+    63       * @throws \Magento\Framework\Exception\LocalizedException
+    64       * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+    65       * @SuppressWarnings(PHPMD.NPathComplexity)
+    66       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    67       */
+>   68      public function aroundSave(
+    69          CustomerRepositoryInterface $subject,
+    70          callable $proceed,
+    71          CustomerInterface $customer,
+    72          $passwordHash = null
+    73      ) {
+    74          $dobRaw = $customer->getDob();
+```
+
+## 17. `vendor/magento/module-inventory-cache/Plugin/InventoryIndexer/Indexer/Stock/Strategy/Sync/CacheFlush.php:51` (core)
+
+[P-PLG-01] Magento\InventoryCache\Plugin\InventoryIndexer\Indexer\Stock\Strategy\Sync\CacheFlush::aroundExecuteList() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    45       * @param callable $proceed
+    46       * @param array $stockIds
+    47       * @return void
+    48       * @throws \Exception in case product entity type hasn't been initialize.
+    49       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    50       */
+>   51      public function aroundExecuteList(Sync $subject, callable $proceed, array $stockIds)
+    52      {
+    53          $beforeReindexProductIds = $this->getProductIdsByStockIds->execute($stockIds);
+    54          $proceed($stockIds);
+    55          $afterReindexProductIds = $this->getProductIdsByStockIds->execute($stockIds);
+    56          $productIdsForCacheClean = array_diff($beforeReindexProductIds, $afterReindexProductIds);
+    57          if ($productIdsForCacheClean) {
+```
+
+## 18. `vendor/magento/module-configurable-product/Plugin/Model/ResourceModel/Product.php:196` (core)
+
+[P-PLG-01] Magento\ConfigurableProduct\Plugin\Model\ResourceModel\Product::aroundDelete() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+   190       * @param ProductResource $subject
+   191       * @param \Closure $proceed
+   192       * @param ProductModel $product
+   193       * @return ProductResource
+   194       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+   195       */
+>  196      public function aroundDelete(
+   197          ProductResource $subject,
+   198          \Closure $proceed,
+   199          ProductModel $product
+   200      ) {
+   201          $configurableProductIds = $this->configurable->getParentIdsByChild($product->getId());
+   202          $result = $proceed($product);
+```
+
+## 19. `vendor/magento/module-re-captcha-frontend-ui/Plugin/ExcludeFromMinification.php:27` (core)
+
+[P-PLG-01] Magento\ReCaptchaFrontendUi\Plugin\ExcludeFromMinification::aroundGetExcludes() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    21       * @param Minification $subject
+    22       * @param callable $proceed
+    23       * @param string $contentType
+    24       * @return array
+    25       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    26       */
+>   27      public function aroundGetExcludes(Minification $subject, callable $proceed, $contentType)
+    28      {
+    29          $result = $proceed($contentType);
+    30          if ($contentType !== 'js') {
+    31              return $result;
+    32          }
+    33          $result[] = 'https://www.google.com/recaptcha/api.js';
+```
+
+## 20. `app/code/Magefan/Blog/Plugin/Magento/AdminGws/Model/ModelsPlugin.php:19` (packagist)
+
+[P-PLG-01] Magefan\Blog\Plugin\Magento\AdminGws\Model\ModelsPlugin::aroundCmsPageSaveBefore() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    13      /**
+    14       * @param $subject
+    15       * @param callable $proceed
+    16       * @param $model
+    17       * @return callable
+    18       */
+>   19      public function aroundCmsPageSaveBefore($subject, callable $proceed, $model)
+    20      {
+    21          $isBlogModel = ($model instanceof \Magefan\Blog\Model\Post
+    22              || $model instanceof \Magefan\Blog\Model\Category
+    23          );
+    24          if ($isBlogModel) {
+    25              $storeId = $model->getStoreId();
+```
+
+## 21. `app/code/JustBetter/Sentry/Plugin/CronScheduleCheckIn.php:30` (packagist)
+
+[P-PLG-01] JustBetter\Sentry\Plugin\CronScheduleCheckIn::aroundSetData() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    24       * @param callable $proceed
+    25       * @param mixed    $field
+    26       * @param mixed    $value
+    27       *
+    28       * @return \Magento\Framework\App\ResponseInterface
+    29       */
+>   30      public function aroundSetData(Schedule $subject, callable $proceed, $field, $value = null)
+    31      {
+    32          $result = $proceed($field, $value);
+    33          if ($field !== 'status') {
+    34              return $result;
+    35          }
+    36  
+```
+
+## 22. `vendor/magento/module-configurable-product/Model/Entity/Product/Attribute/Group/AttributeMapper/Plugin.php:48` (core)
+
+[P-PLG-01] Magento\ConfigurableProduct\Model\Entity\Product\Attribute\Group\AttributeMapper\Plugin::aroundMap() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    42       * @param callable $proceed
+    43       * @param \Magento\Eav\Model\Entity\Attribute $attribute
+    44       *
+    45       * @return array
+    46       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    47       */
+>   48      public function aroundMap(
+    49          \Magento\Catalog\Model\Entity\Product\Attribute\Group\AttributeMapperInterface $subject,
+    50          \Closure $proceed,
+    51          \Magento\Eav\Model\Entity\Attribute $attribute
+    52      ) {
+    53          $setId = $this->registry->registry('current_attribute_set')->getId();
+    54          $result = $proceed($attribute);
+```
+
+## 23. `vendor/magento/module-security/Model/Plugin/AdminUserForm.php:59` (core)
+
+[P-PLG-01] Magento\Security\Model\Plugin\AdminUserForm::aroundGetFormHtml() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    53       * Add the `expires_at` field to the admin user edit form.
+    54       *
+    55       * @param \Magento\User\Block\User\Edit\Tab\Main $subject
+    56       * @param \Closure $proceed
+    57       * @return mixed
+    58       */
+>   59      public function aroundGetFormHtml(
+    60          \Magento\User\Block\User\Edit\Tab\Main $subject,
+    61          \Closure $proceed
+    62      ) {
+    63          /** @var \Magento\Framework\Data\Form $form */
+    64          $form = $subject->getForm();
+    65          if (is_object($form)) {
+```
+
+## 24. `vendor/magento/module-inventory-sales/Plugin/Sales/OrderManagement/DeductSourceItemQuantityOnRefundPlugin.php:98` (core)
+
+[P-PLG-01] Magento\InventorySales\Plugin\Sales\OrderManagement\DeductSourceItemQuantityOnRefundPlugin::aroundSave() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    92       * @param CreditmemoRepositoryInterface $subject
+    93       * @param callable $proceed
+    94       * @param CreditmemoInterface $entity
+    95       * @return mixed
+    96       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    97       */
+>   98      public function aroundSave(
+    99          CreditmemoRepositoryInterface $subject,
+   100          callable $proceed,
+   101          CreditmemoInterface $entity
+   102      ) {
+   103          $isNewCreditMemo = !(bool)$entity->getEntityId();
+   104          $result = $proceed($entity);
+```
+
+## 25. `vendor/magento/module-customer/Model/Plugin/CustomerFlushFormKey.php:43` (core)
+
+[P-PLG-01] Magento\Customer\Model\Plugin\CustomerFlushFormKey::aroundExecute() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    37      /**
+    38       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    39       * @param FlushFormKey $subject
+    40       * @param callable $proceed
+    41       * @param $args
+    42       */
+>   43      public function aroundExecute(FlushFormKey $subject, callable $proceed, ...$args)
+    44      {
+    45          $currentFormKey = $this->dataFormKey->getFormKey();
+    46          $proceed(...$args);
+    47          $beforeParams = $this->session->getBeforeRequestParams();
+    48          if (isset($beforeParams['form_key']) && $beforeParams['form_key'] === $currentFormKey) {
+    49              $beforeParams['form_key'] = $this->dataFormKey->getFormKey();
+```
+
+## 26. `vendor/magento/module-re-captcha-webapi-rest/Plugin/RestValidationPlugin.php:81` (core)
+
+[P-PLG-01] Magento\ReCaptchaWebapiRest\Plugin\RestValidationPlugin::aroundValidate() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    75       * @param callable $proceed
+    76       * @throws WebapiException
+    77       * @return void
+    78       *
+    79       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    80       */
+>   81      public function aroundValidate(RequestValidator $subject, callable $proceed): void
+    82      {
+    83          $request = clone $this->request;
+    84          $proceed();
+    85          $route = $this->restRouter->match($request);
+    86          $endpoint = $this->endpointFactory->create([
+    87              'class' => $route->getServiceClass(),
+```
+
+## 27. `app/code/MarkShust/DisableTwoFactorAuth/Plugin/BypassTwoFactorAuthForApiTokenGeneration.php:66` (packagist)
+
+[P-PLG-01] MarkShust\DisableTwoFactorAuth\Plugin\BypassTwoFactorAuthForApiTokenGeneration::aroundCreateAdminAccessToken() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    60       * @param string $password
+    61       * @return string
+    62       * @throws AuthenticationException
+    63       * @throws InputException
+    64       * @throws LocalizedException
+    65       */
+>   66      public function aroundCreateAdminAccessToken(
+    67          AdminAccessTokenService $subject,
+    68          Closure $proceed,
+    69          $username,
+    70          $password
+    71      ): string {
+    72          $isMain2faEnabled = $this->scopeConfig->isSetFlag(
+```
+
+## 28. `vendor/magento/module-swatches-graph-ql/Plugin/Filters/DataProviderPlugin.php:64` (core)
+
+[P-PLG-01] Magento\SwatchesGraphQl\Plugin\Filters\DataProviderPlugin::aroundGetData() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    58       * @return array
+    59       * @throws \Magento\Framework\Exception\LocalizedException
+    60       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    61       * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+    62       * phpcs:disable Generic.Metrics.NestingLevel
+    63       */
+>   64      public function aroundGetData(
+    65          Filters $subject,
+    66          \Closure $proceed,
+    67          string $layerType,
+    68          $attributesToFilter = null
+    69      ) : array {
+    70          $swatchFilters = [];
+```
+
+## 29. `vendor/magento/module-media-content/Plugin/MediaGalleryAssetDeleteByDirectoryPath.php:65` (core)
+
+[P-PLG-01] Magento\MediaContent\Plugin\MediaGalleryAssetDeleteByDirectoryPath::aroundExecute() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    59       * @param array $paths
+    60       * @throws CouldNotDeleteException
+    61       * @return void
+    62       *
+    63       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    64       */
+>   65      public function aroundExecute(
+    66          DeleteDirectoriesByPathsInterface $subject,
+    67          \Closure $proceed,
+    68          array $paths
+    69      ) : void {
+    70          $assetIdsArrays =[];
+    71          foreach ($paths as $path) {
+```
+
+## 30. `vendor/magento/module-inventory-sales/Plugin/Store/Model/ResourceModel/Website/UpdateSalesChannelWebsiteCodePlugin.php:56` (core)
+
+[P-PLG-01] Magento\InventorySales\Plugin\Store\Model\ResourceModel\Website\UpdateSalesChannelWebsiteCodePlugin::aroundSave() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.
+
+```
+    50       * @return WebsiteResourceModel
+    51       * @throws CouldNotSaveException
+    52       * @throws NoSuchEntityException
+    53       * @throws ValidationException
+    54       * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+    55       */
+>   56      public function aroundSave(
+    57          WebsiteResourceModel $subject,
+    58          callable $proceed,
+    59          AbstractModel $website
+    60      ) {
+    61          $newCode = $website->getCode();
+    62          $oldCode = null;
+```
+
+## Grades
+
+| # | location | verdict | reason | recheck | owner |
+|---|---|---|---|---|---|
+| 1 | `vendor/magento/module-inventory-indexer/Plugin/InventoryApi/ReindexAfterSourceItemsDeletePlugin.php:43` |  |  | re-check |  |
+| 2 | `vendor/magento/module-theme/Model/Indexer/Design/Config/Plugin/Website.php:36` |  |  | re-check |  |
+| 3 | `app/code/Mageplaza/Smtp/Plugin/Model/Resolver/Products/DataProvider/ProductSearch/ProductSearchCriteriaBuilder.php:77` |  |  | re-check |  |
+| 4 | `vendor/magento/module-checkout/Model/Plugin/RecollectQuoteOnCustomerGroupChange.php:83` |  |  |  |  |
+| 5 | `vendor/magento/module-inventory-configuration/Plugin/CatalogInventory/Model/System/Config/Backend/Minqty/AllowNegativeMinQtyInConfigPlugin.php:21` |  |  |  |  |
+| 6 | `vendor/magento/module-login-as-customer-frontend-ui/Plugin/KeepLoginAsCustomerSessionDataPlugin.php:60` |  |  |  |  |
+| 7 | `vendor/magento/module-catalog-search/Model/Attribute/SearchWeight.php:54` |  |  |  |  |
+| 8 | `vendor/magento/module-catalog/Model/Indexer/Product/Price/Plugin/CustomerGroup.php:81` |  |  |  |  |
+| 9 | `app/code/Ebizmarts/MailChimp/Model/Plugin/AccountManagement.php:61` |  |  |  |  |
+| 10 | `vendor/magento/module-persistent/Plugin/AddPersistentRememberMeInitPlugin.php:39` |  |  |  |  |
+| 11 | `vendor/magento/module-inventory-low-quantity-notification/Plugin/InventoryCatalogApi/BulkConfigurationTransferInterfacePlugin.php:54` |  |  |  |  |
+| 12 | `vendor/magento/module-newsletter/Model/Plugin/CustomerPlugin.php:199` |  |  |  |  |
+| 13 | `vendor/magento/module-media-content/Plugin/MediaGalleryAssetDeleteByPath.php:65` |  |  |  |  |
+| 14 | `vendor/magento/module-inventory-bundle-product-indexer/Plugin/Bundle/Model/ResourceModel/Indexer/StockPlugin.php:38` |  |  |  |  |
+| 15 | `vendor/magento/module-grouped-product/Model/ResourceModel/Product/Link/RelationPersister.php:70` |  |  |  |  |
+| 16 | `vendor/magento/module-customer/Plugin/ValidateDobOnSave.php:68` |  |  |  |  |
+| 17 | `vendor/magento/module-inventory-cache/Plugin/InventoryIndexer/Indexer/Stock/Strategy/Sync/CacheFlush.php:51` |  |  |  |  |
+| 18 | `vendor/magento/module-configurable-product/Plugin/Model/ResourceModel/Product.php:196` |  |  |  |  |
+| 19 | `vendor/magento/module-re-captcha-frontend-ui/Plugin/ExcludeFromMinification.php:27` |  |  |  |  |
+| 20 | `app/code/Magefan/Blog/Plugin/Magento/AdminGws/Model/ModelsPlugin.php:19` |  |  |  |  |
+| 21 | `app/code/JustBetter/Sentry/Plugin/CronScheduleCheckIn.php:30` |  |  |  |  |
+| 22 | `vendor/magento/module-configurable-product/Model/Entity/Product/Attribute/Group/AttributeMapper/Plugin.php:48` |  |  |  |  |
+| 23 | `vendor/magento/module-security/Model/Plugin/AdminUserForm.php:59` |  |  |  |  |
+| 24 | `vendor/magento/module-inventory-sales/Plugin/Sales/OrderManagement/DeductSourceItemQuantityOnRefundPlugin.php:98` |  |  |  |  |
+| 25 | `vendor/magento/module-customer/Model/Plugin/CustomerFlushFormKey.php:43` |  |  |  |  |
+| 26 | `vendor/magento/module-re-captcha-webapi-rest/Plugin/RestValidationPlugin.php:81` |  |  |  |  |
+| 27 | `app/code/MarkShust/DisableTwoFactorAuth/Plugin/BypassTwoFactorAuthForApiTokenGeneration.php:66` |  |  |  |  |
+| 28 | `vendor/magento/module-swatches-graph-ql/Plugin/Filters/DataProviderPlugin.php:64` |  |  |  |  |
+| 29 | `vendor/magento/module-media-content/Plugin/MediaGalleryAssetDeleteByDirectoryPath.php:65` |  |  |  |  |
+| 30 | `vendor/magento/module-inventory-sales/Plugin/Store/Model/ResourceModel/Website/UpdateSalesChannelWebsiteCodePlugin.php:56` |  |  |  |  |

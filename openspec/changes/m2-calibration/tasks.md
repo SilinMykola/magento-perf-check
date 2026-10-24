@@ -30,12 +30,12 @@ Groups may be committed one at a time.
 
 - [x] 3.1 Add `composer/semver` as a dev dependency. Write `bin/calibration/build-corpus` for the Magento copy (design D1). Verify: `var/corpus/magento` exists, `var/` is git-ignored, and `find ~/projects/magento-2.4.9.ddev -newer <marker>` reports nothing.
 - [x] 3.2 Select, download and place the 25 Packagist modules, recording skipped packages with reasons. Write `docs/calibration/corpus.json`. Verify: 25 modules under `var/corpus/magento/app/code`, each with name, version and SHA-256 in the manifest; `php bin/magento-perf-check --project=var/corpus/magento --paths=app/code` exits 0 or 1.
-- [ ] 3.3 Install Mage-OS into `var/corpus/mage-os` and add it to the manifest. Verify: `php bin/magento-perf-check --project=var/corpus/mage-os --paths=vendor/mage-os` exits 0 or 1.
+- [x] 3.3 Mage-OS: the install hung three times, and the owner decided on 2026-10-24 to calibrate without it. Record it in the manifest as not included, with the reason. Verify: `docs/calibration/corpus.json` has a `mage-os` entry with `included: false` and the reason; the calibration spec and design reflect the decision.
 
 ## 4. Runs and sampling
 
-- [ ] 4.1 Write `bin/calibration/run`. Run the three corpus runs and store the JSON with the tool commit in `docs/calibration/runs/`. Verify: three JSON files exist, and wall time and peak RSS for each are recorded for the report.
-- [ ] 4.2 Write `bin/calibration/sample` (seed 20261023, sample-data dropped, owner re-check rows marked). Verify: running it twice gives identical files, and every default rule with findings has a `docs/calibration/graded/<RULE>.md`.
+- [x] 4.1 Write `bin/calibration/run`. Run the three corpus runs and store the JSON with the tool commit in `docs/calibration/runs/`. Verify: three JSON files exist, and wall time and peak RSS for each are recorded for the report.
+- [x] 4.2 Write `bin/calibration/sample` (seed 20261023, sample-data dropped, owner re-check rows marked). Verify: running it twice gives identical files, and every default rule with findings has a `docs/calibration/graded/<RULE>.md`.
 
 ## 5. Grading
 

@@ -191,12 +191,16 @@
         "skipped": [
             {
                 "name": "hyva-themes/magento2-graphql-view-model",
-                "reason": "needs the Hyv\u00e4 theme stack"
+                "reason": "needs the Hyvä theme stack"
             },
             {
                 "name": "hyva-themes/magento2-graphql-tokens",
-                "reason": "needs the Hyv\u00e4 theme stack"
+                "reason": "needs the Hyvä theme stack"
             }
         ]
+    },
+    "mage-os": {
+        "included": false,
+        "reason": "composer create-project mage-os/project-community-edition from https://repo.mage-os.org/ hung three times on 2026-10-23/24 on stalled downloads (no CPU use, no file written for 10 minutes), also with COMPOSER_MAX_PARALLEL_HTTP=4 and with a GitHub token. The owner decided to calibrate without it; Mage-OS is a fork of the same core."
     }
 }

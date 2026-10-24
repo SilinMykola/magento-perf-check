@@ -170,6 +170,9 @@ foreach ($metas as $meta) {
 }
 
 $modules = count($corpus['packagist']['modules'] ?? []);
+$mageOs = ($corpus['mage-os']['included'] ?? true) === false
+    ? '- Not included: Mage-OS. ' . $corpus['mage-os']['reason']
+    : '- Mage-OS ' . $corpus['mage-os']['version'] . ' (`vendor/mage-os`)';
 $report = <<<MD
     # Calibration
 
@@ -181,7 +184,7 @@ $report = <<<MD
 
     - Magento {$corpus['magento']['version']} core (`vendor/magento`)
     - {$modules} most-downloaded `magento2-module` packages from Packagist that install on that version (`app/code` of the corpus copy)
-    - Mage-OS {$corpus['mage-os']['version']} (`vendor/mage-os`)
+    {$mageOs}
 
     Test code is excluded (the tool's default), and so are `*-sample-data` modules at sampling time.
 

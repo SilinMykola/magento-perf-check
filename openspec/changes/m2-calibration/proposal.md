@@ -13,7 +13,7 @@ SPEC section 7 makes calibration mandatory before a public release. Each rule's 
 - **Corpus**, fixed and reproducible. It does not touch the test Magento project.
   - Magento 2.4.9 core, analyzed in a copy of `~/projects/magento-2.4.9.ddev` under `var/corpus/` (git-ignored).
   - The 25 most-downloaded `magento2-module` packages from Packagist that install on Magento 2.4.9. Each is pinned to a version and placed in the copy's `app/code`.
-  - Mage-OS: a Composer install of `mage-os/project-community-edition` in `var/corpus/mage-os`.
+  - Mage-OS: planned as a Composer install of `mage-os/project-community-edition`. Dropped on 2026-10-24 by the owner after three installs hung; recorded in the manifest and the report.
   - The package list, versions and checksums are committed as `docs/calibration/corpus.json`.
 - **Rule fixes first**, from the M1 spot-check conclusions. Each fix is limited to the false-positive pattern the spot checks found:
   - P-COL-01: a collection loaded later in the same function counts as loaded.
