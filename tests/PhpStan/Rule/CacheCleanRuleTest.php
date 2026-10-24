@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\PhpStan\Rule;
+namespace Silin\MagentoPerfCheck\Tests\PhpStan\Rule;
 
-use MagentoPerfRules\PhpStan\Rule\CacheCleanRule;
+use Silin\MagentoPerfCheck\PhpStan\Rule\CacheCleanRule;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 

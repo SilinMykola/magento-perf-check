@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Xml;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Xml;
 
-use MagentoPerfRules\Xml\FileDiscovery;
-use MagentoPerfRules\Xml\XmlFile;
+use Silin\MagentoPerfCheck\Xml\FileDiscovery;
+use Silin\MagentoPerfCheck\Xml\XmlFile;
 use PHPUnit\Framework\TestCase;
 
 final class FileDiscoveryTest extends TestCase

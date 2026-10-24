@@ -38,7 +38,7 @@ If the field must never be cached, say so with `@cache(cacheable: false)`.
 
 ## How to suppress
 
-Disable or re-grade the rule in `magento-perf-rules.neon`, or keep the finding in the baseline. Schema files have no inline suppression comment yet.
+Disable or re-grade the rule in `magento-perf-check.neon`, or keep the finding in the baseline. Schema files have no inline suppression comment yet.
 
 ## Known false positives
 

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Config;
+namespace Silin\MagentoPerfCheck\Config;
 
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Rule\RuleRegistry;
-use MagentoPerfRules\Rule\RuleStatus;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Rule\RuleStatus;
 
 /**
- * Settings from magento-perf-rules.neon. Null means "not set in the file".
+ * Settings from magento-perf-check.neon. Null means "not set in the file".
  */
 final class Configuration
 {

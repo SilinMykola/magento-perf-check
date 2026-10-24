@@ -13,7 +13,7 @@ PHPStan's internal API is not covered by its backward-compatibility promise and 
 
 The runner runs the XML analyzer in-process and PHPStan as a child process. It then merges both into one result.
 
-**Generated configuration.** The config lives in `<system temp>/magento-perf-rules/<md5 of project path>/`, together with PHPStan's result cache; nothing is written into the analyzed project. It contains:
+**Generated configuration.** The config lives in `<system temp>/magento-perf-check/<md5 of project path>/`, together with PHPStan's result cache; nothing is written into the analyzed project. It contains:
 - `includes`: this package's `extension.neon`, plus bitExpert's `extension.neon` when that package is installed ([ADR 2](0002-bitexpert-phpstan-magento-as-suggestion.md)).
 - `paths`: the analyzed paths, as absolute paths.
 - `bootstrapFiles`: the project's `vendor/autoload.php`.

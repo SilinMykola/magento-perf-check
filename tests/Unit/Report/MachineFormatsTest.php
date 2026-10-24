@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Report;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Report;
 
 use DOMDocument;
 use JsonSchema\Validator;
-use MagentoPerfRules\Report\AnalysisResult;
-use MagentoPerfRules\Report\CheckstyleReporter;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Report\SarifReporter;
-use MagentoPerfRules\Rule\RuleRegistry;
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Report\AnalysisResult;
+use Silin\MagentoPerfCheck\Report\CheckstyleReporter;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Report\SarifReporter;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Rule\Severity;
 use PHPUnit\Framework\TestCase;
 
 final class MachineFormatsTest extends TestCase

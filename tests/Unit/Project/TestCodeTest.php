@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Project;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Project;
 
-use MagentoPerfRules\Project\TestCode;
+use Silin\MagentoPerfCheck\Project\TestCode;
 use PHPUnit\Framework\TestCase;
 
 final class TestCodeTest extends TestCase

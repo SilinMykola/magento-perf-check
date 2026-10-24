@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\PhpStan\Rule;
+namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
-use MagentoPerfRules\PhpStan\ObjectManagerFallbackVisitor;
+use Silin\MagentoPerfCheck\PhpStan\ObjectManagerFallbackVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\Scope;

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Cli;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Cli;
 
-use MagentoPerfRules\Cli\Options;
-use MagentoPerfRules\Cli\UsageException;
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Cli\Options;
+use Silin\MagentoPerfCheck\Cli\UsageException;
+use Silin\MagentoPerfCheck\Rule\Severity;
 use PHPUnit\Framework\TestCase;
 
 final class OptionsTest extends TestCase

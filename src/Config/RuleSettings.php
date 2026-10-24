@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Config;
+namespace Silin\MagentoPerfCheck\Config;
 
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Rule\Severity;
 
 final class RuleSettings
 {

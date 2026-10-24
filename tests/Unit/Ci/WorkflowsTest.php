@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Ci;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Ci;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;

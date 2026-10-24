@@ -1,8 +1,8 @@
-# magento-perf-rules
+# magento-perf-check
 
-Static analysis for Magento 2 and Mage-OS performance and Full Page Cache anti-patterns. It combines type-aware PHPStan rules with checks for layout XML. Later milestones add `sections.xml`, `events.xml`, `di.xml`, GraphQL schemas, message queues and indexers.
+Static analysis for Magento 2 and Mage-OS performance and Full Page Cache anti-patterns. It combines type-aware PHPStan rules with checks for layout XML, `sections.xml`, `events.xml`, `di.xml`, `db_schema.xml`, message queues, indexers and GraphQL schemas.
 
-**Status:** milestone M1. All 29 rules of the default set are implemented; precision calibration (M2) is still ahead. The full catalog and the roadmap are in [`docs/SPEC.md`](docs/SPEC.md). The package is not on Packagist yet.
+**Status:** milestone M2 done: 29 rules are implemented and [calibrated](docs/calibration.md) on Magento core and popular modules; 24 of them are on by default. The full catalog and the roadmap are in [`docs/SPEC.md`](docs/SPEC.md). The package is not on Packagist yet.
 
 ## Requirements
 
@@ -14,8 +14,8 @@ Static analysis for Magento 2 and Mage-OS performance and Full Page Cache anti-p
 Until the first release, run the tool from a checkout of this repository:
 
 ```sh
-git clone <this repository> magento-perf-rules
-cd magento-perf-rules
+git clone https://github.com/SilinMykola/magento-perf-check.git
+cd magento-perf-check
 composer install
 php bin/magento-perf-check --project=/path/to/magento
 ```
@@ -42,7 +42,7 @@ Some files cannot be analyzed, such as XML that does not parse or PHP with synta
 
 ### Configuration file
 
-Put `magento-perf-rules.neon` in the project root, or pass another file with `--config=<file>`. All keys are optional:
+Put `magento-perf-check.neon` in the project root, or pass another file with `--config=<file>`. All keys are optional:
 
 ```neon
 magentoPerf:
@@ -98,7 +98,7 @@ parameters:
             identifier: magentoPerf.loopSave
 ```
 
-The XML rules and `magento-perf-rules.neon` only apply when you run `magento-perf-check`. To analyze templates in your own setup, add `phtml` to PHPStan's `fileExtensions`.
+The XML rules and `magento-perf-check.neon` only apply when you run `magento-perf-check`. To analyze templates in your own setup, add `phtml` to PHPStan's `fileExtensions`.
 
 PHPStan types collections created through generated factories only when `generated/code` exists or [bitexpert/phpstan-magento](https://github.com/bitExpert/phpstan-magento) is installed. Without either, such calls are skipped rather than reported ([ADR 2](docs/adr/0002-bitexpert-phpstan-magento-as-suggestion.md)).
 
@@ -141,7 +141,7 @@ PHPStan types collections created through generated factories only when `generat
 
 ### Experimental (off by default)
 
-Calibration measured these below their precision threshold. Enable one with `enabled: true` in `magento-perf-rules.neon`; with PHPStan directly, also include `extension-experimental.neon`.
+Calibration measured these below their precision threshold. Enable one with `enabled: true` in `magento-perf-check.neon`; with PHPStan directly, also include `extension-experimental.neon`.
 
 | ID | Finds | Severity | Sources |
 |---|---|---|---|

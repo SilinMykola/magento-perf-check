@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Integration;
+namespace Silin\MagentoPerfCheck\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 

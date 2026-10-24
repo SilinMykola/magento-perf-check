@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Config;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Config;
 
-use MagentoPerfRules\Config\ConfigLoader;
-use MagentoPerfRules\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Config\ConfigLoader;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**

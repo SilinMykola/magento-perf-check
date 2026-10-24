@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Xml\Rule;
+namespace Silin\MagentoPerfCheck\Xml\Rule;
 
 use DOMDocument;
 use DOMElement;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Rule\Severity;
-use MagentoPerfRules\Xml\XmlFile;
-use MagentoPerfRules\Xml\XmlRule;
-use MagentoPerfRules\Xml\XPath;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Rule\Severity;
+use Silin\MagentoPerfCheck\Xml\XmlFile;
+use Silin\MagentoPerfCheck\Xml\XmlRule;
+use Silin\MagentoPerfCheck\Xml\XPath;
 
 /**
  * X-EVT-01, X-EVT-02, X-EVT-03: observers on events that fire far more often than one

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Xml;
+namespace Silin\MagentoPerfCheck\Xml;
 
 use DOMDocument;
 use DOMElement;

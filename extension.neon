@@ -13,39 +13,39 @@ parametersSchema:
 
 services:
     -
-        class: MagentoPerfRules\PhpStan\ProjectIndexProvider
+        class: Silin\MagentoPerfCheck\PhpStan\ProjectIndexProvider
         arguments:
             projectRoot: %magentoPerf.projectRoot%
     -
-        class: MagentoPerfRules\PhpStan\LoopContextVisitor
+        class: Silin\MagentoPerfCheck\PhpStan\LoopContextVisitor
         tags:
             - phpstan.parser.richParserNodeVisitor
     -
-        class: MagentoPerfRules\PhpStan\ObjectManagerFallbackVisitor
+        class: Silin\MagentoPerfCheck\PhpStan\ObjectManagerFallbackVisitor
         tags:
             - phpstan.parser.richParserNodeVisitor
     -
-        class: MagentoPerfRules\PhpStan\ControllerResultVisitor
+        class: Silin\MagentoPerfCheck\PhpStan\ControllerResultVisitor
         tags:
             - phpstan.parser.richParserNodeVisitor
     -
-        class: MagentoPerfRules\PhpStan\CollectionStateVisitor
+        class: Silin\MagentoPerfCheck\PhpStan\CollectionStateVisitor
         tags:
             - phpstan.parser.richParserNodeVisitor
 
 rules:
-    - MagentoPerfRules\PhpStan\Rule\ModelLoadInLoopRule
-    - MagentoPerfRules\PhpStan\Rule\CollectionCountRule
-    - MagentoPerfRules\PhpStan\Rule\CollectionInLoopRule
-    - MagentoPerfRules\PhpStan\Rule\SaveInLoopRule
-    - MagentoPerfRules\PhpStan\Rule\CompositeTypeInLoopRule
-    - MagentoPerfRules\PhpStan\Rule\SessionWithoutProxyRule
-    - MagentoPerfRules\PhpStan\Rule\DispatchInConstructorRule
-    - MagentoPerfRules\PhpStan\Rule\ObjectManagerUsageRule
-    - MagentoPerfRules\PhpStan\Rule\ScopePrivateRule
-    - MagentoPerfRules\PhpStan\Rule\NoCacheHeadersRule
-    - MagentoPerfRules\PhpStan\Rule\StateChangeOnGetRule
-    - MagentoPerfRules\PhpStan\Rule\CacheCleanRule
-    - MagentoPerfRules\PhpStan\Rule\FullReindexRule
-    - MagentoPerfRules\PhpStan\Rule\CreateBlockInTemplateRule
-    - MagentoPerfRules\PhpStan\Rule\RecurringSetupRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\ModelLoadInLoopRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\CollectionCountRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\CollectionInLoopRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\SaveInLoopRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\CompositeTypeInLoopRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\SessionWithoutProxyRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\DispatchInConstructorRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\ObjectManagerUsageRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\ScopePrivateRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\NoCacheHeadersRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\StateChangeOnGetRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\CacheCleanRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\FullReindexRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\CreateBlockInTemplateRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\RecurringSetupRule

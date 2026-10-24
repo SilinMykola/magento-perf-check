@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Xml\Rule;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Xml\Rule;
 
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Xml\FileDiscovery;
-use MagentoPerfRules\Xml\Rule\CacheIdentityRule;
-use MagentoPerfRules\Xml\XmlAnalysisResult;
-use MagentoPerfRules\Xml\XmlAnalyzer;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Xml\FileDiscovery;
+use Silin\MagentoPerfCheck\Xml\Rule\CacheIdentityRule;
+use Silin\MagentoPerfCheck\Xml\XmlAnalysisResult;
+use Silin\MagentoPerfCheck\Xml\XmlAnalyzer;
 use PHPUnit\Framework\TestCase;
 
 final class CacheIdentityRuleTest extends TestCase

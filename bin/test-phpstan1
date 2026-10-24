@@ -4,7 +4,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-work="$(mktemp -d "${TMPDIR:-/tmp}/magento-perf-rules-phpstan1.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/magento-perf-check-phpstan1.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 
 rsync -a --exclude /vendor --exclude /composer.lock --exclude /.phpunit.cache --exclude /.git "$root/" "$work/"

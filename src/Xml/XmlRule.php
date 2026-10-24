@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Xml;
+namespace Silin\MagentoPerfCheck\Xml;
 
 use DOMDocument;
-use MagentoPerfRules\Report\Finding;
+use Silin\MagentoPerfCheck\Report\Finding;
 
 interface XmlRule
 {

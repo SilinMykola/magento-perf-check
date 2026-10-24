@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Xml;
+namespace Silin\MagentoPerfCheck\Xml;
 
 use FilesystemIterator;
-use MagentoPerfRules\Project\TestCode;
+use Silin\MagentoPerfCheck\Project\TestCode;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;

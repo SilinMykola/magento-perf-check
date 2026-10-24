@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Rule;
+namespace Silin\MagentoPerfCheck\Rule;
 
 final class RuleDefinition
 {

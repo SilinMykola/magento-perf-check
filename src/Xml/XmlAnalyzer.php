@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Xml;
+namespace Silin\MagentoPerfCheck\Xml;
 
 use DOMComment;
 use GraphQL\Error\SyntaxError;
@@ -10,8 +10,8 @@ use GraphQL\Language\AST\DocumentNode;
 use GraphQL\Language\Parser;
 use DOMDocument;
 use DOMText;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Report\Notice;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Report\Notice;
 
 final class XmlAnalyzer
 {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Project;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Project;
 
-use MagentoPerfRules\Project\ProjectIndex;
-use MagentoPerfRules\Project\ProjectIndexBuilder;
+use Silin\MagentoPerfCheck\Project\ProjectIndex;
+use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use PHPUnit\Framework\TestCase;
 
 final class ProjectIndexBuilderTest extends TestCase

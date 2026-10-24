@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use MagentoPerfRules\Rule\RuleRegistry;
-use MagentoPerfRules\Rule\RuleStatus;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Rule\RuleStatus;
 
 const ROOT = __DIR__ . '/../..';
 const SEED = 20261023;

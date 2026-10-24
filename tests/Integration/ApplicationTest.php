@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Integration;
+namespace Silin\MagentoPerfCheck\Tests\Integration;
 
 use FilesystemIterator;
-use MagentoPerfRules\Cli\Application;
-use MagentoPerfRules\PhpStan\Runner\PhpStanRunner;
-use MagentoPerfRules\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Cli\Application;
+use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;

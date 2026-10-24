@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Xml;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Xml;
 
 use DOMDocument;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Rule\Severity;
-use MagentoPerfRules\Xml\FileDiscovery;
-use MagentoPerfRules\Xml\XmlAnalyzer;
-use MagentoPerfRules\Xml\XmlFile;
-use MagentoPerfRules\Xml\XmlRule;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Rule\Severity;
+use Silin\MagentoPerfCheck\Xml\FileDiscovery;
+use Silin\MagentoPerfCheck\Xml\XmlAnalyzer;
+use Silin\MagentoPerfCheck\Xml\XmlFile;
+use Silin\MagentoPerfCheck\Xml\XmlRule;
 use PHPUnit\Framework\TestCase;
 
 final class XmlAnalyzerTest extends TestCase

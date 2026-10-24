@@ -2,29 +2,29 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Cli;
+namespace Silin\MagentoPerfCheck\Cli;
 
-use MagentoPerfRules\Baseline\Baseline;
-use MagentoPerfRules\Config\ConfigLoader;
-use MagentoPerfRules\PhpStan\Runner\PhpStanRunner;
-use MagentoPerfRules\Project\ProjectIndexBuilder;
-use MagentoPerfRules\Report\AnalysisResult;
-use MagentoPerfRules\Report\CheckstyleReporter;
-use MagentoPerfRules\Report\GithubReporter;
-use MagentoPerfRules\Report\JsonReporter;
-use MagentoPerfRules\Report\SarifReporter;
-use MagentoPerfRules\Report\TableReporter;
-use MagentoPerfRules\Rule\RuleRegistry;
-use MagentoPerfRules\Xml\FileDiscovery;
-use MagentoPerfRules\Xml\Rule\CacheIdentityRule;
-use MagentoPerfRules\Xml\Rule\EntityHandleTtlRule;
-use MagentoPerfRules\Xml\Rule\IndexerWithoutMviewRule;
-use MagentoPerfRules\Xml\Rule\NonCacheableBlockRule;
-use MagentoPerfRules\Xml\Rule\ObserverEventRule;
-use MagentoPerfRules\Xml\Rule\SectionInvalidationRule;
-use MagentoPerfRules\Xml\Rule\SynchronousTopicRule;
-use MagentoPerfRules\Xml\Rule\TableWithoutPrimaryKeyRule;
-use MagentoPerfRules\Xml\XmlAnalyzer;
+use Silin\MagentoPerfCheck\Baseline\Baseline;
+use Silin\MagentoPerfCheck\Config\ConfigLoader;
+use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
+use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
+use Silin\MagentoPerfCheck\Report\AnalysisResult;
+use Silin\MagentoPerfCheck\Report\CheckstyleReporter;
+use Silin\MagentoPerfCheck\Report\GithubReporter;
+use Silin\MagentoPerfCheck\Report\JsonReporter;
+use Silin\MagentoPerfCheck\Report\SarifReporter;
+use Silin\MagentoPerfCheck\Report\TableReporter;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Xml\FileDiscovery;
+use Silin\MagentoPerfCheck\Xml\Rule\CacheIdentityRule;
+use Silin\MagentoPerfCheck\Xml\Rule\EntityHandleTtlRule;
+use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
+use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
+use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
+use Silin\MagentoPerfCheck\Xml\Rule\SectionInvalidationRule;
+use Silin\MagentoPerfCheck\Xml\Rule\SynchronousTopicRule;
+use Silin\MagentoPerfCheck\Xml\Rule\TableWithoutPrimaryKeyRule;
+use Silin\MagentoPerfCheck\Xml\XmlAnalyzer;
 use Throwable;
 
 final class Application

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Baseline;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Baseline;
 
-use MagentoPerfRules\Baseline\Baseline;
-use MagentoPerfRules\Cli\UsageException;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Baseline\Baseline;
+use Silin\MagentoPerfCheck\Cli\UsageException;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Rule\Severity;
 use PHPUnit\Framework\TestCase;
 
 final class BaselineTest extends TestCase

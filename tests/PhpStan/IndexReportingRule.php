@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\PhpStan;
+namespace Silin\MagentoPerfCheck\Tests\PhpStan;
 
-use MagentoPerfRules\PhpStan\ProjectIndexProvider;
+use Silin\MagentoPerfCheck\PhpStan\ProjectIndexProvider;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
 use PHPStan\Analyser\Scope;

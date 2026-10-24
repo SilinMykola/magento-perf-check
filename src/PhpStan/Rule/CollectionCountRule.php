@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\PhpStan\Rule;
+namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
-use MagentoPerfRules\PhpStan\CollectionStateVisitor;
+use Silin\MagentoPerfCheck\PhpStan\CollectionStateVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
-use MagentoPerfRules\PhpStan\MagentoTypes;
+use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 
 /**
  * P-COL-01: count($collection) loads every row, while getSize() runs a COUNT query.

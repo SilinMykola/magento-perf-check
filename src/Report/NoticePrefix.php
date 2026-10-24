@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Report;
+namespace Silin\MagentoPerfCheck\Report;
 
 /**
  * Message prefixes shared by PHPStan rules and the runner. Kept free of PHPStan

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Report;
+namespace Silin\MagentoPerfCheck\Report;
 
 use XMLWriter;
 

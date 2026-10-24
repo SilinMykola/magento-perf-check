@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Config;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Config;
 
-use MagentoPerfRules\Config\Configuration;
-use MagentoPerfRules\Config\RuleSettings;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Rule\RuleDefinition;
-use MagentoPerfRules\Rule\RuleRegistry;
-use MagentoPerfRules\Rule\RuleStatus;
-use MagentoPerfRules\Rule\Severity;
-use MagentoPerfRules\Rule\Source;
-use MagentoPerfRules\Rule\SourceLevel;
+use Silin\MagentoPerfCheck\Config\Configuration;
+use Silin\MagentoPerfCheck\Config\RuleSettings;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Rule\RuleDefinition;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Rule\RuleStatus;
+use Silin\MagentoPerfCheck\Rule\Severity;
+use Silin\MagentoPerfCheck\Rule\Source;
+use Silin\MagentoPerfCheck\Rule\SourceLevel;
 use PHPUnit\Framework\TestCase;
 
 final class ExperimentalRulesTest extends TestCase

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Xml\Rule;
+namespace Silin\MagentoPerfCheck\Xml\Rule;
 
 use DOMDocument;
-use MagentoPerfRules\Project\ProjectIndex;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Rule\Severity;
-use MagentoPerfRules\Xml\XmlFile;
-use MagentoPerfRules\Xml\XmlRule;
-use MagentoPerfRules\Xml\XPath;
+use Silin\MagentoPerfCheck\Project\ProjectIndex;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Rule\Severity;
+use Silin\MagentoPerfCheck\Xml\XmlFile;
+use Silin\MagentoPerfCheck\Xml\XmlRule;
+use Silin\MagentoPerfCheck\Xml\XPath;
 
 /**
  * X-DB-01: a db_schema.xml table that no module gives a primary key.

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Config;
+namespace Silin\MagentoPerfCheck\Config;
 
-use MagentoPerfRules\Cli\UsageException;
-use MagentoPerfRules\Rule\RuleRegistry;
-use MagentoPerfRules\Rule\RuleStatus;
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Cli\UsageException;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Rule\RuleStatus;
+use Silin\MagentoPerfCheck\Rule\Severity;
 use Nette\Neon\Exception as NeonException;
 use Nette\Neon\Neon;
 
 /**
- * Reads magento-perf-rules.neon. Anything unknown or malformed stops the run with a
+ * Reads magento-perf-check.neon. Anything unknown or malformed stops the run with a
  * message naming the key, so a typo never silently changes what is analyzed.
  */
 final class ConfigLoader

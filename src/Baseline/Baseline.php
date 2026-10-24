@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Baseline;
+namespace Silin\MagentoPerfCheck\Baseline;
 
 use JsonException;
-use MagentoPerfRules\Cli\UsageException;
-use MagentoPerfRules\Report\Finding;
+use Silin\MagentoPerfCheck\Cli\UsageException;
+use Silin\MagentoPerfCheck\Report\Finding;
 
 /**
  * Known findings of a legacy project. A finding is identified by rule ID, file and

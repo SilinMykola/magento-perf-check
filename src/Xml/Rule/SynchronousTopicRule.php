@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Xml\Rule;
+namespace Silin\MagentoPerfCheck\Xml\Rule;
 
 use DOMDocument;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Rule\Severity;
-use MagentoPerfRules\Xml\XmlFile;
-use MagentoPerfRules\Xml\XmlRule;
-use MagentoPerfRules\Xml\XPath;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Rule\Severity;
+use Silin\MagentoPerfCheck\Xml\XmlFile;
+use Silin\MagentoPerfCheck\Xml\XmlRule;
+use Silin\MagentoPerfCheck\Xml\XPath;
 
 /**
  * X-MQ-01: a communication.xml topic that is synchronous by default.

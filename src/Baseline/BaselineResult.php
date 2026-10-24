@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Baseline;
+namespace Silin\MagentoPerfCheck\Baseline;
 
-use MagentoPerfRules\Report\Finding;
+use Silin\MagentoPerfCheck\Report\Finding;
 
 final class BaselineResult
 {

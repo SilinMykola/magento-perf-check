@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Config;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Config;
 
-use MagentoPerfRules\Cli\Options;
-use MagentoPerfRules\Cli\UsageException;
-use MagentoPerfRules\Config\ConfigLoader;
-use MagentoPerfRules\Rule\RuleRegistry;
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Cli\Options;
+use Silin\MagentoPerfCheck\Cli\UsageException;
+use Silin\MagentoPerfCheck\Config\ConfigLoader;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Rule\Severity;
 use PHPUnit\Framework\TestCase;
 
 final class ConfigLoaderTest extends TestCase
 {
     private const FIXTURES = __DIR__ . '/../../Fixtures';
 
-    private function load(string $name): \MagentoPerfRules\Config\Configuration
+    private function load(string $name): \Silin\MagentoPerfCheck\Config\Configuration
     {
         return (new ConfigLoader(new RuleRegistry()))->load(self::FIXTURES . '/Config/' . $name);
     }
@@ -27,7 +27,7 @@ final class ConfigLoaderTest extends TestCase
 
         $options = Options::fromArgv(['--project=' . $project], __DIR__);
 
-        self::assertSame($project . '/magento-perf-rules.neon', $options->configFile);
+        self::assertSame($project . '/magento-perf-check.neon', $options->configFile);
         self::assertTrue((new ConfigLoader(new RuleRegistry()))->load($options->configFile)->includeTests);
     }
 

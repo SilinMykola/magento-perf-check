@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Severity | `warning` |
-| Status | experimental, off by default: precision 38 % in [calibration](../calibration.md). Enable it with `enabled: true` in `magento-perf-rules.neon`; with PHPStan directly, include `extension-experimental.neon` |
+| Status | experimental, off by default: precision 38 % in [calibration](../calibration.md). Enable it with `enabled: true` in `magento-perf-check.neon`; with PHPStan directly, include `extension-experimental.neon` |
 | Analyzer | PHPStan, identifier `magentoPerf.unnecessaryAroundPlugin`, with the project index of `di.xml` |
 
 ## What it catches

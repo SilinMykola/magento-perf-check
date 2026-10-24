@@ -76,7 +76,7 @@ function saveManifest(array $manifest): void
  */
 function fetchJson(string $url): array
 {
-    $context = stream_context_create(['http' => ['timeout' => 60, 'user_agent' => 'magento-perf-rules calibration']]);
+    $context = stream_context_create(['http' => ['timeout' => 60, 'user_agent' => 'magento-perf-check calibration']]);
     $body = @file_get_contents($url, false, $context);
     if ($body === false) {
         fail("cannot fetch $url");
@@ -239,7 +239,7 @@ function buildPackagist(): void
         $zip = $work . '/' . str_replace('/', '_', $name) . '.zip';
         $archive = @file_get_contents($version['dist']['url'], false, stream_context_create([
             // GitHub's zipball API rejects requests without a User-Agent.
-            'http' => ['timeout' => 120, 'user_agent' => 'magento-perf-rules calibration', 'follow_location' => 1],
+            'http' => ['timeout' => 120, 'user_agent' => 'magento-perf-check calibration', 'follow_location' => 1],
         ]));
         if ($archive === false) {
             $skipped[] = skip($name, 'download failed');

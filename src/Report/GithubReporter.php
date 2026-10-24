@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Report;
+namespace Silin\MagentoPerfCheck\Report;
 
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Rule\Severity;
 
 /**
  * GitHub Actions workflow commands: one annotation per finding on the pull request.

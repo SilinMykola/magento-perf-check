@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\PhpStan\Rule;
+namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
-use MagentoPerfRules\PhpStan\MagentoTypes;
+use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;

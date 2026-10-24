@@ -7,11 +7,11 @@ declare(strict_types=1);
  * pinned to magento/magento2@a385d02f.
  */
 
-use MagentoPerfRules\Rule\RuleDefinition;
-use MagentoPerfRules\Rule\RuleStatus;
-use MagentoPerfRules\Rule\Severity;
-use MagentoPerfRules\Rule\Source;
-use MagentoPerfRules\Rule\SourceLevel;
+use Silin\MagentoPerfCheck\Rule\RuleDefinition;
+use Silin\MagentoPerfCheck\Rule\RuleStatus;
+use Silin\MagentoPerfCheck\Rule\Severity;
+use Silin\MagentoPerfCheck\Rule\Source;
+use Silin\MagentoPerfCheck\Rule\SourceLevel;
 
 $a = static fn (string $url, string $confirms): Source => new Source(SourceLevel::A, $url, $confirms);
 $b = static fn (string $path, string $confirms): Source => new Source(

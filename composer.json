@@ -1,5 +1,5 @@
 {
-    "name": "magento-perf-rules/magento-perf-rules",
+    "name": "silin/magento-perf-check",
     "description": "Static analysis for Magento 2 and Mage-OS performance and Full Page Cache anti-patterns: PHPStan rules plus XML checks.",
     "type": "phpstan-extension",
     "keywords": [
@@ -31,12 +31,12 @@
     },
     "autoload": {
         "psr-4": {
-            "MagentoPerfRules\\": "src/"
+            "Silin\\MagentoPerfCheck\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "MagentoPerfRules\\Tests\\": "tests/"
+            "Silin\\MagentoPerfCheck\\Tests\\": "tests/"
         },
         "classmap": [
             "tests/PhpStan/Stubs/",

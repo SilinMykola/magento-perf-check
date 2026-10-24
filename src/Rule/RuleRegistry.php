@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Rule;
+namespace Silin\MagentoPerfCheck\Rule;
 
 /**
  * Metadata of every rule, shared by the XML analyzer, the PHPStan extension and the report.

@@ -1,4 +1,4 @@
-# 5. Configuration in magento-perf-rules.neon, read with nette/neon
+# 5. Configuration in magento-perf-check.neon, read with nette/neon
 
 - Status: Accepted
 - Date: 2026-10-22
@@ -11,7 +11,7 @@ The SPEC also names a section in the project's `phpstan.neon` as an alternative.
 
 ## Decision
 
-- **File:** one optional file, `magento-perf-rules.neon`, read from the project root, or from another location with `--config=<file>`. Reading it does not write anything into the project. The top-level `magentoPerf` section accepts:
+- **File:** one optional file, `magento-perf-check.neon`, read from the project root, or from another location with `--config=<file>`. Reading it does not write anything into the project. The top-level `magentoPerf` section accepts:
   - `paths`, `includeTests`;
   - `rules.<ID>.enabled`, `rules.<ID>.severity`;
   - `layout.allowlistHandles`, `layout.replaceAllowlist`.

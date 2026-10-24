@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Report;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Report;
 
-use MagentoPerfRules\Report\AnalysisResult;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Report\GithubReporter;
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Report\AnalysisResult;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Report\GithubReporter;
+use Silin\MagentoPerfCheck\Rule\Severity;
 use PHPUnit\Framework\TestCase;
 
 final class GithubReporterTest extends TestCase

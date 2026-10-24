@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\PhpStan\Rule;
+namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
-use MagentoPerfRules\PhpStan\MagentoTypes;
-use MagentoPerfRules\PhpStan\ProjectIndexProvider;
+use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
+use Silin\MagentoPerfCheck\PhpStan\ProjectIndexProvider;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Analyser\Scope;

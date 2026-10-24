@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\PhpStan\Rule;
+namespace Silin\MagentoPerfCheck\Tests\PhpStan\Rule;
 
-use MagentoPerfRules\PhpStan\ProjectIndexProvider;
-use MagentoPerfRules\PhpStan\Rule\FullReindexRule;
+use Silin\MagentoPerfCheck\PhpStan\ProjectIndexProvider;
+use Silin\MagentoPerfCheck\PhpStan\Rule\FullReindexRule;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 

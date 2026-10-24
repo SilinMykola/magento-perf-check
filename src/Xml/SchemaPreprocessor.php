@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Xml;
+namespace Silin\MagentoPerfCheck\Xml;
 
 /**
  * Brings Magento's schema.graphqls dialect to standard SDL before parsing, the way

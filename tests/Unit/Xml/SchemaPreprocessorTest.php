@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Xml;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Xml;
 
 use GraphQL\Language\Parser;
-use MagentoPerfRules\Xml\SchemaPreprocessor;
+use Silin\MagentoPerfCheck\Xml\SchemaPreprocessor;
 use PHPUnit\Framework\TestCase;
 
 /**

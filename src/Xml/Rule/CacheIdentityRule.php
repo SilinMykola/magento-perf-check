@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Xml\Rule;
+namespace Silin\MagentoPerfCheck\Xml\Rule;
 
 use GraphQL\Language\AST\BooleanValueNode;
 use GraphQL\Language\AST\DocumentNode;
 use GraphQL\Language\AST\ObjectTypeDefinitionNode;
 use GraphQL\Language\AST\ObjectTypeExtensionNode;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Rule\Severity;
-use MagentoPerfRules\Xml\GraphQlRule;
-use MagentoPerfRules\Xml\XmlFile;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Rule\Severity;
+use Silin\MagentoPerfCheck\Xml\GraphQlRule;
+use Silin\MagentoPerfCheck\Xml\XmlFile;
 
 /**
  * X-GQL-01: a Query field with @cache but neither cacheIdentity nor cacheable: false

@@ -2,7 +2,7 @@
 
 > Техническое задание инструмента. Владелец: Mykola (backend Magento 2, 8+ лет, контрибьютор ядра).
 > Код, README, документация правил, коммиты: английский.
-> Рабочее имя проекта: `magento-perf-rules` (окончательное имя в открытых вопросах).
+> Имя проекта: `magento-perf-check` (пакет `silin/magento-perf-check`, репозиторий [SilinMykola/magento-perf-check](https://github.com/SilinMykola/magento-perf-check)).
 
 ---
 
@@ -79,7 +79,7 @@ vendor/bin/magento-perf-check            ← одна команда для по
 - Для правил, где нужна связка XML ↔ PHP (observer → класс, plugin → методы), XML-анализатор строит индекс, а PHP-часть проверяется через PHPStan по этому индексу (передаётся через параметры extension или временный файл).
 
 ### 3.3 Общее
-- **Конфиг** `magento-perf-rules.neon` (или секция в `phpstan.neon`): пути, отключение правил, severity override, allowlist хэндлов для `cacheable="false"`, свои горячие события и методы.
+- **Конфиг** `magento-perf-check.neon` (или секция в `phpstan.neon`): пути, отключение правил, severity override, allowlist хэндлов для `cacheable="false"`, свои горячие события и методы.
 - **Подавление:** PHP через `@phpstan-ignore magentoPerf.xxx (reason)`. XML через комментарий `<!-- perf-ignore X-LAY-01: reason -->` перед элементом. Причина обязательна.
 - **Baseline:** `magento-perf-check --generate-baseline` для легаси-проектов. Новые нарушения ловятся, старые не мешают.
 - **Форматы:** table (по умолчанию), JSON, Checkstyle, SARIF 2.1.0, GitHub annotations, GitLab Code Quality.
@@ -272,7 +272,7 @@ vendor/bin/magento-perf-check            ← одна команда для по
 
 ## 9a. Среда разработки
 
-- Репозиторий: `~/projects/magento-perf-rules` (macOS, PHP 8.5 и Composer 2.10 на хосте).
+- Репозиторий: [SilinMykola/magento-perf-check](https://github.com/SilinMykola/magento-perf-check), локальная копия `~/projects/magento-perf-rules` (macOS, PHP 8.5 и Composer 2.10 на хосте).
 - Тестовый Magento: `~/projects/magento-2.4.9.ddev` (DDEV, PHP 8.4 в контейнере, Mutagen). Vendor синхронизирован на хост.
 - **Инструмент запускается на хосте против папки Magento**, без установки в проект: `php bin/magento-perf-check --project=~/projects/magento-2.4.9.ddev`. Статическому анализу не нужны контейнер и база.
 - **Не ставить пакет в Magento-проект через composer path-репозиторий с symlink.** Mutagen в DDEV синхронизирует символические ссылки в portable-режиме, и ссылка из `vendor` наружу проекта может не синхронизироваться. Проверка установки через composer выполняется на M3 в отдельной копии проекта, через path-репозиторий в режиме копирования (`"symlink": false`).

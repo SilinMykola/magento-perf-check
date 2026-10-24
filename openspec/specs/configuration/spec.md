@@ -6,10 +6,10 @@ Lets a team keep its analysis settings in the repository: which paths to check, 
 ## Requirements
 
 ### Requirement: Configuration file location
-The command SHALL read `magento-perf-rules.neon` from the project root when it exists. `--config=<path>` SHALL select another file. A missing file given with `--config` SHALL stop the command with exit code 2. A missing default file SHALL mean default settings.
+The command SHALL read `magento-perf-check.neon` from the project root when it exists. `--config=<path>` SHALL select another file. A missing file given with `--config` SHALL stop the command with exit code 2. A missing default file SHALL mean default settings.
 
 #### Scenario: Default file
-- **WHEN** the project root contains `magento-perf-rules.neon`
+- **WHEN** the project root contains `magento-perf-check.neon`
 - **THEN** its settings apply to the run
 
 #### Scenario: Explicit file

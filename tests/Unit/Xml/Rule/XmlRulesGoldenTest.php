@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Xml\Rule;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Xml\Rule;
 
-use MagentoPerfRules\Project\ProjectIndexBuilder;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Xml\FileDiscovery;
-use MagentoPerfRules\Xml\Rule\EntityHandleTtlRule;
-use MagentoPerfRules\Xml\Rule\IndexerWithoutMviewRule;
-use MagentoPerfRules\Xml\Rule\NonCacheableBlockRule;
-use MagentoPerfRules\Xml\Rule\ObserverEventRule;
-use MagentoPerfRules\Xml\Rule\SectionInvalidationRule;
-use MagentoPerfRules\Xml\Rule\SynchronousTopicRule;
-use MagentoPerfRules\Xml\Rule\TableWithoutPrimaryKeyRule;
-use MagentoPerfRules\Xml\XmlAnalyzer;
-use MagentoPerfRules\Xml\XmlFile;
+use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Xml\FileDiscovery;
+use Silin\MagentoPerfCheck\Xml\Rule\EntityHandleTtlRule;
+use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
+use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
+use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
+use Silin\MagentoPerfCheck\Xml\Rule\SectionInvalidationRule;
+use Silin\MagentoPerfCheck\Xml\Rule\SynchronousTopicRule;
+use Silin\MagentoPerfCheck\Xml\Rule\TableWithoutPrimaryKeyRule;
+use Silin\MagentoPerfCheck\Xml\XmlAnalyzer;
+use Silin\MagentoPerfCheck\Xml\XmlFile;
 use PHPUnit\Framework\TestCase;
 
 /**

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\PhpStan\Rule;
+namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
-use MagentoPerfRules\PhpStan\CollectionStateVisitor;
-use MagentoPerfRules\Report\NoticePrefix;
+use Silin\MagentoPerfCheck\PhpStan\CollectionStateVisitor;
+use Silin\MagentoPerfCheck\Report\NoticePrefix;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
-use MagentoPerfRules\PhpStan\MagentoTypes;
+use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 
 /**
  * P-COL-02: getFirstItem() loads the whole collection; without setPageSize()

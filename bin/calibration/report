@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use MagentoPerfRules\Rule\RuleRegistry;
-use MagentoPerfRules\Rule\RuleStatus;
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Rule\RuleStatus;
+use Silin\MagentoPerfCheck\Rule\Severity;
 
 const ROOT = __DIR__ . '/../..';
 const VERDICTS = ['TP', 'TP-low', 'FP', 'unclear'];

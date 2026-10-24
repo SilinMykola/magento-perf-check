@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Cli;
+namespace Silin\MagentoPerfCheck\Cli;
 
 use RuntimeException;
 

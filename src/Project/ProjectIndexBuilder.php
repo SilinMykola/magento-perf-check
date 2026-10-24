@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Project;
+namespace Silin\MagentoPerfCheck\Project;
 
 use DOMDocument;
 use DOMElement;
@@ -112,7 +112,7 @@ final class ProjectIndexBuilder
         foreach ($files as $file) {
             $fingerprint .= $file['path'] . '|' . (int) @filesize($file['path']) . '|' . (int) @filemtime($file['path']) . "\n";
         }
-        $dir = ($this->cacheDir ?? sys_get_temp_dir() . '/magento-perf-rules') . '/' . md5($projectRoot);
+        $dir = ($this->cacheDir ?? sys_get_temp_dir() . '/magento-perf-check') . '/' . md5($projectRoot);
 
         return $dir . '/index-' . md5($fingerprint) . '.json';
     }

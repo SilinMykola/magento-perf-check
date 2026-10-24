@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Report;
+namespace Silin\MagentoPerfCheck\Report;
 
-use MagentoPerfRules\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
 
 final class JsonReporter implements Reporter
 {

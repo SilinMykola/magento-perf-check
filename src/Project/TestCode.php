@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Project;
+namespace Silin\MagentoPerfCheck\Project;
 
 /**
  * Which paths count as test code: any directory named Test (module tests, fixtures,

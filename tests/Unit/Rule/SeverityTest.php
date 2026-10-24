@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Rule;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Rule;
 
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Rule\Severity;
 use PHPUnit\Framework\TestCase;
 
 final class SeverityTest extends TestCase

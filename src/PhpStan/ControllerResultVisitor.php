@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\PhpStan;
+namespace Silin\MagentoPerfCheck\PhpStan;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr;

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Xml\Rule;
+namespace Silin\MagentoPerfCheck\Xml\Rule;
 
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Rule\Severity;
-use MagentoPerfRules\Xml\XmlFile;
-use MagentoPerfRules\Xml\XmlRule;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Rule\Severity;
+use Silin\MagentoPerfCheck\Xml\XmlFile;
+use Silin\MagentoPerfCheck\Xml\XmlRule;
 
 /**
  * X-LAY-01: a block with cacheable="false" makes every page that uses its handle

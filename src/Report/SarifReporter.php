@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Report;
+namespace Silin\MagentoPerfCheck\Report;
 
-use MagentoPerfRules\Rule\RuleRegistry;
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Rule\Severity;
 
 /**
  * SARIF 2.1.0, as read by GitHub code scanning and most CI viewers.
@@ -55,7 +55,7 @@ final class SarifReporter implements Reporter
             '$schema' => self::SCHEMA,
             'version' => '2.1.0',
             'runs' => [[
-                'tool' => ['driver' => ['name' => 'magento-perf-rules', 'rules' => $rules]],
+                'tool' => ['driver' => ['name' => 'magento-perf-check', 'rules' => $rules]],
                 'originalUriBaseIds' => ['%SRCROOT%' => ['uri' => self::fileUri($result->projectRoot) . '/']],
                 'results' => $results,
             ]],

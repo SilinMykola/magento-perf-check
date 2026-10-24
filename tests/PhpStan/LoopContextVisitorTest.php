@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\PhpStan;
+namespace Silin\MagentoPerfCheck\Tests\PhpStan;
 
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;

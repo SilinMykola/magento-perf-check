@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\PhpStan\Runner;
+namespace Silin\MagentoPerfCheck\PhpStan\Runner;
 
 use Composer\InstalledVersions;
 use JsonException;
-use MagentoPerfRules\Cli\UsageException;
-use MagentoPerfRules\Project\TestCode;
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Report\Notice;
-use MagentoPerfRules\Report\NoticePrefix;
-use MagentoPerfRules\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Cli\UsageException;
+use Silin\MagentoPerfCheck\Project\TestCode;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Report\Notice;
+use Silin\MagentoPerfCheck\Report\NoticePrefix;
+use Silin\MagentoPerfCheck\Rule\RuleRegistry;
 
 /**
  * Runs PHPStan with this package's rules as a subprocess and turns its JSON output
@@ -46,7 +46,7 @@ final class PhpStanRunner
             return new PhpStanResult([], []);
         }
 
-        $workDir = sys_get_temp_dir() . '/magento-perf-rules/' . md5($projectRoot);
+        $workDir = sys_get_temp_dir() . '/magento-perf-check/' . md5($projectRoot);
         if (!is_dir($workDir) && !mkdir($workDir, 0777, true) && !is_dir($workDir)) {
             throw new UsageException('Cannot create temp directory ' . $workDir);
         }
@@ -171,7 +171,7 @@ final class PhpStanRunner
     {
         $root = $this->installPath('phpstan/phpstan');
         if ($root === null || !is_file($root . '/phpstan')) {
-            throw new UsageException('phpstan/phpstan is not installed next to magento-perf-rules.');
+            throw new UsageException('phpstan/phpstan is not installed next to magento-perf-check.');
         }
 
         return $root . '/phpstan';
@@ -272,7 +272,7 @@ final class PhpStanRunner
      * By identifier (which also gives the severity of a variant), falling back to the
      * "[RULE-ID]" message prefix.
      *
-     * @return array{\MagentoPerfRules\Rule\RuleDefinition, \MagentoPerfRules\Rule\Severity}|null
+     * @return array{\Silin\MagentoPerfCheck\Rule\RuleDefinition, \Silin\MagentoPerfCheck\Rule\Severity}|null
      */
     private function ruleFor(?string $identifier, string $text): ?array
     {

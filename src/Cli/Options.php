@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Cli;
+namespace Silin\MagentoPerfCheck\Cli;
 
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Rule\Severity;
 
 final class Options
 {
     public const DEFAULT_PATHS = ['app/code', 'app/design'];
     public const FORMATS = ['table', 'json', 'sarif', 'checkstyle', 'github'];
-    public const CONFIG_FILE = 'magento-perf-rules.neon';
+    public const CONFIG_FILE = 'magento-perf-check.neon';
 
     /**
      * @param list<string> $paths relative to the project root
@@ -186,7 +186,7 @@ final class Options
                                     github (GitHub Actions annotations).
               --fail-on=<severity>  Exit with 1 when a finding has at least this severity:
                                     error (default), warning or info.
-              --config=<file>       Configuration file (default: magento-perf-rules.neon in the
+              --config=<file>       Configuration file (default: magento-perf-check.neon in the
                                     project root, when it exists).
               --generate-baseline=<file>
                                     Write all current findings to <file> (relative to the

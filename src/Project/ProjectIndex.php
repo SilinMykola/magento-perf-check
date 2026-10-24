@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Project;
+namespace Silin\MagentoPerfCheck\Project;
 
 /**
  * Magento configuration facts collected from every module of a project, for rules

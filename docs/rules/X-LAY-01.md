@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Severity | `error` for the `default` handle and handles starting with `catalog_` or `cms_`; `warning` for other handles |
-| Status | experimental, off by default: precision 20 % in [calibration](../calibration.md). Enable it with `enabled: true` in `magento-perf-rules.neon` |
+| Status | experimental, off by default: precision 20 % in [calibration](../calibration.md). Enable it with `enabled: true` in `magento-perf-check.neon` |
 | Analyzer | XML (layout files of area `frontend` or `base`) |
 
 ## What it catches
@@ -20,7 +20,7 @@ The rule does not report handles that are personal by nature and not meant to be
 - Payment: `paypal_`, `vault_`, `paymentservicespaypal_vault_`.
 - Lists: `wishlist_`, `catalog_product_compare_`.
 
-The SPEC started with six of these. The rest are the handles that Magento 2.4.9 core itself makes uncacheable, found in the M0 core run ([docs/runs/m0-core.md](../runs/m0-core.md)). `catalog_product_compare_` is allowed even though `catalog_` handles otherwise give an `error`: the compare page is per customer. Add your own prefixes, or replace the list, in `magento-perf-rules.neon` (`layout.allowlistHandles`, `layout.replaceAllowlist`).
+The SPEC started with six of these. The rest are the handles that Magento 2.4.9 core itself makes uncacheable, found in the M0 core run ([docs/runs/m0-core.md](../runs/m0-core.md)). `catalog_product_compare_` is allowed even though `catalog_` handles otherwise give an `error`: the compare page is per customer. Add your own prefixes, or replace the list, in `magento-perf-check.neon` (`layout.allowlistHandles`, `layout.replaceAllowlist`).
 
 ## Example
 
@@ -49,7 +49,7 @@ The template renders a placeholder, and a JS component fills it from the `cart` 
 
 If a page is meant to be uncacheable (for example a payment return page under a handle the allowlist does not cover), keep the attribute and record the reason.
 
-- **Command line:** put `<!-- perf-ignore X-LAY-01: reason -->` directly before the block. A comment without a reason suppresses nothing and is reported as a notice. To allow a whole handle, add its prefix to `layout.allowlistHandles` in `magento-perf-rules.neon`.
+- **Command line:** put `<!-- perf-ignore X-LAY-01: reason -->` directly before the block. A comment without a reason suppresses nothing and is reported as a notice. To allow a whole handle, add its prefix to `layout.allowlistHandles` in `magento-perf-check.neon`.
 - **PHPStan:** this is an XML rule, so `@phpstan-ignore` does not apply.
 
 ## Known false positives

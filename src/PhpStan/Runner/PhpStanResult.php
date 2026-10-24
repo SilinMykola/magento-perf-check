@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\PhpStan\Runner;
+namespace Silin\MagentoPerfCheck\PhpStan\Runner;
 
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Report\Notice;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Report\Notice;
 
 final class PhpStanResult
 {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Report;
+namespace Silin\MagentoPerfCheck\Report;
 
 use DOMElement;
-use MagentoPerfRules\Rule\Severity;
+use Silin\MagentoPerfCheck\Rule\Severity;
 
 final class Finding
 {

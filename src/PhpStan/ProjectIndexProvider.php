@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\PhpStan;
+namespace Silin\MagentoPerfCheck\PhpStan;
 
-use MagentoPerfRules\Project\ProjectIndex;
-use MagentoPerfRules\Project\ProjectIndexBuilder;
+use Silin\MagentoPerfCheck\Project\ProjectIndex;
+use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 
 /**
  * Gives PHP rules the project index, built (or read from cache) on first use from

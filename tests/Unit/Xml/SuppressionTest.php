@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\Unit\Xml;
+namespace Silin\MagentoPerfCheck\Tests\Unit\Xml;
 
-use MagentoPerfRules\Report\Finding;
-use MagentoPerfRules\Xml\FileDiscovery;
-use MagentoPerfRules\Xml\Rule\NonCacheableBlockRule;
-use MagentoPerfRules\Xml\XmlAnalysisResult;
-use MagentoPerfRules\Xml\XmlAnalyzer;
+use Silin\MagentoPerfCheck\Report\Finding;
+use Silin\MagentoPerfCheck\Xml\FileDiscovery;
+use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
+use Silin\MagentoPerfCheck\Xml\XmlAnalysisResult;
+use Silin\MagentoPerfCheck\Xml\XmlAnalyzer;
 use PHPUnit\Framework\TestCase;
 
 final class SuppressionTest extends TestCase

@@ -10,9 +10,9 @@ foreach ([__DIR__ . '/../../../autoload.php', __DIR__ . '/../vendor/autoload.php
         break;
     }
 }
-if (!class_exists(MagentoPerfRules\Cli\Application::class)) {
+if (!class_exists(Silin\MagentoPerfCheck\Cli\Application::class)) {
     fwrite(STDERR, "magento-perf-check: run composer install first.\n");
     exit(2);
 }
 
-exit((new MagentoPerfRules\Cli\Application())->run(array_slice($argv, 1), (string) getcwd()));
+exit((new Silin\MagentoPerfCheck\Cli\Application())->run(array_slice($argv, 1), (string) getcwd()));

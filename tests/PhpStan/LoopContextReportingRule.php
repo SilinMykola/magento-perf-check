@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MagentoPerfRules\Tests\PhpStan;
+namespace Silin\MagentoPerfCheck\Tests\PhpStan;
 
-use MagentoPerfRules\PhpStan\LoopContextVisitor;
+use Silin\MagentoPerfCheck\PhpStan\LoopContextVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
