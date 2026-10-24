@@ -94,6 +94,13 @@ namespace Acme\Promo\Plugin {
             return $proceed($qty);
         }
 
+        public function aroundResultIntoArgument(object $subject, callable $proceed, int $qty): int
+        {
+            $qty = $proceed($qty);
+
+            return $qty * 2;
+        }
+
         public function aroundElementChanged(object $subject, callable $proceed, array $parts): mixed
         {
             $parts[0] = 'other';

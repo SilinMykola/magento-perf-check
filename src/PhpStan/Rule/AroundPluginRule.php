@@ -179,7 +179,8 @@ final class AroundPluginRule implements Rule
         }
         $callStart = $call->getStartFilePos();
         foreach ($finder->find((array) $method->stmts, static fn (Node $n): bool => $n instanceof Expr\Assign || $n instanceof Expr\AssignOp || $n instanceof Expr\AssignRef) as $assign) {
-            if ($assign->getStartFilePos() >= $callStart) {
+            // Only writes that finish before the call; "$group = $proceed($group)" writes the result.
+            if ($assign->getEndFilePos() >= $callStart) {
                 continue;
             }
             $target = $assign->var;
