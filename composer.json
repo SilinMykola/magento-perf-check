@@ -1,6 +1,7 @@
 {
     "name": "silin/magento-perf-check",
     "description": "Static analysis for Magento 2 and Mage-OS performance and Full Page Cache anti-patterns: PHPStan rules plus XML checks.",
+    "license": "MIT",
     "type": "phpstan-extension",
     "keywords": [
         "magento",

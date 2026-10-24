@@ -272,7 +272,7 @@ vendor/bin/magento-perf-check            ← одна команда для по
 
 ## 9a. Среда разработки
 
-- Репозиторий: [SilinMykola/magento-perf-check](https://github.com/SilinMykola/magento-perf-check), локальная копия `~/projects/magento-perf-rules` (macOS, PHP 8.5 и Composer 2.10 на хосте).
+- Репозиторий: [SilinMykola/magento-perf-check](https://github.com/SilinMykola/magento-perf-check), локальная копия `~/projects/magento-perf-check` (macOS, PHP 8.5 и Composer 2.10 на хосте).
 - Тестовый Magento: `~/projects/magento-2.4.9.ddev` (DDEV, PHP 8.4 в контейнере, Mutagen). Vendor синхронизирован на хост.
 - **Инструмент запускается на хосте против папки Magento**, без установки в проект: `php bin/magento-perf-check --project=~/projects/magento-2.4.9.ddev`. Статическому анализу не нужны контейнер и база.
 - **Не ставить пакет в Magento-проект через composer path-репозиторий с symlink.** Mutagen в DDEV синхронизирует символические ссылки в portable-режиме, и ссылка из `vendor` наружу проекта может не синхронизироваться. Проверка установки через composer выполняется на M3 в отдельной копии проекта, через path-репозиторий в режиме копирования (`"symlink": false`).

@@ -174,3 +174,7 @@ composer analyse     # PHPStan at level max on src/
 ```
 
 Architectural decisions are in [`docs/adr/`](docs/adr/).
+
+## License
+
+MIT, see [LICENSE](LICENSE).
