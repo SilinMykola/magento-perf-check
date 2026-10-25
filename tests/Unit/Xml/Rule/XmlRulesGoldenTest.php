@@ -55,6 +55,22 @@ final class XmlRulesGoldenTest extends TestCase
         self::assertSame($expected, $actual);
     }
 
+    public function testLoadAfterMessagesNameWhatTriggersTheEvent(): void
+    {
+        $root = realpath(self::FIXTURE . '/project');
+        self::assertIsString($root);
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [ObserverEventRule::loadAfter()]))->analyze(['app/code']);
+
+        $messages = [];
+        foreach ($result->findings as $finding) {
+            $messages[$finding->line] = $finding->message;
+        }
+
+        self::assertStringContainsString('runs after loading any model, of any entity type', $messages[4] ?? '');
+        self::assertStringContainsString('runs on every load of this entity type', $messages[8] ?? '');
+        self::assertStringContainsString('runs after loading any collection, of any entity type', $messages[26] ?? '');
+    }
+
     public function testConfiguredAllowlistPrefix(): void
     {
         $layout = static fn (string $handle): XmlFile => new XmlFile('/x.xml', 'x.xml', XmlFile::KIND_LAYOUT, 'frontend', 'Acme_Rules', $handle);

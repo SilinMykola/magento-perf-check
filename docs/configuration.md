@@ -36,6 +36,7 @@ php bin/magento-perf-check --project=/path/to/magento
 | `--fail-on=error\|warning\|info` | Lowest severity that makes the command exit with 1. Default: `error`. |
 | `--config=<file>` | Configuration file. Default: `magento-perf-check.neon` in the project root, when it exists. |
 | `--baseline=<file>`, `--generate-baseline=<file>` | Report only new findings; see [Baseline](baseline.md). |
+| `--output=<file>` | Write the report, in the chosen `--format`, to `<file>` (relative to the current directory) instead of the console, and print a one-line summary. The exit code is the same. The file's directory must exist. |
 | `--memory-limit=<value>` | Memory limit for PHPStan. Default: `2G`. |
 | `--version` | Print the version. |
 

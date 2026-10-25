@@ -7,7 +7,7 @@ Gives users a short README that gets them running and convinced, reference pages
 ## ADDED Requirements
 
 ### Requirement: README structure
-`README.md` SHALL contain, in this order: a one-line description, badges, an example of real output, a quick start of at most three commands, a section on why the findings can be trusted (source levels and calibration), and links to the reference pages. It SHALL NOT contain the rule tables or the option reference.
+`README.md` SHALL contain, in this order: a one-line description, badges, an example of real output, a quick start of at most three commands, optionally followed by a way to run it without installing, a section on why the findings can be trusted (source levels and calibration), and links to the reference pages. It SHALL NOT contain the rule tables or the option reference.
 
 #### Scenario: README links every reference page
 - **WHEN** the test suite runs

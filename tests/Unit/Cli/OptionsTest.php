@@ -90,4 +90,19 @@ final class OptionsTest extends TestCase
 
         self::assertTrue($options->version);
     }
+
+    public function testOutputFileIsRelativeToWorkingDirectory(): void
+    {
+        $options = Options::fromArgv(['--project=' . $this->project(), '--output=reports/perf.txt'], '/work/dir');
+
+        self::assertSame('/work/dir/reports/perf.txt', $options->outputFile);
+    }
+
+    public function testOutputCannotBeCombinedWithBaselineGeneration(): void
+    {
+        $this->expectException(UsageException::class);
+        $this->expectExceptionMessage('--output and --generate-baseline cannot be used together.');
+
+        Options::fromArgv(['--project=' . $this->project(), '--output=a.txt', '--generate-baseline=b.json'], __DIR__);
+    }
 }

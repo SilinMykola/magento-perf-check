@@ -1,4 +1,5 @@
 X-DB-01 error app/code/Acme/Rules/etc/db_schema.xml:6
+X-EVT-01 warning app/code/Acme/Rules/etc/events.xml:26
 X-EVT-01 warning app/code/Acme/Rules/etc/events.xml:4
 X-EVT-01 warning app/code/Acme/Rules/etc/events.xml:8
 X-EVT-02 warning app/code/Acme/Rules/etc/events.xml:11

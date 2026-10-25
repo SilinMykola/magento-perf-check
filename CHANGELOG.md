@@ -14,7 +14,7 @@ First release.
 
 - `magento-perf-check` command: analyzes a Magento 2 or Mage-OS project by path (`--project`) without writing into it, merging XML and PHPStan findings in one report.
 - Output formats: `table`, `json`, `sarif` (SARIF 2.1.0), `checkstyle` and `github` (GitHub Actions annotations).
-- `--fail-on`, `--paths`, `--include-tests`, `--memory-limit`, `--config` and `--version` options; exit codes 0 (clean), 1 (findings), 2 (tool error).
+- `--fail-on`, `--paths`, `--include-tests`, `--memory-limit`, `--config`, `--output` (write the report to a file, for example from a Git hook) and `--version` options; exit codes 0 (clean), 1 (findings), 2 (tool error).
 - `magento-perf-check.neon` configuration file: paths, test code, per-rule `enabled` and `severity`, X-LAY-01 handle allowlist.
 - Baseline: `--generate-baseline` and `--baseline`, matching findings by rule, file and message.
 - PHPStan extension (`extension.neon`, `extension-experimental.neon`) for use inside an existing PHPStan setup; PHPStan 1.12 and 2.x are supported.

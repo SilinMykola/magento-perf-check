@@ -70,9 +70,12 @@ final class Application
 
                 return self::EXIT_CLEAN;
             }
-            // Fail on a broken baseline before spending minutes on analysis.
+            // Fail on a broken baseline or an unwritable report file before spending minutes on analysis.
             if ($options->baselineFile !== null) {
                 Baseline::load($options->baselineFile);
+            }
+            if ($options->outputFile !== null) {
+                self::assertWritable($options->outputFile);
             }
             $result = $this->analyze($options);
             if ($options->generateBaselineFile !== null) {
@@ -100,9 +103,34 @@ final class Application
             'github' => new GithubReporter(),
             default => new TableReporter($registry),
         };
-        fwrite($this->stdout, $reporter->render($result));
+        $report = $reporter->render($result);
+        if ($options->outputFile === null) {
+            fwrite($this->stdout, $report);
+        } elseif (@file_put_contents($options->outputFile, $report) === false) {
+            fwrite($this->stderr, sprintf("magento-perf-check: Cannot write report file %s.\n", $options->outputFile));
+
+            return self::EXIT_ERROR;
+        } else {
+            $counts = $result->countBySeverity();
+            fwrite($this->stdout, sprintf(
+                "%d finding(s): %d error, %d warning, %d info. Report written to %s.\n",
+                count($result->findings),
+                $counts['error'] ?? 0,
+                $counts['warning'] ?? 0,
+                $counts['info'] ?? 0,
+                $options->outputFile,
+            ));
+        }
 
         return $result->hasFindingsAtLeast($options->failOn) ? self::EXIT_FINDINGS : self::EXIT_CLEAN;
+    }
+
+    private static function assertWritable(string $file): void
+    {
+        $writable = is_file($file) ? is_writable($file) : is_dir(dirname($file)) && is_writable(dirname($file));
+        if (!$writable) {
+            throw new UsageException(sprintf('Cannot write report file %s.', $file));
+        }
     }
 
     private function analyze(Options $options): AnalysisResult

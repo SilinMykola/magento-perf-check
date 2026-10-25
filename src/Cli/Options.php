@@ -30,6 +30,7 @@ final class Options
         public readonly ?string $baselineFile = null,
         public readonly ?string $generateBaselineFile = null,
         public readonly bool $version = false,
+        public readonly ?string $outputFile = null,
     ) {
     }
 
@@ -50,7 +51,7 @@ final class Options
                 $values['include-tests'] = '1';
                 continue;
             }
-            if (preg_match('/^--(project|paths|format|fail-on|memory-limit|config|baseline|generate-baseline)=(.*)$/s', $argument, $m) !== 1) {
+            if (preg_match('/^--(project|paths|format|fail-on|memory-limit|config|baseline|generate-baseline|output)=(.*)$/s', $argument, $m) !== 1) {
                 throw new UsageException(sprintf('Unknown argument "%s". Run with --help for usage.', $argument));
             }
             $values[$m[1]] = $m[2];
@@ -87,13 +88,16 @@ final class Options
         }
 
         $inCwd = static fn (string $file): string => str_starts_with($file, '/') ? $file : $cwd . '/' . $file;
-        foreach (['baseline', 'generate-baseline'] as $key) {
+        foreach (['baseline', 'generate-baseline', 'output'] as $key) {
             if (isset($values[$key]) && $values[$key] === '') {
                 throw new UsageException(sprintf('--%s needs a file name.', $key));
             }
         }
         if (isset($values['baseline'], $values['generate-baseline'])) {
             throw new UsageException('--baseline and --generate-baseline cannot be used together.');
+        }
+        if (isset($values['output'], $values['generate-baseline'])) {
+            throw new UsageException('--output and --generate-baseline cannot be used together.');
         }
 
         return new self(
@@ -108,6 +112,8 @@ final class Options
             $configFile,
             isset($values['baseline']) ? $inCwd($values['baseline']) : null,
             isset($values['generate-baseline']) ? $inCwd($values['generate-baseline']) : null,
+            false,
+            isset($values['output']) ? $inCwd($values['output']) : null,
         );
     }
 
@@ -196,6 +202,8 @@ final class Options
                                     Write all current findings to <file> (relative to the
                                     current directory) and exit with 0.
               --baseline=<file>     Report only findings that are not in <file>.
+              --output=<file>       Write the report to <file> (relative to the current
+                                    directory) instead of stdout; print a one-line summary.
               --include-tests       Also analyze test code (Test/ and dev/tests/ directories),
                                     which is skipped by default.
               --memory-limit=<v>    Memory limit for PHPStan (default: 2G).

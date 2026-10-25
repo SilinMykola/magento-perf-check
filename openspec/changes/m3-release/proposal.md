@@ -38,8 +38,9 @@ Out of M3: new rules and the follow-ups in `docs/calibration/follow-ups.md` (M4)
 ### Modified Capabilities
 
 - `rule-documentation`: the documentation link in findings becomes a versioned GitHub URL instead of a local path.
-- `cli`: adds `--version`.
+- `cli`: adds `--version`, and `--output=<file>` to write the report to a file (requested by the owner during M3, for Git hooks).
 - `loop-rules`: P-LOOP-02 no longer reports a collection created in the iterated expression of a top-level `foreach` (found on a real project during M3; the corpus findings did not change).
+- `event-rules`: X-EVT-01 names `core_collection_abstract_load_after` as firing after every collection load, instead of calling it an entity event (found on a real project during M3).
 - `calibration`: the default-set rule table it keeps in step lives in `docs/rules.md` instead of the README.
 
 ## Impact

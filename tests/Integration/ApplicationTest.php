@@ -121,6 +121,38 @@ final class ApplicationTest extends TestCase
         self::assertSame('', $stderr);
     }
 
+    public function testOutputWritesTheReportToAFile(): void
+    {
+        $file = sys_get_temp_dir() . '/mpc-output-' . getmypid() . '.json';
+        @unlink($file);
+        try {
+            [$exitCode, $stdout, $stderr] = $this->runCommand(['--format=json', '--output=' . $file]);
+            [$plainExitCode, $plainStdout] = $this->runCommand(['--format=json']);
+
+            self::assertSame($plainExitCode, $exitCode);
+            self::assertSame('', $stderr);
+            self::assertFileExists($file);
+            $report = $this->json((string) file_get_contents($file));
+            self::assertSame($this->json($plainStdout)['summary']['findings'], $report['summary']['findings']);
+            self::assertMatchesRegularExpression(
+                '/^\d+ finding\(s\): \d+ error, \d+ warning, \d+ info\. Report written to ' . preg_quote($file, '/') . '\.\n$/',
+                $stdout,
+            );
+        } finally {
+            @unlink($file);
+        }
+    }
+
+    public function testOutputIntoMissingDirectoryFailsBeforeAnalysis(): void
+    {
+        $runner = new PhpStanRunner(new RuleRegistry(), __DIR__ . '/../Fixtures/Project/crashing-phpstan.php');
+        [$exitCode, $stdout, $stderr] = $this->runCommand(['--output=/nonexistent-dir/report.txt'], $runner);
+
+        self::assertSame(Application::EXIT_ERROR, $exitCode);
+        self::assertSame('', $stdout);
+        self::assertStringContainsString('Cannot write report file /nonexistent-dir/report.txt', $stderr);
+    }
+
     public function testInvalidInputExitsWithTwo(): void
     {
         [$exitCode, $stdout, $stderr] = $this->runCommand(['--format=xml']);
