@@ -129,7 +129,9 @@ final class LoopContextVisitor extends NodeVisitorAbstract
 
     private function trackCreatedCollections(Node $node): void
     {
-        if ($this->created === []) {
+        // The iteration scope opens before the iterated expression of foreach and the
+        // init of for are visited; they run once, so only loop bodies count.
+        if ($this->created === [] || $this->depth === 0) {
             return;
         }
         if ($node instanceof Expr\Assign && $node->var instanceof Expr\Variable && is_string($node->var->name)

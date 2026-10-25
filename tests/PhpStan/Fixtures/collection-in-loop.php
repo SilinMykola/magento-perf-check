@@ -28,6 +28,13 @@ final class Example
         }
 
         array_map(fn (int $id) => $this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->getFirstItem(), $ids);
+
+        // The iterated expression of an inner loop runs once per outer iteration.
+        foreach ($ids as $id) {
+            foreach ($this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->load() as $child) {
+                $child->getId();
+            }
+        }
     }
 
     /**
@@ -46,5 +53,13 @@ final class Example
 
         $outside = $this->collectionFactory->create();
         $outside->getItems();
+
+        // The iterated expression of foreach and the init of for run once.
+        foreach ($this->collectionFactory->create()->load() as $item) {
+            $item->getId();
+        }
+        for ($i = 0, $size = $this->collectionFactory->create()->getSize(); $i < $size; $i++) {
+            $outside->getItems();
+        }
     }
 }

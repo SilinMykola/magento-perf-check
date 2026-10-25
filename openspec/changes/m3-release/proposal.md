@@ -39,6 +39,7 @@ Out of M3: new rules and the follow-ups in `docs/calibration/follow-ups.md` (M4)
 
 - `rule-documentation`: the documentation link in findings becomes a versioned GitHub URL instead of a local path.
 - `cli`: adds `--version`.
+- `loop-rules`: P-LOOP-02 no longer reports a collection created in the iterated expression of a top-level `foreach` (found on a real project during M3; the corpus findings did not change).
 - `calibration`: the default-set rule table it keeps in step lives in `docs/rules.md` instead of the README.
 
 ## Impact

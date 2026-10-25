@@ -28,6 +28,8 @@
 - [x] 4.6 Reword the repository's `AGENTS.md` for outside contributors
 - [x] 4.7 Translate `docs/SPEC.md` to English; check headings, table rows and links match the original one-to-one (D7)
 
+- [x] 4.8 Fix P-LOOP-02 reporting a collection created in the iterated expression of a top-level `foreach` (found on a real project); fixture cases for it and for an inner loop; corpus re-run shows no change in default-set findings
+
 ## 5. Verification
 
 - [x] 5.1 `composer test`, `bin/test-phpstan1`, `composer analyse`, `openspec validate --specs` and `openspec validate m3-release` pass
