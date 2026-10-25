@@ -2,6 +2,17 @@
     "name": "silin/magento-perf-check",
     "description": "Static analysis for Magento 2 and Mage-OS performance and Full Page Cache anti-patterns: PHPStan rules plus XML checks.",
     "license": "MIT",
+    "homepage": "https://github.com/SilinMykola/magento-perf-check",
+    "authors": [
+        {
+            "name": "Mykola Silin",
+            "homepage": "https://github.com/SilinMykola"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/SilinMykola/magento-perf-check/issues",
+        "source": "https://github.com/SilinMykola/magento-perf-check"
+    },
     "type": "phpstan-extension",
     "keywords": [
         "magento",

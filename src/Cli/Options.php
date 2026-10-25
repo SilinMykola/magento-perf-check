@@ -29,6 +29,7 @@ final class Options
         public readonly ?string $configFile = null,
         public readonly ?string $baselineFile = null,
         public readonly ?string $generateBaselineFile = null,
+        public readonly bool $version = false,
     ) {
     }
 
@@ -41,6 +42,9 @@ final class Options
         foreach ($argv as $argument) {
             if ($argument === '--help' || $argument === '-h') {
                 return new self($cwd, self::DEFAULT_PATHS, 'table', Severity::Error, '2G', false, true);
+            }
+            if ($argument === '--version') {
+                return new self($cwd, self::DEFAULT_PATHS, 'table', Severity::Error, '2G', version: true);
             }
             if ($argument === '--include-tests') {
                 $values['include-tests'] = '1';
@@ -195,6 +199,7 @@ final class Options
               --include-tests       Also analyze test code (Test/ and dev/tests/ directories),
                                     which is skipped by default.
               --memory-limit=<v>    Memory limit for PHPStan (default: 2G).
+              --version             Show the version.
               -h, --help            Show this help.
 
             Exit codes: 0 no findings at --fail-on level, 1 findings, 2 tool error.

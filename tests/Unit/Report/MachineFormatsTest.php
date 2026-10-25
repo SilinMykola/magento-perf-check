@@ -51,7 +51,8 @@ final class MachineFormatsTest extends TestCase
         // Findings are sorted by file: "Acme/My Module" before "Acme/Promo".
         self::assertSame(['P-LOOP-01', 'X-LAY-01'], array_column($run['tool']['driver']['rules'], 'id'));
         self::assertStringEndsWith('docs/rules/P-LOOP-01.md', $run['tool']['driver']['rules'][0]['helpUri']);
-        self::assertStringStartsWith('file://', $run['tool']['driver']['rules'][0]['helpUri']);
+        self::assertSame((new RuleRegistry())->docUrl('P-LOOP-01'), $run['tool']['driver']['rules'][0]['helpUri']);
+        self::assertStringStartsWith('https://github.com/', $run['tool']['driver']['rules'][0]['helpUri']);
         self::assertSame('file:///srv/shop/', $run['originalUriBaseIds']['%SRCROOT%']['uri']);
 
         self::assertSame('note', $run['results'][0]['level']);

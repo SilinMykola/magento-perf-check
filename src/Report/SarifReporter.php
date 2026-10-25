@@ -6,6 +6,7 @@ namespace Silin\MagentoPerfCheck\Report;
 
 use Silin\MagentoPerfCheck\Rule\RuleRegistry;
 use Silin\MagentoPerfCheck\Rule\Severity;
+use Silin\MagentoPerfCheck\Version;
 
 /**
  * SARIF 2.1.0, as read by GitHub code scanning and most CI viewers.
@@ -31,7 +32,7 @@ final class SarifReporter implements Reporter
             $rules[] = [
                 'id' => $finding->ruleId,
                 'shortDescription' => ['text' => $definition !== null ? $definition->title : $finding->ruleId],
-                'helpUri' => self::fileUri($this->registry->docUrl($finding->ruleId)),
+                'helpUri' => $this->registry->docUrl($finding->ruleId),
                 'defaultConfiguration' => ['level' => self::level($definition !== null ? $definition->severity : $finding->severity)],
             ];
         }
@@ -55,7 +56,12 @@ final class SarifReporter implements Reporter
             '$schema' => self::SCHEMA,
             'version' => '2.1.0',
             'runs' => [[
-                'tool' => ['driver' => ['name' => 'magento-perf-check', 'rules' => $rules]],
+                'tool' => ['driver' => [
+                    'name' => 'magento-perf-check',
+                    'version' => Version::VERSION,
+                    'informationUri' => Version::REPOSITORY,
+                    'rules' => $rules,
+                ]],
                 'originalUriBaseIds' => ['%SRCROOT%' => ['uri' => self::fileUri($result->projectRoot) . '/']],
                 'results' => $results,
             ]],

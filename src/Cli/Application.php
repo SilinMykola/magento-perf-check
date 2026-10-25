@@ -15,6 +15,7 @@ use Silin\MagentoPerfCheck\Report\JsonReporter;
 use Silin\MagentoPerfCheck\Report\SarifReporter;
 use Silin\MagentoPerfCheck\Report\TableReporter;
 use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Version;
 use Silin\MagentoPerfCheck\Xml\FileDiscovery;
 use Silin\MagentoPerfCheck\Xml\Rule\CacheIdentityRule;
 use Silin\MagentoPerfCheck\Xml\Rule\EntityHandleTtlRule;
@@ -61,6 +62,11 @@ final class Application
             $options = Options::fromArgv($argv, $cwd);
             if ($options->help) {
                 fwrite($this->stdout, Options::usage());
+
+                return self::EXIT_CLEAN;
+            }
+            if ($options->version) {
+                fwrite($this->stdout, 'magento-perf-check ' . Version::VERSION . "\n");
 
                 return self::EXIT_CLEAN;
             }

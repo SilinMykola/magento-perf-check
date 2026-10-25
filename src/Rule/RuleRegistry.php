@@ -4,18 +4,14 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\Rule;
 
+use Silin\MagentoPerfCheck\Version;
+
 /**
  * Metadata of every rule, shared by the XML analyzer, the PHPStan extension and the report.
  * Sources come from docs/source-audit.md.
  */
 final class RuleRegistry
 {
-    /**
-     * Base for documentation links in findings. Points at this checkout until the
-     * repository is published (change m0-skeleton, design D7).
-     */
-    public const DOCS_BASE = __DIR__ . '/../..';
-
     /** @var array<string, RuleDefinition> */
     private array $rules = [];
 
@@ -58,9 +54,15 @@ final class RuleRegistry
         return null;
     }
 
-    public function docUrl(string $id): string
+    /**
+     * Rule page on GitHub at the release tag; development builds link to main, where
+     * rules added after the last tag exist (change m3-release, design D2).
+     */
+    public function docUrl(string $id, string $version = Version::VERSION): string
     {
-        return (realpath(self::DOCS_BASE) ?: self::DOCS_BASE) . '/docs/rules/' . $id . '.md';
+        $ref = Version::isDevelopment($version) ? 'main' : 'v' . $version;
+
+        return Version::REPOSITORY . '/blob/' . $ref . '/docs/rules/' . $id . '.md';
     }
 
     /**

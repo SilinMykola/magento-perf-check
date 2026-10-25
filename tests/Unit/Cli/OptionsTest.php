@@ -83,4 +83,11 @@ final class OptionsTest extends TestCase
 
         self::assertSame('/work/dir/perf-baseline.json', $options->generateBaselineFile);
     }
+
+    public function testVersionDoesNotCheckTheProject(): void
+    {
+        $options = Options::fromArgv(['--version'], __DIR__);
+
+        self::assertTrue($options->version);
+    }
 }

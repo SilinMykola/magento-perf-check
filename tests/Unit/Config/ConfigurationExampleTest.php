@@ -9,18 +9,18 @@ use Silin\MagentoPerfCheck\Rule\RuleRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The configuration example in README.md must stay valid.
+ * The configuration example in docs/configuration.md must stay valid.
  */
-final class ReadmeExampleTest extends TestCase
+final class ConfigurationExampleTest extends TestCase
 {
-    public function testReadmeExampleLoads(): void
+    public function testExampleLoads(): void
     {
-        $readme = (string) file_get_contents(__DIR__ . '/../../../README.md');
-        self::assertSame(1, preg_match('/```neon\n(.*?)```/s', $readme, $m));
+        $document = (string) file_get_contents(__DIR__ . '/../../../docs/configuration.md');
+        self::assertSame(1, preg_match('/```neon\nmagentoPerf:\n(.*?)```/s', $document, $m));
 
         $file = tempnam(sys_get_temp_dir(), 'mpr-readme');
         self::assertIsString($file);
-        file_put_contents($file, $m[1]);
+        file_put_contents($file, "magentoPerf:\n" . $m[1]);
         try {
             $config = (new ConfigLoader(new RuleRegistry()))->load($file);
         } finally {

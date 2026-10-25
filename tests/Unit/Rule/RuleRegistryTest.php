@@ -34,6 +34,22 @@ final class RuleRegistryTest extends TestCase
         self::assertStringEndsWith('docs/rules/P-COL-02.md', (new RuleRegistry())->docUrl('P-COL-02'));
     }
 
+    public function testDocUrlPointsAtReleaseTag(): void
+    {
+        self::assertSame(
+            'https://github.com/SilinMykola/magento-perf-check/blob/v0.1.0/docs/rules/X-LAY-01.md',
+            (new RuleRegistry())->docUrl('X-LAY-01', '0.1.0'),
+        );
+    }
+
+    public function testDevelopmentDocUrlPointsAtMain(): void
+    {
+        self::assertSame(
+            'https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-LAY-01.md',
+            (new RuleRegistry())->docUrl('X-LAY-01', '0.2.0-dev'),
+        );
+    }
+
     public function testIdentifierVariantsCarryTheirSeverity(): void
     {
         $registry = new RuleRegistry();

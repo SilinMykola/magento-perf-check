@@ -8,6 +8,7 @@ use FilesystemIterator;
 use Silin\MagentoPerfCheck\Cli\Application;
 use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
 use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Version;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -109,6 +110,15 @@ final class ApplicationTest extends TestCase
         [$exitCode] = $this->runCommand(['--paths=app/code/Acme/Warn', '--fail-on=warning']);
 
         self::assertSame(Application::EXIT_FINDINGS, $exitCode);
+    }
+
+    public function testVersion(): void
+    {
+        [$exitCode, $stdout, $stderr] = $this->runCommand(['--version']);
+
+        self::assertSame(Application::EXIT_CLEAN, $exitCode);
+        self::assertSame('magento-perf-check ' . Version::VERSION . "\n", $stdout);
+        self::assertSame('', $stderr);
     }
 
     public function testInvalidInputExitsWithTwo(): void

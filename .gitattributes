@@ -1,0 +1,16 @@
+# Kept out of the Composer dist archive: development, tests and calibration data.
+/.github export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/AGENTS.md export-ignore
+/bin/calibration export-ignore
+/bin/test-phpstan1 export-ignore
+/docs/SPEC.md export-ignore
+/docs/adr export-ignore
+/docs/calibration export-ignore
+/docs/runs export-ignore
+/docs/source-audit.md export-ignore
+/openspec export-ignore
+/phpstan.neon.dist export-ignore
+/phpunit.xml.dist export-ignore
+/tests export-ignore
