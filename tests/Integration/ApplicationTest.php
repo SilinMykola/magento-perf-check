@@ -153,6 +153,17 @@ final class ApplicationTest extends TestCase
         self::assertStringContainsString('Cannot write report file /nonexistent-dir/report.txt', $stderr);
     }
 
+    public function testOutputIntoExistingDirectoryFailsBeforeAnalysis(): void
+    {
+        $runner = new PhpStanRunner(new RuleRegistry(), __DIR__ . '/../Fixtures/Project/crashing-phpstan.php');
+        $directory = sys_get_temp_dir();
+        [$exitCode, $stdout, $stderr] = $this->runCommand(['--output=' . $directory], $runner);
+
+        self::assertSame(Application::EXIT_ERROR, $exitCode);
+        self::assertSame('', $stdout);
+        self::assertStringContainsString('Cannot write report file ' . $directory, $stderr);
+    }
+
     public function testInvalidInputExitsWithTwo(): void
     {
         [$exitCode, $stdout, $stderr] = $this->runCommand(['--format=xml']);

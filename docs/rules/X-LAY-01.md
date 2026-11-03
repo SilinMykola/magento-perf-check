@@ -20,7 +20,7 @@ The rule does not report handles that are personal by nature and not meant to be
 - Payment: `paypal_`, `vault_`, `paymentservicespaypal_vault_`.
 - Lists: `wishlist_`, `catalog_product_compare_`.
 
-The SPEC started with six of these. The rest are the handles that Magento 2.4.9 core itself makes uncacheable, found in the M0 core run ([docs/runs/m0-core.md](../runs/m0-core.md)). `catalog_product_compare_` is allowed even though `catalog_` handles otherwise give an `error`: the compare page is per customer. Add your own prefixes, or replace the list, in `magento-perf-check.neon` (`layout.allowlistHandles`, `layout.replaceAllowlist`).
+The SPEC started with six of these. The rest are the handles that Magento 2.4.9 core itself makes uncacheable, found in the M0 core run ([docs/runs/m0-core.md](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m0-core.md)). `catalog_product_compare_` is allowed even though `catalog_` handles otherwise give an `error`: the compare page is per customer. Add your own prefixes, or replace the list, in `magento-perf-check.neon` (`layout.allowlistHandles`, `layout.replaceAllowlist`).
 
 ## Example
 
@@ -69,4 +69,4 @@ If a page is meant to be uncacheable (for example a payment return page under a 
 | [elements.xsd#L184-L221](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/View/Layout/etc/elements.xsd#L184-L221) | B | `cacheable` is an attribute of `<block>`, not of `<referenceBlock>`; the rule therefore checks only `<block>`. |
 | [Sam James: non-cacheable blocks](https://www.samdjames.uk/docs/platforms/magento/development/non-cacheable-blocks/) | C | Supplementary explanation. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

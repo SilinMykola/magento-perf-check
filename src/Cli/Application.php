@@ -127,7 +127,7 @@ final class Application
 
     private static function assertWritable(string $file): void
     {
-        $writable = is_file($file) ? is_writable($file) : is_dir(dirname($file)) && is_writable(dirname($file));
+        $writable = is_file($file) ? is_writable($file) : !is_dir($file) && is_dir(dirname($file)) && is_writable(dirname($file));
         if (!$writable) {
             throw new UsageException(sprintf('Cannot write report file %s.', $file));
         }

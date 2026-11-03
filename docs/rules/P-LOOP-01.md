@@ -69,4 +69,4 @@ $product = $this->productRepository->getById($id);
 
 Adobe does not forbid repositories inside loops as such. The same code-review page recommends factories or repositories to create models within a loop, to keep customer data isolated. The rule targets per-iteration **loading**, which is what the sources call a bottleneck.
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

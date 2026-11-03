@@ -48,4 +48,4 @@ Good: declare the view and the tables it subscribes to in `mview.xml`:
 | [Adobe: indexer configuration](https://experienceleague.adobe.com/en/docs/commerce-operations/implementation-playbook/best-practices/maintenance/indexer-configuration) | A | Recommends "Update by Schedule" for production. |
 | [Mview/View.php#L185-L189](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/Mview/View.php#L185-L189) | B | Loading an undeclared view throws an exception. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

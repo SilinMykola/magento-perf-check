@@ -35,6 +35,20 @@ final class Example
                 $child->getId();
             }
         }
+
+        // Loop conditions and the step of for run on every iteration.
+        for ($i = 0; $i < $this->collectionFactory->create()->getSize(); $i++) {
+            $i += 0;
+        }
+        for ($i = 0; $i < 3; $i += $this->collectionFactory->create()->count()) {
+            $i += 0;
+        }
+        while ($this->collectionFactory->create()->addFieldToFilter('status', 0)->getSize() > 0) {
+            break;
+        }
+        do {
+            $limit = 0;
+        } while ($this->collectionFactory->create()->getSize() > $limit);
     }
 
     /**

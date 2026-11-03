@@ -43,4 +43,4 @@ None known.
 |---|---|---|
 | [Adobe: Technical guidelines](https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines) | A | Section 2.3.2: "Events MUST NOT be triggered in constructors." |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

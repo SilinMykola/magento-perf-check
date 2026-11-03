@@ -52,7 +52,7 @@ $item = $collection->getFirstItem();
 
 Since M1 the rule recognizes earlier loads and unique-key filters. These were the false positives found in the M0 core run (`docs/runs/m0-core.md`).
 
-The rule needs the receiver's type. A collection created through a generated factory is typed when the analyzed project has `generated/code`, or when bitexpert/phpstan-magento is installed (see [ADR 2](../adr/0002-bitexpert-phpstan-magento-as-suggestion.md)). Otherwise the call is skipped, not reported.
+The rule needs the receiver's type. A collection created through a generated factory is typed when the analyzed project has `generated/code`, or when bitexpert/phpstan-magento is installed (see [ADR 2](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0002-bitexpert-phpstan-magento-as-suggestion.md)). Otherwise the call is skipped, not reported.
 
 ## Basis
 
@@ -64,4 +64,4 @@ The rule needs the receiver's type. A collection created through a generated fac
 | [EAV AbstractCollection.php#L1213-L1215](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Eav/Model/Entity/Collection/AbstractCollection.php#L1213-L1215) | B | EAV collections apply the limit under the same condition. |
 | ECG `GetFirstItemSniff` | C | The same check in a token-based standard. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

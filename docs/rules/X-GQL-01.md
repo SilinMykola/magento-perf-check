@@ -54,4 +54,4 @@ None known.
 
 The SPEC row also covered "storefront query without `@cache`". No A/B source tells storefront queries from private ones, so that part is the separate experimental rule X-GQL-04 (decision in change m1-mvp, design D11).
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

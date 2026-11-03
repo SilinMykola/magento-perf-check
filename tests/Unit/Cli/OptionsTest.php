@@ -105,4 +105,12 @@ final class OptionsTest extends TestCase
 
         Options::fromArgv(['--project=' . $this->project(), '--output=a.txt', '--generate-baseline=b.json'], __DIR__);
     }
+
+    public function testOutputCannotOverwriteTheBaseline(): void
+    {
+        $this->expectException(UsageException::class);
+        $this->expectExceptionMessage('--output must not be the --baseline file.');
+
+        Options::fromArgv(['--project=' . $this->project(), '--output=b.json', '--baseline=' . __DIR__ . '/b.json'], __DIR__);
+    }
 }

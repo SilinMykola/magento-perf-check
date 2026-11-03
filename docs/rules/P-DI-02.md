@@ -63,4 +63,4 @@ Classes in Composer packages of type `composer-plugin` and in `magento/magento-c
 |---|---|---|
 | [Adobe: Technical guidelines](https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines) | A | Section 2.3: "Class constructor can have only dependency assignment operations and/or argument validation operations. No other operations are allowed." Section 2.3.1 shows validation with `foreach` and `throw`. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

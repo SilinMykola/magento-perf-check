@@ -36,7 +36,7 @@ git clone https://github.com/SilinMykola/magento-perf-check.git && cd magento-pe
 php bin/magento-perf-check --project=/path/to/magento
 ```
 
-It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpstan.org/) rules and XML checks, and never writes into the project. No database or container is needed. On a stock Magento 2.4.9 project, install plus the first run took under 20 seconds ([measured](docs/runs/m3-install.md)).
+It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpstan.org/) rules and XML checks, and never writes into the project. No database or container is needed. On a stock Magento 2.4.9 project, install plus the first run took under 20 seconds ([measured](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m3-install.md)).
 
 ## What it finds
 
@@ -53,13 +53,16 @@ Full list with severities and sources: [docs/rules.md](docs/rules.md). Every rul
 
 From the calibration corpus (Magento 2.4.9 core and the 25 most-downloaded Packagist modules), graded as true positives:
 
-| Rule | Where | What happens |
-|---|---|---|
-| P-LOOP-01 | `app/code/Ebizmarts/MailChimp/Block/Pixel/Order.php:96` (`mailchimp/mc-magento2` 103.4.86) | One product `getById()` per visible order item on the checkout success page. |
-| P-LOOP-01 | `vendor/magento/module-catalog-url-rewrite/Model/Product/AnchorUrlRewriteGenerator.php:70` (core) | Category repository `get()` per anchor category of every product category, on product save and import. |
-| P-LOOP-01 | `vendor/magento/module-configurable-product/Controller/Adminhtml/Product/Initialization/Helper/Plugin/UpdateConfigurations.php:80` (core) | One `getById()` per configurable variation on admin product save; variations can number in the hundreds. |
-| P-FPC-06 | `app/code/Mollie/Payment/Controller/Express/Process.php:58` (`mollie/magento2` 3.2.0) | A GET action saves the quote and returns a cacheable page, so a repeated request can be served from cache without running the save. |
-| P-LOOP-03 | `app/code/Adyen/Payment/Cron/StateDataCleanUp.php:57` (`adyen/module-payment` 11.3.0) | A cron job deletes expired rows one by one where one `DELETE` query would do. |
+- **P-LOOP-01** in `mailchimp/mc-magento2` 103.4.86: one product `getById()` per visible order item on the checkout success page.\
+  `app/code/Ebizmarts/MailChimp/Block/Pixel/Order.php:96`
+- **P-LOOP-01** in core: category repository `get()` per anchor category of every product category, on product save and import.\
+  `vendor/magento/module-catalog-url-rewrite/Model/Product/AnchorUrlRewriteGenerator.php:70`
+- **P-LOOP-01** in core: one `getById()` per configurable variation on admin product save; variations can number in the hundreds.\
+  `vendor/magento/module-configurable-product/Controller/Adminhtml/Product/Initialization/Helper/Plugin/UpdateConfigurations.php:80`
+- **P-FPC-06** in `mollie/magento2` 3.2.0: a GET action saves the quote and returns a cacheable page, so a repeated request can be served from cache without running the save.\
+  `app/code/Mollie/Payment/Controller/Express/Process.php:58`
+- **P-LOOP-03** in `adyen/module-payment` 11.3.0: a cron job deletes expired rows one by one where one `DELETE` query would do.\
+  `app/code/Adyen/Payment/Cron/StateDataCleanUp.php:57`
 
 ## What our rules are based on
 
@@ -67,7 +70,7 @@ Every rule in the default set cites at least one primary source:
 - **A:** official Adobe or Hyvä documentation.
 - **B:** Magento core code pinned to a specific commit (currently [`a385d02f`](https://github.com/magento/magento2/commit/a385d02f60ee6dfa052f12cdc7d82e956581fba5)), or a magento/magento2 issue with a confirmed reproduction or measurements.
 
-Community sources (**C**) are used only as supplementary explanation. A rule with only C sources stays experimental and is off by default. Each rule page ends with a **Basis** section listing its sources, their levels and what each one confirms; the audit of the whole catalog is in [`docs/source-audit.md`](docs/source-audit.md).
+Community sources (**C**) are used only as supplementary explanation. A rule with only C sources stays experimental and is off by default. Each rule page ends with a **Basis** section listing its sources, their levels and what each one confirms; the audit of the whole catalog is in [`docs/source-audit.md`](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md).
 
 Precision is measured, not assumed. Every rule ran on Magento 2.4.9 core and the 25 most-downloaded Packagist modules, and up to 30 findings per rule were graded by reading the code ([method and per-rule results](docs/calibration.md)):
 - the six default-set rules with enough findings to measure (P-LOOP-01, P-LOOP-03, P-DI-01, P-DI-06, P-FPC-01, T-01) were right in 87–100 % of graded findings;
@@ -94,7 +97,7 @@ bin/test-phpstan1    # the same suite against PHPStan 1.12, in a temporary copy
 composer analyse     # PHPStan at level max on src/
 ```
 
-The design and roadmap are in [`docs/SPEC.md`](docs/SPEC.md), architectural decisions in [`docs/adr/`](docs/adr/). Contributors: see [`AGENTS.md`](AGENTS.md) for the rules every change follows.
+The design and roadmap are in [`docs/SPEC.md`](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/SPEC.md), architectural decisions in [`docs/adr/`](https://github.com/SilinMykola/magento-perf-check/tree/main/docs/adr/). Contributors: see [`AGENTS.md`](https://github.com/SilinMykola/magento-perf-check/blob/main/AGENTS.md) for the rules every change follows.
 
 ## License
 

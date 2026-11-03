@@ -50,4 +50,4 @@ Good:
 | [SectionConfigConverter.php#L18-L35](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Customer/CustomerData/SectionConfigConverter.php#L18-L35) | B | An action without sections is converted to "invalidate all". |
 | [dev.to: customer sections](https://dev.to/magevanta/magento-2-customer-data-sections-localstorage-performance-optimization-4ci9) | C | Background on section reloads. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

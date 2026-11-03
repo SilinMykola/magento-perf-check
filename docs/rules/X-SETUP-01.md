@@ -51,4 +51,4 @@ Good: a data patch (`Setup/Patch/Data/...` implementing `DataPatchInterface`), o
 | [Adobe: Extension lifecycle](https://developer.adobe.com/commerce/php/development/prepare/extension-lifecycle) | A | The `Recurring` class runs after every schema installation or upgrade stage, and `RecurringData` after every data stage. |
 | [Installer.php#L1159-L1174](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/setup/src/Magento/Setup/Model/Installer.php#L1159-L1174) | B | The installer runs the recurring script of every module. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

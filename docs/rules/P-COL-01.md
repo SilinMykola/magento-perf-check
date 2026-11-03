@@ -57,4 +57,4 @@ Since M2 the rule recognizes rows used later in the same function. This was the 
 | [AbstractDb.php#L433-L441](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L433-L441) | B | `AbstractDb::getSize()` runs only a COUNT query. |
 | ECG `CollectionCountSniff` | C | The same check in a token-based standard. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

@@ -44,4 +44,4 @@ Good:
 | [Rpc/Publisher.php#L105-L125](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/MessageQueue/Rpc/Publisher.php#L105-L125) | B | The RPC publisher waits for the reply. |
 | [Adobe: Message queue configuration](https://developer.adobe.com/commerce/php/development/components/message-queues/configuration) | A | Documents `is_synchronous` on topics. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

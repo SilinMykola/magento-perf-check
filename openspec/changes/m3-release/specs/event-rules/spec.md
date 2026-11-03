@@ -7,7 +7,7 @@ X-EVT-01 SHALL report, as `warning`, an observer on `model_load_after` or on any
 - events ending in `_collection_load_after`, which fire once per collection, not per entity;
 - observers whose class is in the `Magento\Framework\EntityManager\Observer` namespace, which is core plumbing that adds no query.
 
-The message SHALL say that `model_load_after` runs after loading any model, that `core_collection_abstract_load_after` runs after loading any collection, and that `<prefix>_load_after` runs on every load of that entity type.
+The message SHALL say that `model_load_after` runs after loading any model, that `core_collection_abstract_load_after` runs after loading any non-EAV collection, and that `<prefix>_load_after` runs on every load of that entity type.
 
 #### Scenario: Generic load event
 - **WHEN** `events.xml` has `<event name="model_load_after"><observer .../></event>`
@@ -27,4 +27,4 @@ The message SHALL say that `model_load_after` runs after loading any model, that
 
 #### Scenario: Any collection load
 - **WHEN** `events.xml` observes `core_collection_abstract_load_after`
-- **THEN** X-EVT-01 reports a warning that names every collection load, not one entity type
+- **THEN** X-EVT-01 reports a warning that names every non-EAV collection load, not one entity type

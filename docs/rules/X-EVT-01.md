@@ -16,7 +16,7 @@ Not reported:
 
 ## Why it hurts performance
 
-`AbstractModel::_afterLoad()` dispatches `model_load_after` after loading any model of any type, and the entity-specific `<prefix>_load_after` after every load of that entity type. `AbstractCollection::_afterLoad()` likewise dispatches `core_collection_abstract_load_after` after loading any database collection, whatever it holds. An observer there runs on every model or collection load in every request: product pages, carts, admin grids, imports. Even a cheap observer adds up; one that queries the database turns every load into two.
+`AbstractModel::_afterLoad()` dispatches `model_load_after` after loading any model of any type, and the entity-specific `<prefix>_load_after` after every load of that entity type. `AbstractCollection::_afterLoad()` of the flat-table (non-EAV) collections likewise dispatches `core_collection_abstract_load_after` after every load, whatever the collection holds; EAV collections such as products, categories and customers do not dispatch it. An observer there runs on every model or collection load in every request: product pages, carts, admin grids, imports. Even a cheap observer adds up; one that queries the database turns every load into two.
 
 ## Example
 
@@ -51,7 +51,8 @@ Better: add the data where it is used. Use a plugin on the specific repository o
 | Source | Level | What it confirms |
 |---|---|---|
 | [AbstractModel.php#L590-L609](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/Model/AbstractModel.php#L590-L609) | B | `_afterLoad()` dispatches `model_load_after` and the entity-specific `*_load_after` event on every load. |
-| [AbstractCollection.php#L591-L605](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/Model/ResourceModel/Db/Collection/AbstractCollection.php#L591-L605) | B | `_afterLoad()` of every database collection dispatches `core_collection_abstract_load_after`, then its own `<prefix>_load_after`. |
+| [AbstractCollection.php#L591-L605](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/Model/ResourceModel/Db/Collection/AbstractCollection.php#L591-L605) | B | `_afterLoad()` of every flat-table collection dispatches `core_collection_abstract_load_after`, then its own `<prefix>_load_after`. |
+| [Eav AbstractCollection.php#L25](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Eav/Model/Entity/Collection/AbstractCollection.php#L25) and [#L1725-L1728](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Eav/Model/Entity/Collection/AbstractCollection.php#L1725-L1728) | B | EAV collections extend `AbstractDb` directly and their `_afterLoad()` dispatches nothing, so `core_collection_abstract_load_after` does not fire for them. |
 | [Adobe: observers best practices](https://developer.adobe.com/commerce/php/best-practices/extensions/observers) | A | Observers run every time their event fires and must be kept lightweight. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)); the collection source was added and verified on 2026-10-25.
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)); the collection source was added and verified on 2026-10-25.

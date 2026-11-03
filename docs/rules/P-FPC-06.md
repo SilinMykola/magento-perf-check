@@ -54,4 +54,4 @@ Good: implement `HttpPostActionInterface` and send the request as POST (with a f
 | [Adobe: Public content](https://developer.adobe.com/commerce/php/development/cache/page/public-content) | A | "Use only HTTP POST or PUT methods to change state." |
 | [Adobe: Private content](https://developer.adobe.com/commerce/php/development/cache/page/private-content) | A | The same rule, for private content. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

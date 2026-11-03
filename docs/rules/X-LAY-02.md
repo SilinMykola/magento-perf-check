@@ -40,6 +40,6 @@ None known.
 | [Result/Page.php#L236-L252](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/View/Result/Page.php#L236-L252) | B | Entity-specific handles are the `*_id_*` and `*_sku_*` ones. |
 | [Adobe: Varnish ESI](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/cache/varnish/use-varnish-esi) | A | How blocks with `ttl` are rendered through ESI. |
 
-The SPEC's former warning for `ttl` in `default.xml` was dropped: core's own `default.xml` declares `catalog.topnav` with `ttl="3600"` (see the [source audit](../source-audit.md)).
+The SPEC's former warning for `ttl` in `default.xml` was dropped: core's own `default.xml` declares `catalog.topnav` with `ttl="3600"` (see the [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

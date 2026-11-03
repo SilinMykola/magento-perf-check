@@ -53,9 +53,10 @@ final class ReadmeTest extends TestCase
         }
     }
 
-    public function testRealFindingsTableShowsOnlyGradedTruePositives(): void
+    public function testRealFindingsListShowsOnlyGradedTruePositives(): void
     {
-        preg_match_all('/^\| ([A-Z0-9-]+) \| `([^`]+:\d+)`/m', $this->readme(), $rows, PREG_SET_ORDER);
+        // List items: "- **RULE-ID** in <package>: <what happens>", then the location on its own line.
+        preg_match_all('/^- \*\*([A-Z0-9-]+)\*\*[^\n]*\n\s+`([^`]+:\d+)`/m', $this->readme(), $rows, PREG_SET_ORDER);
 
         self::assertNotEmpty($rows);
         foreach ($rows as [, $rule, $location]) {

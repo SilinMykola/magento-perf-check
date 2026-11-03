@@ -54,8 +54,8 @@ final class ArchiveContentsTest extends TestCase
 
     protected function setUp(): void
     {
-        // bin/test-phpstan1 runs the suite in a copy without .git.
-        if (!is_dir(self::ROOT . '/.git')) {
+        // bin/test-phpstan1 runs the suite in a copy without .git; in a worktree .git is a file.
+        if (!file_exists(self::ROOT . '/.git')) {
             self::markTestSkipped('needs a git checkout');
         }
     }

@@ -52,8 +52,9 @@ final class ObserverEventRule implements XmlRule
             'X-EVT-01',
             static fn (string $event): ?string => match (true) {
                 $event === 'model_load_after' => 'runs after loading any model, of any entity type',
-                // Dispatched by every database collection after it loads, before its own prefixed event.
-                $event === 'core_collection_abstract_load_after' => 'runs after loading any collection, of any entity type',
+                // Dispatched by every flat-table collection after it loads, before its own prefixed
+                // event; EAV collections (products, categories, customers) do not dispatch it.
+                $event === 'core_collection_abstract_load_after' => 'runs after loading any non-EAV collection, of any entity type',
                 // Collection events fire once per collection, not per entity.
                 str_ends_with($event, '_collection_load_after') => null,
                 str_ends_with($event, '_load_after') => 'runs on every load of this entity type',

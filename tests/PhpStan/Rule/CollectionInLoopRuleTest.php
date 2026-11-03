@@ -30,6 +30,10 @@ final class CollectionInLoopRuleTest extends RuleTestCase
             ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (getSize()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 27],
             ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (getFirstItem()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 30],
             ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (load()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 34],
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (getSize()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 40],
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (count()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 43],
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (getSize()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 46],
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (getSize()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 51],
         ]);
     }
 }

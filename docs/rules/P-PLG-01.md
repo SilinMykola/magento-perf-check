@@ -57,4 +57,4 @@ public function afterGetPrice(Product $subject, $price)
 |---|---|---|
 | [Adobe: Plugins](https://developer.adobe.com/commerce/php/development/components/plugins) | A | "Avoid using around method plugins when they are not required because they increase stack traces and affect performance." |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

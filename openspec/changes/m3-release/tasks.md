@@ -29,9 +29,10 @@
 - [x] 4.7 Translate `docs/SPEC.md` to English; check headings, table rows and links match the original one-to-one (D7)
 
 - [x] 4.8 Fix P-LOOP-02 reporting a collection created in the iterated expression of a top-level `foreach` (found on a real project); fixture cases for it and for an inner loop; corpus re-run shows no change in default-set findings
-- [x] 4.9 X-EVT-01: name `core_collection_abstract_load_after` as firing after every collection load (found on a real project); fixture, message test, rule page with a pinned core source
+- [x] 4.9 X-EVT-01: name `core_collection_abstract_load_after` as firing after every non-EAV collection load (found on a real project); fixture, message test, rule page with a pinned core source
 - [x] 4.10 README: run without installing, next to the quick start
 - [x] 4.11 `--output=<file>`: report to a file with a one-line summary, checked before the analysis; tests; Git pre-commit hook example in `docs/ci.md`, checked in a throwaway repository
+- [x] 4.12 Fixes from an independent review: P-LOOP-02 again reports collections created in loop conditions and the step of `for` (regression of 4.8), X-EVT-01 names non-EAV collections only, `--output` rejects a directory and the `--baseline` file before the analysis, links from shipped docs to files outside the Composer archive point at GitHub, the archive test runs in a worktree; corpus re-run shows no change in default-set findings
 
 ## 5. Verification
 

@@ -99,6 +99,9 @@ final class Options
         if (isset($values['output'], $values['generate-baseline'])) {
             throw new UsageException('--output and --generate-baseline cannot be used together.');
         }
+        if (isset($values['output'], $values['baseline']) && $inCwd($values['output']) === $inCwd($values['baseline'])) {
+            throw new UsageException('--output must not be the --baseline file.');
+        }
 
         return new self(
             $project,

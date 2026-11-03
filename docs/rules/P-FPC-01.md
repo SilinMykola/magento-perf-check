@@ -44,4 +44,4 @@ None known.
 | [Adobe: Private content](https://developer.adobe.com/commerce/php/development/cache/page/private-content) | A | Do not use the `$_isScopePrivate` property: it is obsolete and will not work properly. |
 | [AbstractBlock.php#L158-L166](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/View/Element/AbstractBlock.php#L158-L166) | B | The property is marked `@deprecated`. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

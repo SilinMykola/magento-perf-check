@@ -68,7 +68,7 @@ final class XmlRulesGoldenTest extends TestCase
 
         self::assertStringContainsString('runs after loading any model, of any entity type', $messages[4] ?? '');
         self::assertStringContainsString('runs on every load of this entity type', $messages[8] ?? '');
-        self::assertStringContainsString('runs after loading any collection, of any entity type', $messages[26] ?? '');
+        self::assertStringContainsString('runs after loading any non-EAV collection, of any entity type', $messages[26] ?? '');
     }
 
     public function testConfiguredAllowlistPrefix(): void

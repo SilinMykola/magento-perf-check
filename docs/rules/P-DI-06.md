@@ -53,4 +53,4 @@ public function __construct(private readonly LoggerInterface $logger)
 | [Adobe: Object Manager, usage rules](https://developer.adobe.com/commerce/php/development/components/object-manager/) | A | The object manager must not be called directly. The allowed exceptions are factories and proxies, the constructor backward-compatibility fallback and magic methods such as `__wakeup()`/`__sleep()`. |
 | ECG `ObjectManagerUsage` | C | The same check in a token-based standard. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

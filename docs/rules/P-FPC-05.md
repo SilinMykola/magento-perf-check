@@ -52,4 +52,4 @@ If the page is meant to be cached: remove the call and move personal data to cus
 | [PageCache Kernel.php#L154-L183](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/App/PageCache/Kernel.php#L154-L183) | B | The built-in page cache stores only responses with public cache headers. |
 | [Adobe: Public content](https://developer.adobe.com/commerce/php/development/cache/page/public-content) | A | Shows no-cache headers as the deliberate way to disable caching for a page. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

@@ -30,6 +30,7 @@ final class LoopContextVisitor extends NodeVisitorAbstract
 
     private const BODY_ROOT = 'magentoPerfLoopBodyRoot';
     private const ITERATION_SCOPE = 'magentoPerfIterationScope';
+    private const RUNS_ONCE = 'magentoPerfRunsOnce';
 
     private const LOADING_METHODS = ['load', 'getitems', 'getsize', 'getfirstitem', 'count'];
 
@@ -40,6 +41,9 @@ final class LoopContextVisitor extends NodeVisitorAbstract
 
     private int $depth = 0;
 
+    /** Nesting inside the iterated expression of foreach or the init of for. */
+    private int $once = 0;
+
     /** @var list<array<string, true>> variables assigned from create(), one set per enclosing iteration */
     private array $created = [];
 
@@ -49,6 +53,7 @@ final class LoopContextVisitor extends NodeVisitorAbstract
     public function beforeTraverse(array $nodes): ?array
     {
         $this->depth = 0;
+        $this->once = 0;
         $this->created = [];
 
         return null;
@@ -61,6 +66,9 @@ final class LoopContextVisitor extends NodeVisitorAbstract
         }
         if ($this->depth > 0) {
             $node->setAttribute(self::IN_LOOP, true);
+        }
+        if ($node->getAttribute(self::RUNS_ONCE) === true) {
+            ++$this->once;
         }
         if ($node->getAttribute(self::ITERATION_SCOPE) === true) {
             $this->created[] = [];
@@ -75,6 +83,13 @@ final class LoopContextVisitor extends NodeVisitorAbstract
             $node->setAttribute(self::ITERATION_SCOPE, true);
             $this->created[] = [];
             $this->markBodyRoots($node->stmts);
+            if ($node instanceof Stmt\Foreach_) {
+                $node->expr->setAttribute(self::RUNS_ONCE, true);
+            } elseif ($node instanceof Stmt\For_) {
+                foreach ($node->init as $init) {
+                    $init->setAttribute(self::RUNS_ONCE, true);
+                }
+            }
         } elseif ($node instanceof Expr\FuncCall && $node->name instanceof Node\Name) {
             $position = self::ITERATING_FUNCTIONS[$node->name->toLowerString()] ?? null;
             if ($position !== null) {
@@ -94,6 +109,9 @@ final class LoopContextVisitor extends NodeVisitorAbstract
     {
         if ($node->getAttribute(self::BODY_ROOT) === true) {
             --$this->depth;
+        }
+        if ($node->getAttribute(self::RUNS_ONCE) === true) {
+            --$this->once;
         }
         if ($node->getAttribute(self::ITERATION_SCOPE) === true) {
             array_pop($this->created);
@@ -130,8 +148,9 @@ final class LoopContextVisitor extends NodeVisitorAbstract
     private function trackCreatedCollections(Node $node): void
     {
         // The iteration scope opens before the iterated expression of foreach and the
-        // init of for are visited; they run once, so only loop bodies count.
-        if ($this->created === [] || $this->depth === 0) {
+        // init of for are visited. Outside any loop body they run once; conditions
+        // and the step of for run on every iteration and still count.
+        if ($this->created === [] || ($this->depth === 0 && $this->once > 0)) {
             return;
         }
         if ($node instanceof Expr\Assign && $node->var instanceof Expr\Variable && is_string($node->var->name)

@@ -57,4 +57,4 @@ $items = $this->collectionFactory->create()->setStoreId($storeId)->getItems();
 | [AbstractDb.php#L813-L836](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L813-L836) | B | `load()` runs the select and builds every item. |
 | [AbstractDb.php#L433-L441](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L433-L441) | B | `getSize()` runs its own COUNT query. |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).

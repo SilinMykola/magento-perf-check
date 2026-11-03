@@ -58,4 +58,4 @@ public function execute(Observer $observer)
 | [Indexer.php#L452-L494](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Indexer/Model/Indexer.php#L452-L494) | B | `reindexAll()` rebuilds the whole index synchronously. |
 | [Adobe: indexer configuration](https://experienceleague.adobe.com/en/docs/commerce-operations/implementation-playbook/best-practices/maintenance/indexer-configuration) | A | General guidance on indexer modes (indirect support). |
 
-Verified 2026-10-21 (see [source audit](../source-audit.md)).
+Verified 2026-10-21 (see [source audit](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md)).
