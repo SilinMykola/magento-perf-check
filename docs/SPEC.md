@@ -267,12 +267,13 @@ The finding message contains a short explanation and a link to the rule page.
 | **M3. Release 0.1** | Publication on Packagist, README with real examples of findings, AGENTS.md and skill. First PRs to module authors | The package installs and works on a clean project within 2 minutes |
 | **M4. Expansion** | ⏳ rules, cross-method loop analysis through PHPStan Collectors | Every new rule passes calibration |
 | **M5 (optional)** | 🧪 experimental rules, Rector auto-fixes for simple cases (`count()` → `getSize()`, `getFirstItem` + `setPageSize(1)`). There is no ready-made Magento Rector set | |
+| **M6 (proposal). Frontend** | Rules for storefront code that runs in the browser: Luma (RequireJS modules and mixins, `x-magento-init` / `data-mage-init` components, Knockout templates, LESS) and Hyvä (Alpine.js components, Tailwind, the experimental T-02). Candidate topics: scripts and components loaded on every page from the `default` handle, render-blocking and synchronous loading, images in templates without dimensions or lazy loading. Each rule needs an A or B source under section 2, like the PHP rules; start with an OpenSpec change that collects the sources | A source audit for every candidate; calibration on Luma and Hyvä themes |
 
 ---
 
 ## 9a. Development environment
 
-- Repository: [SilinMykola/magento-perf-check](https://github.com/SilinMykola/magento-perf-check), local copy `~/projects/magento-perf-check` (macOS, PHP 8.5 and Composer 2.10 on the host).
+- Repository: [SilinMykola/magento-perf-check](https://github.com/SilinMykola/magento-perf-check), local copy `~/projects/magento-contribution-skills/magento-perf-check` (macOS, PHP 8.5 and Composer 2.10 on the host).
 - Test Magento: `~/projects/magento-2.4.9.ddev` (DDEV, PHP 8.4 in the container, Mutagen). Vendor is synced to the host.
 - **The tool runs on the host against the Magento folder**, without being installed into the project: `php bin/magento-perf-check --project=~/projects/magento-2.4.9.ddev`. Static analysis needs neither the container nor the database.
 - **Do not install the package into a Magento project through a Composer path repository with a symlink.** Mutagen in DDEV syncs symbolic links in portable mode, and a link from `vendor` out of the project may not sync. The Composer install check is done in M3 in a separate copy of the project, through a path repository in copy mode (`"symlink": false`). In M3 a path repository turned out to mirror the whole development checkout, including the git-ignored `var/`, so the check installed the `git archive` zip instead, which is what Packagist serves ([`docs/runs/m3-install.md`](runs/m3-install.md)).
@@ -282,7 +283,7 @@ The finding message contains a short explanation and a link to the rule page.
 
 ## 10. Out of scope
 - Runtime profiling (debug bar modules exist for that).
-- Frontend performance (JS, CSS, images).
+- Frontend performance (JS, CSS, images) until milestone M6, which is a proposal, not a commitment.
 - Infrastructure settings (Redis, Varnish, MySQL, PHP), except the optional C-* group.
 - Security and general code style (that is MCS, ECG and so on).
 
