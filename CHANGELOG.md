@@ -6,6 +6,12 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-06
+
+### Changed
+
+- Documentation only: the install from Packagist comes first again, and the docs say which Magento versions can install the package. No rule or behavior changed.
+
 ## [0.1.0] - 2026-11-06
 
 First release.
@@ -25,5 +31,6 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/SilinMykola/magento-perf-check/releases/tag/v0.1.0
