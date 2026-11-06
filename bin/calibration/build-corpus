@@ -6,7 +6,7 @@ declare(strict_types=1);
 /**
  * Builds the calibration corpus under var/corpus/ (change m2-calibration, design D1).
  *
- *   build-corpus magento     copy of the test Magento project (read-only source)
+ *   build-corpus magento     copy of the Magento project at CORPUS_SOURCE_PROJECT, an absolute path (read-only source)
  *   build-corpus packagist   the 25 most-downloaded installable magento2-module packages
  *   build-corpus mage-os     composer install of mage-os/project-community-edition
  *   build-corpus --clean     remove var/corpus
@@ -23,7 +23,6 @@ use Composer\Semver\VersionParser;
 const ROOT = __DIR__ . '/../..';
 const CORPUS = ROOT . '/var/corpus';
 const MANIFEST = ROOT . '/docs/calibration/corpus.json';
-const SOURCE_PROJECT = '/Users/mykola/projects/magento-2.4.9.ddev';
 const MODULE_COUNT = 25;
 const TARGET_PHP = '8.4.0';
 
@@ -103,6 +102,10 @@ function installedVersions(): array
 
 function buildMagento(): void
 {
+    $source = rtrim((string) getenv('CORPUS_SOURCE_PROJECT'), '/');
+    if ($source === '') {
+        fail('set CORPUS_SOURCE_PROJECT to the absolute path of the Magento project to copy');
+    }
     $marker = tempnam(sys_get_temp_dir(), 'corpus-marker');
     if (!is_dir(CORPUS)) {
         mkdir(CORPUS, 0777, true);
@@ -111,18 +114,18 @@ function buildMagento(): void
         'rsync', '-a', '--delete',
         '--exclude', '/var/', '--exclude', '/pub/static/', '--exclude', '/pub/media/', '--exclude', '/.ddev/',
         '--exclude', '/app/code/',
-        SOURCE_PROJECT . '/', CORPUS . '/magento/',
+        $source . '/', CORPUS . '/magento/',
     ]);
     mkdir(CORPUS . '/magento/app/code', 0777, true);
-    $changed = trim(run(['find', SOURCE_PROJECT, '-newer', (string) $marker]));
+    $changed = trim(run(['find', $source, '-newer', (string) $marker]));
     unlink((string) $marker);
     if ($changed !== '') {
         fail("the source project changed during the copy:\n$changed");
     }
-    $base = json_decode((string) file_get_contents(SOURCE_PROJECT . '/vendor/magento/magento2-base/composer.json'), true);
+    $base = json_decode((string) file_get_contents($source . '/vendor/magento/magento2-base/composer.json'), true);
     $manifest = manifest();
     $manifest['magento'] = [
-        'source' => 'copy of ' . SOURCE_PROJECT . ' (app/code of the source left out)',
+        'source' => 'copy of a local Magento project (app/code of the source left out)',
         'version' => $base['version'] ?? 'unknown',
         'paths' => ['vendor/magento'],
     ];

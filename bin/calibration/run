@@ -4,7 +4,7 @@
 # Usage: run [core] [packagist] [mage-os]   (no argument: all three)
 set -euo pipefail
 
-root="$(cd "$(dirname "$0")/../.." && pwd)"
+root="$(cd "$(dirname "$0")/../.." && pwd -P)"
 out="$root/docs/calibration/runs"
 mkdir -p "$out"
 commit="$(git -C "$root" rev-parse --short HEAD)"
@@ -45,6 +45,12 @@ for run in "${runs[@]}"; do
     set +e; wait "$pid"; code=$?; set -e
     if [ "$code" -gt 1 ]; then
         echo "run $name failed with exit code $code" >&2
+        exit 2
+    fi
+    # Keep the stored reports free of this machine's paths.
+    php -r 'file_put_contents($argv[1], str_replace($argv[2] . "/", "", file_get_contents($argv[1])));' "$out/$name.json" "$root"
+    if grep -qF "$root/" "$out/$name.json"; then
+        echo "run $name: $root is still in the report" >&2
         exit 2
     fi
     printf '{"run": "%s", "project": "%s", "paths": "%s", "toolCommit": "%s", "exitCode": %d, "wallSeconds": %d, "peakRssMb": %d, "date": "%s"}\n' \

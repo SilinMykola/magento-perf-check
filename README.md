@@ -82,9 +82,7 @@ Static analysis gives heuristics, not guarantees: treat each finding as a reason
 
 ## Related
 
-- [magento2-best-practices](https://github.com/SilinMykola/magento2-best-practices-skill): Magento coding rules, test layers, fixtures and PHPUnit conventions; detects a magento/magento2 checkout and hands core edits to magento-core-contrib.
-- [magento2-ddev](https://github.com/SilinMykola/magento2-ddev): DDEV harness with one command per test layer, a separate test site, and the skill `magento-ddev`.
-- [magento2-core-contrib](https://github.com/SilinMykola/magento2-core-contrib): workflow and PR checks for fixing magento/magento2 issues.
+- [magento2-best-practices](https://github.com/SilinMykola/magento2-best-practices-skill): Magento coding rules, test layers, fixtures and PHPUnit conventions; detects a magento/magento2 checkout.
 
 ## Documentation
 

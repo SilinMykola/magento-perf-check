@@ -1,7 +1,7 @@
 {
     "description": "Calibration corpus (change m2-calibration). Rebuild with bin/calibration/build-corpus.",
     "magento": {
-        "source": "copy of /Users/mykola/projects/magento-2.4.9.ddev (app/code of the source left out)",
+        "source": "copy of a local Magento project (app/code of the source left out)",
         "version": "2.4.9",
         "paths": [
             "vendor/magento"
