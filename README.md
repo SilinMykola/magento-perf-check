@@ -3,6 +3,7 @@
 Finds performance and Full Page Cache anti-patterns in Magento 2 and Mage-OS code before they reach production: database queries in loops, state changes in cacheable GET requests, session objects created on every page, misconfigured layout, events, indexers, queues and GraphQL caching.
 
 [![CI](https://github.com/SilinMykola/magento-perf-check/actions/workflows/ci.yml/badge.svg)](https://github.com/SilinMykola/magento-perf-check/actions/workflows/ci.yml)
+[![Packagist](https://img.shields.io/packagist/v/silin/magento-perf-check.svg)](https://packagist.org/packages/silin/magento-perf-check)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![PHP 8.1+](https://img.shields.io/badge/php-8.1%2B-777bb4.svg)](docs/configuration.md#requirements)
 [![PHPStan 1.12 and 2.x](https://img.shields.io/badge/PHPStan-1.12%20%7C%202.x-brightgreen.svg)](docs/configuration.md#inside-an-existing-phpstan-setup)
@@ -24,18 +25,21 @@ Real output on two published modules (`magefan/module-community` 2.4.9 and `moll
 
 ## Quick start
 
-Run it from its own clone (the project still needs its own `composer install`):
+```sh
+composer require --dev silin/magento-perf-check
+vendor/bin/magento-perf-check
+```
+
+Or check a project without adding a dependency to it (the project still needs its own `composer install`):
 
 ```sh
 git clone https://github.com/SilinMykola/magento-perf-check.git && cd magento-perf-check && composer install
 php bin/magento-perf-check --project=/path/to/magento
 ```
 
-The package is not on Packagist yet.
+Calibrated on Magento 2.4.9, where both ways were checked. Stock Magento 2.4.4 and older pin a PHPStan version below 1.12, so `composer require` cannot work there: use the clone. It ran that way on `vendor/magento/module-cms` of 2.4.0, 2.4.3 and 2.4.4, without grading the findings ([check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/older-magento.md)). The install was not tried on 2.4.5 to 2.4.8, and Magento 2.3 is not checked.
 
-Calibrated on Magento 2.4.9. It also ran on `vendor/magento/module-cms` of 2.4.0, 2.4.3 and 2.4.4 this way, without grading the findings ([check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/older-magento.md)); Magento 2.3 is not checked.
-
-It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpstan.org/) rules and XML checks, and never writes into the project. No database or container is needed. On a stock Magento 2.4.9 project, a Composer install of the release archive plus the first run took under 20 seconds ([measured](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m3-install.md)).
+It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpstan.org/) rules and XML checks, and never writes into the project. No database or container is needed. On a stock Magento 2.4.9 project, install plus the first run took under 20 seconds ([measured](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m3-install.md)).
 
 ## What it finds
 

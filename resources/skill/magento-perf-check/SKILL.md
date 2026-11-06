@@ -16,7 +16,7 @@ vendor/bin/magento-perf-check --paths=app/code/Vendor/Module --format=json
 ```
 
 - Without `--paths` it analyzes `app/code` and `app/design`.
-- If the tool is in its own clone, which is the only option until the package is on Packagist, run `php <clone>/bin/magento-perf-check --project=<magento root>` instead.
+- If the tool is installed elsewhere, add `--project=<magento root>`.
 - Exit code 0: no finding at the `--fail-on` severity (default `error`); 1: such findings exist; 2: the tool failed. On 2, read stderr and report it; do not treat the run as clean.
 
 ## Read the result

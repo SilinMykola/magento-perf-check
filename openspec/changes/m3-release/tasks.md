@@ -44,7 +44,7 @@
 
 - [x] 6.1 Push; CI green
 - [x] 6.2 Make the repository public
-- [ ] 6.3 Submit to Packagist and enable the GitHub hook
+- [x] 6.3 Submit to Packagist and enable the GitHub hook
 - [x] 6.4 Tag `v0.1.0`, push the tag, create the GitHub release from the changelog entry
-- [ ] 6.5 Repeat the install check from Packagist, add the result to `docs/runs/m3-install.md`, add the Packagist badge
+- [x] 6.5 Repeat the install check from Packagist, add the result to `docs/runs/m3-install.md`, add the Packagist badge
 - [ ] 6.6 Hand the owner the list of third-party TP findings for possible PRs (kept outside the repository); open PRs only for the ones the owner picks (D9)

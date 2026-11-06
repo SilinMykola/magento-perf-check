@@ -32,4 +32,16 @@ A first attempt used a path repository with `"symlink": false`, as SPEC section 
 
 ## After publication
 
-To be repeated with Packagist as the only source of the package (task 6.5 of change m3-release).
+Repeated on 2026-11-06 with Packagist as the source of the package, on a new copy of the same project (the project's `auth.json` was in the copy, as before).
+
+| Step | Command | Wall time | Outcome |
+|---|---|---|---|
+| Install | `composer require --dev silin/magento-perf-check` | 10 s | `^0.1.0` resolved to v0.1.0; 2 packages installed: the tool and `nette/neon` 3.4.10 |
+| First run | `vendor/bin/magento-perf-check` | 4 s | exit 0, 1 finding (P-DI-01, info) in `app/code` |
+
+- **Lock file:** only those two packages were added and no locked package changed.
+- **Installed size:** 596 KB. `--version` printed `magento-perf-check 0.1.0`, and the finding links to the `v0.1.0` rule page opened.
+- **`--paths=vendor/magento/module-catalog`:** exit 1, 12 s, 117 findings (11 error, 39 warning, 67 info; P-DI-06 56, P-DI-01 38, P-LOOP-03 11, P-LOOP-01 10, P-COL-01 1, P-LOOP-02 1). The count differs from the earlier run of 2026-10-24: `090fb91` and `44726f8`, both before the tag, narrowed the loop rules (P-LOOP-02 from 4 to 1, P-LOOP-01 from 12 to 10).
+- **GitHub hook:** the repository webhook to `https://packagist.org/api/github` is active and its last delivery returned 202.
+
+The clone route from the README was checked the same day on the project itself, which it only reads: a new `git clone` of `main` at `789ef47` and `composer install` took 8 s, and `php bin/magento-perf-check --project=<project>` took 4 s, exit 0, with the same 1 finding.

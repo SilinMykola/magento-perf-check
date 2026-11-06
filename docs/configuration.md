@@ -7,7 +7,16 @@
 
 ## Installing
 
-Run the tool from its own directory and point it at the project with `--project`. The project still needs its own `composer install`, because PHPStan loads the project's `vendor/autoload.php`:
+Install it as a development dependency of the Magento project:
+
+```sh
+composer require --dev silin/magento-perf-check
+vendor/bin/magento-perf-check
+```
+
+The tool reads the project and never writes into it. PHP and XML are analyzed on the host; no database or container is needed.
+
+To analyze a project without adding a dependency to it, install the tool in its own directory and point it at the project with `--project`. The host needs PHP 8.1 or newer whatever the project runs on. The project still needs its own `composer install`, because PHPStan loads the project's `vendor/autoload.php`:
 
 ```sh
 git clone https://github.com/SilinMykola/magento-perf-check.git
@@ -16,13 +25,21 @@ composer install
 php bin/magento-perf-check --project=/path/to/magento
 ```
 
-The tool reads the project and never writes into it. PHP and XML are analyzed on the host, which needs PHP 8.1 or newer whatever the project runs on; no database or container is needed.
-
-The package is not on Packagist yet. Once it is, a project can also install it as a development dependency with `composer require --dev silin/magento-perf-check`. Stock Magento 2.4.4 and 2.4.3 cannot do that: they pin `phpstan/phpstan` to `~1.2.0` and `^0.12.77`.
-
 ## Magento versions
 
-The code has no check of the Magento version. Precision is calibrated on Magento 2.4.9 only. The tool also ran on `vendor/magento/module-cms` of 2.4.0, 2.4.3 and 2.4.4 with `--project`, without grading the findings ([check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/older-magento.md)). Magento 2.3 is not checked.
+The code has no check of the Magento version. Precision is calibrated on Magento 2.4.9 only.
+
+| Magento | `phpstan/phpstan` in the stock project | `composer require` | Own clone with `--project` |
+|---|---|---|---|
+| 2.4.9 | `^1.9` | checked | checked |
+| 2.4.6 to 2.4.8 | `^1.9` | not tried | not tried |
+| 2.4.5 | `^1.6.8` | not tried | not tried |
+| 2.4.4 | `~1.2.0` | conflict | ran on `module-cms` |
+| 2.4.3 | `^0.12.77` | conflict | ran on `module-cms` |
+| 2.4.0 to 2.4.2 | `>=0.12.3 <=0.12.23` | below what the tool accepts | ran on `module-cms` of 2.4.0 |
+| 2.3 | not checked | not checked | not checked |
+
+The tool needs PHPStan 1.12 or 2.x. On 2.4.5 to 2.4.8 the constraint allows 1.12, but a project locked to an older 1.x has to update PHPStan for the install to resolve. Findings on versions other than 2.4.9 were not graded ([check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/older-magento.md)).
 
 ## Options
 

@@ -1,6 +1,5 @@
 # Example GrumPHP configuration: merge the shell task into your project's grumphp.yml.
-# The package is not on Packagist yet: until it is, replace vendor/bin/magento-perf-check with
-# php /path/to/magento-perf-check/bin/magento-perf-check --project=.
+# Needs silin/magento-perf-check in the project's require-dev.
 # magento-perf-check exits with 1 when a finding reaches --fail-on, which fails the commit.
 grumphp:
   tasks:
