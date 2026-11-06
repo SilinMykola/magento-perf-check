@@ -248,7 +248,7 @@ The finding message contains a short explanation and a link to the rule page.
 
 ## 8. Compatibility and quality
 
-- PHP 8.1+ (the minimum PHP for Magento 2.4.6). Analyzed code: Magento 2.4.4+ and Mage-OS.
+- PHP 8.1+ (the minimum PHP for Magento 2.4.6). Analyzed code: calibrated on Magento 2.4.9; also ran on `module-cms` of 2.4.0, 2.4.3 and 2.4.4 from its own clone (`docs/runs/older-magento.md`), Mage-OS.
 - **PHPStan 1.12 and 2.x.** Checked on a clean Magento 2.4.9: the project's `composer.json` `require-dev` contains `"phpstan/phpstan": "^1.9"`, and `composer.lock` has 1.12.33. An extension for PHPStan 2.x only will not install into a standard project without changing that constraint. In M0, decide in an ADR: support both major versions (shared rule code, adapters) or 1.12 as the minimum. Check the constraints in 2.4.4–2.4.8 and Mage-OS.
 - In the same 2.4.9 installation: `nikic/php-parser` v5.8.0, `magento/magento-coding-standard` 40, `squizlabs/php_codesniffer` 3.13.5.
 - Tests: for each rule, fixtures with positive **and negative** cases (looks like a violation but is not). For PHP through PHPStan's `RuleTestCase`, for XML golden tests.

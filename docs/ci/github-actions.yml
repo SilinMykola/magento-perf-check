@@ -25,6 +25,8 @@ jobs:
           php-version: '8.3'
           coverage: none
 
+      # The package is not on Packagist yet: until it is, clone the tool in a step here and
+      # replace vendor/bin/magento-perf-check with php <clone>/bin/magento-perf-check --project=.
       # repo.magento.com needs credentials: store them as the COMPOSER_AUTH secret.
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist

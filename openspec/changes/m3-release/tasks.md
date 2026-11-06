@@ -43,7 +43,7 @@
 ## 6. Publication (each step only after the owner's explicit OK)
 
 - [x] 6.1 Push; CI green
-- [ ] 6.2 Make the repository public
+- [x] 6.2 Make the repository public
 - [ ] 6.3 Submit to Packagist and enable the GitHub hook
 - [ ] 6.4 Tag `v0.1.0`, push the tag, create the GitHub release from the changelog entry
 - [ ] 6.5 Repeat the install check from Packagist, add the result to `docs/runs/m3-install.md`, add the Packagist badge

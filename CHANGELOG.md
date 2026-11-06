@@ -6,7 +6,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-10-24
+## [0.1.0] - 2026-11-06
 
 First release.
 

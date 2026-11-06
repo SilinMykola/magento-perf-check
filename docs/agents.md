@@ -1,5 +1,7 @@
 # Coding agents
 
+The package is not on Packagist yet, so `vendor/bin/magento-perf-check` below works only once it is. Until then, clone the tool and use `php /path/to/magento-perf-check/bin/magento-perf-check --project=.` from the Magento project root. Copy the skill from the `resources/skill/magento-perf-check` folder of that clone.
+
 Two ways to let a coding agent run the tool and act on its findings.
 
 ## Snippet for AGENTS.md
