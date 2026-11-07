@@ -3,4 +3,11 @@
     <type name="Magento\Framework\View\Element\AbstractBlock">
         <plugin name="acme_in_admin" type="Acme\Render\InAdmin"/>
     </type>
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="admin_only" xsi:type="object">Acme\Batch\AdminOnly</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

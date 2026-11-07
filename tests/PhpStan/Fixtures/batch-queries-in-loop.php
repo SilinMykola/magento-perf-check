@@ -134,4 +134,14 @@ final class Example
             $resource->load($product, $id);
         }
     }
+
+    /**
+     * @param list<\Magento\Catalog\Api\Data\ProductInterface> $products
+     */
+    public function categoryIdsFromRepositoryList(array $products): void
+    {
+        foreach ($products as $product) {
+            $product->getCategoryIds();
+        }
+    }
 }

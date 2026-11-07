@@ -34,6 +34,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     /** Set on a call that builds a product URL, after addUrlRewrite() in the same function. */
     public const URL_REWRITE_ADDED = 'magentoPerfUrlRewriteAdded';
 
+    /** Set on a foreach over a collection that the same function created. */
+    public const CREATED_HERE = 'magentoPerfCollectionCreatedHere';
+
     /** Uses that need the rows themselves, not just their number. */
     private const ROW_USING_METHODS = ['load', 'getitems', 'getfirstitem', 'getlastitem', 'getcolumnvalues'];
 
@@ -79,7 +82,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             if ($this->rootKey($node->expr) !== $key) {
                 unset($this->frames[count($this->frames) - 1][$key]);
             }
-            foreach ([self::LIMITED, self::UNIQUE_FILTER] as $fact) {
+            foreach ([self::LIMITED, self::UNIQUE_FILTER, self::CREATED_HERE] as $fact) {
                 if ($this->chainHas($node->expr, $fact)) {
                     $this->record($key, $fact);
                 }
@@ -105,7 +108,20 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         }
 
         if ($node instanceof Stmt\Foreach_) {
-            $this->record($this->rootKey($node->expr), self::LOADED);
+            $key = $this->rootKey($node->expr);
+            if ($this->isTheRootItself($node->expr)) {
+                $this->mark($node, $key);
+            }
+            foreach ([self::LIMITED, self::UNIQUE_FILTER, self::CREATED_HERE] as $fact) {
+                if ($this->chainHas($node->expr, $fact)) {
+                    $node->setAttribute($fact, true);
+                }
+            }
+            $this->record($key, self::LOADED);
+            // The loop assigns a new value to this variable.
+            if ($node->valueVar instanceof Expr\Variable && is_string($node->valueVar->name)) {
+                unset($this->frames[count($this->frames) - 1]['$' . $node->valueVar->name]);
+            }
 
             return null;
         }
@@ -238,6 +254,19 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         }
     }
 
+    /**
+     * What is known about "$order" says nothing about "$order->getItemsCollection()", only about
+     * "$collection" and "$collection->getItems()".
+     */
+    private function isTheRootItself(Expr $expr): bool
+    {
+        if ($expr instanceof Expr\MethodCall && $expr->name instanceof Node\Identifier && $expr->name->toLowerString() === 'getitems') {
+            $expr = $expr->var;
+        }
+
+        return !$expr instanceof Expr\MethodCall;
+    }
+
     private function chainHas(Expr $expr, string $fact): bool
     {
         while ($expr instanceof Expr\MethodCall) {
@@ -257,6 +286,10 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         }
         $name = $call->name->toLowerString();
 
+        if ($fact === self::CREATED_HERE) {
+            // A method of this class may set a limit of its own; a factory cannot.
+            return $name === 'create' && !($call->var instanceof Expr\Variable && $call->var->name === 'this');
+        }
         if ($fact === self::LIMITED) {
             // setPageSize(), setPage(), or limit()/limitPage() on getSelect()
             return $name === 'setpagesize' || $name === 'setpage'

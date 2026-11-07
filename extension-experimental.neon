@@ -19,3 +19,5 @@ rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\AttributeTextInLoopRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\SelectAllAttributesRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\HotRenderPluginRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\EagerCommandDependencyRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\UnpagedBatchCollectionRule

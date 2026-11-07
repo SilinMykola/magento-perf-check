@@ -32,6 +32,7 @@ final class AttributeTextInLoopRuleTest extends RuleTestCase
             [$message('getAttributeText'), 76],
             [$message('getOptionText'), 77],
             [$message('getAttributeText'), 80],
+            [$message('getAttributeText'), 144],
         ]);
     }
 }

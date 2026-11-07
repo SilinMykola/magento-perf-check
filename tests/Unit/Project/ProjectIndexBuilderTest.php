@@ -75,6 +75,24 @@ final class ProjectIndexBuilderTest extends TestCase
         self::assertSame([], $index->pluginTargetsOf('Acme\Render\DisabledByName'));
     }
 
+    public function testConsoleCommandsAndCronJobs(): void
+    {
+        $index = $this->index();
+
+        self::assertTrue($index->isConsoleCommand('Acme\Batch\Sync'));
+        self::assertTrue($index->isConsoleCommand('\Acme\Batch\BaseOfVirtual'));
+        self::assertTrue($index->isConsoleCommand('Acme\Batch\OnTheClass'));
+        self::assertFalse($index->isConsoleCommand('Acme\Batch\AdminOnly'));
+        self::assertFalse($index->isConsoleCommand('Acme\Batch\Unregistered'));
+        self::assertTrue($index->isCronJob('Acme\Batch\NightlyJob'));
+        self::assertTrue($index->isCronJob('Acme\Batch\BaseOfVirtualJob'));
+        self::assertFalse($index->isCronJob('Acme\Batch\Sync'));
+
+        $cached = $this->index();
+        self::assertTrue($cached->isConsoleCommand('Acme\Batch\Sync'));
+        self::assertTrue($cached->isCronJob('Acme\Batch\NightlyJob'));
+    }
+
     public function testAListCountsForEverythingBelowIt(): void
     {
         $schema = tempnam(sys_get_temp_dir(), 'mpr-schema');

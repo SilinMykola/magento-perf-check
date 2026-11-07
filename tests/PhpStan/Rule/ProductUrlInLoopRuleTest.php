@@ -36,6 +36,7 @@ final class ProductUrlInLoopRuleTest extends RuleTestCase
             [$message('getUrlInStore'), 23],
             [$message('getProductUrl'), 26],
             [$message('getUrlInStore'), 29],
+            [$message('getProductUrl'), 143],
         ]);
     }
 }

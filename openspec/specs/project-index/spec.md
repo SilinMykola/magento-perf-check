@@ -48,3 +48,18 @@ When an XML file behind the project index changes, PHP findings that depend on t
 #### Scenario: Proxy added and removed
 - **WHEN** a class reports P-DI-01, then `di.xml` gets a Proxy for that argument, then the Proxy is removed again
 - **THEN** the second run reports nothing and the third reports P-DI-01
+
+### Requirement: Console commands and cron jobs
+The index SHALL know the classes in the `commands` argument of `CommandList` or `CommandListInterface` in a global `di.xml`, and the `instance` classes of jobs in `crontab.xml`. A virtual type SHALL count as the class it is based on.
+
+#### Scenario: Command
+- **WHEN** `etc/di.xml` adds `Acme\Promo\Console\Sync` to the `commands` of `CommandListInterface`
+- **THEN** the index reports that class as a console command
+
+#### Scenario: Area di.xml
+- **WHEN** only `etc/adminhtml/di.xml` adds the command
+- **THEN** the index does not report it
+
+#### Scenario: Cron job
+- **WHEN** `etc/crontab.xml` has a job with `instance="Acme\Promo\Cron\Sync"`
+- **THEN** the index reports that class as a cron job

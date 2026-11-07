@@ -43,7 +43,8 @@ final class CategoryIdsInLoopRule implements Rule
             || !$node->name instanceof Node\Identifier
             || $node->name->toLowerString() !== 'getcategoryids'
             || $node->getAttribute(CollectionStateVisitor::CATEGORY_IDS_ADDED) === true
-            || !$this->types->isProduct($node, $scope)
+            // ProductRepository::getList() calls addCategoryIds(), and it returns the interface.
+            || !$this->types->isProduct($node, $scope, MagentoTypes::PRODUCT_MODEL)
         ) {
             return [];
         }

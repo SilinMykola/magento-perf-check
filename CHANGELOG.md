@@ -8,6 +8,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Added
 
+- Experimental rules, off by default: P-DI-04 at `info`, on a console command that every `bin/magento` run creates with its dependencies; P-COL-04 at `warning`, on a collection walked without a page size in a cron job or console command.
 - Experimental rules, off by default: P-LOOP-04, P-LOOP-06 at `warning`, on a product URL or an attribute option text inside a loop; P-COL-03, X-PLG-02 at `info`, on `addAttributeToSelect('*')` and on a plugin that runs for every rendered block.
 - Experimental rules, off by default: X-GQL-02 at `warning`, on a database query in a resolver of a field on a type returned inside a list; P-FPC-03 at `error`, on a value specific to a visitor or a moment in the HTTP context.
 - New rules in the default set, which can change a CI result: X-LAY-03 at `error`, on `cacheable="false"` in the `default`, `catalog_*` and `cms_*` handles; P-LOOP-05, P-LOOP-09, P-LOOP-10, P-IDX-01 and, back from experimental, P-PLG-01 at `warning`; X-DB-02, X-AREA-01 and X-GQL-03 at `info`. **X-LAY-03 can fail a CI run that passed before.**
@@ -31,6 +32,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Changed
 
+- The experimental P-LOOP-04 and P-LOOP-06 recognize a product typed `ProductInterface`, as a repository returns it. On 56 modules this adds 2 P-LOOP-04 findings.
 - P-LOOP-02 does not report a collection that is created and limited in a `while`, `do` or `for` loop: that is paging. A `foreach`, a `for` over `count()` and a limit of one row are still reported.
 - P-LOOP-09 also counts a `for` with `count()` or `sizeof()` in its condition as a loop over items. **This can change a CI result.**
 - Nothing to analyze is an error, exit code 2, instead of a clean run: a project without `app/code` and `app/design`, or paths with no PHP, template or XML file. **This can change a CI result.**

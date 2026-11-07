@@ -24,7 +24,8 @@ final class MagentoTypes
 
     private const REPOSITORY_SUFFIX = 'RepositoryInterface';
     private const DATA_OBJECT = 'Magento\Framework\DataObject';
-    private const PRODUCT = 'Magento\Catalog\Model\Product';
+    public const PRODUCT_MODEL = 'Magento\Catalog\Model\Product';
+    private const PRODUCT = 'Magento\Catalog\Api\Data\ProductInterface';
     private const PRODUCT_COLLECTION = 'Magento\Catalog\Model\ResourceModel\Product\Collection';
     private const SEARCH_CRITERIA = 'Magento\Framework\Api\SearchCriteriaInterface';
 
@@ -52,16 +53,17 @@ final class MagentoTypes
     }
 
     /**
-     * True when the receiver of $call is a product. Collections have no item type of their own, so
+     * True when the receiver of $call is a product, also when a repository returned it as the
+     * interface, which does not declare the costly methods. Collections have no item type of their own, so
      * the loop variable of "foreach ($productCollection as $product)" is mixed or a DataObject:
      * only then the iterated collection tells what it is.
      */
-    public function isProduct(MethodCall $call, Scope $scope): bool
+    public function isProduct(MethodCall $call, Scope $scope, string $class = self::PRODUCT): bool
     {
         $type = $scope->getType($call->var);
         $classes = $type->getObjectClassNames();
         if ($classes !== [] && $classes !== [self::DATA_OBJECT]) {
-            return $this->subtypeOf($type, self::PRODUCT) !== null;
+            return $this->subtypeOf($type, $class) !== null;
         }
         $iterated = $call->getAttribute(LoopContextVisitor::ITERATED_EXPRESSION);
         if ($iterated instanceof MethodCall && $iterated->name instanceof Node\Identifier && $iterated->name->toLowerString() === 'getitems') {

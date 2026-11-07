@@ -235,3 +235,26 @@ The six experimental rules added in this work, on all 56 modules:
 
 These samples are too small to move any rule to the default set. Both X-GQL-02 false positives come from putting ScandiPWA's quote module and Mollie in one project, which this scratch project does and few real ones do. The grader doubted the TP grades of two P-LOOP-04 findings, on cart and checkout pages, because carts are small, and that of P-LOOP-06, because the attribute comes from configuration.
 
+## Rules added after these runs
+
+P-DI-04 and P-COL-04 on the same 56 modules, graded by one grader who did not write them, reading the code once:
+
+| Rule | Findings | TP | TP-low | FP |
+|---|---|---|---|---|
+| P-DI-04 | 25 | 10 | 15 | 0 |
+| P-COL-04 | 5 | 2 | 3 | 0 |
+
+The grader counted a dependency as costly when its constructor does real work or pulls a large object graph, and doubted 7 of the 12 TP grades. Four P-DI-04 findings are TP only for the size of the graph, in `Fastly\Cdn`, and four only because a constructor calls `getConnection()`, which builds the adapter without running a query. If neither counts, P-DI-04 has 2 TP. Both P-COL-04 TP grades are category walks in one module, and the grader doubted that many stores have enough categories for this to matter. Row counts and construction times were not measured. The precision of these rules can look high because of what they say: a command is created on every run whether or not that costs anything.
+
+The modules in this scratch project are not enabled in its `app/etc/config.php`. The grader treated that as a property of the scratch project and graded them as a store that uses them.
+
+Three planned rules were looked at and not built, each on a rough syntax count of the same modules:
+
+| Rule | Count | Why not |
+|---|---|---|
+| P-EXT-01 | 0 of 29 files with an HTTP client are controllers, blocks, view models, observers or plugins | As planned it finds nothing, and the Adobe page it cites only lists third-party API calls among what to analyze |
+| P-FPC-07 | 1 frontend block with a cache lifetime, and it has `getCacheKeyInfo()` | Too rare to measure |
+| P-LOOP-08 | About 102 `in_array()` calls with a variable array inside a `foreach` | The rule cannot tell how large the array is |
+
+Giving untyped `protected` properties a type from the constructor was also measured and not built. Of about 4800 properties that constructors assign from class-typed parameters, 112 are `protected` with no type or `@var`. Adding `@var` to them in a copy gave 6 more findings across all rules, 5 of them in one module.
+

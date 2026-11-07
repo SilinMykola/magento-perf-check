@@ -48,6 +48,8 @@ foreach ($collection as $product) {
 - Products that already carry `category_ids`, because another method called `addCategoryIds()`, are reported. Suppress with a reason.
 - Loops over one or two products cost little.
 
+A product typed `ProductInterface` is not reported: [`ProductRepository::getList()`](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Catalog/Model/ProductRepository.php#L716-L721) returns that type after calling `addCategoryIds()`. A product from `getById()` has the same type, so its query goes unreported.
+
 The rule also accepts `addCategoryIds()` called before `load()`, which does nothing, so that mistake goes unreported.
 
 ## Basis

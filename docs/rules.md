@@ -1,6 +1,6 @@
 # Rules
 
-33 rules in the default set and 10 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+33 rules in the default set and 12 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -46,7 +46,7 @@ Severity is the default; change it per rule in [`magento-perf-check.neon`](confi
 
 ## Experimental (off by default)
 
-Calibration measured these below their precision threshold. Enable one with `enabled: true` in `magento-perf-check.neon`; with PHPStan directly, also include `extension-experimental.neon`.
+These are not in the default set: calibration measured them below their precision threshold, or they have too few graded findings to decide. Enable one with `enabled: true` in `magento-perf-check.neon`; with PHPStan directly, also include `extension-experimental.neon`.
 
 | ID | Finds | Severity | Sources |
 |---|---|---|---|
@@ -60,6 +60,8 @@ Calibration measured these below their precision threshold. Enable one with `ena
 | [P-LOOP-06](rules/P-LOOP-06.md) | getAttributeText() or the table source getOptionText() inside a loop | warning | B |
 | [P-COL-03](rules/P-COL-03.md) | addAttributeToSelect('*') on an EAV collection | info | B |
 | [X-PLG-02](rules/X-PLG-02.md) | Plugin on a method that runs for every rendered block or layout element | info | A, B |
+| [P-DI-04](rules/P-DI-04.md) | Console command in CommandList with dependencies that are not lazy | info | A, B |
+| [P-COL-04](rules/P-COL-04.md) | Collection walked without a page size in a cron job or console command | warning | B |
 
 ## Planned
 

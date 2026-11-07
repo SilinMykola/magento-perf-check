@@ -101,6 +101,14 @@ return [
         $b('lib/internal/Magento/Framework/View/Element/AbstractBlock.php#L666-L692', 'toHtml() runs once per rendered block. That a plugin here is slow is an inference from how often it runs.'),
         $b('lib/internal/Magento/Framework/View/Layout.php#L555-L571', 'renderElement() runs once per layout element.'),
     ], ['magentoPerf.hotRenderPlugin' => null]),
+    new RuleDefinition('P-DI-04', 'Console command in CommandList with dependencies that are not lazy', Severity::Info, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/development/components/proxies', 'Constructor injection instantiates a chain of objects, which costs when a resource-intensive one is not needed; a real instance behind a proxy is created only when one of its methods is called. The page does not mention console commands.'),
+        $b('lib/internal/Magento/Framework/Console/Cli.php#L196-L232', 'Every run on an installed store creates CommandListInterface, and so the objects in its commands argument. That their dependencies are costly is not measured.'),
+    ], ['magentoPerf.commandWithoutProxy' => null]),
+    new RuleDefinition('P-COL-04', 'Collection walked without a page size in a cron job or console command', Severity::Warning, RuleStatus::Experimental, [
+        $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L813-L836', 'loadWithFilter(), which load() runs, adds every fetched row to the collection.'),
+        $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L756-L763', '_renderLimit() adds a LIMIT only when a page size is set.'),
+    ], ['magentoPerf.unpagedBatchCollection' => null]),
     new RuleDefinition('P-FPC-03', 'Value specific to a visitor or a moment in the HTTP context', Severity::Error, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Context variables should not be specific to individual users", because each value yields a separate cached copy.'),
         $b('lib/internal/Magento/Framework/App/Http/Context.php#L107-L135', 'Every non-default value goes into the vary string of the page cache key.'),

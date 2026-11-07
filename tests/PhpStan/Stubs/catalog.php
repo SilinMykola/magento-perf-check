@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 namespace Magento\Catalog\Model {
-    class Product extends \Magento\Framework\Model\AbstractModel
+    class Product extends \Magento\Framework\Model\AbstractModel implements \Magento\Catalog\Api\Data\ProductInterface
     {
         public function getSku(): string
         {
@@ -247,6 +247,10 @@ namespace Magento\Catalog\Api {
 }
 
 namespace Magento\Catalog\Api\Data {
+    interface ProductInterface
+    {
+    }
+
     interface ProductSearchResultsInterface
     {
         /** @return list<\Magento\Catalog\Model\Product> */

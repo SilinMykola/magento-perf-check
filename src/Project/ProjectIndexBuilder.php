@@ -19,9 +19,11 @@ final class ProjectIndexBuilder
 
     /** Indexed files, relative to a module's etc/ directory; * is one area directory. */
     /** Part of the cache key: raise it when the same files start to give a different index. */
-    private const INDEX_VERSION = 3;
+    private const INDEX_VERSION = 4;
 
-    private const FILES = ['di.xml', '*/di.xml', 'events.xml', '*/events.xml', 'mview.xml', 'db_schema.xml', 'schema.graphqls'];
+    private const FILES = ['di.xml', '*/di.xml', 'events.xml', '*/events.xml', 'mview.xml', 'db_schema.xml', 'schema.graphqls', 'crontab.xml'];
+
+    private const COMMAND_LISTS = ['magento\\framework\\console\\commandlist', 'magento\\framework\\console\\commandlistinterface'];
 
     public function __construct(private readonly ?string $cacheDir = null)
     {
@@ -170,6 +172,8 @@ final class ProjectIndexBuilder
         $schemas = [];
         $pluginsByName = [];
         $disabledPlugins = [];
+        $commands = [];
+        $cronJobs = [];
 
         foreach ($files as $file) {
             if ($file['name'] === 'schema.graphqls') {
@@ -206,6 +210,20 @@ final class ProjectIndexBuilder
                             if ($plugin->getAttribute('disabled') === 'true') {
                                 $disabledPlugins[$name][$plugin->getAttribute('name')] = true;
                             }
+                        }
+                        if ($file['area'] === 'global' && in_array($name, self::COMMAND_LISTS, true)) {
+                            foreach ($this->elements($xpath, 'arguments/argument[@name="commands"]/item', $type) as $item) {
+                                if ($this->xsiType($item) === 'object') {
+                                    $commands[ProjectIndex::normalizeClass($item->textContent)] = true;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case 'crontab.xml':
+                    foreach ($this->elements($xpath, '/config/group/job') as $job) {
+                        if ($job->getAttribute('instance') !== '') {
+                            $cronJobs[ProjectIndex::normalizeClass($job->getAttribute('instance'))] = true;
                         }
                     }
                     break;
@@ -259,7 +277,14 @@ final class ProjectIndexBuilder
             $listFields[self::baseOfVirtualType($class, $virtualTypes)] ??= $field;
         }
 
-        return new ProjectIndex($moduleCount, $proxies, $plugins, $observers, $views, $tables, $listFields, $pluginTargets);
+        foreach ([&$commands, &$cronJobs] as &$classes) {
+            foreach (array_keys($classes) as $class) {
+                $classes[self::baseOfVirtualType($class, $virtualTypes)] = true;
+            }
+        }
+        unset($classes);
+
+        return new ProjectIndex($moduleCount, $proxies, $plugins, $observers, $views, $tables, $listFields, $pluginTargets, $commands, $cronJobs);
     }
 
     /**

@@ -133,3 +133,15 @@ final class InClosure
         }
     }
 }
+
+final class ProductInterfaces
+{
+    /** @param list<\Magento\Catalog\Api\Data\ProductInterface> $products */
+    public function reported(array $products): void
+    {
+        foreach ($products as $product) {
+            $product->getProductUrl();
+            $product->getAttributeText('color');
+        }
+    }
+}
