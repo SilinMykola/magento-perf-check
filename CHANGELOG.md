@@ -6,6 +6,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-07
+
 ### Added
 
 - Experimental rules, off by default: P-DI-04 at `info`, on a console command that every `bin/magento` run creates with its dependencies; P-COL-04 at `warning`, on a collection walked without a page size in a cron job or console command.
@@ -62,6 +64,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 - Analysis runs the project's autoloader, and with it module code: do not analyze untrusted code outside a sandbox.
 - The README lists the default-set rules that look weak on a small sample, and says each finding had one grader.
+- Two checks on modules the rules were not tuned on: [15 modules](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out.md) and [22 more](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out-2.md). Most findings are correct and few matter in practice.
 
 ## [0.1.1] - 2026-11-06
 
@@ -88,6 +91,7 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/SilinMykola/magento-perf-check/releases/tag/v0.1.0
