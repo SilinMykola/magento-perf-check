@@ -12,6 +12,7 @@ A `getFirstItem()` call on a database collection (a subtype of `Magento\Framewor
 
 - **A limit:** `setPageSize()`, `setPage()`, `getSelect()->limit()` or `getSelect()->limitPage()`, or a comparison of `getSize()` or `getTotalCount()` with `1`. `setCurPage()` alone does not count: without a page size it adds no `LIMIT`.
 - **An earlier load:** `load()`, `getItems()`, `count()`, `getFirstItem()` or a `foreach` over the collection. The items are already in memory, so `getFirstItem()` runs no query.
+- **Rows used anyway:** the same function, before or after the call, iterates the collection or calls `load()`, `getItems()`, `getLastItem()` or `getColumnValues()` on it. Adding a limit would then drop rows the code needs.
 - **A unique-key filter:** `addIdFilter()`, `setIdFilter()`, or `addFieldToFilter()`/`addAttributeToFilter()` on `entity_id`, `sku`, `increment_id` or `username` (optionally with a table alias such as `main_table.`), with a plain value or an `['eq' => ...]` condition. At most one row matches.
 
 ## Why it hurts performance

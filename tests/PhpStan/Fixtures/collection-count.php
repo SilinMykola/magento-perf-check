@@ -66,6 +66,21 @@ final class Example
     }
 }
 
+final class CountInClosure
+{
+    public function iteratedOutside(Collection $collection): int
+    {
+        $count = static function () use ($collection): int {
+            return count($collection);
+        };
+        foreach ($collection as $item) {
+            $item->getId();
+        }
+
+        return $count();
+    }
+}
+
 final class Memoized
 {
     private ?Collection $rows = null;

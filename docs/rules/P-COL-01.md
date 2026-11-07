@@ -8,7 +8,7 @@
 
 ## What it catches
 
-`count($collection)` or `sizeof($collection)` on a database collection (a subtype of `Magento\Framework\Data\Collection\AbstractDb`) whose rows the function does not use anyway. The rule stays silent when the same function, before or after the count, iterates the collection or calls `load()`, `getItems()`, `getFirstItem()` or `getLastItem()` on it: then the rows are loaded either way, and counting them is free. A second `count()` alone does not count as using the rows.
+`count($collection)` or `sizeof($collection)` on a database collection (a subtype of `Magento\Framework\Data\Collection\AbstractDb`) whose rows the function does not use anyway. The rule stays silent when the same function, before or after the count, iterates the collection or calls `load()`, `getItems()`, `getFirstItem()`, `getLastItem()` or `getColumnValues()` on it: then the rows are loaded either way, and counting them is free. A second `count()` alone does not count as using the rows.
 
 ## Why it hurts performance
 

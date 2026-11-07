@@ -11,6 +11,7 @@
             <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
         </arguments>
     </virtualType>
+    <virtualType name="Acme\Promo\Resolver\VirtualBrand" type="Acme\Promo\Resolver\BaseOfVirtualBrand"/>
     <type name="Magento\Checkout\Model\Cart">
         <plugin name="acme_cart" type="Acme\Promo\Plugin\CartPlugin"/>
         <plugin name="acme_price" type="Acme\Promo\Model\PriceModifier"/>

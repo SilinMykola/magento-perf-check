@@ -18,7 +18,10 @@ final class ProjectIndexBuilder
     private const XSI = 'http://www.w3.org/2001/XMLSchema-instance';
 
     /** Indexed files, relative to a module's etc/ directory; * is one area directory. */
-    private const FILES = ['di.xml', '*/di.xml', 'events.xml', '*/events.xml', 'mview.xml', 'db_schema.xml'];
+    /** Part of the cache key: raise it when the same files start to give a different index. */
+    private const INDEX_VERSION = 2;
+
+    private const FILES = ['di.xml', '*/di.xml', 'events.xml', '*/events.xml', 'mview.xml', 'db_schema.xml', 'schema.graphqls'];
 
     public function __construct(private readonly ?string $cacheDir = null)
     {
@@ -65,8 +68,13 @@ final class ProjectIndexBuilder
                 continue;
             }
             $root = realpath($projectRoot . '/vendor/composer/' . $package['install-path']);
-            if ($root !== false && is_file($root . '/etc/module.xml')) {
-                $roots[$root] = $root . '/etc/module.xml';
+            if ($root === false) {
+                continue;
+            }
+            foreach ([$root, $root . '/src'] as $candidate) {
+                if (is_file($candidate . '/etc/module.xml')) {
+                    $roots[$candidate] = $candidate . '/etc/module.xml';
+                }
             }
         }
 
@@ -117,7 +125,7 @@ final class ProjectIndexBuilder
      */
     private function fingerprintOf(array $files): string
     {
-        $fingerprint = '';
+        $fingerprint = self::INDEX_VERSION . "\n";
         foreach ($files as $file) {
             $fingerprint .= $file['path'] . '|' . (int) @filesize($file['path']) . '|' . (int) @filemtime($file['path']) . "\n";
         }
@@ -159,8 +167,13 @@ final class ProjectIndexBuilder
         $tables = [];
         $virtualTypes = [];
         $virtualProxies = [];
+        $schemas = [];
 
         foreach ($files as $file) {
+            if ($file['name'] === 'schema.graphqls') {
+                $schemas[] = $file['path'];
+                continue;
+            }
             $xpath = $this->load($file['path']);
             if ($xpath === null) {
                 continue;
@@ -218,18 +231,32 @@ final class ProjectIndexBuilder
 
         // A Proxy configured on a virtual type covers the class it is based on.
         foreach ($virtualProxies as $virtualType => $arguments) {
-            $class = $virtualType;
-            $seen = [];
-            while (isset($virtualTypes[$class]) && !isset($seen[$class])) {
-                $seen[$class] = true;
-                $class = $virtualTypes[$class];
-            }
+            $class = self::baseOfVirtualType($virtualType, $virtualTypes);
             foreach ($arguments as $argument) {
                 $proxies[$class][$argument] = true;
             }
         }
 
-        return new ProjectIndex($moduleCount, $proxies, $plugins, $observers, $views, $tables);
+        $listFields = ListFieldResolvers::fromSchemas($schemas);
+        foreach ($listFields as $class => $field) {
+            $listFields[self::baseOfVirtualType($class, $virtualTypes)] ??= $field;
+        }
+
+        return new ProjectIndex($moduleCount, $proxies, $plugins, $observers, $views, $tables, $listFields);
+    }
+
+    /**
+     * @param array<string, string> $virtualTypes
+     */
+    private static function baseOfVirtualType(string $class, array $virtualTypes): string
+    {
+        $seen = [];
+        while (isset($virtualTypes[$class]) && !isset($seen[$class])) {
+            $seen[$class] = true;
+            $class = $virtualTypes[$class];
+        }
+
+        return $class;
     }
 
     private function load(string $path): ?DOMXPath

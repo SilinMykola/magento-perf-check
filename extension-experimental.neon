@@ -12,3 +12,6 @@ services:
 rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\ConstructorWorkRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\SessionDataInBlockRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\ResolverQueryRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\ResolverCollectionLoopRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\UserValueInHttpContextRule

@@ -53,6 +53,39 @@ final class SchemaPreprocessorTest extends TestCase
         self::assertStringContainsString('promoTags', $lines[19]);
     }
 
+    public function testCommentsAndExtendsParseWithLinesKept(): void
+    {
+        $schema = "// @codingStandardsIgnoreFile\n/**\n * License\n */\nextends type Query {\n    a: String // note\n}\n";
+
+        $normalized = SchemaPreprocessor::normalize($schema);
+
+        self::assertCount(1, Parser::parse($normalized)->definitions);
+        self::assertSame(substr_count($schema, "\n"), substr_count($normalized, "\n"));
+        self::assertStringStartsWith('extend type Query', explode("\n", $normalized)[4]);
+    }
+
+    public function testCommentCharactersInStringsAreKept(): void
+    {
+        $sdl = "# it's a \"comment /* here */\ntype Query {\n    a: String @doc(description: \"see https://example.com/* extends type\")\n}\n"
+            . "\"\"\"\nBlock // string\n\"\"\"\ntype B {\n    c: String @doc(description: \"a \\\" // b\")\n}\n";
+
+        self::assertSame($sdl, SchemaPreprocessor::normalize($sdl));
+    }
+
+    public function testEscapedQuotesInABlockStringDoNotEndIt(): void
+    {
+        $sdl = "\"\"\"\na \\\"\"\" b // c\n\"\"\"\ntype Query {\n    a: String\n}\n";
+
+        self::assertSame($sdl, SchemaPreprocessor::normalize($sdl));
+    }
+
+    public function testALongStringOnOneLineIsKept(): void
+    {
+        $sdl = 'type Query { a: String @doc(description: "' . str_repeat('x', 1000000) . '") }';
+
+        self::assertSame($sdl, SchemaPreprocessor::normalize($sdl));
+    }
+
     public function testPlainSdlIsUnchanged(): void
     {
         $sdl = "type Query {\n    a: String\n}\n\ntype B implements C & D {\n    e: Int\n}\n";

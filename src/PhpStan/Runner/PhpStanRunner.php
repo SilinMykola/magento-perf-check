@@ -60,8 +60,11 @@ final class PhpStanRunner
         // and the analysis runs again; their parse errors stay in the result as notices.
         $testPatterns = [];
         if (!$includeTests) {
+            $testPaths = array_filter($paths, TestCode::contains(...));
             foreach ($paths as $path) {
-                if (!TestCode::contains($path) && is_dir($projectRoot . '/' . $path)) {
+                // A test path given next to its parent is analyzed, so the parent cannot exclude test code.
+                $coversTestPath = array_filter($testPaths, static fn (string $test): bool => str_starts_with($test, rtrim($path, '/') . '/') || $path === '.');
+                if (!TestCode::contains($path) && $coversTestPath === [] && is_dir($projectRoot . '/' . $path)) {
                     array_push($testPatterns, ...TestCode::excludePatterns($projectRoot . '/' . $path));
                 }
             }
@@ -72,7 +75,7 @@ final class PhpStanRunner
         for ($pass = 1; $pass <= self::MAX_PASSES; ++$pass) {
             $config = $this->writeConfig(
                 $workDir,
-                $this->config($projectRoot, $absolutePaths, [...$testPatterns, ...$excluded], $workDir . '/cache', $indexFingerprint),
+                $this->config($projectRoot, $absolutePaths, $testPatterns, $excluded, $workDir . '/cache', $indexFingerprint),
             );
             $result = $this->analyse($config, $projectRoot, $memoryLimit);
             $unparsable = array_diff(array_keys($result['unparsable']), $excluded);
@@ -165,9 +168,10 @@ final class PhpStanRunner
 
     /**
      * @param list<string> $paths
-     * @param list<string> $excludePaths test-code patterns and files PHPStan cannot parse
+     * @param list<string> $testPatterns test code, left out of symbol discovery too: a stub of a core class in a module's Test directory must not replace the real class for all other code
+     * @param list<string> $unparsable files PHPStan cannot parse
      */
-    private function config(string $projectRoot, array $paths, array $excludePaths, string $cacheDir, string $indexFingerprint): string
+    private function config(string $projectRoot, array $paths, array $testPatterns, array $unparsable, string $cacheDir, string $indexFingerprint): string
     {
         $includes = [];
         foreach (['extension.neon', 'extension-experimental.neon'] as $file) {
@@ -189,7 +193,7 @@ final class PhpStanRunner
             // Templates are analyzed too (T-01 and every rule that applies to code in them).
             'fileExtensions' => ['php', 'phtml'],
             'paths' => $paths,
-            'excludePaths' => ['analyse' => $excludePaths],
+            'excludePaths' => ['analyseAndScan' => $testPatterns, 'analyse' => $unparsable],
             'bootstrapFiles' => [$projectRoot . '/vendor/autoload.php'],
             'scanDirectories' => $scanDirectories,
             'tmpDir' => $cacheDir,
@@ -303,7 +307,7 @@ final class PhpStanRunner
                 if ($match !== null) {
                     $findings[] = new Finding($match[0]->id, $match[1], $relative, $line, $text);
                 } elseif (str_starts_with($text, NoticePrefix::UNTYPED_RECEIVER)) {
-                    $notices[] = new Notice('untyped-receiver', $text, $relative, $line);
+                    $notices[] = new Notice(Notice::SOURCE_UNTYPED_RECEIVER, $text, $relative, $line);
                 } else {
                     $notices[] = new Notice('phpstan', $text, $relative, $line);
                 }

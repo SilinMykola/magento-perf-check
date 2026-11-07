@@ -25,10 +25,10 @@ final class ModelLoadInLoopRule implements Rule
     public const IDENTIFIER = 'magentoPerf.loopModelLoad';
 
     /** Currency::load() only sets the currency code. */
-    private const LOAD_WITHOUT_QUERY = ['Magento\Directory\Model\Currency'];
+    public const LOAD_WITHOUT_QUERY = ['Magento\Directory\Model\Currency'];
 
     /** These read cached configuration (the "scopes" section), not the database. */
-    private const REPOSITORIES_WITHOUT_QUERY = [
+    public const REPOSITORIES_WITHOUT_QUERY = [
         'Magento\Store\Api\StoreRepositoryInterface',
         'Magento\Store\Api\WebsiteRepositoryInterface',
         'Magento\Store\Api\GroupRepositoryInterface',

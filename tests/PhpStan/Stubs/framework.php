@@ -57,6 +57,32 @@ namespace Magento\Framework\Model\ResourceModel\Db {
     }
 }
 
+namespace Magento\Eav\Model\Entity {
+    abstract class AbstractEntity
+    {
+        /**
+         * @param mixed $value
+         * @return $this
+         */
+        public function load(\Magento\Framework\Model\AbstractModel $object, $value)
+        {
+            return $this;
+        }
+
+        /** @return $this */
+        public function save(\Magento\Framework\Model\AbstractModel $object)
+        {
+            return $this;
+        }
+    }
+}
+
+namespace Magento\Customer\Model\ResourceModel {
+    class Customer extends \Magento\Eav\Model\Entity\AbstractEntity
+    {
+    }
+}
+
 namespace Magento\Framework\Data {
     /**
      * @implements \IteratorAggregate<int, \Magento\Framework\DataObject>
@@ -102,6 +128,12 @@ namespace Magento\Framework\Data {
         public function setPage(int $page, int $size)
         {
             return $this;
+        }
+
+        /** @return list<mixed> */
+        public function getColumnValues(string $column): array
+        {
+            return [];
         }
 
         /**

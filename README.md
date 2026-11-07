@@ -43,7 +43,7 @@ It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpsta
 
 ## What it finds
 
-37 rules: 33 on by default, 4 experimental. A few of them:
+39 rules: 33 on by default, 6 experimental. A few of them:
 
 - **Queries in loops:** `load()`, `getById()`, `getList()` or a new collection inside a loop (P-LOOP-01, P-LOOP-02, P-LOOP-09, P-LOOP-10).
 - **Full Page Cache breakers:** `cacheable="false"` on the default, catalog and CMS handles (X-LAY-03), state changes in GET-only controllers (P-FPC-06), no-cache headers on cacheable pages (P-FPC-05), cache flushes and `reindexAll()` from request code (P-FPC-09, P-FPC-10), ESI blocks on entity pages (X-LAY-02).
@@ -81,7 +81,7 @@ Precision is measured, not assumed. Every rule ran on Magento 2.4.9 core and the
 - rules that were right but mostly found low-impact cases were lowered to `warning` or `info`;
 - the remaining rules have fewer than 10 findings in the corpus, too few to measure, so they keep their severity. That includes P-LOOP-02 (`error`, 3 of 3 correct, all low impact) and X-EVT-02 (0 of 1). X-LAY-03, P-LOOP-05, P-COL-01 and X-GQL-03 have none.
 
-[Round 2](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-2.md) fixed the known false positives and measured again on the same corpus, so its figures are optimistic for code the rules have not seen. Each finding was graded once, by one grader, without a second review.
+[Round 2](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-2.md) fixed the known false positives and measured again on the same corpus, so its figures are optimistic for code the rules have not seen. [A separate check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out.md) on 15 other modules found 52 of 55 graded findings correct, of which 3 matter in practice: expect most findings to be correct and cheap to live with, not urgent. Each finding was graded once, by one grader, without a second review.
 
 Static analysis gives heuristics, not guarantees: treat each finding as a reason to check, not a verdict.
 

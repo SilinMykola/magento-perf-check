@@ -82,6 +82,13 @@ return [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 9.4: server-rendered HTML must not contain user-specific data.'),
         $b('app/code/Magento/Customer/Model/Layout/DepersonalizePlugin.php#L101-L112', 'On cacheable GET pages the customer session is cleared after layout generation.'),
     ], ['magentoPerf.sessionDataInBlock' => null]),
+    new RuleDefinition('P-FPC-03', 'Value specific to a visitor or a moment in the HTTP context', Severity::Error, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Context variables should not be specific to individual users", because each value yields a separate cached copy.'),
+        $b('lib/internal/Magento/Framework/App/Http/Context.php#L107-L135', 'Every non-default value goes into the vary string of the page cache key.'),
+    ], ['magentoPerf.httpContextUserValue' => null]),
+    new RuleDefinition('X-GQL-02', 'Database query in a resolver of a field on a type returned inside a list', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/webapi/graphql/develop/resolvers', '"We recommend using batch resolvers for queries because they improve performance"; loading related products per product "would be expensive performance-wise".'),
+    ], ['magentoPerf.resolverQuery' => null]),
     new RuleDefinition('P-FPC-05', 'No-cache or private headers on cacheable requests', Severity::Warning, RuleStatus::Default, [
         $b('app/code/Magento/PageCache/etc/varnish6.vcl#L191-L200', 'Varnish does not cache responses marked no-cache or private.'),
         $b('lib/internal/Magento/Framework/App/PageCache/Kernel.php#L154-L183', 'The built-in page cache stores only responses with public cache headers.'),

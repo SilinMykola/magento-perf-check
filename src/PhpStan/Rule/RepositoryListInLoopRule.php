@@ -12,7 +12,6 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
-use PHPStan\Type\Type;
 
 /**
  * P-LOOP-09: a repository getList(SearchCriteriaInterface) once per item of a foreach or
@@ -26,8 +25,6 @@ final class RepositoryListInLoopRule implements Rule
 {
     public const ID = 'P-LOOP-09';
     public const IDENTIFIER = 'magentoPerf.loopRepositoryList';
-
-    private const SEARCH_CRITERIA = 'Magento\Framework\Api\SearchCriteriaInterface';
 
     private readonly MagentoTypes $types;
 
@@ -51,7 +48,7 @@ final class RepositoryListInLoopRule implements Rule
         }
         $type = $scope->getType($node->var);
         $class = $this->types->repository($type);
-        if ($class === null || !$this->takesSearchCriteria($type, $scope)) {
+        if ($class === null || !MagentoTypes::takesSearchCriteria($type, $scope)) {
             return [];
         }
 
@@ -63,18 +60,5 @@ final class RepositoryListInLoopRule implements Rule
                 $class,
             ))->identifier(self::IDENTIFIER)->build(),
         ];
-    }
-
-    private function takesSearchCriteria(Type $type, Scope $scope): bool
-    {
-        $method = $scope->getMethodReflection($type, 'getList');
-        foreach ($method?->getVariants() ?? [] as $variant) {
-            $first = $variant->getParameters()[0] ?? null;
-            if ($first !== null && MagentoTypes::isObjectOf($first->getType(), self::SEARCH_CRITERIA)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

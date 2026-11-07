@@ -6,6 +6,7 @@ namespace Silin\MagentoPerfCheck\Cli;
 
 use Silin\MagentoPerfCheck\Baseline\Baseline;
 use Silin\MagentoPerfCheck\Config\ConfigLoader;
+use Silin\MagentoPerfCheck\PhpStan\Rule\GetFirstItemWithoutLimitRule;
 use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Report\AnalysisResult;
@@ -224,9 +225,14 @@ final class Application
             [$findings, $hidden, $unmatched] = [$filtered->findings, $filtered->hidden, $filtered->unmatched];
         }
 
+        // These notices tell how much P-COL-02 could not check, which means nothing while it is off.
+        $phpNotices = $config->isEnabled(GetFirstItemWithoutLimitRule::ID, $registry)
+            ? $php->notices
+            : array_values(array_filter($php->notices, static fn (Notice $notice): bool => $notice->source !== Notice::SOURCE_UNTYPED_RECEIVER));
+
         return new AnalysisResult(
             $findings,
-            [...$xml->notices, ...$php->notices],
+            [...$xml->notices, ...$phpNotices],
             $options->projectRoot,
             $paths,
             microtime(true) - $started,

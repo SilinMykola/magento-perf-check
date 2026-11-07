@@ -27,6 +27,10 @@ Handles still reported that are personal or private by design: `mailchimp_cart_l
 
 Observers on `controller_action_postdispatch_adminhtml_catalog_product_*` never fire: `Magento_Catalog`'s admin route id is `catalog`, and `FrontController` builds the event name from the route id (`module-cache-invalidate/etc/events.xml:43,46`, `Fastly/Cdn/etc/events.xml:59,62`). X-AREA-01 tells people to move them. A separate check that resolves `routes.xml` could report them as dead.
 
+## P-LOOP-03 and P-DI-06, from the check on other modules
+
+See [held-out.md](held-out.md): a save behind a check on an id in the loop, and classes that a library builds by name.
+
 ## Low impact
 
 These rules are correct but report mostly negligible cases; calibration lowers their severity through the impact share. A narrower scope could raise it again:

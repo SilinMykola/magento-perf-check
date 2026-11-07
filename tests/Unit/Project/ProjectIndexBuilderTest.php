@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\Tests\Unit\Project;
 
+use Silin\MagentoPerfCheck\Project\ListFieldResolvers;
 use Silin\MagentoPerfCheck\Project\ProjectIndex;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use PHPUnit\Framework\TestCase;
@@ -38,8 +39,65 @@ final class ProjectIndexBuilderTest extends TestCase
 
     public function testModulesFromAppCodeAndComposerPackages(): void
     {
-        // Acme_Core, Acme_Gift, Acme_Promo, Magento_Sales; acme/library is not a module.
-        self::assertSame(4, $this->index()->moduleCount);
+        // Acme_Core, Acme_Gift, Acme_Promo, Magento_Sales, Acme_SrcLayout (in src/); acme/library is not a module.
+        self::assertSame(5, $this->index()->moduleCount);
+    }
+
+    public function testResolversOfFieldsOnListTypes(): void
+    {
+        $index = $this->index();
+
+        self::assertSame('ProductInterface.brand', $index->listFieldResolvedBy('Acme\Promo\Resolver\Brand'));
+        self::assertSame('Shared.shared', $index->listFieldResolvedBy('Acme\Promo\Resolver\OnInterfaceOfListedType'));
+        self::assertSame('Leaf.title', $index->listFieldResolvedBy('Acme\Promo\Resolver\OnRecursiveType'));
+        self::assertSame('Inherited.value', $index->listFieldResolvedBy('Acme\Promo\Resolver\OnTypeOfInheritedField'));
+        self::assertSame('ProductInterface.brand_virtual', $index->listFieldResolvedBy('Acme\Promo\Resolver\BaseOfVirtualBrand'));
+        self::assertNull($index->listFieldResolvedBy('Acme\Promo\Resolver\OnTypeOfSibling'));
+        self::assertNull($index->listFieldResolvedBy('Acme\Promo\Resolver\OnSingleType'));
+    }
+
+    public function testResolversSurviveTheCache(): void
+    {
+        $this->index();
+
+        self::assertSame('ProductInterface.brand', $this->index()->listFieldResolvedBy('Acme\Promo\Resolver\Brand'));
+    }
+
+    public function testAListCountsForEverythingBelowIt(): void
+    {
+        $schema = tempnam(sys_get_temp_dir(), 'mpr-schema');
+        self::assertIsString($schema);
+        file_put_contents($schema, <<<'GRAPHQL'
+            type Query { a: [A!]! single: S }
+            type A { nested: B }
+            type B { c: String @resolver(class: "OnNested") }
+            type S { d: String @resolver(class: "OnSingle") }
+            type Mutation { m: [M] }
+            type M { e: String @resolver(class: "OnMutation") }
+            GRAPHQL);
+
+        try {
+            self::assertSame(['onnested' => 'B.c', 'onmutation' => 'M.e'], ListFieldResolvers::fromSchemas([$schema]));
+        } finally {
+            unlink($schema);
+        }
+    }
+
+    public function testASchemaThatDoesNotParseLeavesTheOthersIndexed(): void
+    {
+        $broken = tempnam(sys_get_temp_dir(), 'mpr-schema');
+        self::assertIsString($broken);
+        file_put_contents($broken, 'type {');
+        $good = tempnam(sys_get_temp_dir(), 'mpr-schema');
+        self::assertIsString($good);
+        file_put_contents($good, 'type Query { a: [B] } type B { c: String @resolver(class: "D") }');
+
+        try {
+            self::assertSame(['d' => 'B.c'], ListFieldResolvers::fromSchemas([$broken, $good]));
+        } finally {
+            unlink($broken);
+            unlink($good);
+        }
     }
 
     public function testProxyConfiguredInAnotherModule(): void

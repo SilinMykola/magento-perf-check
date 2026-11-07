@@ -70,7 +70,7 @@ final class RecurringSetupRule implements Rule
     {
         return match ($method) {
             'save' => $this->types->subtypeOf($type, MagentoTypes::ABSTRACT_MODEL) !== null
-                || $this->types->subtypeOf($type, MagentoTypes::RESOURCE_MODEL) !== null
+                || $this->types->resourceModel($type) !== null
                 || $this->types->repository($type) !== null,
             'reindexall', 'reindexlist', 'reindexrow' => $this->types->subtypeOf($type, self::INDEXER) !== null,
             default => false,

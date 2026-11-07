@@ -541,3 +541,32 @@ namespace Acme\Promo\Controller\Status {
         }
     }
 }
+
+namespace Acme\Promo\Controller\Feed {
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+    use Magento\Framework\App\Response\Http;
+
+    final class OwnHelper implements HttpGetActionInterface
+    {
+        public function __construct(private readonly Http $response)
+        {
+        }
+
+        public function execute(): mixed
+        {
+            $this->setNoCacheHeaders();
+
+            return null;
+        }
+
+        private function setNoCacheHeaders(): void
+        {
+            $this->response->setHeader('Pragma', 'no-cache');
+        }
+
+        private function setHeader(string $name, string $value): void
+        {
+            $this->setHeader('Cache-Control', 'no-store');
+        }
+    }
+}

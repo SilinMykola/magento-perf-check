@@ -28,6 +28,7 @@ final class ResourceLoadInLoopRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/../Fixtures/batch-queries-in-loop.php'], [
             ['[P-LOOP-10] Magento\Catalog\Model\ResourceModel\Product::load() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().', 75],
             ['[P-LOOP-10] Magento\Catalog\Model\ResourceModel\Product::load() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().', 79],
+            ['[P-LOOP-10] Magento\Customer\Model\ResourceModel\Customer::load() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().', 134],
         ]);
     }
 }

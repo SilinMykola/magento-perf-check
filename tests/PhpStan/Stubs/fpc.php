@@ -82,6 +82,53 @@ namespace Magento\Framework\GraphQl\Query {
 }
 
 namespace Magento\Framework\GraphQl\Query\Resolver {
+    interface BatchServiceContractResolverInterface
+    {
+    }
+}
+
+namespace Magento\Framework\DB\Adapter {
+    interface AdapterInterface
+    {
+        /** @return list<array<string, mixed>> */
+        public function fetchAll(string $sql): array;
+    }
+}
+
+namespace Magento\Framework\App\Http {
+    class Context
+    {
+        /**
+         * @param mixed $value
+         * @param mixed $default
+         * @return $this
+         */
+        public function setValue(string $name, $value, $default)
+        {
+            return $this;
+        }
+    }
+}
+
+namespace Magento\Customer\Api\Data {
+    interface CustomerInterface
+    {
+        public function getId(): ?int;
+
+        public function getEmail(): string;
+
+        public function getGroupId(): int;
+    }
+}
+
+namespace Magento\Quote\Api\Data {
+    interface CartInterface
+    {
+        public function getId(): ?int;
+    }
+}
+
+namespace Magento\Framework\GraphQl\Query\Resolver {
     interface BatchResolverInterface
     {
     }

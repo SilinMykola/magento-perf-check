@@ -1,0 +1,54 @@
+// @codingStandardsIgnoreFile
+/**
+ * A license block, which Magento's reader ignores.
+ */
+type Query {
+    products: Products
+    single: Single
+    listed: [Implementer]
+    tree: Node
+}
+
+type Products {
+    items: [ProductInterface]
+}
+
+interface ProductInterface {
+    sku: String
+}
+
+type SimpleProduct implements ProductInterface {
+    sku: String
+}
+
+type Single {
+    name: String @resolver(class: "Acme\\Promo\\Resolver\\OnSingleType")
+}
+
+interface Shared {
+    shared: String @resolver(class: "Acme\\Promo\\Resolver\\OnInterfaceOfListedType")
+    inherited: Inherited
+}
+
+type Inherited {
+    value: String @resolver(class: "Acme\\Promo\\Resolver\\OnTypeOfInheritedField")
+}
+
+type Sibling implements Shared {
+    own: SiblingOnly
+}
+
+type SiblingOnly {
+    value: String @resolver(class: "Acme\\Promo\\Resolver\\OnTypeOfSibling")
+}
+
+type Implementer implements Shared {
+    shared: String
+}
+
+union Node = Leaf
+
+type Leaf {
+    children: [Leaf]
+    title: String @resolver(class: "\\Acme\\Promo\\Resolver\\OnRecursiveType")
+}

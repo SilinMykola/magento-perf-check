@@ -197,6 +197,45 @@ final class Example
         $collection->getFirstItem();
     }
 
+    public function rowsUsedLater(Collection $collection): void
+    {
+        if ($collection->getFirstItem()->getId() === null) {
+            return;
+        }
+        $collection->getColumnValues('entity_id');
+    }
+
+    public function iteratedLater(Collection $collection): void
+    {
+        $collection->getFirstItem();
+        foreach ($collection as $item) {
+            $item->getId();
+        }
+    }
+
+    public function otherCollectionUsedLater(Collection $collection, Collection $other): void
+    {
+        $collection->getFirstItem();
+        $other->getColumnValues('entity_id');
+    }
+
+    public function calledTwice(Collection $collection): void
+    {
+        $collection->getFirstItem();
+        $collection->getFirstItem();
+    }
+
+    public function inClosureAndUsedOutside(Collection $collection): void
+    {
+        $first = static function () use ($collection): object {
+            return $collection->getFirstItem();
+        };
+        foreach ($collection as $item) {
+            $item->getId();
+        }
+        $first();
+    }
+
     public function unrelatedClass(Unrelated $unrelated): void
     {
         $unrelated->getFirstItem();

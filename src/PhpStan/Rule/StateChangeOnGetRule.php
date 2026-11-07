@@ -56,7 +56,7 @@ final class StateChangeOnGetRule implements Rule
         $type = $scope->getType($node->var);
         $target = match ($method) {
             'save', 'delete' => $this->types->subtypeOf($type, MagentoTypes::ABSTRACT_MODEL)
-                ?? $this->types->subtypeOf($type, MagentoTypes::RESOURCE_MODEL)
+                ?? $this->types->resourceModel($type)
                 ?? $this->types->repository($type),
             'deletebyid' => $this->types->repository($type),
             'addproduct' => $this->types->subtypeOf($type, self::CART_CLASSES[0]) ?? $this->types->subtypeOf($type, self::CART_CLASSES[1]),

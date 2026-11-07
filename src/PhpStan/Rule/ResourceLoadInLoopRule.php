@@ -43,7 +43,7 @@ final class ResourceLoadInLoopRule implements Rule
         ) {
             return [];
         }
-        $class = $this->types->subtypeOf($scope->getType($node->var), MagentoTypes::RESOURCE_MODEL);
+        $class = $this->types->resourceModel($scope->getType($node->var));
         if ($class === null) {
             return [];
         }

@@ -8,6 +8,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Added
 
+- Experimental rules, off by default: X-GQL-02 at `warning`, on a database query in a resolver of a field on a type returned inside a list; P-FPC-03 at `error`, on a value specific to a visitor or a moment in the HTTP context.
 - New rules in the default set, which can change a CI result: X-LAY-03 at `error`, on `cacheable="false"` in the `default`, `catalog_*` and `cms_*` handles; P-LOOP-05, P-LOOP-09, P-LOOP-10, P-IDX-01 and, back from experimental, P-PLG-01 at `warning`; X-DB-02, X-AREA-01 and X-GQL-03 at `info`. **X-LAY-03 can fail a CI run that passed before.**
 
 ### Fixed
@@ -15,8 +16,13 @@ A rule added to or removed from the default set, or a changed default severity, 
 - A PHPStan worker crash or memory limit no longer ends in exit code 0: the command exits with 2, marks the JSON report `"incomplete": true`, says why on stderr and writes no baseline. **This can change a CI result.**
 - With the `magento-perf-check` command, PHP rules that read XML (P-DI-01, P-FPC-10, P-PLG-01) no longer report stale results from PHPStan's cache after `di.xml` or another indexed file changes. Before this, adding a Proxy changed nothing, and removing one could go unreported.
 - Two runs on one project at the same time no longer return each other's results.
+- A stub of a core class in a module's `Test` directory no longer replaces the real class for all other code. In the calibration corpus, one module's stubs of `Magento\Customer\Model\Session` and `Customer` hid 24 findings in other modules. **This can change a CI result.**
+- P-LOOP-03, P-LOOP-10, P-FPC-06 and X-SETUP-01 also recognize EAV resource models, such as those of products and customers. **This can change a CI result.**
+- A `schema.graphqls` with `//` or `/* */` comments or `extends type`, which Magento reads, is analyzed. Before, it was skipped with a notice, so X-GQL-01 did not see it. **This can change a CI result.**
+- The project index finds a Composer module whose `etc/module.xml` is in `src/`.
 - A single `.phtml` file in `--paths` is analyzed.
 - XML of a module symlinked into the analyzed path is analyzed.
+- A test directory given in `--paths` next to its parent directory is analyzed. Before, the parent excluded it.
 - `--paths` entries with `./` or a repeated entry no longer report the same finding twice, and `--output` cannot overwrite the `--baseline` file through a relative path.
 - A `--generate-baseline` file that cannot be written fails before the analysis.
 
@@ -33,8 +39,11 @@ A rule added to or removed from the default set, or a changed default severity, 
 - P-LOOP-02 reports one finding per collection, on its first loading call.
 - Loop rules no longer treat the body of a `foreach` over `array_chunk()` as a loop: one query per batch is the fix.
 - X-SETUP-01 reports only writes and reindexing on a matching receiver type, and leaves out calls inside an `if`. It reports every such call instead of the first one per method.
-- P-COL-02 (experimental) accepts a comparison of `getSize()` or `getTotalCount()` with 1, `setPage()` and `setIdFilter()`.
+- P-COL-02 (experimental) accepts a comparison of `getSize()` or `getTotalCount()` with 1, `setPage()` and `setIdFilter()`, and stays silent when the same function uses the rows anyway.
+- P-COL-01 and P-COL-02 count `getColumnValues()` as using the rows.
+- P-FPC-05 no longer reports a controller's own method named `setNoCacheHeaders()` or similar; what it sets inside is still reported.
 - P-PLG-01 no longer reports an around plugin with a local variable assigned before `$proceed` and read after it.
+- P-COL-02 notices about receivers of unknown type appear only when that rule is enabled. It is experimental and off by default, so without this every default run printed a notice about a rule that did not run.
 - Analysis notices reach stderr with `--format=sarif`, `checkstyle` and `github`, and with `--output`.
 - A missing or empty `generated/code` is an analysis notice, because some findings are missed without it.
 - A file PHPStan cannot reflect is skipped with a notice, like a file it cannot parse, because it made PHPStan drop every finding of the run.

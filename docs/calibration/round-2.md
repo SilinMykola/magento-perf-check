@@ -8,8 +8,8 @@ The corpus and the method are those of round 1. Both parts ran on 2026-11-07, on
 
 | Part | Paths | Duration reported by the tool |
 |---|---|---|
-| core | `vendor/magento` | 83 s |
-| packagist | `app/code` | 11 s |
+| core | `vendor/magento` | 97 s |
+| packagist | `app/code` | 8 s |
 
 The machine was busy; an earlier run of the same code took 37 s and 5 s. Tool state: branch `develop`, uncommitted, on top of commit `30ee35a`. `*-sample-data` modules are excluded from the counts.
 
@@ -25,9 +25,9 @@ The machine was busy; an earlier run of the same code took 37 s and 5 s. Tool st
 | [X-LAY-03](../rules/X-LAY-03.md) | error | 0 | 0 | 0 | 0 | 0 | 0 | – | – | no findings in the corpus |
 | [X-LAY-01](../rules/X-LAY-01.md) | warning | 4 | 4 | 1 | 1 | 2 | 0 | 50 % | 50 % | experimental |
 | [P-COL-01](../rules/P-COL-01.md) | warning | 0 | 0 | 0 | 0 | 0 | 0 | – | – | no findings in the corpus |
-| [P-COL-02](../rules/P-COL-02.md) | error | 16 | 14 | 3 | 2 | 9 | 0 | 36 % | 60 % | experimental |
-| [P-LOOP-01](../rules/P-LOOP-01.md) | error | 112 | 27 | 14 | 13 | 0 | 0 | 100 % | 52 % | kept |
-| [P-LOOP-02](../rules/P-LOOP-02.md) | error | 3 | 3 | 0 | 3 | 0 | 0 | 100 % | 0 % | insufficient data |
+| [P-COL-02](../rules/P-COL-02.md) | error | 17 | 13 | 2 | 2 | 9 | 0 | 31 % | 50 % | experimental |
+| [P-LOOP-01](../rules/P-LOOP-01.md) | error | 114 | 27 | 14 | 13 | 0 | 0 | 100 % | 52 % | kept |
+| [P-LOOP-02](../rules/P-LOOP-02.md) | error | 4 | 3 | 0 | 3 | 0 | 0 | 100 % | 0 % | insufficient data |
 | [P-LOOP-05](../rules/P-LOOP-05.md) | warning | 0 | 0 | 0 | 0 | 0 | 0 | – | – | no findings in the corpus |
 | [P-LOOP-09](../rules/P-LOOP-09.md) | warning | 3 | 3 | 0 | 3 | 0 | 0 | 100 % | 0 % | insufficient data |
 | [P-LOOP-10](../rules/P-LOOP-10.md) | warning | 1 | 1 | 0 | 1 | 0 | 0 | 100 % | 0 % | insufficient data |
@@ -39,7 +39,7 @@ The machine was busy; an earlier run of the same code took 37 s and 5 s. Tool st
 | [X-AREA-01](../rules/X-AREA-01.md) | info | 16 | 16 | 0 | 16 | 0 | 0 | 100 % | 0 % | kept |
 | [X-GQL-03](../rules/X-GQL-03.md) | info | 0 | 0 | 0 | 0 | 0 | 0 | – | – | no findings in the corpus |
 
-The thresholds are those of round 1. X-LAY-01 stays experimental at 2 of 4, although that is too few findings for a measured decision. Two of the 16 P-COL-02 findings are new and not graded, which cannot change its decision.
+The thresholds are those of round 1. X-LAY-01 stays experimental at 2 of 4, although that is too few findings for a measured decision. Four of the 17 P-COL-02 findings are new and not graded, which cannot change its decision. One P-LOOP-02 and two P-LOOP-01 findings appeared when test stubs stopped hiding them; they are not graded.
 
 P-PLG-01 returns to the default set. In round 1 it had 18 false positives of 29, all with state carried across `$proceed`; the rule now skips those.
 
@@ -48,10 +48,11 @@ P-PLG-01 returns to the default set. In round 1 it had 18 false positives of 29,
 - P-COL-01 no longer reports anything in this corpus. Its one correct finding in round 1, a getter that builds a new collection only to count it, is lost too.
 - P-PLG-01 no longer reports 2 findings that round 1 graded as correct.
 - P-LOOP-02 no longer reports 1 finding that round 1 graded as correct, because it duplicated another finding on the same collection.
+- P-COL-02 no longer reports 1 finding that round 1 graded as correct, because the function uses the rows later.
 
 ## Limitations
 
-- The rules were changed by looking at these same findings, so the precision above is optimistic. It says the known false positives are gone, not how a rule does on code it has not seen.
+- The rules were changed by looking at these same findings, so the precision above is optimistic. It says the known false positives are gone, not how a rule does on code it has not seen. [`held-out.md`](held-out.md) checks that on 15 other modules.
 - Most findings of the new rules are low impact: in the corpus they sit in admin code or in small, capped loops.
 - X-LAY-03, P-LOOP-05, P-COL-01 and X-GQL-03 have no findings in the corpus, so their precision is unmeasured. X-LAY-03 and P-LOOP-05 are covered only by fixtures.
 - A grader who reads the code can still miss a caller. For X-AREA-01, dispatchers outside the named files were not searched.

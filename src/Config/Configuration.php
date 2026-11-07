@@ -27,6 +27,11 @@ final class Configuration
     ) {
     }
 
+    public function isEnabled(string $ruleId, RuleRegistry $registry): bool
+    {
+        return $this->rules[$ruleId]->enabled ?? $registry->find($ruleId)?->status !== RuleStatus::Experimental;
+    }
+
     /**
      * Drops findings of disabled rules (experimental rules are disabled unless enabled
      * explicitly) and applies severity overrides.
@@ -38,13 +43,9 @@ final class Configuration
     {
         $result = [];
         foreach ($findings as $finding) {
-            $settings = $this->rules[$finding->ruleId] ?? null;
-            if ($settings === null) {
-                if ($registry->find($finding->ruleId)?->status !== RuleStatus::Experimental) {
-                    $result[] = $finding;
-                }
-            } elseif ($settings->enabled) {
-                $result[] = $settings->severity !== null ? $finding->withSeverity($settings->severity) : $finding;
+            if ($this->isEnabled($finding->ruleId, $registry)) {
+                $severity = $this->rules[$finding->ruleId]->severity ?? null;
+                $result[] = $severity !== null ? $finding->withSeverity($severity) : $finding;
             }
         }
 

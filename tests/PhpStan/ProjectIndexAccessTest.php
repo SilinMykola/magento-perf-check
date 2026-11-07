@@ -26,7 +26,7 @@ final class ProjectIndexAccessTest extends RuleTestCase
     public function testRulesReadTheIndexOfTheConfiguredProject(): void
     {
         $this->analyse([__DIR__ . '/Fixtures/index/anything.php'], [
-            ['modules: 4, banner proxy: yes', 1],
+            ['modules: 5, banner proxy: yes', 1],
         ]);
     }
 }

@@ -25,14 +25,17 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     public const LOADED = 'magentoPerfCollectionLoaded';
     public const UNIQUE_FILTER = 'magentoPerfCollectionUniqueFilter';
 
-    /** Set on count() when the same function uses the collection's rows elsewhere. */
+    /** Set on count() and getFirstItem() when the same function uses the collection's rows elsewhere. */
     public const ROWS_USED_ELSEWHERE = 'magentoPerfCollectionRowsUsedElsewhere';
 
     /** Set on getCategoryIds() after addCategoryIds() in the same function. */
     public const CATEGORY_IDS_ADDED = 'magentoPerfCategoryIdsAdded';
 
     /** Uses that need the rows themselves, not just their number. */
-    private const ROW_USING_METHODS = ['load', 'getitems', 'getfirstitem', 'getlastitem'];
+    private const ROW_USING_METHODS = ['load', 'getitems', 'getfirstitem', 'getlastitem', 'getcolumnvalues'];
+
+    /** Suffix of the row use key that counts the getFirstItem() calls among them. */
+    private const FIRST_ITEM_USES = '#first';
 
     /** Columns that identify at most one row. */
     private const UNIQUE_COLUMNS = ['entity_id', 'sku', 'increment_id', 'username'];
@@ -109,7 +112,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         ) {
             $key = $this->rootKey($node->getArgs()[0]->value ?? null);
             $this->mark($node, $key);
-            if ($key !== null && ($this->rowUses[count($this->rowUses) - 1][$key] ?? 0) > 0) {
+            if ($key !== null && ($this->functionRowUses()[$key] ?? 0) > 0) {
                 $node->setAttribute(self::ROWS_USED_ELSEWHERE, true);
             }
             $this->record($key, self::LOADED);
@@ -131,6 +134,11 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
 
         if ($name === 'getfirstitem') {
             $this->mark($node, $key);
+            // Another getFirstItem() needs one row as well; any other use needs the rows anyway.
+            $uses = $this->functionRowUses();
+            if ($key !== null && ($uses[$key] ?? 0) - ($uses[$key . self::FIRST_ITEM_USES] ?? 0) > 0) {
+                $node->setAttribute(self::ROWS_USED_ELSEWHERE, true);
+            }
             foreach ([self::LIMITED, self::UNIQUE_FILTER] as $fact) {
                 if ($this->chainHas($node->var, $fact)) {
                     $node->setAttribute($fact, true);
@@ -160,6 +168,17 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     }
 
     /**
+     * Row uses of the outermost enclosing function, which include those in its closures, so
+     * that a use outside a closure is seen from inside it too.
+     *
+     * @return array<string, int>
+     */
+    private function functionRowUses(): array
+    {
+        return $this->rowUses[1] ?? $this->rowUses[0];
+    }
+
+    /**
      * Counts, per collection, the operations in these statements that need its rows:
      * iterating it, or load()/getItems()/getFirstItem()/getLastItem(). Nested functions
      * are counted too; they usually run in the same request.
@@ -182,6 +201,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             }
             if ($key !== null) {
                 $uses[$key] = ($uses[$key] ?? 0) + 1;
+                if ($node instanceof Expr\MethodCall && $node->name instanceof Node\Identifier && $node->name->toLowerString() === 'getfirstitem') {
+                    $uses[$key . self::FIRST_ITEM_USES] = ($uses[$key . self::FIRST_ITEM_USES] ?? 0) + 1;
+                }
             }
         }
 

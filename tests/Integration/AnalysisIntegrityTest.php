@@ -397,6 +397,51 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame(['P-DI-01'], $this->ruleIds($project));
     }
 
+    public function testUntypedReceiverNoticesFollowTheRule(): void
+    {
+        $code = "<?php\nnamespace Acme\\Demo;\nclass Foo\n{\n    public function run(object \$x): void\n    {\n        \$x->getFirstItem();\n    }\n}\n";
+        $project = $this->project([
+            'app/code/Acme/Demo/Foo.php' => $code,
+            'off.neon' => "magentoPerf:\n    includeTests: false\n",
+            'on.neon' => "magentoPerf:\n    rules:\n        P-COL-02:\n            enabled: true\n",
+        ]);
+        $notices = function (string $config) use ($project): array {
+            [, $stdout] = $this->runCommand($project, ['--format=json', '--config=' . $project . '/' . $config]);
+            $report = json_decode($stdout, true);
+            self::assertIsArray($report);
+            /** @var array{summary: array{notices: array<string, int>}} $report */
+
+            return $report['summary']['notices'];
+        };
+
+        self::assertArrayNotHasKey('untyped-receiver', $notices('off.neon'));
+        self::assertSame(1, $notices('on.neon')['untyped-receiver'] ?? null);
+    }
+
+    public function testTestPathGivenNextToItsParentIsAnalyzed(): void
+    {
+        $test = str_replace('Acme\\Demo\\Block', 'Acme\\Demo\\Test\\Unit', self::SESSION_BLOCK);
+        $project = $this->project([
+            'app/code/Acme/Demo/Test/Unit/Foo.php' => $test,
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+        ]);
+
+        self::assertSame(['P-DI-01'], $this->ruleIds($project, ['--paths=app/code/Acme/Demo,app/code/Acme/Demo/Test/Unit']));
+        self::assertSame([], $this->ruleIds($project, ['--paths=app/code/Acme/Demo']));
+    }
+
+    public function testStubOfACoreClassInTestCodeDoesNotChangeOtherModules(): void
+    {
+        $stub = "<?php\nnamespace Magento\\Customer\\Model;\nclass Session\n{\n}\n";
+        $project = $this->project([
+            'app/code/Acme/Demo/Block/Foo.php' => self::SESSION_BLOCK,
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Other/Test/Unit/_stubs/Magento/Customer/Model/Session.php' => $stub,
+        ]);
+
+        self::assertSame(['P-DI-01'], $this->ruleIds($project));
+    }
+
     public function testUnwritableBaselineFileFailsBeforeTheAnalysis(): void
     {
         $project = $this->project(['app/code/Acme/Demo/Foo.php' => "<?php\n"]);

@@ -45,7 +45,7 @@ final class SaveInLoopRule implements Rule
 
         $class = match ($method) {
             'save', 'delete' => $this->types->subtypeOf($type, MagentoTypes::ABSTRACT_MODEL)
-                ?? $this->types->subtypeOf($type, MagentoTypes::RESOURCE_MODEL)
+                ?? $this->types->resourceModel($type)
                 ?? $this->types->repository($type),
             'deletebyid' => $this->types->repository($type),
             default => null,

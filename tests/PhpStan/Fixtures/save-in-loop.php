@@ -49,4 +49,14 @@ final class Example
         }
         $this->productRepository->save($last);
     }
+
+    /**
+     * @param list<Product> $products
+     */
+    public function eavResourceModel(array $products, \Magento\Customer\Model\ResourceModel\Customer $resource): void
+    {
+        foreach ($products as $product) {
+            $resource->save($product);
+        }
+    }
 }

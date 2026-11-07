@@ -41,6 +41,9 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 174],
             [$message, 190],
             [$message, 197],
+            [$message, 218],
+            // Only the first of two: it loads the rows.
+            [$message, 224],
         ]);
     }
 
@@ -62,6 +65,9 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 174],
             [$message, 190],
             [$message, 197],
+            [$message, 218],
+            // Only the first of two: it loads the rows.
+            [$message, 224],
         ]);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\PhpStan;
 
+use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
@@ -16,9 +17,11 @@ final class MagentoTypes
 {
     public const ABSTRACT_MODEL = 'Magento\Framework\Model\AbstractModel';
     public const DB_COLLECTION = 'Magento\Framework\Data\Collection\AbstractDb';
-    public const RESOURCE_MODEL = 'Magento\Framework\Model\ResourceModel\Db\AbstractDb';
+    private const RESOURCE_MODEL = 'Magento\Framework\Model\ResourceModel\Db\AbstractDb';
+    private const EAV_RESOURCE_MODEL = 'Magento\Eav\Model\Entity\AbstractEntity';
 
     private const REPOSITORY_SUFFIX = 'RepositoryInterface';
+    private const SEARCH_CRITERIA = 'Magento\Framework\Api\SearchCriteriaInterface';
 
     public function __construct(private readonly ReflectionProvider $reflectionProvider)
     {
@@ -43,6 +46,12 @@ final class MagentoTypes
         return $type->getObjectClassNames() !== [] && (new ObjectType($class))->isSuperTypeOf($type)->yes();
     }
 
+    /** The class of $type when it is a flat or an EAV resource model, such as the one of products. */
+    public function resourceModel(Type $type): ?string
+    {
+        return $this->subtypeOf($type, self::RESOURCE_MODEL) ?? $this->subtypeOf($type, self::EAV_RESOURCE_MODEL);
+    }
+
     /**
      * The first class of $type that is, or implements, an interface named *RepositoryInterface.
      */
@@ -65,6 +74,20 @@ final class MagentoTypes
         }
 
         return null;
+    }
+
+    /** True when getList() of $type takes search criteria, which means it runs a query. */
+    public static function takesSearchCriteria(Type $type, Scope $scope): bool
+    {
+        $method = $scope->getMethodReflection($type, 'getList');
+        foreach ($method?->getVariants() ?? [] as $variant) {
+            $first = $variant->getParameters()[0] ?? null;
+            if ($first !== null && self::isObjectOf($first->getType(), self::SEARCH_CRITERIA)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function implements(?ClassReflection $class, string $interface): bool

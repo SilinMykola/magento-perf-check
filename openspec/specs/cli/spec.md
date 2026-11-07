@@ -33,7 +33,7 @@ By default the command SHALL analyze `app/code` and `app/design` of the project.
 - **THEN** the command prints an error naming that path and exits with code 2
 
 ### Requirement: Test code excluded by default
-By default the command SHALL skip test code below the analyzed paths: any directory named `Test` and any `dev/tests` directory, for both XML and PHP. `--include-tests` SHALL turn the exclusion off. A path given in `--paths` that itself lies inside test code SHALL be analyzed.
+By default the command SHALL skip test code below the analyzed paths: any directory named `Test` and any `dev/tests` directory, for both XML and PHP. `--include-tests` SHALL turn the exclusion off. A path given in `--paths` that itself lies inside test code SHALL be analyzed. Excluded test code SHALL NOT be a source of symbols either: a class declared there SHALL NOT replace a class of the same name for other code.
 
 #### Scenario: Module tests skipped
 - **WHEN** `app/code/Acme/Promo/Test/Integration/ExportTest.php` contains a P-LOOP-01 violation and the command runs without `--include-tests`
@@ -46,6 +46,14 @@ By default the command SHALL skip test code below the analyzed paths: any direct
 #### Scenario: Test directory given explicitly
 - **WHEN** the command runs with `--paths=app/code/Acme/Promo/Test`
 - **THEN** files under that directory are analyzed
+
+#### Scenario: Stub of a core class in test code
+- **WHEN** `app/code/Acme/Other/Test/Unit/_stubs/Magento/Customer/Model/Session.php` declares a plain `Magento\Customer\Model\Session` and another module injects that session without a Proxy
+- **THEN** P-DI-01 reports the other module's class
+
+#### Scenario: Test path next to its parent
+- **WHEN** `--paths=app/code/Acme/Demo,app/code/Acme/Demo/Test/Unit` is given
+- **THEN** the code in `Test/Unit` is analyzed
 
 ### Requirement: Merged report
 The command SHALL run both the XML and the PHP analysis and report their findings together. Each finding SHALL carry rule ID, severity, file path relative to the project, line, message and documentation link.
@@ -146,6 +154,10 @@ The analysis notice summary SHALL go to stderr when the format is `sarif`, `chec
 #### Scenario: No generated code
 - **WHEN** the project has no `generated/code`
 - **THEN** the report has one `generated-code` notice
+
+#### Scenario: Notice of a disabled rule
+- **WHEN** P-COL-02 is not enabled and the code calls `getFirstItem()` on a receiver of unknown type
+- **THEN** the result contains no `untyped-receiver` notice
 
 ### Requirement: Runs do not share state
 Two runs on one project at the same time SHALL each analyze their own paths. With PHP's posix extension, generated files SHALL live in a per-user directory that only that user can read, and the command SHALL exit with 2 if that directory belongs to someone else.

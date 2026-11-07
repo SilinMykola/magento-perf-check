@@ -1,6 +1,6 @@
 # Rules
 
-33 rules in the default set and 4 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+33 rules in the default set and 6 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -54,6 +54,8 @@ Calibration measured these below their precision threshold. Enable one with `ena
 | [P-COL-02](rules/P-COL-02.md) | getFirstItem() on a database collection without setPageSize() | error | B |
 | [P-DI-02](rules/P-DI-02.md) | Constructor does more than assign dependencies | warning | A |
 | [P-FPC-02](rules/P-FPC-02.md) | Block or view model reads customer data from the session | warning | A, B |
+| [P-FPC-03](rules/P-FPC-03.md) | Value specific to a visitor or a moment in the HTTP context | error | A, B |
+| [X-GQL-02](rules/X-GQL-02.md) | Database query in a resolver of a field on a type returned inside a list | warning | A |
 
 ## Planned
 

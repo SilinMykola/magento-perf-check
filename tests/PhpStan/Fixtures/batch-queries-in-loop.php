@@ -124,4 +124,14 @@ final class Example
             $item->getCategoryIds();
         }
     }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function eavResourceModel(array $ids, \Magento\Customer\Model\ResourceModel\Customer $resource, Product $product): void
+    {
+        foreach ($ids as $id) {
+            $resource->load($product, $id);
+        }
+    }
 }

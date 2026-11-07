@@ -40,7 +40,7 @@ P-FPC-02 SHALL report, as `warning`, calls to `getCustomer`, `getCustomerId` or 
 - **THEN** P-FPC-02 reports nothing
 
 ### Requirement: P-FPC-05 no-cache headers on cacheable requests
-P-FPC-05 SHALL report, as `warning`, one finding per statement that disables caching: `setNoCacheHeaders()`, `setPrivateHeaders()`, or `setHeader()` with a literal `Cache-Control` or `Pragma` name (case-insensitive) and a value that contains `no-cache`, `no-store` or `private`, or is not a literal. It applies in a class that serves cacheable requests (see "P-FPC-05 scope"). The message SHALL ask to confirm that the response is meant to be uncacheable.
+P-FPC-05 SHALL report, as `warning`, one finding per statement that disables caching: `setNoCacheHeaders()`, `setPrivateHeaders()`, or `setHeader()` with a literal `Cache-Control` or `Pragma` name (case-insensitive) and a value that contains `no-cache`, `no-store` or `private`, or is not a literal. It applies in a class that serves cacheable requests (see "P-FPC-05 scope"). The message SHALL ask to confirm that the response is meant to be uncacheable. A call on `$this` SHALL NOT count: a controller's own helper is not the response.
 
 #### Scenario: GET controller sets no-cache
 - **WHEN** a frontend controller implementing `HttpGetActionInterface` calls `$this->getResponse()->setNoCacheHeaders()`
@@ -57,6 +57,10 @@ P-FPC-05 SHALL report, as `warning`, one finding per statement that disables cac
 #### Scenario: Two headers in one chain
 - **WHEN** one statement calls `->setHeader('Pragma', 'no-cache')->setHeader('Cache-Control', 'no-store')`
 - **THEN** P-FPC-05 reports one warning
+
+#### Scenario: Own helper method
+- **WHEN** a GET controller calls `$this->setNoCacheHeaders()`, its own private method, which calls `$this->response->setHeader('Pragma', 'no-cache')`
+- **THEN** P-FPC-05 reports one warning, on the `setHeader()` call
 
 ### Requirement: P-FPC-05 scope
 P-FPC-05 SHALL consider only:
@@ -146,3 +150,26 @@ P-FPC-10 SHALL report, as `error`, `reindexAll()` on `Magento\Framework\Indexer\
 #### Scenario: Partial reindex
 - **WHEN** a plugin calls `$this->indexer->reindexList($ids)`
 - **THEN** P-FPC-10 reports nothing
+
+### Requirement: P-FPC-03 user-specific value in the HTTP context
+P-FPC-03 SHALL report, as `error`, a call of `Magento\Framework\App\Http\Context::setValue()` whose value is specific to a visitor or a moment: a customer id, an email, a session id, a quote id, the id of a customer, quote or session object, or the current time, directly or through a cast, concatenation, hash, array, ternary branch, or a variable or property with such a name. It is off by default.
+
+#### Scenario: Customer id
+- **WHEN** a plugin calls `$this->httpContext->setValue('customer', $this->session->getCustomerId(), 0)`
+- **THEN** P-FPC-03 reports the call
+
+#### Scenario: Hashed email
+- **WHEN** the value is `md5($customer->getEmail())`
+- **THEN** P-FPC-03 reports the call
+
+#### Scenario: Customer group
+- **WHEN** the value is `$this->session->getCustomerGroupId()`
+- **THEN** P-FPC-03 reports nothing
+
+#### Scenario: A flag derived from the id
+- **WHEN** the value is `(bool) $session->getCustomerId()` or `$session->getCustomerId() ? 1 : 0`
+- **THEN** P-FPC-03 reports nothing
+
+#### Scenario: Another class
+- **WHEN** `setValue()` is called on a class that is not `Http\Context`
+- **THEN** P-FPC-03 reports nothing
