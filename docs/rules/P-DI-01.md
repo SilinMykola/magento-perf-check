@@ -24,7 +24,8 @@ The object manager creates constructor dependencies together with the object. `S
 
 How much this costs depends on where the object is built:
 - **Actions.** On a page cache miss, the core `Magento\Customer\Model\App\Action\ContextPlugin` (a `beforeExecute` plugin on every frontend `ActionInterface`, declared in `Magento_Customer`'s `etc/frontend/di.xml`) reads the customer session anyway, and an admin request is checked against the admin session (login, or form key on POST) before its action runs. A controller is built only to run, so the rule leaves actions out. One more session dependency in a block on such a page adds little too, but a block can also be rendered elsewhere, for example in an email from a cron job, so blocks are still reported.
-- **Before action dispatch, and outside frontend and admin actions.** Objects built on the page cache hit path (for example plugins on the front controller), and in GraphQL, REST, cron or CLI, start a session that nothing else would start. There it is real cost.
+- **Before action dispatch, and outside frontend and admin actions.** Objects built on the page cache hit path (for example plugins on the front controller), in REST, and in GraphQL unless `graphql/session/disable` is set (it is off by default), start a session that nothing else would start. There it is real cost.
+- **Cron and CLI.** [`SessionStartChecker`](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/Session/SessionStartChecker.php) keeps a session from starting under the CLI, so there a session dependency costs only the objects built with it. None of the findings on the 78 modules checked is in a console command or a cron job class.
 
 Calibration on Magento core and popular modules found mostly the first case, so most findings have low impact (see [calibration](../calibration.md)).
 
