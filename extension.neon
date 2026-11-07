@@ -4,11 +4,14 @@ parameters:
         reportUntypedReceivers: false
         # Magento project whose configuration (di.xml, events.xml, ...) rules may consult.
         projectRoot: %currentWorkingDirectory%
+        # Set by magento-perf-check: changes with the XML behind the project index, so PHPStan drops stale results.
+        indexFingerprint: ''
 
 parametersSchema:
     magentoPerf: structure([
         reportUntypedReceivers: bool()
         projectRoot: string()
+        indexFingerprint: string()
     ])
 
 services:
@@ -16,6 +19,10 @@ services:
         class: Silin\MagentoPerfCheck\PhpStan\ProjectIndexProvider
         arguments:
             projectRoot: %magentoPerf.projectRoot%
+    -
+        class: Silin\MagentoPerfCheck\PhpStan\FactoryCreateTypeExtension
+        tags:
+            - phpstan.broker.expressionTypeResolverExtension
     -
         class: Silin\MagentoPerfCheck\PhpStan\LoopContextVisitor
         tags:
@@ -26,6 +33,14 @@ services:
             - phpstan.parser.richParserNodeVisitor
     -
         class: Silin\MagentoPerfCheck\PhpStan\ControllerResultVisitor
+        tags:
+            - phpstan.parser.richParserNodeVisitor
+    -
+        class: Silin\MagentoPerfCheck\PhpStan\ConditionalContextVisitor
+        tags:
+            - phpstan.parser.richParserNodeVisitor
+    -
+        class: Silin\MagentoPerfCheck\PhpStan\IndexerModeVisitor
         tags:
             - phpstan.parser.richParserNodeVisitor
     -
@@ -49,3 +64,8 @@ rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\FullReindexRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\CreateBlockInTemplateRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\RecurringSetupRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\AroundPluginRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\RepositoryListInLoopRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\ResourceLoadInLoopRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\CategoryIdsInLoopRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\DirectReindexRule

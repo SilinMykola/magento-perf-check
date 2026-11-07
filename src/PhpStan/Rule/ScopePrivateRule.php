@@ -29,12 +29,17 @@ final class ScopePrivateRule implements Rule
 
     public function processNode(Node $node, Scope $scope): array
     {
-        $declares = $node instanceof Node\Stmt\Property
-            && in_array(self::PROPERTY, array_map(static fn ($property): string => $property->name->toString(), $node->props), true);
+        $declares = false;
+        if ($node instanceof Node\Stmt\Property) {
+            foreach ($node->props as $property) {
+                $declares = $declares || ($property->name->toString() === self::PROPERTY && self::isTrue($property->default));
+            }
+        }
         $assigns = $node instanceof Node\Expr\Assign
             && $node->var instanceof Node\Expr\PropertyFetch
             && $node->var->name instanceof Node\Identifier
-            && $node->var->name->toString() === self::PROPERTY;
+            && $node->var->name->toString() === self::PROPERTY
+            && self::isTrue($node->expr);
         // AbstractBlock itself declares the (deprecated) property; only subclasses use it.
         $class = $scope->getClassReflection();
         if ((!$declares && !$assigns) || $class === null || !$class->isSubclassOf(self::ABSTRACT_BLOCK)) {
@@ -47,5 +52,11 @@ final class ScopePrivateRule implements Rule
                 self::ID,
             ))->identifier(self::IDENTIFIER)->build(),
         ];
+    }
+
+    /** False is the default value and marks nothing private. */
+    private static function isTrue(?Node\Expr $value): bool
+    {
+        return $value instanceof Node\Expr\ConstFetch && $value->name->toLowerString() === 'true';
     }
 }

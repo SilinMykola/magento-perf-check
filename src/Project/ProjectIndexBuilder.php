@@ -18,7 +18,10 @@ final class ProjectIndexBuilder
     private const XSI = 'http://www.w3.org/2001/XMLSchema-instance';
 
     /** Indexed files, relative to a module's etc/ directory; * is one area directory. */
-    private const FILES = ['di.xml', '*/di.xml', 'events.xml', '*/events.xml', 'mview.xml', 'db_schema.xml'];
+    /** Part of the cache key: raise it when the same files start to give a different index. */
+    private const INDEX_VERSION = 3;
+
+    private const FILES = ['di.xml', '*/di.xml', 'events.xml', '*/events.xml', 'mview.xml', 'db_schema.xml', 'schema.graphqls'];
 
     public function __construct(private readonly ?string $cacheDir = null)
     {
@@ -29,7 +32,7 @@ final class ProjectIndexBuilder
         $modules = $this->moduleRoots($projectRoot);
         $files = $this->indexedFiles($projectRoot, $modules);
 
-        $cacheFile = $this->cacheFile($projectRoot, $files);
+        $cacheFile = $this->cacheFile($projectRoot, $this->fingerprintOf($files));
         if (is_file($cacheFile)) {
             $data = json_decode((string) file_get_contents($cacheFile), true);
             if (is_array($data)) {
@@ -65,8 +68,13 @@ final class ProjectIndexBuilder
                 continue;
             }
             $root = realpath($projectRoot . '/vendor/composer/' . $package['install-path']);
-            if ($root !== false && is_file($root . '/etc/module.xml')) {
-                $roots[$root] = $root . '/etc/module.xml';
+            if ($root === false) {
+                continue;
+            }
+            foreach ([$root, $root . '/src'] as $candidate) {
+                if (is_file($candidate . '/etc/module.xml')) {
+                    $roots[$candidate] = $candidate . '/etc/module.xml';
+                }
             }
         }
 
@@ -104,17 +112,32 @@ final class ProjectIndexBuilder
     }
 
     /**
+     * Changes whenever an XML file behind the index changes. PHP rules read the index, so
+     * PHPStan results cached for another fingerprint are out of date.
+     */
+    public function fingerprint(string $projectRoot): string
+    {
+        return $this->fingerprintOf($this->indexedFiles($projectRoot, $this->moduleRoots($projectRoot)));
+    }
+
+    /**
      * @param list<array{path: string, module: string, area: string, name: string}> $files
      */
-    private function cacheFile(string $projectRoot, array $files): string
+    private function fingerprintOf(array $files): string
     {
-        $fingerprint = '';
+        $fingerprint = self::INDEX_VERSION . "\n";
         foreach ($files as $file) {
             $fingerprint .= $file['path'] . '|' . (int) @filesize($file['path']) . '|' . (int) @filemtime($file['path']) . "\n";
         }
-        $dir = ($this->cacheDir ?? sys_get_temp_dir() . '/magento-perf-check') . '/' . md5($projectRoot);
 
-        return $dir . '/index-' . md5($fingerprint) . '.json';
+        return md5($fingerprint);
+    }
+
+    private function cacheFile(string $projectRoot, string $fingerprint): string
+    {
+        $dir = $this->cacheDir !== null ? $this->cacheDir . '/' . md5($projectRoot) : WorkDirectory::forProject($projectRoot);
+
+        return $dir . '/index-' . $fingerprint . '.json';
     }
 
     private function writeCache(string $cacheFile, ProjectIndex $index): void
@@ -144,8 +167,15 @@ final class ProjectIndexBuilder
         $tables = [];
         $virtualTypes = [];
         $virtualProxies = [];
+        $schemas = [];
+        $pluginsByName = [];
+        $disabledPlugins = [];
 
         foreach ($files as $file) {
+            if ($file['name'] === 'schema.graphqls') {
+                $schemas[] = $file['path'];
+                continue;
+            }
             $xpath = $this->load($file['path']);
             if ($xpath === null) {
                 continue;
@@ -167,7 +197,14 @@ final class ProjectIndexBuilder
                         }
                         foreach ($this->elements($xpath, 'plugin', $type) as $plugin) {
                             if ($plugin->getAttribute('type') !== '') {
-                                $plugins[ProjectIndex::normalizeClass($plugin->getAttribute('type'))] = true;
+                                $class = ProjectIndex::normalizeClass($plugin->getAttribute('type'));
+                                $plugins[$class] = true;
+                                if ($file['area'] !== 'adminhtml') {
+                                    $pluginsByName[$name][$plugin->getAttribute('name')] = $class;
+                                }
+                            }
+                            if ($plugin->getAttribute('disabled') === 'true') {
+                                $disabledPlugins[$name][$plugin->getAttribute('name')] = true;
                             }
                         }
                     }
@@ -203,18 +240,40 @@ final class ProjectIndexBuilder
 
         // A Proxy configured on a virtual type covers the class it is based on.
         foreach ($virtualProxies as $virtualType => $arguments) {
-            $class = $virtualType;
-            $seen = [];
-            while (isset($virtualTypes[$class]) && !isset($seen[$class])) {
-                $seen[$class] = true;
-                $class = $virtualTypes[$class];
-            }
+            $class = self::baseOfVirtualType($virtualType, $virtualTypes);
             foreach ($arguments as $argument) {
                 $proxies[$class][$argument] = true;
             }
         }
 
-        return new ProjectIndex($moduleCount, $proxies, $plugins, $observers, $views, $tables);
+        // Magento merges plugins by target and name, so another module can disable one by name alone.
+        $pluginTargets = [];
+        foreach ($pluginsByName as $target => $byName) {
+            foreach (array_diff_key($byName, $disabledPlugins[$target] ?? []) as $class) {
+                $pluginTargets[$class][] = $target;
+            }
+        }
+
+        $listFields = ListFieldResolvers::fromSchemas($schemas);
+        foreach ($listFields as $class => $field) {
+            $listFields[self::baseOfVirtualType($class, $virtualTypes)] ??= $field;
+        }
+
+        return new ProjectIndex($moduleCount, $proxies, $plugins, $observers, $views, $tables, $listFields, $pluginTargets);
+    }
+
+    /**
+     * @param array<string, string> $virtualTypes
+     */
+    private static function baseOfVirtualType(string $class, array $virtualTypes): string
+    {
+        $seen = [];
+        while (isset($virtualTypes[$class]) && !isset($seen[$class])) {
+            $seen[$class] = true;
+            $class = $virtualTypes[$class];
+        }
+
+        return $class;
     }
 
     private function load(string $path): ?DOMXPath

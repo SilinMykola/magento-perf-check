@@ -39,14 +39,14 @@ php bin/magento-perf-check --project=/path/to/magento
 
 Calibrated on Magento 2.4.9, where both ways were checked. Stock Magento 2.4.4 and older pin a PHPStan version below 1.12, so `composer require` cannot work there: use the clone. It ran that way on `vendor/magento/module-cms` of 2.4.0, 2.4.3 and 2.4.4, without grading the findings ([check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/older-magento.md)). The install was not tried on 2.4.5 to 2.4.8, and Magento 2.3 is not checked.
 
-It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpstan.org/) rules and XML checks, and never writes into the project. No database or container is needed. On a stock Magento 2.4.9 project, install plus the first run took under 20 seconds ([measured](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m3-install.md)).
+It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpstan.org/) rules and XML checks, and never writes into the project. No database or container is needed. It does load the project's autoloader, which runs the `registration.php` of every module, so do not analyze code you do not trust outside a sandbox. On a stock Magento 2.4.9 project, install plus the first run took under 20 seconds ([measured](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m3-install.md)).
 
 ## What it finds
 
-29 rules: 24 on by default, 5 experimental. A few of them:
+43 rules: 33 on by default, 10 experimental. A few of them:
 
-- **Queries in loops:** `load()`, `getById()` or a new collection inside a loop (P-LOOP-01, P-LOOP-02).
-- **Full Page Cache breakers:** state changes in GET-only controllers (P-FPC-06), no-cache headers on cacheable pages (P-FPC-05), cache flushes and `reindexAll()` from request code (P-FPC-09, P-FPC-10), ESI blocks on entity pages (X-LAY-02).
+- **Queries in loops:** `load()`, `getById()`, `getList()` or a new collection inside a loop (P-LOOP-01, P-LOOP-02, P-LOOP-09, P-LOOP-10).
+- **Full Page Cache breakers:** `cacheable="false"` on the default, catalog and CMS handles (X-LAY-03), state changes in GET-only controllers (P-FPC-06), no-cache headers on cacheable pages (P-FPC-05), cache flushes and `reindexAll()` from request code (P-FPC-09, P-FPC-10), ESI blocks on entity pages (X-LAY-02).
 - **Expensive wiring:** sessions injected without a Proxy (P-DI-01), events dispatched in constructors (P-DI-03), observers on every model load or block render (X-EVT-01, X-EVT-03).
 - **Configuration:** `sections.xml` that reloads all customer data on every POST (X-SEC-01), GraphQL `@cache` without an identity (X-GQL-01), synchronous queue topics (X-MQ-01), indexers without mview (X-IDX-01), tables without a primary key (X-DB-01).
 
@@ -76,10 +76,12 @@ Every rule in the default set cites at least one primary source:
 Community sources (**C**) are used only as supplementary explanation. A rule with only C sources stays experimental and is off by default. Each rule page ends with a **Basis** section listing its sources, their levels and what each one confirms; the audit of the whole catalog is in [`docs/source-audit.md`](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/source-audit.md).
 
 Precision is measured, not assumed. Every rule ran on Magento 2.4.9 core and the 25 most-downloaded Packagist modules, and up to 30 findings per rule were graded by reading the code ([method and per-rule results](docs/calibration.md)):
-- the six default-set rules with enough findings to measure (P-LOOP-01, P-LOOP-03, P-DI-01, P-DI-06, P-FPC-01, T-01) were right in 87–100 % of graded findings;
-- five rules measured below their threshold and are experimental, off by default;
+- the rules with at least 10 graded findings in the default set (P-LOOP-01, P-LOOP-03, P-DI-01, P-DI-06, P-FPC-01, P-PLG-01, T-01, X-AREA-01) were right in 90–100 % of them;
+- four rules measured below their threshold and are experimental, off by default;
 - rules that were right but mostly found low-impact cases were lowered to `warning` or `info`;
-- the remaining rules had fewer than 10 findings in the corpus, so their precision is not established yet.
+- the remaining rules have fewer than 10 findings in the corpus, too few to measure, so they keep their severity. That includes P-LOOP-02 (`error`, 3 of 3 correct, all low impact) and X-EVT-02 (0 of 1). X-LAY-03, P-LOOP-05, P-COL-01 and X-GQL-03 have none.
+
+[Round 2](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-2.md) fixed the known false positives and measured again on the same corpus, so its figures are optimistic for code the rules have not seen. [A separate check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out.md) on 15 other modules found 52 of 55 graded findings correct, of which 3 matter in practice: expect most findings to be correct and cheap to live with, not urgent. Each finding was graded once, by one grader, without a second review. Those runs [undercounted](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out.md#what-the-first-runs-missed): of 29 sampled findings that the later fixes added, 28 were correct and 9 matter.
 
 Static analysis gives heuristics, not guarantees: treat each finding as a reason to check, not a verdict.
 

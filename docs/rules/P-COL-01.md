@@ -8,7 +8,7 @@
 
 ## What it catches
 
-`count($collection)` or `sizeof($collection)` on a database collection (a subtype of `Magento\Framework\Data\Collection\AbstractDb`) whose rows the function does not use anyway. The rule stays silent when the same function, before or after the count, iterates the collection or calls `load()`, `getItems()`, `getFirstItem()` or `getLastItem()` on it: then the rows are loaded either way, and counting them is free. A second `count()` alone does not count as using the rows.
+`count($collection)` or `sizeof($collection)` on a database collection (a subtype of `Magento\Framework\Data\Collection\AbstractDb`) whose rows the function does not use anyway. The rule stays silent when the same function, before or after the count, iterates the collection or calls `load()`, `getItems()`, `getFirstItem()`, `getLastItem()` or `getColumnValues()` on it: then the rows are loaded either way, and counting them is free. A second `count()` alone does not count as using the rows.
 
 ## Why it hurts performance
 
@@ -45,7 +45,9 @@ $count = count($collection);
 
 ## Known false positives
 
-- A collection whose rows are used in another method, or in a template rendered later (a memoized getter, for example), is not recognized as loaded.
+- A collection whose rows are used in another method and that reaches the count through a local variable is not recognized as loaded.
+
+Not reported: `count($this)` inside a collection's `_afterLoad()`, where the rows are already loaded, and a collection on the object itself, `count($this->rows)` or `count($this->getRows())`. Such a collection is usually memoized and its rows are read elsewhere, often in a template. This misses a getter that builds a new collection and is only ever counted.
 
 Since M2 the rule recognizes rows used later in the same function. This was the most common false positive in the M1 core spot checks (`docs/runs/m1-core.md`).
 

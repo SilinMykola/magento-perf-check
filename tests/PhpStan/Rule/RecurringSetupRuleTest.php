@@ -15,7 +15,7 @@ final class RecurringSetupRuleTest extends RuleTestCase
 {
     protected function getRule(): Rule
     {
-        return new RecurringSetupRule();
+        return new RecurringSetupRule($this->createReflectionProvider());
     }
 
     public static function getAdditionalConfigFiles(): array
@@ -25,12 +25,18 @@ final class RecurringSetupRuleTest extends RuleTestCase
 
     public function testFixture(): void
     {
-        $message = 'install() does heavy work (loading, saving or reindexing); it runs on every setup:upgrade. Move one-time work to a data or schema patch.';
+        $message = static fn (string $class, string $method): string => sprintf(
+            '[X-SETUP-01] %s::install() does heavy work (%s()); it runs on every setup:upgrade. Move one-time work to a data or schema patch.',
+            $class,
+            $method,
+        );
 
         $this->analyse([__DIR__ . '/../Fixtures/recurring-setup.php'], [
-            ['[X-SETUP-01] Recurring::' . $message, 17],
+            [$message('Recurring', 'reindexAll'), 17],
             // A save() inside a loop is heavy; the loop over table names in Acme\Other\Setup\Recurring is not.
-            ['[X-SETUP-01] RecurringData::' . $message, 83],
+            [$message('RecurringData', 'save'), 91],
+            // Reads are not heavy work: getItems(), getSize() and load() in the same method are not reported.
+            [$message('RecurringData', 'save'), 96],
         ]);
     }
 }

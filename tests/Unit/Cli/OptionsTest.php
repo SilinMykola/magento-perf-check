@@ -113,4 +113,26 @@ final class OptionsTest extends TestCase
 
         Options::fromArgv(['--project=' . $this->project(), '--output=b.json', '--baseline=' . __DIR__ . '/b.json'], __DIR__);
     }
+
+    public function testPathsCannotLeaveTheProject(): void
+    {
+        $this->expectException(UsageException::class);
+        $this->expectExceptionMessage("inside the project");
+
+        Options::fromArgv(["--project=" . $this->project(), "--paths=app/../../outside"], "/tmp");
+    }
+
+    public function testPathsAreNormalizedAndDeduplicated(): void
+    {
+        $options = Options::fromArgv(["--project=" . $this->project(), "--paths=app/etc,./app/etc,app//etc/"], "/tmp");
+
+        self::assertSame(["app/etc"], $options->paths);
+    }
+
+    public function testOutputCannotOverwriteTheBaselineThroughARelativePath(): void
+    {
+        $this->expectException(UsageException::class);
+
+        Options::fromArgv(["--project=" . $this->project(), "--baseline=b.json", "--output=./b.json"], sys_get_temp_dir());
+    }
 }

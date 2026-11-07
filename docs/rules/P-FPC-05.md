@@ -9,7 +9,7 @@
 ## What it catches
 
 A statement that disables caching, with one finding per statement however many headers it sets:
-- `setNoCacheHeaders()` or `setPrivateHeaders()`;
+- `setNoCacheHeaders()` or `setPrivateHeaders()`, on anything but `$this`: a controller's own helper with such a name is not the response;
 - `setHeader()` with a literal `Cache-Control` or `Pragma` name and a value that contains `no-cache`, `no-store` or `private`, or is computed at run time. `Pragma: public` is not reported.
 
 The rule applies in two kinds of classes:

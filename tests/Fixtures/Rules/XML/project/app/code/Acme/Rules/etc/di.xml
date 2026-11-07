@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <type name="Magento\Backend\Controller\Adminhtml\Index\Index">
+        <plugin name="acme_admin_page" type="Acme\Rules\Plugin\AdminPage"/>
+    </type>
+    <type name="Magento\Catalog\Model\Product">
+        <plugin name="acme_product" type="Acme\Rules\Plugin\Product"/>
+    </type>
+    <type name="Magento\GraphQlCache\Model\CacheId\CacheIdCalculator">
+        <arguments>
+            <argument name="idFactorProviders" xsi:type="array">
+                <item name="acme_segment" xsi:type="object">Acme\Rules\CacheIdFactorProviders\Segment</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Acme\Rules\Other">
+        <arguments>
+            <argument name="idFactorProviders" xsi:type="array">
+                <item name="unrelated" xsi:type="object">Acme\Rules\Unrelated</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

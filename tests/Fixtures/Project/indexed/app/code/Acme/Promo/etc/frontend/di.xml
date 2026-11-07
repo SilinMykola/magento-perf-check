@@ -5,4 +5,9 @@
             <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
         </arguments>
     </type>
+    <type name="Magento\Framework\View\Element\AbstractBlock">
+        <plugin name="acme_on_block" type="Acme\Render\OnBlock"/>
+        <plugin name="acme_private_method" type="Acme\Render\PrivateMethod"/>
+        <plugin name="acme_disabled_elsewhere" type="Acme\Render\DisabledByName"/>
+    </type>
 </config>

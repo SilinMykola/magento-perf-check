@@ -42,8 +42,9 @@ $this->ruleRepository->save($rule);
 
 ## Known false positives
 
-- Loops in import, cron or CLI code where no batch API exists. The rule is a `warning` for this reason.
+- Loops in import, cron or CLI code where no batch API exists. The rule is `info` for this reason.
 - Loops with a small fixed bound.
+- A save inside an `if` in the loop that matches at most one key, so it runs once.
 
 ## Basis
 

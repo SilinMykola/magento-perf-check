@@ -7,10 +7,10 @@ Rules on setup scripts that catch heavy work in scripts which run on every `setu
 
 ### Requirement: X-SETUP-01 heavy work in recurring setup
 X-SETUP-01 SHALL report, as `warning`, heavy work in the `install()` method of a class named `Recurring` or `RecurringData` in a `Setup` namespace. Heavy work means any of:
-- a call to `load()`, `getItems()`, `getSize()` or `save()`;
-- `reindexAll()`, `reindexList()` or `reindexRow()`.
+- `save()` on a model, a resource model or a `*RepositoryInterface`;
+- `reindexAll()`, `reindexList()` or `reindexRow()` on `Magento\Framework\Indexer\IndexerInterface`.
 
-A loop SHALL count only through such calls inside it: a loop over a list of table names or in-memory configuration is not heavy work. One finding per method SHALL point at the first heavy call.
+A loop SHALL count only through such calls inside it: a loop over a list of table names or in-memory configuration is not heavy work. A call inside a branch of an `if` SHALL NOT be reported, because it does not run every time. Reads SHALL NOT be reported. Each heavy call SHALL give one finding.
 
 #### Scenario: Reindex in recurring
 - **WHEN** `Setup/Recurring.php` calls `$this->indexer->reindexAll()` in `install()`
@@ -29,5 +29,13 @@ A loop SHALL count only through such calls inside it: a loop over a list of tabl
 - **THEN** X-SETUP-01 reports nothing
 
 #### Scenario: Save inside a loop
-- **WHEN** `install()` loops over items and calls `save()` on each
+- **WHEN** `install()` loops over models and calls `save()` on each
 - **THEN** X-SETUP-01 reports a warning on the `save()` call
+
+#### Scenario: Reads
+- **WHEN** `install()` calls `getItems()` or `getSize()` on a collection
+- **THEN** X-SETUP-01 reports nothing
+
+#### Scenario: Guarded reindex
+- **WHEN** `install()` calls `reindexAll()` inside `if ($this->needsReindex())`
+- **THEN** X-SETUP-01 reports nothing

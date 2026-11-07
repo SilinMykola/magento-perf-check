@@ -6,22 +6,27 @@ namespace Silin\MagentoPerfCheck\Cli;
 
 use Silin\MagentoPerfCheck\Baseline\Baseline;
 use Silin\MagentoPerfCheck\Config\ConfigLoader;
+use Silin\MagentoPerfCheck\PhpStan\Rule\GetFirstItemWithoutLimitRule;
 use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Report\AnalysisResult;
 use Silin\MagentoPerfCheck\Report\CheckstyleReporter;
 use Silin\MagentoPerfCheck\Report\GithubReporter;
 use Silin\MagentoPerfCheck\Report\JsonReporter;
+use Silin\MagentoPerfCheck\Report\Notice;
 use Silin\MagentoPerfCheck\Report\SarifReporter;
 use Silin\MagentoPerfCheck\Report\TableReporter;
 use Silin\MagentoPerfCheck\Rule\RuleRegistry;
 use Silin\MagentoPerfCheck\Version;
 use Silin\MagentoPerfCheck\Xml\FileDiscovery;
+use Silin\MagentoPerfCheck\Xml\Rule\CacheIdFactorRule;
 use Silin\MagentoPerfCheck\Xml\Rule\CacheIdentityRule;
 use Silin\MagentoPerfCheck\Xml\Rule\EntityHandleTtlRule;
+use Silin\MagentoPerfCheck\Xml\Rule\GlobalAreaRule;
 use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
+use Silin\MagentoPerfCheck\Xml\Rule\RedundantIndexRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SectionInvalidationRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SynchronousTopicRule;
 use Silin\MagentoPerfCheck\Xml\Rule\TableWithoutPrimaryKeyRule;
@@ -75,10 +80,16 @@ final class Application
                 Baseline::load($options->baselineFile);
             }
             if ($options->outputFile !== null) {
-                self::assertWritable($options->outputFile);
+                self::assertWritable($options->outputFile, 'report file');
+            }
+            if ($options->generateBaselineFile !== null) {
+                self::assertWritable($options->generateBaselineFile, 'baseline file');
             }
             $result = $this->analyze($options);
             if ($options->generateBaselineFile !== null) {
+                if ($result->analysisFailures() !== []) {
+                    throw new UsageException("The analysis is incomplete, so no baseline was written.\n" . implode("\n", $result->analysisFailures()));
+                }
                 $baseline = Baseline::fromFindings($result->findings);
                 $baseline->write($options->generateBaselineFile);
                 fwrite($this->stdout, sprintf("Baseline with %d finding(s) written to %s.\n", $baseline->size(), $options->generateBaselineFile));
@@ -122,15 +133,49 @@ final class Application
             ));
         }
 
+        // Table and JSON reports already carry this; a report going to a file or a CI tool does not show it to anyone.
+        $summary = $result->noticeSummary();
+        if ($summary !== null && ($options->outputFile !== null || !in_array($options->format, ['table', 'json'], true))) {
+            fwrite($this->stderr, 'magento-perf-check: ' . $summary . "\n");
+        }
+
+        // PHPStan drops its findings when this happens, so PHP code may be unreported: this must not pass as a clean run.
+        if ($result->analysisFailures() !== []) {
+            fwrite($this->stderr, "magento-perf-check: the analysis is incomplete, so the result cannot be trusted.\n" . implode("\n", $result->analysisFailures()) . "\n");
+
+            return self::EXIT_ERROR;
+        }
+
         return $result->hasFindingsAtLeast($options->failOn) ? self::EXIT_FINDINGS : self::EXIT_CLEAN;
     }
 
-    private static function assertWritable(string $file): void
+    private static function assertWritable(string $file, string $description): void
     {
         $writable = is_file($file) ? is_writable($file) : !is_dir($file) && is_dir(dirname($file)) && is_writable(dirname($file));
         if (!$writable) {
-            throw new UsageException(sprintf('Cannot write report file %s.', $file));
+            throw new UsageException(sprintf('Cannot write %s %s.', $description, $file));
         }
+    }
+
+    /**
+     * @param list<string> $paths
+     * @param list<Notice> $notices
+     */
+    private static function nothingToAnalyze(array $paths, array $notices, bool $includeTests): string
+    {
+        $message = $paths === []
+            ? 'Nothing to analyze: the project has neither app/code nor app/design. Choose what to analyze with --paths.'
+            : sprintf('Nothing to analyze in %s: no PHP, template or Magento XML files were found.', implode(', ', $paths));
+        if (!$includeTests) {
+            $message .= ' Test code is skipped unless --include-tests is set.';
+        }
+        foreach ($notices as $notice) {
+            if ($notice->source === 'phpstan-parse') {
+                $message .= sprintf("\n%s:%d: %s", (string) $notice->file, (int) $notice->line, $notice->message);
+            }
+        }
+
+        return $message;
     }
 
     private function analyze(Options $options): AnalysisResult
@@ -159,10 +204,17 @@ final class Application
             new IndexerWithoutMviewRule($index),
             new TableWithoutPrimaryKeyRule($index),
             new CacheIdentityRule(),
+            new RedundantIndexRule(),
+            new GlobalAreaRule(),
+            new CacheIdFactorRule(),
         ];
         $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests), $xmlRules))->analyze($paths);
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
             ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests);
+
+        if ($xml->filesFound === 0 && !$php->filesAnalyzed) {
+            throw new UsageException(self::nothingToAnalyze($paths, $php->notices, $includeTests));
+        }
 
         // Configuration first, then the baseline; --fail-on looks at what is left.
         $findings = $config->apply([...$xml->findings, ...$php->findings], $registry);
@@ -173,9 +225,14 @@ final class Application
             [$findings, $hidden, $unmatched] = [$filtered->findings, $filtered->hidden, $filtered->unmatched];
         }
 
+        // These notices tell how much P-COL-02 could not check, which means nothing while it is off.
+        $phpNotices = $config->isEnabled(GetFirstItemWithoutLimitRule::ID, $registry)
+            ? $php->notices
+            : array_values(array_filter($php->notices, static fn (Notice $notice): bool => $notice->source !== Notice::SOURCE_UNTYPED_RECEIVER));
+
         return new AnalysisResult(
             $findings,
-            [...$xml->notices, ...$php->notices],
+            [...$xml->notices, ...$phpNotices],
             $options->projectRoot,
             $paths,
             microtime(true) - $started,

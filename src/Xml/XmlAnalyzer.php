@@ -32,7 +32,8 @@ final class XmlAnalyzer
         $findings = [];
         $notices = [];
         $analyzed = 0;
-        foreach ($this->discovery->discover($paths) as $file) {
+        $files = $this->discovery->discover($paths);
+        foreach ($files as $file) {
             if ($file->kind === XmlFile::KIND_GRAPHQL) {
                 $graphQlRules = array_values(array_filter($this->rules, static fn ($rule): bool => $rule instanceof GraphQlRule));
                 $schema = $graphQlRules === [] ? null : $this->parseSchema($file, $notices);
@@ -65,7 +66,7 @@ final class XmlAnalyzer
             }
         }
 
-        return new XmlAnalysisResult($findings, $notices, $analyzed);
+        return new XmlAnalysisResult($findings, $notices, $analyzed, count($files));
     }
 
     /**

@@ -48,6 +48,7 @@ final class GetFirstItemWithoutLimitRule implements Rule
             || $node->getAttribute(CollectionStateVisitor::LIMITED) === true
             || $node->getAttribute(CollectionStateVisitor::LOADED) === true
             || $node->getAttribute(CollectionStateVisitor::UNIQUE_FILTER) === true
+            || $node->getAttribute(CollectionStateVisitor::ROWS_USED_ELSEWHERE) === true
         ) {
             return [];
         }

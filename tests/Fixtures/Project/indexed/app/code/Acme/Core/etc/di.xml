@@ -11,6 +11,20 @@
             <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
         </arguments>
     </virtualType>
+    <virtualType name="Acme\Promo\Resolver\VirtualBrand" type="Acme\Promo\Resolver\BaseOfVirtualBrand"/>
+    <type name="Magento\Framework\View\Element\Template">
+        <plugin name="acme_on_template" type="Acme\Render\OnTemplate"/>
+    </type>
+    <type name="Magento\Framework\View\Layout">
+        <plugin name="acme_on_layout" type="Acme\Render\OnLayout"/>
+    </type>
+    <type name="Magento\Catalog\Block\Product\View">
+        <plugin name="acme_on_specific" type="Acme\Render\OnSpecificBlock"/>
+    </type>
+    <type name="Magento\Framework\View\Element\AbstractBlock">
+        <plugin name="acme_disabled" type="Acme\Render\Disabled" disabled="true"/>
+        <plugin name="acme_disabled_elsewhere" disabled="true"/>
+    </type>
     <type name="Magento\Checkout\Model\Cart">
         <plugin name="acme_cart" type="Acme\Promo\Plugin\CartPlugin"/>
         <plugin name="acme_price" type="Acme\Promo\Model\PriceModifier"/>

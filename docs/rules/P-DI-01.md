@@ -64,6 +64,7 @@ Better still, for cacheable pages: do not read customer data on the server at al
 ## Known false positives
 
 - A Proxy configured through a virtual type is recognized for the class the virtual type is based on, but a `<preference>` that swaps in another class with its own `di.xml` arguments is not followed.
+- A class that reads the session as soon as its method runs gains little from a Proxy, because the session starts on that call anyway. The rule is still right that the session is a dependency of every caller; the fix may be to read it later or only where needed.
 - Classes that run only in contexts where a session is needed anyway, such as POST controllers of the customer account, may be fine without a Proxy.
 
 ## Basis

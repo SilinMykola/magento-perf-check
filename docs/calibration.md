@@ -36,6 +36,8 @@ Test code is excluded (the tool's default), and so are `*-sample-data` modules a
 
 ## Results
 
+Rules changed after this report were measured again: see [round 2](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-2.md), whose decisions replace the ones below.
+
 | Rule | Severity | Findings | Sampled | TP | TP-low | FP | Unclear | Precision | Impact share | Owner re-checked | Decision |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | [X-LAY-01](rules/X-LAY-01.md) | warning | 10 | 10 | 1 | 1 | 8 | 0 | 20 % | 50 % | 0 (0 changed) | experimental |

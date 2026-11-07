@@ -25,11 +25,20 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     public const LOADED = 'magentoPerfCollectionLoaded';
     public const UNIQUE_FILTER = 'magentoPerfCollectionUniqueFilter';
 
-    /** Set on count() when the same function uses the collection's rows elsewhere. */
+    /** Set on count() and getFirstItem() when the same function uses the collection's rows elsewhere. */
     public const ROWS_USED_ELSEWHERE = 'magentoPerfCollectionRowsUsedElsewhere';
 
+    /** Set on getCategoryIds() after addCategoryIds() in the same function. */
+    public const CATEGORY_IDS_ADDED = 'magentoPerfCategoryIdsAdded';
+
+    /** Set on a call that builds a product URL, after addUrlRewrite() in the same function. */
+    public const URL_REWRITE_ADDED = 'magentoPerfUrlRewriteAdded';
+
     /** Uses that need the rows themselves, not just their number. */
-    private const ROW_USING_METHODS = ['load', 'getitems', 'getfirstitem', 'getlastitem'];
+    private const ROW_USING_METHODS = ['load', 'getitems', 'getfirstitem', 'getlastitem', 'getcolumnvalues'];
+
+    /** Suffix of the row use key that counts the getFirstItem() calls among them. */
+    private const FIRST_ITEM_USES = '#first';
 
     /** Columns that identify at most one row. */
     private const UNIQUE_COLUMNS = ['entity_id', 'sku', 'increment_id', 'username'];
@@ -64,9 +73,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         }
 
         // "$c = <chain>": $c is a new collection; it inherits only what the chain establishes.
-        if ($node instanceof Expr\Assign && $node->var instanceof Expr\Variable && is_string($node->var->name)
-            && $node->expr instanceof Expr\MethodCall
-        ) {
+        if ($node instanceof Expr\Assign && $node->var instanceof Expr\Variable && is_string($node->var->name)) {
             $key = '$' . $node->var->name;
             // "$c = $c->addFieldToFilter(...)" keeps working on the same collection.
             if ($this->rootKey($node->expr) !== $key) {
@@ -75,6 +82,22 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             foreach ([self::LIMITED, self::UNIQUE_FILTER] as $fact) {
                 if ($this->chainHas($node->expr, $fact)) {
                     $this->record($key, $fact);
+                }
+            }
+
+            return null;
+        }
+
+        // "if ($c->getSize() === 1)": the collection is known to hold one row.
+        if ($node instanceof Expr\BinaryOp\Identical || $node instanceof Expr\BinaryOp\NotIdentical
+            || $node instanceof Expr\BinaryOp\Equal || $node instanceof Expr\BinaryOp\NotEqual
+        ) {
+            foreach ([[$node->left, $node->right], [$node->right, $node->left]] as [$call, $value]) {
+                if ($call instanceof Expr\MethodCall && $call->name instanceof Node\Identifier
+                    && in_array($call->name->toLowerString(), ['getsize', 'gettotalcount'], true)
+                    && $value instanceof Node\Scalar\LNumber && $value->value === 1
+                ) {
+                    $this->record($this->rootKey($call), self::LIMITED);
                 }
             }
 
@@ -92,7 +115,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         ) {
             $key = $this->rootKey($node->getArgs()[0]->value ?? null);
             $this->mark($node, $key);
-            if ($key !== null && ($this->rowUses[count($this->rowUses) - 1][$key] ?? 0) > 0) {
+            if ($key !== null && ($this->functionRowUses()[$key] ?? 0) > 0) {
                 $node->setAttribute(self::ROWS_USED_ELSEWHERE, true);
             }
             $this->record($key, self::LOADED);
@@ -106,8 +129,21 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         $name = $node->name->toLowerString();
         $key = $this->rootKey($node->var);
 
+        if ($name === 'addcategoryids') {
+            $this->record('*', self::CATEGORY_IDS_ADDED);
+        } elseif ($name === 'addurlrewrite') {
+            $this->record('*', self::URL_REWRITE_ADDED);
+        } elseif (in_array($name, ['getcategoryids', 'getproducturl', 'geturl', 'geturlinstore'], true)) {
+            $this->mark($node, '*');
+        }
+
         if ($name === 'getfirstitem') {
             $this->mark($node, $key);
+            // Another getFirstItem() needs one row as well; any other use needs the rows anyway.
+            $uses = $this->functionRowUses();
+            if ($key !== null && ($uses[$key] ?? 0) - ($uses[$key . self::FIRST_ITEM_USES] ?? 0) > 0) {
+                $node->setAttribute(self::ROWS_USED_ELSEWHERE, true);
+            }
             foreach ([self::LIMITED, self::UNIQUE_FILTER] as $fact) {
                 if ($this->chainHas($node->var, $fact)) {
                     $node->setAttribute($fact, true);
@@ -137,6 +173,17 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     }
 
     /**
+     * Row uses of the outermost enclosing function, which include those in its closures, so
+     * that a use outside a closure is seen from inside it too.
+     *
+     * @return array<string, int>
+     */
+    private function functionRowUses(): array
+    {
+        return $this->rowUses[1] ?? $this->rowUses[0];
+    }
+
+    /**
      * Counts, per collection, the operations in these statements that need its rows:
      * iterating it, or load()/getItems()/getFirstItem()/getLastItem(). Nested functions
      * are counted too; they usually run in the same request.
@@ -159,6 +206,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             }
             if ($key !== null) {
                 $uses[$key] = ($uses[$key] ?? 0) + 1;
+                if ($node instanceof Expr\MethodCall && $node->name instanceof Node\Identifier && $node->name->toLowerString() === 'getfirstitem') {
+                    $uses[$key . self::FIRST_ITEM_USES] = ($uses[$key . self::FIRST_ITEM_USES] ?? 0) + 1;
+                }
             }
         }
 
@@ -173,8 +223,11 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         if ($key === null) {
             return;
         }
-        foreach ($this->frames[count($this->frames) - 1][$key] ?? [] as $fact => $_) {
-            $node->setAttribute($fact, true);
+        // A fact about all items, set in a function, holds in the closures it passes them to.
+        foreach ($key === '*' ? $this->frames : [$this->frames[count($this->frames) - 1]] as $frame) {
+            foreach ($frame[$key] ?? [] as $fact => $_) {
+                $node->setAttribute($fact, true);
+            }
         }
     }
 
@@ -205,16 +258,16 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         $name = $call->name->toLowerString();
 
         if ($fact === self::LIMITED) {
-            // setPageSize(), or limit()/limitPage() on getSelect()
-            return $name === 'setpagesize'
+            // setPageSize(), setPage(), or limit()/limitPage() on getSelect()
+            return $name === 'setpagesize' || $name === 'setpage'
                 || (($name === 'limit' || $name === 'limitpage')
                     && $call->var instanceof Expr\MethodCall
                     && $call->var->name instanceof Node\Identifier
                     && $call->var->name->toLowerString() === 'getselect');
         }
 
-        if ($name === 'addidfilter') {
-            return true;
+        if ($name === 'addidfilter' || $name === 'setidfilter') {
+            return $this->isEquality($call->getArgs()[0]->value ?? null);
         }
         if ($name !== 'addfieldtofilter' && $name !== 'addattributetofilter') {
             return false;

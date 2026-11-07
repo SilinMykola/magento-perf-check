@@ -32,6 +32,10 @@ final class CollectionCountRuleTest extends RuleTestCase
             ['[P-COL-01] sizeof()' . $suffix, 35],
             // The first of two counts loads the rows only to count them; the second is free.
             ['[P-COL-01] count()' . $suffix, 60],
+            // A getter of another object is not known to be memoized; the object's own getter and property are skipped.
+            ['[P-COL-01] count()' . $suffix, 105],
+            // count($this) outside _afterLoad() may run before the rows are loaded; the same call inside it is not reported.
+            ['[P-COL-01] count() on CollectionCountFixture\\LoadedInHook loads every row of the collection to count it. Use getSize(), which runs a COUNT query.', 118],
         ]);
     }
 }

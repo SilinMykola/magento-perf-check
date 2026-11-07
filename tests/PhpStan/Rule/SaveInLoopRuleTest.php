@@ -31,6 +31,7 @@ final class SaveInLoopRuleTest extends RuleTestCase
             ['[P-LOOP-03] Magento\Catalog\Model\Product::delete() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 33],
             ['[P-LOOP-03] Magento\Catalog\Model\ResourceModel\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 34],
             ['[P-LOOP-03] Magento\Catalog\Api\ProductRepositoryInterface::deleteById() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 38],
+            ['[P-LOOP-03] Magento\Customer\Model\ResourceModel\Customer::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 59],
         ]);
     }
 }

@@ -51,17 +51,9 @@ final class TableReporter implements Reporter
                 $result->baselineUnmatched === 1 ? 'y' : 'ies',
             );
         }
-        $notices = $result->countNoticesBySource();
-        if ($notices !== []) {
-            $parts = [];
-            foreach ($notices as $source => $count) {
-                $parts[] = $count . ' ' . $source;
-            }
-            $out .= sprintf(
-                "%d analysis notice(s) not reported as findings (%s). Use --format=json to list them.\n",
-                count($result->notices),
-                implode(', ', $parts),
-            );
+        $notices = $result->noticeSummary();
+        if ($notices !== null) {
+            $out .= $notices . "\n";
         }
 
         return $out;

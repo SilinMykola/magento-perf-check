@@ -16,6 +16,7 @@ final class PhpStanResult
     public function __construct(
         public readonly array $findings,
         public readonly array $notices,
+        public readonly bool $filesAnalyzed = true,
     ) {
     }
 }

@@ -39,7 +39,7 @@
         "symfony/yaml": "^6.4 || ^7.0"
     },
     "suggest": {
-        "bitexpert/phpstan-magento": "Resolves types of generated factories and proxies when generated/code is not available"
+        "bitexpert/phpstan-magento": "Resolves types of generated proxies and extension attributes when generated/code is not available"
     },
     "autoload": {
         "psr-4": {
@@ -51,7 +51,6 @@
             "Silin\\MagentoPerfCheck\\Tests\\": "tests/"
         },
         "classmap": [
-            "tests/PhpStan/Stubs/",
             "tests/PhpStan/Fixtures/",
             "tests/Integration/Fixtures/phpstan-cli/"
         ]

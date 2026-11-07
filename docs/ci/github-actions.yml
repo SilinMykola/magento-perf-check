@@ -32,6 +32,8 @@ jobs:
         env:
           COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
 
+      # Without generated/code some findings are missed: add bin/magento setup:di:compile here
+      # if the job can run it, or install bitexpert/phpstan-magento.
       - name: Analyze (SARIF)
         # Exit code 1 means findings; upload them anyway. Exit code 2 is a tool error and fails the step.
         run: vendor/bin/magento-perf-check --format=sarif > magento-perf.sarif || [ $? -eq 1 ]

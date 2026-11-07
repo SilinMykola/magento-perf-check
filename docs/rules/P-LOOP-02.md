@@ -8,7 +8,7 @@
 
 ## What it catches
 
-Inside a loop, a database collection is created by `create()` and loaded by `load()`, `getItems()`, `getSize()`, `getFirstItem()` or `count()` within the same iteration. The collection can be created in the same call chain, or assigned to a variable inside the loop body. Loop context is the same as for [P-LOOP-01](P-LOOP-01.md): loop bodies, and closures passed to `array_map()`, `array_walk()` or `->walk()`.
+Inside a loop, a database collection is created by `create()` and loaded by `load()`, `getItems()`, `getSize()`, `getFirstItem()` or `count()` within the same iteration. The collection can be created in the same call chain, or assigned to a variable inside the loop body. Loop context is the same as for [P-LOOP-01](P-LOOP-01.md): loop bodies, and closures passed to `array_map()`, `array_walk()` or `->walk()`. One collection gives one finding, on its first loading call. A `foreach` over `array_chunk()` is one query per batch, which is the fix, and is not reported.
 
 ## Why it hurts performance
 
@@ -43,6 +43,12 @@ foreach ($collection as $child) {
 // @phpstan-ignore magentoPerf.loopCollectionLoad (at most two store views)
 $items = $this->collectionFactory->create()->setStoreId($storeId)->getItems();
 ```
+
+## Paging
+
+A collection created in a `while`, `do` or `for` loop, with `setPageSize()`, `setPage()`, `limit()` or `limitPage()` setting a row count before it loads, is not reported: one query per page is what paging is for.
+
+Still reported: a limit in a `foreach` or in a `for` with `count()` or `sizeof()` in its condition, because that runs one query per item; a limit of the literal 1 in any loop, which is a lookup; and `setCurPage()` alone, which sets no limit. A `while` loop over database rows with a variable limit is not recognized as a loop over items, so it goes unreported.
 
 ## Known false positives
 

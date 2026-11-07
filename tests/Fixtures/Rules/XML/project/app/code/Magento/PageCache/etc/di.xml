@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <type name="Magento\GraphQlCache\Model\CacheId\CacheIdCalculator">
+        <arguments>
+            <argument name="idFactorProviders" xsi:type="array">
+                <item name="core_factor" xsi:type="object">Magento\PageCache\Factor</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

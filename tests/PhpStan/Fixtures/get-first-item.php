@@ -146,6 +146,96 @@ final class Example
         $collection->getFirstItem();
     }
 
+    public function guardedBySize(Collection $collection): void
+    {
+        if ($collection->getSize() === 1) {
+            $collection->getFirstItem();
+        }
+    }
+
+    public function guardedByNegatedSize(Collection $collection): void
+    {
+        if ($collection->getSize() !== 1) {
+            return;
+        }
+        $collection->getFirstItem();
+    }
+
+    public function sizeOfManyIsNoGuard(Collection $collection): void
+    {
+        if ($collection->getSize() > 0) {
+            $collection->getFirstItem();
+        }
+    }
+
+    public function sizeOfFiveIsNoGuard(Collection $collection): void
+    {
+        if ($collection->getSize() === 5) {
+            $collection->getFirstItem();
+        }
+    }
+
+    public function limitedBySetPage(Collection $collection): void
+    {
+        $collection->setPage(1, 1)->getFirstItem();
+    }
+
+    public function filteredById(Collection $collection): void
+    {
+        $collection->setIdFilter(5)->getFirstItem();
+    }
+
+    public function filteredByManyIds(Collection $collection): void
+    {
+        $collection->addIdFilter([1, 2, 3])->getFirstItem();
+    }
+
+    public function freshCollectionInSameVariable(Collection $collection, Collection $other): void
+    {
+        $collection->setPageSize(1);
+        $collection = $other;
+        $collection->getFirstItem();
+    }
+
+    public function rowsUsedLater(Collection $collection): void
+    {
+        if ($collection->getFirstItem()->getId() === null) {
+            return;
+        }
+        $collection->getColumnValues('entity_id');
+    }
+
+    public function iteratedLater(Collection $collection): void
+    {
+        $collection->getFirstItem();
+        foreach ($collection as $item) {
+            $item->getId();
+        }
+    }
+
+    public function otherCollectionUsedLater(Collection $collection, Collection $other): void
+    {
+        $collection->getFirstItem();
+        $other->getColumnValues('entity_id');
+    }
+
+    public function calledTwice(Collection $collection): void
+    {
+        $collection->getFirstItem();
+        $collection->getFirstItem();
+    }
+
+    public function inClosureAndUsedOutside(Collection $collection): void
+    {
+        $first = static function () use ($collection): object {
+            return $collection->getFirstItem();
+        };
+        foreach ($collection as $item) {
+            $item->getId();
+        }
+        $first();
+    }
+
     public function unrelatedClass(Unrelated $unrelated): void
     {
         $unrelated->getFirstItem();

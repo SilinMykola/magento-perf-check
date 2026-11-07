@@ -13,6 +13,16 @@ namespace Magento\Framework\Session {
         {
             return null;
         }
+
+        public function getId(): string
+        {
+            return '';
+        }
+
+        public function getCurrencyCode(): string
+        {
+            return '';
+        }
     }
 }
 
