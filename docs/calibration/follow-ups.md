@@ -34,7 +34,6 @@ See [held-out.md](held-out.md): a save behind a check on an id in the loop, and 
 ## Low impact
 
 These rules are correct but report mostly negligible cases; calibration lowers their severity through the impact share. A narrower scope could raise it again:
-- P-DI-01: sessions in frontend actions, which `ContextPlugin` starts anyway (see the [rule page](../rules/P-DI-01.md)).
 - P-DI-06: lazy BC getters that create a dependency on first use.
 - P-LOOP-03: saves in loops over small, capped sets in cron and setup.
 - P-FPC-01: blocks placed only on uncacheable pages.

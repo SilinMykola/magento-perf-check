@@ -11,6 +11,7 @@
 A constructor parameter whose type is a session (`Magento\Framework\Session\SessionManagerInterface` and its subtypes, such as `Magento\Customer\Model\Session` or `Magento\Checkout\Model\Session`) or the cookie manager (`Magento\Framework\Stdlib\CookieManagerInterface`). It is reported when no `di.xml` in the project configures a `\Proxy` for that argument, neither for the class nor for one of its parent classes, in any area.
 
 The rule does not report:
+- a session in a class that implements `Magento\Framework\App\ActionInterface`, that is a controller action: every action starts a session anyway (see below). A cookie manager there is still reported;
 - generated classes (`\Proxy`, `\Interceptor`, `Factory`);
 - session classes themselves;
 - parameters already type-hinted as `\Proxy` (magento-coding-standard reports those).
@@ -22,8 +23,8 @@ When the project has no Magento configuration at all, the rule reports nothing.
 The object manager creates constructor dependencies together with the object. `SessionManager::__construct()` calls `start()`, which calls `session_start()`. A block, view model or plugin that receives the customer session therefore starts a session (session storage read, locking) every time it is built, even when the code path never uses it. The Technical guidelines forbid injecting Request, Session and Cookie objects into constructors at all.
 
 How much this costs depends on where the object is built:
-- **Frontend actions.** On a page cache miss, the core `Magento\Customer\Model\App\Action\ContextPlugin` (a `beforeExecute` plugin on every frontend `ActionInterface`, declared in `Magento_Customer`'s `etc/frontend/di.xml`) reads the customer session anyway, so one more session dependency in a block or controller adds little.
-- **Before action dispatch, and outside the frontend.** Objects built on the page cache hit path (for example plugins on the front controller), and in GraphQL, REST, cron or CLI, start a session that nothing else would start. There it is real cost.
+- **Actions.** On a page cache miss, the core `Magento\Customer\Model\App\Action\ContextPlugin` (a `beforeExecute` plugin on every frontend `ActionInterface`, declared in `Magento_Customer`'s `etc/frontend/di.xml`) reads the customer session anyway, and an admin request is checked against the admin session (login, or form key on POST) before its action runs. A controller is built only to run, so the rule leaves actions out. One more session dependency in a block on such a page adds little too, but a block can also be rendered elsewhere, for example in an email from a cron job, so blocks are still reported.
+- **Before action dispatch, and outside frontend and admin actions.** Objects built on the page cache hit path (for example plugins on the front controller), and in GraphQL, REST, cron or CLI, start a session that nothing else would start. There it is real cost.
 
 Calibration on Magento core and popular modules found mostly the first case, so most findings have low impact (see [calibration](../calibration.md)).
 
@@ -65,7 +66,7 @@ Better still, for cacheable pages: do not read customer data on the server at al
 
 - A Proxy configured through a virtual type is recognized for the class the virtual type is based on, but a `<preference>` that swaps in another class with its own `di.xml` arguments is not followed.
 - A class that reads the session as soon as its method runs gains little from a Proxy, because the session starts on that call anyway. The rule is still right that the session is a dependency of every caller; the fix may be to read it later or only where needed.
-- Classes that run only in contexts where a session is needed anyway, such as POST controllers of the customer account, may be fine without a Proxy.
+- Classes other than actions that run only where a session is needed anyway, such as a block placed only on customer account pages, may be fine without a Proxy.
 
 ## Basis
 

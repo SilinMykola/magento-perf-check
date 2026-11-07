@@ -32,7 +32,7 @@ Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded on
 
 | Rule | Findings | Graded | TP | TP-low | FP |
 |---|---|---|---|---|---|
-| P-DI-01 | 41 | 12 | 2 | 10 | 0 |
+| P-DI-01 | 36 | 11 | 2 | 9 | 0 |
 | P-DI-06 | 18 | 12 | 0 | 10 | 2 |
 | P-FPC-05 | 2 | 2 | 0 | 2 | 0 |
 | P-LOOP-01 | 3 | 3 | 0 | 3 | 0 |
@@ -43,15 +43,15 @@ Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded on
 | X-DB-01 | 1 | 1 | 1 | 0 | 0 |
 | X-DB-02 | 1 | 1 | 0 | 1 | 0 |
 | X-EVT-03 | 1 | 1 | 0 | 1 | 0 |
-| **All** | **88** | **53** | **3** | **47** | **3** |
+| **All** | **83** | **52** | **3** | **46** | **3** |
 
-50 of the 53 graded findings are correct, and 3 matter in practice. The tool is right far more often than it is important: most correct findings cost little.
+49 of the 52 graded findings are correct, and 3 matter in practice. The tool is right far more often than it is important: most correct findings cost little.
 
 ## What this run changed
 
 - P-COL-02 (experimental) had 4 false positives of 4: a `getFirstItem()` used as an emptiness check on a collection whose rows the same function reads later. It now stays silent when the function uses the rows anyway, and reports nothing on these modules.
 - P-FPC-05 reported a controller's own private `setNoCacheHeaders()` as well as the `setHeader()` calls inside it. The helper is no longer reported.
-- Two more P-FPC-05 findings, on `Pragma`, were dropped after the [second check](held-out-2.md), which is why the table shows 88 of the 90 findings.
+- Later changes dropped two P-FPC-05 findings, on `Pragma`, after the [second check](held-out-2.md), and five P-DI-01 findings in controllers, which is why the table shows 83 of the 90 findings.
 - Two defects outside the rules came from running the tool module by module: a stub of a core class in one module's `Test` directory hid 24 findings in other modules, and notices of the disabled rule P-COL-02 appeared on every default run.
 
 ## False positives left
@@ -61,7 +61,7 @@ Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded on
 
 ## Limitations
 
-- 15 modules and one grader. 53 findings are a small sample, and a correct verdict can miss a caller outside the files read.
+- 15 modules and one grader. 52 findings are a small sample, and a correct verdict can miss a caller outside the files read.
 - Rules with no finding here (X-LAY-03, P-LOOP-05, P-LOOP-09 and others) were not tested by this run.
 - Impact was judged from the code, not measured.
 
@@ -81,7 +81,6 @@ Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded on
 | app/code/Yireo/GoogleTagManager2/Plugin/AddDataToCustomerSection.php:39 | TP-low | The frontend plugin runs on customer section load, where the session is already needed and is read unconditionally. |
 | app/code/Trustpilot/Reviews/Block/Success.php:28 | TP-low | The block is used on the checkout success page, which already needs the checkout session. |
 | app/code/Magmodules/Channable/Model/Carrier/Channable.php:71 | TP-low | The carrier defaults to active and `collectRates()` reads the session whenever active, so a Proxy helps only paths that build it without collecting rates. |
-| app/code/Mageplaza/SocialLogin/Controller/Social/DataDeletion.php:76 | TP-low | This frontend controller forwards the session to its parent constructor, and the customer `ContextPlugin` reads the session on the same action anyway. |
 | app/code/ShipperHQ/Shipper/Helper/Package.php:56 | TP | The helper is an eager dependency of the `Shipper` carrier and `RecordOrder`, so it defeats the Proxy that `etc/di.xml` sets on their own session and starts a session on GraphQL and token REST rate paths. |
 
 ### P-DI-06
@@ -202,11 +201,11 @@ Findings of the default set now:
 
 | Modules | First runs | Now |
 |---|---|---|
-| 25 of the calibration corpus | 218 | 228 |
-| 15 above | 90 | 94 |
+| 25 of the calibration corpus | 218 | 240 |
+| 15 above | 90 | 89 |
 | 16 GraphQL modules | 8 | 9 |
 
-These projects have some generated factories and the first runs had the stubs, so this table does not show the size of each fix. The table below does for factories, against a run on all 56 modules with no `generated/code` and no factory typing, on a clean autoloader.
+These projects have some generated factories and the first runs had the stubs, so this table does not show the size of each fix. An earlier version of this table gave 228 for the corpus, from a run made before the factory fix; release 0.2.0 gives 261, and 240 since P-DI-01 leaves out actions. The table below does for factories, against a run on all 56 modules with no `generated/code` and no factory typing, on a clean autoloader.
 
 The grades above were not redone. These tables grade what the fixes added, by one grader who did not write the rules, reading the code once. Most of the sample is correct and cheap, as before. Most P-LOOP-03 findings not graded are in one-off blog imports of `Magefan\Blog\Model\Import`.
 

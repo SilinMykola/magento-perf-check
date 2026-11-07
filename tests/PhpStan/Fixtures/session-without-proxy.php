@@ -62,3 +62,23 @@ namespace Acme\Promo\Model {
         }
     }
 }
+
+namespace Acme\Promo\Controller\Account {
+    use Magento\Customer\Model\Session;
+    use Magento\Framework\App\ActionInterface;
+    use Magento\Framework\Stdlib\CookieManagerInterface;
+
+    final class Edit implements ActionInterface
+    {
+        public function __construct(
+            private readonly Session $customerSession,
+            private readonly CookieManagerInterface $cookieManager,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            return null;
+        }
+    }
+}

@@ -6,6 +6,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Changed
+
+- P-DI-01, in the default set, no longer reports a session in the constructor of a controller action: every action starts a session anyway, on the frontend through the customer `ContextPlugin` and in the admin through the request validation. On 78 modules this removes 42 of 182 findings; the 6 of them graded in calibration were all low impact. The cookie manager is still reported there. **This can change a CI result.**
+
 ## [0.2.0] - 2026-11-07
 
 ### Added
