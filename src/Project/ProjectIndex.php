@@ -18,6 +18,7 @@ final class ProjectIndex
      * @param array<string, true> $mviewViews
      * @param array<string, true> $tablesWithPrimaryKey
      * @param array<string, string> $listFieldResolvers resolver class => a field on a list type it resolves
+     * @param array<string, list<string>> $pluginTargets plugin class => classes it is configured on, outside the admin area
      */
     public function __construct(
         public readonly int $moduleCount,
@@ -27,6 +28,7 @@ final class ProjectIndex
         private readonly array $mviewViews,
         private readonly array $tablesWithPrimaryKey,
         private readonly array $listFieldResolvers = [],
+        private readonly array $pluginTargets = [],
     ) {
     }
 
@@ -69,6 +71,16 @@ final class ProjectIndex
         return isset($this->tablesWithPrimaryKey[$table]);
     }
 
+    /**
+     * Normalized classes that $class is a plugin on, outside the admin area.
+     *
+     * @return list<string>
+     */
+    public function pluginTargetsOf(string $class): array
+    {
+        return $this->pluginTargets[self::normalizeClass($class)] ?? [];
+    }
+
     /** "Type.field" when the class resolves a field of a type returned inside a list, else null. */
     public function listFieldResolvedBy(string $class): ?string
     {
@@ -88,6 +100,7 @@ final class ProjectIndex
             'mviewViews' => $this->mviewViews,
             'tablesWithPrimaryKey' => $this->tablesWithPrimaryKey,
             'listFieldResolvers' => $this->listFieldResolvers,
+            'pluginTargets' => $this->pluginTargets,
         ];
     }
 
@@ -96,7 +109,7 @@ final class ProjectIndex
      */
     public static function fromArray(array $data): self
     {
-        /** @var array{moduleCount: int, proxyArguments: array<string, array<string, true>>, pluginClasses: array<string, true>, observers: array<string, list<array{class: string, area: string, module: string}>>, mviewViews: array<string, true>, tablesWithPrimaryKey: array<string, true>, listFieldResolvers: array<string, string>} $data */
+        /** @var array{moduleCount: int, proxyArguments: array<string, array<string, true>>, pluginClasses: array<string, true>, observers: array<string, list<array{class: string, area: string, module: string}>>, mviewViews: array<string, true>, tablesWithPrimaryKey: array<string, true>, listFieldResolvers: array<string, string>, pluginTargets: array<string, list<string>>} $data */
         return new self(
             $data['moduleCount'],
             $data['proxyArguments'],
@@ -105,6 +118,7 @@ final class ProjectIndex
             $data['mviewViews'],
             $data['tablesWithPrimaryKey'],
             $data['listFieldResolvers'],
+            $data['pluginTargets'],
         );
     }
 }

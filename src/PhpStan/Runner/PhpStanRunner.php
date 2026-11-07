@@ -127,7 +127,7 @@ final class PhpStanRunner
 
         return [new Notice(
             'generated-code',
-            'generated/code is missing or empty, so the types of factories and proxies are unknown and calls on them are not checked. '
+            'generated/code is missing or empty, so the types of proxies and extension attributes are unknown and calls on them are not checked. '
             . 'Run bin/magento setup:di:compile, or install bitexpert/phpstan-magento in the tool.',
         )];
     }
@@ -190,6 +190,8 @@ final class PhpStanRunner
         $parameters = [
             // Only this package's rules run; PHPStan's built-in level rules stay off.
             'customRulesetUsed' => true,
+            // Older Magento code often has "private $x;" with no type: the constructor tells what it is.
+            'inferPrivatePropertyTypeFromConstructor' => true,
             // Templates are analyzed too (T-01 and every rule that applies to code in them).
             'fileExtensions' => ['php', 'phtml'],
             'paths' => $paths,

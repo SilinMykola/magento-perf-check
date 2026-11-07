@@ -31,6 +31,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     /** Set on getCategoryIds() after addCategoryIds() in the same function. */
     public const CATEGORY_IDS_ADDED = 'magentoPerfCategoryIdsAdded';
 
+    /** Set on a call that builds a product URL, after addUrlRewrite() in the same function. */
+    public const URL_REWRITE_ADDED = 'magentoPerfUrlRewriteAdded';
+
     /** Uses that need the rows themselves, not just their number. */
     private const ROW_USING_METHODS = ['load', 'getitems', 'getfirstitem', 'getlastitem', 'getcolumnvalues'];
 
@@ -128,7 +131,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
 
         if ($name === 'addcategoryids') {
             $this->record('*', self::CATEGORY_IDS_ADDED);
-        } elseif ($name === 'getcategoryids') {
+        } elseif ($name === 'addurlrewrite') {
+            $this->record('*', self::URL_REWRITE_ADDED);
+        } elseif (in_array($name, ['getcategoryids', 'getproducturl', 'geturl', 'geturlinstore'], true)) {
             $this->mark($node, '*');
         }
 
@@ -218,8 +223,11 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         if ($key === null) {
             return;
         }
-        foreach ($this->frames[count($this->frames) - 1][$key] ?? [] as $fact => $_) {
-            $node->setAttribute($fact, true);
+        // A fact about all items, set in a function, holds in the closures it passes them to.
+        foreach ($key === '*' ? $this->frames : [$this->frames[count($this->frames) - 1]] as $frame) {
+            foreach ($frame[$key] ?? [] as $fact => $_) {
+                $node->setAttribute($fact, true);
+            }
         }
     }
 

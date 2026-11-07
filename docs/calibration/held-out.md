@@ -191,3 +191,47 @@ No run failed: 12 findings with X-GQL-02 and P-FPC-03 enabled, `incomplete: fals
 Twelve is too few to decide anything, and the grader was unsure of 3 grades: the size of two lists and how often one code path runs. X-GQL-02 stays experimental until it has at least 10 graded findings.
 
 This run also showed that 3 of the 14 schemas were skipped with a notice, although Magento reads them: `//` and `/** */` comments and `extends type` did not parse. They parse now.
+
+## What the first runs missed
+
+Everything above, and rounds 1 and 2, ran from a checkout of this repository. That turned out to undercount, for two reasons.
+
+- **Test stubs.** They were in Composer's `autoload-dev`, and PHPStan loads this package's autoloader, so the stand-ins for `Product`, `AbstractModel` and the collections replaced the real classes. A method missing from a stub left the rest of a call chain untyped. An installed package never had this. A run from a clean install and one from the fixed checkout now give the same findings.
+- **Factories that are not generated.** Of the 1205 factory parameters in the 56 modules, 680 named a factory that the checked project had not generated, so calls on them went unchecked. `create()` is now typed from the factory's name. On all 56 modules with the experimental rules on, the run with generated factories and the run without `generated/code` both give 383 findings; without this fix, the second gives 327.
+
+Findings of the default set now:
+
+| Modules | First runs | Now |
+|---|---|---|
+| 25 of the calibration corpus | 218 | 228 |
+| 15 above | 90 | 96 |
+| 16 GraphQL modules | 8 | 9 |
+
+These projects have some generated factories and the first runs had the stubs, so this table does not show the size of each fix. The table below does for factories, against a run on all 56 modules with no `generated/code` and no factory typing, on a clean autoloader.
+
+The grades above were not redone. These tables grade what the fixes added, by one grader who did not write the rules, reading the code once. Most of the sample is correct and cheap, as before. Most P-LOOP-03 findings not graded are in one-off blog imports of `Magefan\Blog\Model\Import`.
+
+| Rule | Added on 56 modules | Graded | TP | TP-low | FP |
+|---|---|---|---|---|---|
+| P-LOOP-01 | 7 | 5 | 3 | 2 | 0 |
+| P-LOOP-02 | 3 | 2 | 0 | 2 | 0 |
+| P-LOOP-03 | 39 | 18 | 4 | 13 | 1 |
+| P-LOOP-07 | 1 | 0 | | | |
+| P-LOOP-10 | 4 | 4 | 2 | 2 | 0 |
+| **All** | **54** | **29** | **9** | **19** | **1** |
+
+Two more P-LOOP-02 findings were false, paged queries in a `while` loop. The rule no longer reports those. The P-LOOP-03 false positive is a save inside an `if` in a loop that matches at most one key.
+
+The six experimental rules added in this work, on all 56 modules:
+
+| Rule | Findings | Graded | TP | TP-low | FP |
+|---|---|---|---|---|---|
+| X-GQL-02 | 6 | 6 | 3 | 1 | 2 |
+| P-LOOP-04 | 3 | 3 | 3 | 0 | 0 |
+| P-LOOP-06 | 1 | 1 | 1 | 0 | 0 |
+| P-COL-03 | 2 | 1 | 0 | 1 | 0 |
+| X-PLG-02 | 5 | 5 | 1 | 4 | 0 |
+| P-FPC-03 | 0 | | | | |
+
+These samples are too small to move any rule to the default set. Both X-GQL-02 false positives come from putting ScandiPWA's quote module and Mollie in one project, which this scratch project does and few real ones do. The grader doubted the TP grades of two P-LOOP-04 findings, on cart and checkout pages, because carts are small, and that of P-LOOP-06, because the attribute comes from configuration.
+

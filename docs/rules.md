@@ -1,6 +1,6 @@
 # Rules
 
-33 rules in the default set and 6 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+33 rules in the default set and 10 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -56,6 +56,10 @@ Calibration measured these below their precision threshold. Enable one with `ena
 | [P-FPC-02](rules/P-FPC-02.md) | Block or view model reads customer data from the session | warning | A, B |
 | [P-FPC-03](rules/P-FPC-03.md) | Value specific to a visitor or a moment in the HTTP context | error | A, B |
 | [X-GQL-02](rules/X-GQL-02.md) | Database query in a resolver of a field on a type returned inside a list | warning | A |
+| [P-LOOP-04](rules/P-LOOP-04.md) | Product URL built inside a loop without addUrlRewrite() | warning | B |
+| [P-LOOP-06](rules/P-LOOP-06.md) | getAttributeText() or the table source getOptionText() inside a loop | warning | B |
+| [P-COL-03](rules/P-COL-03.md) | addAttributeToSelect('*') on an EAV collection | info | B |
+| [X-PLG-02](rules/X-PLG-02.md) | Plugin on a method that runs for every rendered block or layout element | info | A, B |
 
 ## Planned
 

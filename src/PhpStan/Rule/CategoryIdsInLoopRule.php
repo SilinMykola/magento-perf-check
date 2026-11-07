@@ -25,9 +25,6 @@ final class CategoryIdsInLoopRule implements Rule
     public const ID = 'P-LOOP-05';
     public const IDENTIFIER = 'magentoPerf.loopCategoryIds';
 
-    private const PRODUCT = 'Magento\Catalog\Model\Product';
-    private const PRODUCT_COLLECTION = 'Magento\Catalog\Model\ResourceModel\Product\Collection';
-
     private readonly MagentoTypes $types;
 
     public function __construct(ReflectionProvider $reflectionProvider)
@@ -46,7 +43,7 @@ final class CategoryIdsInLoopRule implements Rule
             || !$node->name instanceof Node\Identifier
             || $node->name->toLowerString() !== 'getcategoryids'
             || $node->getAttribute(CollectionStateVisitor::CATEGORY_IDS_ADDED) === true
-            || !$this->isProduct($node, $scope)
+            || !$this->types->isProduct($node, $scope)
         ) {
             return [];
         }
@@ -58,23 +55,5 @@ final class CategoryIdsInLoopRule implements Rule
                 self::ID,
             ))->identifier(self::IDENTIFIER)->build(),
         ];
-    }
-
-    /**
-     * Collections have no item type, so the loop variable of "foreach ($productCollection as $product)"
-     * is mixed: the iterated collection tells what it is.
-     */
-    private function isProduct(MethodCall $call, Scope $scope): bool
-    {
-        if ($this->types->subtypeOf($scope->getType($call->var), self::PRODUCT) !== null) {
-            return true;
-        }
-        $iterated = $call->getAttribute(LoopContextVisitor::ITERATED_EXPRESSION);
-        if ($iterated instanceof MethodCall && $iterated->name instanceof Node\Identifier && $iterated->name->toLowerString() === 'getitems') {
-            $iterated = $iterated->var;
-        }
-
-        return $iterated instanceof Node\Expr
-            && $this->types->subtypeOf($scope->getType($iterated), self::PRODUCT_COLLECTION) !== null;
     }
 }

@@ -44,6 +44,12 @@ foreach ($collection as $child) {
 $items = $this->collectionFactory->create()->setStoreId($storeId)->getItems();
 ```
 
+## Paging
+
+A collection created in a `while`, `do` or `for` loop, with `setPageSize()`, `setPage()`, `limit()` or `limitPage()` setting a row count before it loads, is not reported: one query per page is what paging is for.
+
+Still reported: a limit in a `foreach` or in a `for` with `count()` or `sizeof()` in its condition, because that runs one query per item; a limit of the literal 1 in any loop, which is a lookup; and `setCurPage()` alone, which sets no limit. A `while` loop over database rows with a variable limit is not recognized as a loop over items, so it goes unreported.
+
 ## Known false positives
 
 - Loops with a small fixed bound, such as iterating over two or three store views, cost little. Suppress with a reason.

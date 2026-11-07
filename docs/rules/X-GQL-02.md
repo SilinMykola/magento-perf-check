@@ -50,6 +50,7 @@ return $this->valueFactory->create(fn () => $this->brandCollector->getName($valu
 
 - A type reachable through a list that in practice is returned one at a time. `StoreConfig` is an example: `availableStores` returns a list of it, but `storeConfig` is the usual query.
 - A list that is always short. The rule does not know the size.
+- A list that one module adds to a type another module uses for one object. On a project with both ScandiPWA's quote module and Mollie, `[Order]` from the first makes the `Order` resolvers of the second count, although Mollie returns one order.
 - A query memoized in a property, such as `$this->rates ??= $this->collection->getItems()`, runs once but is reported. A query memoized per id runs per distinct id, so that finding is correct when ids repeat rarely.
 - A private method that a deferred closure calls is treated as an ordinary method, so its queries are reported.
 - A resolver on an interface field that a type overrides with its own resolver, when only that type is returned in a list.

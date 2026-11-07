@@ -82,6 +82,25 @@ return [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 9.4: server-rendered HTML must not contain user-specific data.'),
         $b('app/code/Magento/Customer/Model/Layout/DepersonalizePlugin.php#L101-L112', 'On cacheable GET pages the customer session is cleared after layout generation.'),
     ], ['magentoPerf.sessionDataInBlock' => null]),
+    new RuleDefinition('P-LOOP-04', 'Product URL built inside a loop without addUrlRewrite()', Severity::Warning, RuleStatus::Experimental, [
+        $b('app/code/Magento/Catalog/Model/Product/Url.php#L154-L183', 'Without a request path on the product, getUrl() looks the rewrite up through findOneByData().'),
+        $b('app/code/Magento/UrlRewrite/Model/Storage/DbStorage.php#L107-L131', 'The lookup runs a query on the url_rewrite table.'),
+        $b('app/code/Magento/Catalog/Model/ResourceModel/Product/Collection.php#L1455-L1504', 'addUrlRewrite() fills the request paths of the whole collection.'),
+    ], ['magentoPerf.loopProductUrl' => null]),
+    new RuleDefinition('P-LOOP-06', 'getAttributeText() or the table source getOptionText() inside a loop', Severity::Warning, RuleStatus::Experimental, [
+        $b('app/code/Magento/Eav/Model/Entity/Attribute/Source/Table.php#L106-L119', 'getSpecificOptions() creates and loads an option collection on every call.'),
+        $b('app/code/Magento/Catalog/Model/Product.php#L1796-L1801', 'getAttributeText() calls getOptionText() of the attribute source.'),
+        new Source(SourceLevel::B, 'https://github.com/magento/magento2/issues/38934', 'Confirmed issue: the table source "loads data from Database every time attribute value is requested". It has no measurements.'),
+    ], ['magentoPerf.loopAttributeText' => null]),
+    new RuleDefinition('P-COL-03', "addAttributeToSelect('*') on an EAV collection", Severity::Info, RuleStatus::Experimental, [
+        $b('app/code/Magento/Eav/Model/Entity/Collection/AbstractCollection.php#L583-L588', "For '*', every attribute of the entity is added to the selected attributes."),
+        $b('app/code/Magento/Eav/Model/Entity/Collection/AbstractCollection.php#L1266-L1297', '_loadAttributes() reads the values of all selected attributes. This shows the mechanism; no source measures the cost.'),
+    ], ['magentoPerf.selectAllAttributes' => null]),
+    new RuleDefinition('X-PLG-02', 'Plugin on a method that runs for every rendered block or layout element', Severity::Info, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/development/components/plugins', 'A plugin on a class also applies to the classes that inherit from it.'),
+        $b('lib/internal/Magento/Framework/View/Element/AbstractBlock.php#L666-L692', 'toHtml() runs once per rendered block. That a plugin here is slow is an inference from how often it runs.'),
+        $b('lib/internal/Magento/Framework/View/Layout.php#L555-L571', 'renderElement() runs once per layout element.'),
+    ], ['magentoPerf.hotRenderPlugin' => null]),
     new RuleDefinition('P-FPC-03', 'Value specific to a visitor or a moment in the HTTP context', Severity::Error, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Context variables should not be specific to individual users", because each value yields a separate cached copy.'),
         $b('lib/internal/Magento/Framework/App/Http/Context.php#L107-L135', 'Every non-default value goes into the vary string of the page cache key.'),

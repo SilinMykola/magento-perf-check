@@ -418,6 +418,34 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame(1, $notices('on.neon')['untyped-receiver'] ?? null);
     }
 
+    public function testUntypedPrivatePropertyGetsItsTypeFromTheConstructor(): void
+    {
+        $code = <<<'PHP'
+            <?php
+            namespace Acme\Demo;
+            class Model extends \Magento\Framework\Model\AbstractModel
+            {
+            }
+            class Foo
+            {
+                private $factory;
+                public function __construct(ModelFactory $factory)
+                {
+                    $this->factory = $factory;
+                }
+                public function run(array $ids): void
+                {
+                    foreach ($ids as $id) {
+                        $this->factory->create()->load($id);
+                    }
+                }
+            }
+            PHP;
+        $project = $this->project(['app/code/Acme/Demo/Foo.php' => $code]);
+
+        self::assertSame(['P-LOOP-01'], $this->ruleIds($project, []));
+    }
+
     public function testTestPathGivenNextToItsParentIsAnalyzed(): void
     {
         $test = str_replace('Acme\\Demo\\Block', 'Acme\\Demo\\Test\\Unit', self::SESSION_BLOCK);

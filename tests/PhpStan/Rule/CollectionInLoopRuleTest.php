@@ -46,6 +46,15 @@ final class CollectionInLoopRuleTest extends RuleTestCase
             // A variable name counts as a batch only in its function, and until it is assigned again.
             ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (getSize()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 132],
             ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (getItems()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 144],
+            // A limit in a loop over items is not paging.
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (getFirstItem()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 173],
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (load()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 176],
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (load()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 182],
+            // A loop over a count, one row per iteration, and a page number without a size are not paging.
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (load()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 205],
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (load()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 208],
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (getItems()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 213],
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (load()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 218],
         ]);
     }
 }

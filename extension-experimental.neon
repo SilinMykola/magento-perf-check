@@ -15,3 +15,7 @@ rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\ResolverQueryRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\ResolverCollectionLoopRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\UserValueInHttpContextRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\ProductUrlInLoopRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\AttributeTextInLoopRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\SelectAllAttributesRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\HotRenderPluginRule

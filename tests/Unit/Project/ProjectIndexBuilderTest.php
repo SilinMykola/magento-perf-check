@@ -60,7 +60,19 @@ final class ProjectIndexBuilderTest extends TestCase
     {
         $this->index();
 
-        self::assertSame('ProductInterface.brand', $this->index()->listFieldResolvedBy('Acme\Promo\Resolver\Brand'));
+        $cached = $this->index();
+
+        self::assertSame('ProductInterface.brand', $cached->listFieldResolvedBy('Acme\Promo\Resolver\Brand'));
+        self::assertContains('magento\framework\view\element\abstractblock', $cached->pluginTargetsOf('Acme\Render\OnBlock'));
+    }
+
+    public function testPluginTargetsLeaveOutAdminAndDisabledPlugins(): void
+    {
+        $index = $this->index();
+
+        self::assertSame([], $index->pluginTargetsOf('Acme\Render\InAdmin'));
+        self::assertSame([], $index->pluginTargetsOf('Acme\Render\Disabled'));
+        self::assertSame([], $index->pluginTargetsOf('Acme\Render\DisabledByName'));
     }
 
     public function testAListCountsForEverythingBelowIt(): void

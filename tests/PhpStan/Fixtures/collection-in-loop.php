@@ -144,4 +144,78 @@ final class Example
             $this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->getItems();
         }
     }
+
+    public function pagingInAWhileLoop(int $pages): void
+    {
+        do {
+            $byLimit = $this->collectionFactory->create();
+            $byLimit->getSelect()->limit(500);
+            $byLimit->getItems();
+        } while (--$pages > 0);
+        while (--$pages > 0) {
+            $bySize = $this->collectionFactory->create();
+            $bySize->setPageSize(100);
+            $bySize->load();
+        }
+        for ($page = 1; $page < $pages; $page++) {
+            $this->collectionFactory->create()->setPageSize(100)->setCurPage($page)->load();
+        }
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function limitPerItemIsNotPaging(array $ids): void
+    {
+        foreach ($ids as $id) {
+            $collection = $this->collectionFactory->create();
+            $collection->setPageSize(1);
+            $collection->getFirstItem();
+        }
+        foreach ($ids as $id) {
+            $this->collectionFactory->create()->setPageSize(1)->load();
+        }
+        while (--$ids[0] > 0) {
+            foreach ($ids as $id) {
+                $inner = $this->collectionFactory->create();
+                $inner->setPageSize(1);
+                $inner->load();
+            }
+        }
+    }
+
+    public function pagingWrittenOtherWays(int $pages): void
+    {
+        while (--$pages > 0) {
+            $assigned = $this->collectionFactory->create()->setPageSize(100);
+            $assigned->load();
+        }
+        do {
+            $fluent = $this->collectionFactory->create();
+            $fluent->setPageSize(100)->setCurPage($pages)->load();
+        } while (--$pages > 0);
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function notPagingInAnotherLoop(array $ids, int $page): void
+    {
+        for ($i = 0; $i < count($ids); $i++) {
+            $this->collectionFactory->create()->setPageSize(100)->load();
+        }
+        while ($page-- > 0) {
+            $this->collectionFactory->create()->setPageSize(1)->load();
+        }
+        while ($page-- > 0) {
+            $lookup = $this->collectionFactory->create();
+            $lookup->getSelect()->limit(1);
+            $lookup->getItems();
+        }
+        while ($page-- > 0) {
+            $allRows = $this->collectionFactory->create();
+            $allRows->setCurPage($page);
+            $allRows->load();
+        }
+    }
 }

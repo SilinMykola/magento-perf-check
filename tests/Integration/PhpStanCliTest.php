@@ -22,11 +22,12 @@ final class PhpStanCliTest extends TestCase
         self::assertIsString($config);
         rename($config, $config .= '.neon');
         file_put_contents($config, sprintf(
-            "includes:\n    - %s/extension.neon\n%sparameters:\n    level: %d\n    tmpDir: %s\n",
+            "includes:\n    - %s/extension.neon\n%sparameters:\n    level: %d\n    tmpDir: %s\n    bootstrapFiles:\n        - %s/tests/bootstrap.php\n",
             realpath(self::ROOT),
             $experimental ? '    - ' . realpath(self::ROOT) . "/extension-experimental.neon\n" : '',
             $level,
             sys_get_temp_dir() . '/mpr-phpstan-test',
+            realpath(self::ROOT),
         ));
 
         $command = [

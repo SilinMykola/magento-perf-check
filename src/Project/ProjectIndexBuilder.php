@@ -19,7 +19,7 @@ final class ProjectIndexBuilder
 
     /** Indexed files, relative to a module's etc/ directory; * is one area directory. */
     /** Part of the cache key: raise it when the same files start to give a different index. */
-    private const INDEX_VERSION = 2;
+    private const INDEX_VERSION = 3;
 
     private const FILES = ['di.xml', '*/di.xml', 'events.xml', '*/events.xml', 'mview.xml', 'db_schema.xml', 'schema.graphqls'];
 
@@ -168,6 +168,8 @@ final class ProjectIndexBuilder
         $virtualTypes = [];
         $virtualProxies = [];
         $schemas = [];
+        $pluginsByName = [];
+        $disabledPlugins = [];
 
         foreach ($files as $file) {
             if ($file['name'] === 'schema.graphqls') {
@@ -195,7 +197,14 @@ final class ProjectIndexBuilder
                         }
                         foreach ($this->elements($xpath, 'plugin', $type) as $plugin) {
                             if ($plugin->getAttribute('type') !== '') {
-                                $plugins[ProjectIndex::normalizeClass($plugin->getAttribute('type'))] = true;
+                                $class = ProjectIndex::normalizeClass($plugin->getAttribute('type'));
+                                $plugins[$class] = true;
+                                if ($file['area'] !== 'adminhtml') {
+                                    $pluginsByName[$name][$plugin->getAttribute('name')] = $class;
+                                }
+                            }
+                            if ($plugin->getAttribute('disabled') === 'true') {
+                                $disabledPlugins[$name][$plugin->getAttribute('name')] = true;
                             }
                         }
                     }
@@ -237,12 +246,20 @@ final class ProjectIndexBuilder
             }
         }
 
+        // Magento merges plugins by target and name, so another module can disable one by name alone.
+        $pluginTargets = [];
+        foreach ($pluginsByName as $target => $byName) {
+            foreach (array_diff_key($byName, $disabledPlugins[$target] ?? []) as $class) {
+                $pluginTargets[$class][] = $target;
+            }
+        }
+
         $listFields = ListFieldResolvers::fromSchemas($schemas);
         foreach ($listFields as $class => $field) {
             $listFields[self::baseOfVirtualType($class, $virtualTypes)] ??= $field;
         }
 
-        return new ProjectIndex($moduleCount, $proxies, $plugins, $observers, $views, $tables, $listFields);
+        return new ProjectIndex($moduleCount, $proxies, $plugins, $observers, $views, $tables, $listFields, $pluginTargets);
     }
 
     /**

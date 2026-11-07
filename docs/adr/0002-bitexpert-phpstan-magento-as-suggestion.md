@@ -29,3 +29,7 @@ No single version supports both PHPStan majors. A hard dependency would therefor
 - No Composer conflict on either PHPStan major.
 - Projects without `generated/code` and without bitExpert miss some findings. Typical cases are collections created through factories (P-COL-02) and repositories injected through generated proxies. The M0 core run counts how many `getFirstItem()` receivers stay untyped, to size the problem (see `docs/runs/m0-core.md`).
 - If bitExpert later supports both majors in one release, this decision can be revisited.
+
+## Update, 2026-11-07
+
+On 56 modules, 680 of 1205 factory parameters named a factory that the checked project had not generated, so findings depended on whether `setup:di:compile` had run. `create()` of a missing factory is now typed by this package's own `FactoryCreateTypeExtension`, on both PHPStan majors. The results on those modules with generated factories and without `generated/code` are now the same 383 findings; without the extension, the run without `generated/code` gives 327. bitExpert stays a suggestion for proxies and extension attributes.

@@ -20,6 +20,10 @@ services:
         arguments:
             projectRoot: %magentoPerf.projectRoot%
     -
+        class: Silin\MagentoPerfCheck\PhpStan\FactoryCreateTypeExtension
+        tags:
+            - phpstan.broker.expressionTypeResolverExtension
+    -
         class: Silin\MagentoPerfCheck\PhpStan\LoopContextVisitor
         tags:
             - phpstan.parser.richParserNodeVisitor

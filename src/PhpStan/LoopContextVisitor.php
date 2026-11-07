@@ -7,6 +7,7 @@ namespace Silin\MagentoPerfCheck\PhpStan;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt;
+use PhpParser\NodeFinder;
 use PhpParser\NodeVisitorAbstract;
 
 /**
@@ -44,6 +45,12 @@ final class LoopContextVisitor extends NodeVisitorAbstract
     private const COVERED_BY_CHAIN = 'magentoPerfCoveredByChain';
 
     private const LOADING_METHODS = ['load', 'getitems', 'getsize', 'getfirstitem', 'count'];
+
+    /**
+     * Methods that limit the rows of a query => position of their row count. A limit in a loop
+     * that is not over items is paging: one query per page is the fix, not the problem.
+     */
+    private const PAGING_METHODS = ['setpagesize' => 0, 'limit' => 0, 'setpage' => 1, 'limitpage' => 1];
 
     /** Callback argument position per iterating function. */
     private const ITERATING_FUNCTIONS = ['array_map' => 0, 'array_walk' => 1];
@@ -125,7 +132,7 @@ final class LoopContextVisitor extends NodeVisitorAbstract
         ) {
             $node->setAttribute(self::ITERATION_SCOPE, true);
             $this->created[] = [];
-            $this->markBodyRoots($node->stmts, $node instanceof Stmt\Foreach_);
+            $this->markBodyRoots($node->stmts, $node instanceof Stmt\Foreach_ || ($node instanceof Stmt\For_ && self::countsItems($node)));
             if ($node instanceof Stmt\Foreach_) {
                 $this->foreaches[] = $node;
                 $node->expr->setAttribute(self::RUNS_ONCE, true);
@@ -210,7 +217,20 @@ final class LoopContextVisitor extends NodeVisitorAbstract
         if ($node instanceof Expr\Assign && $node->var instanceof Expr\Variable && is_string($node->var->name)
             && $this->chainCallsCreate($node->expr)
         ) {
-            $this->created[count($this->created) - 1][$node->var->name] = !self::chainLoads($node->expr);
+            $this->created[count($this->created) - 1][$node->var->name] = !self::chainHas($node->expr, self::LOADING_METHODS) && !$this->pagesInThisLoop($node->expr);
+
+            return;
+        }
+        if ($node instanceof Expr\MethodCall && $this->itemDepth === 0 && self::isPaging($node)) {
+            $paged = $node->var;
+            while ($paged instanceof Expr\MethodCall) {
+                $paged = $paged->var;
+            }
+            if ($paged instanceof Expr\Variable && is_string($paged->name)) {
+                foreach (array_keys($this->created) as $i) {
+                    unset($this->created[$i][$paged->name]);
+                }
+            }
 
             return;
         }
@@ -233,7 +253,7 @@ final class LoopContextVisitor extends NodeVisitorAbstract
                 }
             }
         }
-        if ($createdVariable || $this->chainCallsCreate($node->var)) {
+        if (($createdVariable || $this->chainCallsCreate($node->var)) && !$this->pagesInThisLoop($node->var)) {
             $node->setAttribute(self::CREATED_IN_LOOP, true);
             for ($inner = $node->var; $inner instanceof Expr\MethodCall; $inner = $inner->var) {
                 $inner->setAttribute(self::COVERED_BY_CHAIN, true);
@@ -255,15 +275,53 @@ final class LoopContextVisitor extends NodeVisitorAbstract
         }
     }
 
-    private static function chainLoads(Expr $expr): bool
+    /**
+     * @param list<string> $methods
+     */
+    private static function chainHas(Expr $expr, array $methods): bool
     {
         for (; $expr instanceof Expr\MethodCall; $expr = $expr->var) {
-            if ($expr->name instanceof Node\Identifier && in_array($expr->name->toLowerString(), self::LOADING_METHODS, true)) {
+            if ($expr->name instanceof Node\Identifier && in_array($expr->name->toLowerString(), $methods, true)) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private function pagesInThisLoop(Expr $expr): bool
+    {
+        if ($this->itemDepth > 0) {
+            return false;
+        }
+        for (; $expr instanceof Expr\MethodCall; $expr = $expr->var) {
+            if (self::isPaging($expr)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** A limit of one row is a lookup, not a page, whatever kind of loop it is in. */
+    private static function isPaging(Expr\MethodCall $call): bool
+    {
+        $position = $call->name instanceof Node\Identifier ? (self::PAGING_METHODS[$call->name->toLowerString()] ?? null) : null;
+        if ($position === null) {
+            return false;
+        }
+        $rows = $call->getArgs()[$position]->value ?? null;
+
+        return $rows !== null && !($rows instanceof Node\Scalar\LNumber && $rows->value === 1);
+    }
+
+    /** for ($i = 0; $i < count($items); $i++) goes over items the way foreach does. */
+    private static function countsItems(Stmt\For_ $loop): bool
+    {
+        return (new NodeFinder())->findFirst(
+            $loop->cond,
+            static fn (Node $node): bool => $node instanceof Expr\FuncCall && $node->name instanceof Node\Name && in_array($node->name->toLowerString(), ['count', 'sizeof'], true),
+        ) !== null;
     }
 
     private static function isChunk(Expr $expr): bool

@@ -8,6 +8,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Added
 
+- Experimental rules, off by default: P-LOOP-04, P-LOOP-06 at `warning`, on a product URL or an attribute option text inside a loop; P-COL-03, X-PLG-02 at `info`, on `addAttributeToSelect('*')` and on a plugin that runs for every rendered block.
 - Experimental rules, off by default: X-GQL-02 at `warning`, on a database query in a resolver of a field on a type returned inside a list; P-FPC-03 at `error`, on a value specific to a visitor or a moment in the HTTP context.
 - New rules in the default set, which can change a CI result: X-LAY-03 at `error`, on `cacheable="false"` in the `default`, `catalog_*` and `cms_*` handles; P-LOOP-05, P-LOOP-09, P-LOOP-10, P-IDX-01 and, back from experimental, P-PLG-01 at `warning`; X-DB-02, X-AREA-01 and X-GQL-03 at `info`. **X-LAY-03 can fail a CI run that passed before.**
 
@@ -17,6 +18,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 - With the `magento-perf-check` command, PHP rules that read XML (P-DI-01, P-FPC-10, P-PLG-01) no longer report stale results from PHPStan's cache after `di.xml` or another indexed file changes. Before this, adding a Proxy changed nothing, and removing one could go unreported.
 - Two runs on one project at the same time no longer return each other's results.
 - A stub of a core class in a module's `Test` directory no longer replaces the real class for all other code. In the calibration corpus, one module's stubs of `Magento\Customer\Model\Session` and `Customer` hid 24 findings in other modules. **This can change a CI result.**
+- `create()` of a factory that is not generated yet is typed from its name, so findings no longer depend on whether `setup:di:compile` has run. On 56 modules without `generated/code`, this adds 54 findings of P-LOOP-01, P-LOOP-02, P-LOOP-03, P-LOOP-07 and P-LOOP-10 and removes none; with generated factories the same findings were there already. **This can change a CI result.**
+- Untyped private properties take their type from the constructor. **This can change a CI result.**
 - P-LOOP-03, P-LOOP-10, P-FPC-06 and X-SETUP-01 also recognize EAV resource models, such as those of products and customers. **This can change a CI result.**
 - A `schema.graphqls` with `//` or `/* */` comments or `extends type`, which Magento reads, is analyzed. Before, it was skipped with a notice, so X-GQL-01 did not see it. **This can change a CI result.**
 - The project index finds a Composer module whose `etc/module.xml` is in `src/`.
@@ -28,6 +31,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Changed
 
+- P-LOOP-02 does not report a collection that is created and limited in a `while`, `do` or `for` loop: that is paging. A `foreach`, a `for` over `count()` and a limit of one row are still reported.
+- P-LOOP-09 also counts a `for` with `count()` or `sizeof()` in its condition as a loop over items. **This can change a CI result.**
 - Nothing to analyze is an error, exit code 2, instead of a clean run: a project without `app/code` and `app/design`, or paths with no PHP, template or XML file. **This can change a CI result.**
 - `--paths` entries with `..` are rejected. **This can change a CI result.**
 - P-LOOP-01 no longer reports `Magento\Directory\Model\Currency::load()` or `get()`/`getById()` on the `Magento\Store\Api` store, website and group repositories: no query runs.

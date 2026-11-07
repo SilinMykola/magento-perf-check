@@ -2,6 +2,8 @@
 
 Round 1 ([`docs/calibration.md`](../calibration.md)) measured the rules and listed recurring false positives. This round changes the rules with those patterns and measures them again, together with the new rules. A decision here replaces the one in round 1. Rules not listed did not change and keep their round 1 result.
 
+These runs undercount: test stubs replaced real classes during them, and factories that were not generated stayed untyped. See [What the first runs missed](held-out.md#what-the-first-runs-missed).
+
 ## Runs
 
 The corpus and the method are those of round 1. Both parts ran on 2026-11-07, one after the other, at low priority, with the experimental rules enabled:
