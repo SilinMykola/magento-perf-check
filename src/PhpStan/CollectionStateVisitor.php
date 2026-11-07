@@ -28,6 +28,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     /** Set on count() when the same function uses the collection's rows elsewhere. */
     public const ROWS_USED_ELSEWHERE = 'magentoPerfCollectionRowsUsedElsewhere';
 
+    /** Set on getCategoryIds() after addCategoryIds() in the same function. */
+    public const CATEGORY_IDS_ADDED = 'magentoPerfCategoryIdsAdded';
+
     /** Uses that need the rows themselves, not just their number. */
     private const ROW_USING_METHODS = ['load', 'getitems', 'getfirstitem', 'getlastitem'];
 
@@ -64,9 +67,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         }
 
         // "$c = <chain>": $c is a new collection; it inherits only what the chain establishes.
-        if ($node instanceof Expr\Assign && $node->var instanceof Expr\Variable && is_string($node->var->name)
-            && $node->expr instanceof Expr\MethodCall
-        ) {
+        if ($node instanceof Expr\Assign && $node->var instanceof Expr\Variable && is_string($node->var->name)) {
             $key = '$' . $node->var->name;
             // "$c = $c->addFieldToFilter(...)" keeps working on the same collection.
             if ($this->rootKey($node->expr) !== $key) {
@@ -75,6 +76,22 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             foreach ([self::LIMITED, self::UNIQUE_FILTER] as $fact) {
                 if ($this->chainHas($node->expr, $fact)) {
                     $this->record($key, $fact);
+                }
+            }
+
+            return null;
+        }
+
+        // "if ($c->getSize() === 1)": the collection is known to hold one row.
+        if ($node instanceof Expr\BinaryOp\Identical || $node instanceof Expr\BinaryOp\NotIdentical
+            || $node instanceof Expr\BinaryOp\Equal || $node instanceof Expr\BinaryOp\NotEqual
+        ) {
+            foreach ([[$node->left, $node->right], [$node->right, $node->left]] as [$call, $value]) {
+                if ($call instanceof Expr\MethodCall && $call->name instanceof Node\Identifier
+                    && in_array($call->name->toLowerString(), ['getsize', 'gettotalcount'], true)
+                    && $value instanceof Node\Scalar\LNumber && $value->value === 1
+                ) {
+                    $this->record($this->rootKey($call), self::LIMITED);
                 }
             }
 
@@ -105,6 +122,12 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         }
         $name = $node->name->toLowerString();
         $key = $this->rootKey($node->var);
+
+        if ($name === 'addcategoryids') {
+            $this->record('*', self::CATEGORY_IDS_ADDED);
+        } elseif ($name === 'getcategoryids') {
+            $this->mark($node, '*');
+        }
 
         if ($name === 'getfirstitem') {
             $this->mark($node, $key);
@@ -205,16 +228,16 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         $name = $call->name->toLowerString();
 
         if ($fact === self::LIMITED) {
-            // setPageSize(), or limit()/limitPage() on getSelect()
-            return $name === 'setpagesize'
+            // setPageSize(), setPage(), or limit()/limitPage() on getSelect()
+            return $name === 'setpagesize' || $name === 'setpage'
                 || (($name === 'limit' || $name === 'limitpage')
                     && $call->var instanceof Expr\MethodCall
                     && $call->var->name instanceof Node\Identifier
                     && $call->var->name->toLowerString() === 'getselect');
         }
 
-        if ($name === 'addidfilter') {
-            return true;
+        if ($name === 'addidfilter' || $name === 'setidfilter') {
+            return $this->isEquality($call->getArgs()[0]->value ?? null);
         }
         if ($name !== 'addfieldtofilter' && $name !== 'addattributetofilter') {
             return false;

@@ -65,3 +65,41 @@ final class Example
         return $collection->getSize();
     }
 }
+
+final class Memoized
+{
+    private ?Collection $rows = null;
+
+    public function getRows(): Collection
+    {
+        return $this->rows ?? throw new \LogicException();
+    }
+
+    public function hasRows(): bool
+    {
+        return count($this->getRows()) > 0;
+    }
+
+    public function hasStoredRows(Collection $other): bool
+    {
+        return $this->rows !== null && count($this->rows) > 0;
+    }
+
+    public function otherObject(self $other): bool
+    {
+        return count($other->getRows()) > 0;
+    }
+}
+
+abstract class LoadedInHook extends Collection
+{
+    protected function _afterLoad(): int
+    {
+        return count($this);
+    }
+
+    public function notInTheHook(): int
+    {
+        return count($this);
+    }
+}

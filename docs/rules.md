@@ -1,6 +1,6 @@
 # Rules
 
-24 rules in the default set and 5 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+33 rules in the default set and 4 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -34,6 +34,15 @@ Severity is the default; change it per rule in [`magento-perf-check.neon`](confi
 | [X-IDX-01](rules/X-IDX-01.md) | Indexer without an mview subscription | warning | A, B |
 | [X-SETUP-01](rules/X-SETUP-01.md) | Heavy work in Setup/Recurring or RecurringData | warning | A, B |
 | [X-DB-01](rules/X-DB-01.md) | db_schema.xml table without a primary key | error | A |
+| [P-PLG-01](rules/P-PLG-01.md) | around plugin where before/after would do | warning | A |
+| [P-LOOP-05](rules/P-LOOP-05.md) | Product getCategoryIds() inside a loop | warning | B |
+| [P-LOOP-09](rules/P-LOOP-09.md) | Repository getList() with search criteria once per item of a loop | warning | A |
+| [P-LOOP-10](rules/P-LOOP-10.md) | Resource model load() inside a loop | warning | A, B |
+| [P-IDX-01](rules/P-IDX-01.md) | reindexRow()/reindexList() in request code without isScheduled() | warning | A, B |
+| [X-LAY-03](rules/X-LAY-03.md) | Block with cacheable="false" on the default, catalog or CMS handle | error | A, B |
+| [X-DB-02](rules/X-DB-02.md) | db_schema.xml index that duplicates a key or another index | info | A |
+| [X-AREA-01](rules/X-AREA-01.md) | Observer on an admin event declared in the global area | info | A |
+| [X-GQL-03](rules/X-GQL-03.md) | GraphQL cache id factor added to CacheIdCalculator | info | A, B |
 
 ## Experimental (off by default)
 
@@ -41,11 +50,10 @@ Calibration measured these below their precision threshold. Enable one with `ena
 
 | ID | Finds | Severity | Sources |
 |---|---|---|---|
-| [X-LAY-01](rules/X-LAY-01.md) | Block with cacheable="false" in a frontend layout | error (`default`, `catalog_*`, `cms_*`), warning (other handles) | A, B |
+| [X-LAY-01](rules/X-LAY-01.md) | Block with cacheable="false" in a frontend layout, other than the X-LAY-03 handles | warning | A, B |
 | [P-COL-02](rules/P-COL-02.md) | getFirstItem() on a database collection without setPageSize() | error | B |
 | [P-DI-02](rules/P-DI-02.md) | Constructor does more than assign dependencies | warning | A |
 | [P-FPC-02](rules/P-FPC-02.md) | Block or view model reads customer data from the session | warning | A, B |
-| [P-PLG-01](rules/P-PLG-01.md) | around plugin where before/after would do | warning | A |
 
 ## Planned
 

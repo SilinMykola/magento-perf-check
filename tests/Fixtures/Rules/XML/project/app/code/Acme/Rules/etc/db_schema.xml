@@ -7,4 +7,40 @@
         <column xsi:type="int" name="log_id" nullable="false"/>
     </table>
     <table name="acme_old" resource="default" disabled="true"/>
+    <table name="acme_indexed" resource="default">
+        <column xsi:type="int" name="id" nullable="false"/>
+        <column xsi:type="int" name="code" nullable="false"/>
+        <column xsi:type="int" name="store_id" nullable="false"/>
+        <column xsi:type="text" name="body"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="ACME_INDEXED_CODE">
+            <column name="code"/>
+        </constraint>
+        <index referenceId="ACME_INDEXED_ID" indexType="btree">
+            <column name="id"/>
+        </index>
+        <index referenceId="ACME_INDEXED_CODE_IDX" indexType="btree">
+            <column name="code"/>
+        </index>
+        <index referenceId="ACME_INDEXED_STORE" indexType="btree">
+            <column name="store_id"/>
+            <column name="code"/>
+        </index>
+        <index referenceId="ACME_INDEXED_STORE_AGAIN">
+            <column name="store_id"/>
+            <column name="code"/>
+        </index>
+        <index referenceId="ACME_INDEXED_CODE_STORE" indexType="btree">
+            <column name="code"/>
+            <column name="store_id"/>
+        </index>
+        <index referenceId="ACME_INDEXED_BODY" indexType="fulltext">
+            <column name="id"/>
+        </index>
+        <index referenceId="ACME_INDEXED_OFF" indexType="btree" disabled="true">
+            <column name="id"/>
+        </index>
+    </table>
 </schema>

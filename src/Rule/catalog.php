@@ -24,7 +24,7 @@ $extensionPerformance = 'https://developer.adobe.com/commerce/php/best-practices
 $codeReview = 'https://experienceleague.adobe.com/en/docs/commerce-operations/implementation-playbook/best-practices/development/code-review';
 
 return [
-    new RuleDefinition('X-LAY-01', 'Block with cacheable="false" in a frontend layout', Severity::Warning, RuleStatus::Experimental, [
+    new RuleDefinition('X-LAY-01', 'Block with cacheable="false" in a frontend layout, other than the X-LAY-03 handles', Severity::Warning, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/php/development/cache/page/', '"If any block in a layout is designated as uncacheable, the entire page is uncacheable."'),
         $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Using cacheable="false" inside the default.xml file disables caching for all pages on the site."'),
         $b('lib/internal/Magento/Framework/View/Layout.php#L1192-L1210', 'Layout::isCacheable() returns false when any <block cacheable="false"> is present in the layout.'),
@@ -100,7 +100,7 @@ return [
         $a('https://developer.adobe.com/commerce/php/development/components/indexing/', 'Update on Save indexers reindex the changed entities through plugins or events.'),
         $b('app/code/Magento/Indexer/Model/Indexer.php#L452-L494', 'reindexAll() rebuilds the whole index synchronously.'),
     ], ['magentoPerf.fullReindex' => null]),
-    new RuleDefinition('P-PLG-01', 'around plugin where before/after would do', Severity::Warning, RuleStatus::Experimental, [
+    new RuleDefinition('P-PLG-01', 'around plugin where before/after would do', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/components/plugins', 'Avoid using around method plugins when they are not required, because they increase stack traces and affect performance.'),
     ], ['magentoPerf.unnecessaryAroundPlugin' => null]),
     new RuleDefinition('T-01', 'getLayout()->createBlock() in a template', Severity::Info, RuleStatus::Default, [
@@ -149,5 +149,39 @@ return [
         $b('app/code/Magento/GraphQlCache/Model/CacheableQueryHandler.php#L59-L85', 'A field with @cache but without cacheIdentity marks the whole query as not cacheable.'),
         $b('app/code/Magento/GraphQlCache/Model/Plugin/Query/Resolver.php#L43-L82', 'The resolver plugin collects cache tags only through the field\'s identity class.'),
         $a('https://developer.adobe.com/commerce/webapi/graphql/develop/identity-class', 'Cacheable queries need an identity class that returns the cache tags.'),
+    ]),
+    new RuleDefinition('P-LOOP-09', 'Repository getList() with search criteria once per item of a loop', Severity::Warning, RuleStatus::Default, [
+        $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),
+        $a($codeReview, '"Are queries executed in a loop? This loop can be outside of the edited files."'),
+    ], ['magentoPerf.loopRepositoryList' => null]),
+    new RuleDefinition('P-LOOP-10', 'Resource model load() inside a loop', Severity::Warning, RuleStatus::Default, [
+        $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),
+        $b('lib/internal/Magento/Framework/Model/ResourceModel/Db/AbstractDb.php#L323-L333', 'AbstractDb::load() runs fetchRow() on every call.'),
+    ], ['magentoPerf.loopResourceLoad' => null]),
+    new RuleDefinition('P-LOOP-05', 'Product getCategoryIds() inside a loop', Severity::Warning, RuleStatus::Default, [
+        $b('app/code/Magento/Catalog/Model/Product.php#L753-L769', 'getCategoryIds() asks the resource model when category_ids is not set.'),
+        $b('app/code/Magento/Catalog/Model/ResourceModel/Product/CategoryLink.php#L54-L69', 'Each call runs one fetchAll for one product id.'),
+        $b('app/code/Magento/Catalog/Model/ResourceModel/Product/Collection.php#L2163-L2200', 'addCategoryIds() runs one query for all loaded items.'),
+    ], ['magentoPerf.loopCategoryIds' => null]),
+    new RuleDefinition('P-IDX-01', 'reindexRow()/reindexList() in request code without isScheduled()', Severity::Warning, RuleStatus::Default, [
+        $a('https://experienceleague.adobe.com/en/docs/commerce-operations/implementation-playbook/best-practices/maintenance/indexer-configuration', '"frequent reindexing degrades database performance which slows site performance"'),
+        $b('app/code/Magento/Indexer/Model/Indexer.php#L562-L566', 'Indexer::reindexRow() runs the action without looking at the indexer mode.'),
+        $b('lib/internal/Magento/Framework/Indexer/AbstractProcessor.php#L50-L56', 'Core processors return early when the indexer is scheduled.'),
+    ], ['magentoPerf.directReindex' => null]),
+    new RuleDefinition('X-LAY-03', 'Block with cacheable="false" on the default, catalog or CMS handle', Severity::Error, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/cache/page/', '"If any block in a layout is designated as uncacheable, the entire page is uncacheable."'),
+        $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Using cacheable="false" inside the default.xml file disables caching for all pages on the site."'),
+        $b('lib/internal/Magento/Framework/View/Layout.php#L1192-L1210', 'Layout::isCacheable() returns false when any <block cacheable="false"> is present in the layout.'),
+    ]),
+    new RuleDefinition('X-DB-02', 'db_schema.xml index that duplicates a key or another index', Severity::Info, RuleStatus::Default, [
+        $a($extensionPerformance, 'Indexes "are regenerated during every table INSERT or UPDATE. That can hit performance; only add indexes when necessary."'),
+    ]),
+    new RuleDefinition('X-AREA-01', 'Observer on an admin event declared in the global area', Severity::Info, RuleStatus::Default, [
+        $a($extensionPerformance, '"It is NOT RECOMMENDED to register everything in global area, as the bootstrapping process will become much heavier."'),
+        $a('https://developer.adobe.com/commerce/php/development/components/events-and-observers/', '"Declare the observer in the appropriate area."'),
+    ]),
+    new RuleDefinition('X-GQL-03', 'GraphQL cache id factor added to CacheIdCalculator', Severity::Info, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/webapi/graphql/usage/caching/', '"Adding factors could generate too many unique cache keys, thereby reducing the number of caching hits and affecting performance."'),
+        $b('app/code/Magento/GraphQlCache/Model/CacheId/CacheIdCalculator.php#L89-L104', 'Every provider value goes into the hash of the cache id.'),
     ]),
 ];

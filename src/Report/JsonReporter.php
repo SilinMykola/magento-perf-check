@@ -32,6 +32,7 @@ final class JsonReporter implements Reporter
 
         return json_encode([
             'summary' => [
+                'incomplete' => $result->analysisFailures() !== [],
                 'project' => $result->projectRoot,
                 'paths' => $result->paths,
                 'findings' => count($result->findings),

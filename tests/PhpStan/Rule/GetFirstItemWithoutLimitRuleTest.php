@@ -37,6 +37,10 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 37],
             [$message, 118],
             [$message, 133],
+            [$message, 167],
+            [$message, 174],
+            [$message, 190],
+            [$message, 197],
         ]);
     }
 
@@ -54,6 +58,10 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             ['[notice:P-COL-02] getFirstItem() on a receiver of unknown type', 75],
             [$message, 118],
             [$message, 133],
+            [$message, 167],
+            [$message, 174],
+            [$message, 190],
+            [$message, 197],
         ]);
     }
 }

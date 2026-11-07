@@ -108,6 +108,30 @@ namespace Acme\Promo\Plugin {
             return $proceed($parts);
         }
 
+        public function aroundStateReadBefore(object $subject, callable $proceed): mixed
+        {
+            $isNew = $subject->isObjectNew();
+            $result = $proceed();
+
+            return $isNew ? $result : null;
+        }
+
+        public function aroundListBuiltBefore(object $subject, callable $proceed): mixed
+        {
+            $ids[] = $subject->getId();
+            $proceed();
+
+            return $ids;
+        }
+
+        public function aroundVariableUnusedAfter(object $subject, callable $proceed): mixed
+        {
+            $id = $subject->getId();
+            $subject->log($id);
+
+            return $proceed();
+        }
+
         private function aroundPrivate(object $subject, callable $proceed): mixed
         {
             return $proceed();

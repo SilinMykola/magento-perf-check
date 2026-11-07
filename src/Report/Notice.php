@@ -10,6 +10,9 @@ namespace Silin\MagentoPerfCheck\Report;
  */
 final class Notice
 {
+    /** Part of the analysis did not run, so the result cannot be trusted. */
+    public const SOURCE_ANALYSIS_FAILURE = 'analysis-failure';
+
     public function __construct(
         public readonly string $source,
         public readonly string $message,

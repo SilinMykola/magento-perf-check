@@ -103,6 +103,10 @@ namespace Magento\Framework\Indexer {
     {
         public function reindexAll(): void;
 
+        public function reindexRow(int $id): void;
+
+        public function isScheduled(): bool;
+
         /** @param list<int> $ids */
         public function reindexList(array $ids): void;
     }

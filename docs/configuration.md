@@ -61,9 +61,17 @@ To check one module or folder, pass it in `--paths`, for example `--paths=app/co
 Exit codes:
 - `0`: no finding at or above `--fail-on`.
 - `1`: at least one such finding.
-- `2`: the tool itself failed, for example invalid options, a path that is not a Magento project, or a PHPStan crash.
+- `2`: the tool itself failed or the result cannot be trusted: invalid options, a path that is not a Magento project, nothing to analyze in the given paths, or a PHPStan crash. When a PHPStan worker dies or hits `--memory-limit`, PHPStan drops its findings, so the report may hold only XML findings. `"incomplete": true` marks it in `--format=json`, the reason goes to stderr, and no baseline is written.
 
-Some files cannot be analyzed, such as XML that does not parse or PHP with syntax errors. They are skipped and counted as analysis notices in the summary; `--format=json` lists them.
+Some files cannot be analyzed, such as XML that does not parse, PHP with syntax errors, or a class PHPStan cannot reflect. They are skipped and counted as analysis notices in the summary; `--format=json` lists them. With `--format=sarif`, `checkstyle` or `github`, or with `--output`, that summary goes to stderr.
+
+## Security
+
+Analysis runs code from the project. PHPStan loads the project's `vendor/autoload.php`, which in a stock Magento project requires the `registration.php` of every module in `app/code`. Do not analyze code you do not trust outside a sandbox.
+
+## Temporary files
+
+The generated PHPStan configuration, its result cache and the project index live in `magento-perf-check-<uid>/<md5 of the project path>/` under the system temp directory, which only your user can read. Without PHP's posix extension the directory has no `<uid>` and its owner is not checked. The cache can reach several hundred MB for a large project and is not cleaned automatically. Deleting the directory is safe; the next run is slower. Set `TMPDIR` to move it.
 
 ## Configuration file
 
@@ -81,10 +89,10 @@ magentoPerf:
         # Turn a rule off, or change its severity (error, warning, info).
         P-COL-02:
             enabled: false
-        X-LAY-01:
+        X-LAY-03:
             severity: warning
     layout:
-        # Extra handle prefixes that X-LAY-01 must not report.
+        # Extra handle prefixes that X-LAY-01 and X-LAY-03 must not report.
         allowlistHandles:
             - acme_account_
         # true: use only the prefixes above instead of adding them to the default list.
@@ -94,6 +102,8 @@ magentoPerf:
 The tool rejects unknown keys, unknown rule IDs and invalid values with exit code 2, so a typo never silently changes the analysis. Disabled rules and severity overrides apply to XML and PHP findings alike, and to the `--fail-on` decision. [Experimental rules](rules.md#experimental-off-by-default) are off until you set `enabled: true`.
 
 ## Inside an existing PHPStan setup
+
+PHPStan's result cache does not see XML here: after changing `di.xml` or another configuration file, run `phpstan clear-result-cache`. The `magento-perf-check` command handles this itself.
 
 The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) they are picked up automatically; otherwise include `vendor/silin/magento-perf-check/extension.neon` in your `phpstan.neon`. They report at every level. To suppress one finding, use its identifier and give a reason:
 

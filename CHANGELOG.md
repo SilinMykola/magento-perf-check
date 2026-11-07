@@ -6,6 +6,46 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Added
+
+- New rules in the default set, which can change a CI result: X-LAY-03 at `error`, on `cacheable="false"` in the `default`, `catalog_*` and `cms_*` handles; P-LOOP-05, P-LOOP-09, P-LOOP-10, P-IDX-01 and, back from experimental, P-PLG-01 at `warning`; X-DB-02, X-AREA-01 and X-GQL-03 at `info`. **X-LAY-03 can fail a CI run that passed before.**
+
+### Fixed
+
+- A PHPStan worker crash or memory limit no longer ends in exit code 0: the command exits with 2, marks the JSON report `"incomplete": true`, says why on stderr and writes no baseline. **This can change a CI result.**
+- With the `magento-perf-check` command, PHP rules that read XML (P-DI-01, P-FPC-10, P-PLG-01) no longer report stale results from PHPStan's cache after `di.xml` or another indexed file changes. Before this, adding a Proxy changed nothing, and removing one could go unreported.
+- Two runs on one project at the same time no longer return each other's results.
+- A single `.phtml` file in `--paths` is analyzed.
+- XML of a module symlinked into the analyzed path is analyzed.
+- `--paths` entries with `./` or a repeated entry no longer report the same finding twice, and `--output` cannot overwrite the `--baseline` file through a relative path.
+- A `--generate-baseline` file that cannot be written fails before the analysis.
+
+### Changed
+
+- Nothing to analyze is an error, exit code 2, instead of a clean run: a project without `app/code` and `app/design`, or paths with no PHP, template or XML file. **This can change a CI result.**
+- `--paths` entries with `..` are rejected. **This can change a CI result.**
+- P-LOOP-01 no longer reports `Magento\Directory\Model\Currency::load()` or `get()`/`getById()` on the `Magento\Store\Api` store, website and group repositories: no query runs.
+- P-COL-01 no longer reports `count($this)` in a collection's `_afterLoad()`, or a collection on the object itself (`count($this->rows)`, `count($this->getRows())`), which is usually memoized and read elsewhere.
+- X-LAY-01 is split: the `default`, `catalog_*` and `cms_*` handles are now X-LAY-03, which is on by default. X-LAY-01 stays experimental and covers other handles, at `warning`. If you opted in to X-LAY-01, change `perf-ignore X-LAY-01` comments, baseline entries and severity settings for those handles to X-LAY-03.
+- X-LAY-01 and X-LAY-03 no longer report `hyva_checkout_`, `shipping_tracking_`, `productalert_unsubscribe_` and `sendfriend_` handles, or a layout that includes the `customer_account` handle.
+- P-FPC-01 no longer reports `$_isScopePrivate = false`, which is the default and marks nothing private.
+- P-FPC-06 no longer reports actions that return only JSON or raw results: they are sent with no-cache headers.
+- P-LOOP-02 reports one finding per collection, on its first loading call.
+- Loop rules no longer treat the body of a `foreach` over `array_chunk()` as a loop: one query per batch is the fix.
+- X-SETUP-01 reports only writes and reindexing on a matching receiver type, and leaves out calls inside an `if`. It reports every such call instead of the first one per method.
+- P-COL-02 (experimental) accepts a comparison of `getSize()` or `getTotalCount()` with 1, `setPage()` and `setIdFilter()`.
+- P-PLG-01 no longer reports an around plugin with a local variable assigned before `$proceed` and read after it.
+- Analysis notices reach stderr with `--format=sarif`, `checkstyle` and `github`, and with `--output`.
+- A missing or empty `generated/code` is an analysis notice, because some findings are missed without it.
+- A file PHPStan cannot reflect is skipped with a notice, like a file it cannot parse, because it made PHPStan drop every finding of the run.
+- Workers get 30 minutes instead of PHPStan's default 10.
+- The temp directory is now `magento-perf-check-<uid>`, readable only by your user (with PHP's posix extension). The old `magento-perf-check` directory in the system temp directory can be deleted.
+
+### Documentation
+
+- Analysis runs the project's autoloader, and with it module code: do not analyze untrusted code outside a sandbox.
+- The README lists the default-set rules that look weak on a small sample, and says each finding had one grader.
+
 ## [0.1.1] - 2026-11-06
 
 ### Changed

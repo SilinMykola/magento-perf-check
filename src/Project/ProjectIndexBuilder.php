@@ -29,7 +29,7 @@ final class ProjectIndexBuilder
         $modules = $this->moduleRoots($projectRoot);
         $files = $this->indexedFiles($projectRoot, $modules);
 
-        $cacheFile = $this->cacheFile($projectRoot, $files);
+        $cacheFile = $this->cacheFile($projectRoot, $this->fingerprintOf($files));
         if (is_file($cacheFile)) {
             $data = json_decode((string) file_get_contents($cacheFile), true);
             if (is_array($data)) {
@@ -104,17 +104,32 @@ final class ProjectIndexBuilder
     }
 
     /**
+     * Changes whenever an XML file behind the index changes. PHP rules read the index, so
+     * PHPStan results cached for another fingerprint are out of date.
+     */
+    public function fingerprint(string $projectRoot): string
+    {
+        return $this->fingerprintOf($this->indexedFiles($projectRoot, $this->moduleRoots($projectRoot)));
+    }
+
+    /**
      * @param list<array{path: string, module: string, area: string, name: string}> $files
      */
-    private function cacheFile(string $projectRoot, array $files): string
+    private function fingerprintOf(array $files): string
     {
         $fingerprint = '';
         foreach ($files as $file) {
             $fingerprint .= $file['path'] . '|' . (int) @filesize($file['path']) . '|' . (int) @filemtime($file['path']) . "\n";
         }
-        $dir = ($this->cacheDir ?? sys_get_temp_dir() . '/magento-perf-check') . '/' . md5($projectRoot);
 
-        return $dir . '/index-' . md5($fingerprint) . '.json';
+        return md5($fingerprint);
+    }
+
+    private function cacheFile(string $projectRoot, string $fingerprint): string
+    {
+        $dir = $this->cacheDir !== null ? $this->cacheDir . '/' . md5($projectRoot) : WorkDirectory::forProject($projectRoot);
+
+        return $dir . '/index-' . $fingerprint . '.json';
     }
 
     private function writeCache(string $cacheFile, ProjectIndex $index): void

@@ -49,9 +49,21 @@ final class NonCacheableBlockRuleTest extends TestCase
         ));
 
         self::assertCount(1, $default);
-        self::assertSame(NonCacheableBlockRule::ID, $default[0]->ruleId);
-        self::assertStringStartsWith('[X-LAY-01]', $default[0]->message);
+        self::assertSame(NonCacheableBlockRule::SHOP_WIDE_ID, $default[0]->ruleId);
+        self::assertStringStartsWith('[X-LAY-03]', $default[0]->message);
         self::assertStringContainsString('"promo.banner"', $default[0]->message);
         self::assertStringContainsString('"default"', $default[0]->message);
+    }
+
+    public function testOtherHandlesKeepTheirOwnRule(): void
+    {
+        $contact = array_values(array_filter(
+            $this->findings(),
+            static fn (Finding $f): bool => str_ends_with($f->file, 'contact_index_index.xml'),
+        ));
+
+        self::assertCount(1, $contact);
+        self::assertSame(NonCacheableBlockRule::ID, $contact[0]->ruleId);
+        self::assertStringStartsWith('[X-LAY-01]', $contact[0]->message);
     }
 }

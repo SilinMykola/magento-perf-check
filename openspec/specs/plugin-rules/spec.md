@@ -6,11 +6,12 @@ Rules on interceptor plugins that catch plugin types more expensive than the job
 ## Requirements
 
 ### Requirement: P-PLG-01 around plugin that could be before/after
-P-PLG-01 SHALL report, as `warning`, a public `around*` method of a plugin class in which:
+P-PLG-01 SHALL report, as `warning` and in the default set, a public `around*` method of a plugin class in which:
 - `$proceed` is called exactly once;
 - the call is in a top-level statement, not inside `if`, a loop, `try` or a closure;
 - the call is not a branch of a ternary and not the right operand of `&&`, `||`, `and`, `or` or `??`;
-- the arguments are the method's own parameters after `$subject` and `$proceed`, in order (or spread with `...`), and none of them, or an element of one, is assigned before the call.
+- the arguments are the method's own parameters after `$subject` and `$proceed`, in order (or spread with `...`), and none of them, or an element of one, is assigned before the call;
+- no local variable is assigned before the call and read after it, because a before and after pair cannot share it.
 
 #### Scenario: Pass-through around
 - **WHEN** `aroundGetPrice($subject, callable $proceed, $qty)` does `$result = $proceed($qty); return $result * 2;`
@@ -39,6 +40,14 @@ P-PLG-01 SHALL report, as `warning`, a public `around*` method of a plugin class
 #### Scenario: Exception handling
 - **WHEN** the call is wrapped in `try`/`catch`
 - **THEN** P-PLG-01 reports nothing
+
+#### Scenario: State read before the call
+- **WHEN** the method does `$isNew = $subject->isObjectNew(); $result = $proceed(); return $isNew ? $result : null;`
+- **THEN** P-PLG-01 reports nothing
+
+#### Scenario: Variable not read after the call
+- **WHEN** the method does `$id = $subject->getId(); $subject->log($id); return $proceed();`
+- **THEN** P-PLG-01 reports a warning
 
 ### Requirement: Plugin class detection
 A class SHALL count as a plugin class when the project index lists it as one in any `di.xml`, or when its short name ends with `Plugin`.

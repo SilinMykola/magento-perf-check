@@ -12,4 +12,3 @@ services:
 rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\ConstructorWorkRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\SessionDataInBlockRule
-    - Silin\MagentoPerfCheck\PhpStan\Rule\AroundPluginRule

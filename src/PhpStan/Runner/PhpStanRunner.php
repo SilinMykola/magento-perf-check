@@ -7,7 +7,9 @@ namespace Silin\MagentoPerfCheck\PhpStan\Runner;
 use Composer\InstalledVersions;
 use JsonException;
 use Silin\MagentoPerfCheck\Cli\UsageException;
+use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Project\TestCode;
+use Silin\MagentoPerfCheck\Project\WorkDirectory;
 use Silin\MagentoPerfCheck\Report\Finding;
 use Silin\MagentoPerfCheck\Report\Notice;
 use Silin\MagentoPerfCheck\Report\NoticePrefix;
@@ -40,19 +42,20 @@ final class PhpStanRunner
     {
         $absolutePaths = array_values(array_filter(
             array_map(static fn (string $p): string => $projectRoot . '/' . $p, $paths),
-            static fn (string $p): bool => is_dir($p) || (is_file($p) && str_ends_with($p, '.php')),
+            static fn (string $p): bool => is_dir($p) || (is_file($p) && (str_ends_with($p, '.php') || str_ends_with($p, '.phtml'))),
         ));
         if ($absolutePaths === []) {
-            return new PhpStanResult([], []);
+            return new PhpStanResult([], [], false);
         }
 
-        $workDir = sys_get_temp_dir() . '/magento-perf-check/' . md5($projectRoot);
+        $workDir = WorkDirectory::forProject($projectRoot);
         if (!is_dir($workDir) && !mkdir($workDir, 0777, true) && !is_dir($workDir)) {
             throw new UsageException('Cannot create temp directory ' . $workDir);
         }
-        $config = $workDir . '/phpstan.neon';
+        $indexFingerprint = (new ProjectIndexBuilder())->fingerprint($projectRoot);
+        $notices = $this->generatedCodeNotices($projectRoot);
 
-        // A file PHPStan cannot parse makes it stop reporting rule errors for every other
+        // A file PHPStan cannot parse or reflect makes it stop reporting rule errors for every other
         // file ("Result is incomplete because of severe errors"). Such files are excluded
         // and the analysis runs again; their parse errors stay in the result as notices.
         $testPatterns = [];
@@ -67,11 +70,14 @@ final class PhpStanRunner
         $excluded = [];
         $parseNotices = [];
         for ($pass = 1; $pass <= self::MAX_PASSES; ++$pass) {
-            file_put_contents($config, $this->config($projectRoot, $absolutePaths, [...$testPatterns, ...$excluded], $workDir . '/cache'));
+            $config = $this->writeConfig(
+                $workDir,
+                $this->config($projectRoot, $absolutePaths, [...$testPatterns, ...$excluded], $workDir . '/cache', $indexFingerprint),
+            );
             $result = $this->analyse($config, $projectRoot, $memoryLimit);
             $unparsable = array_diff(array_keys($result['unparsable']), $excluded);
             if ($unparsable === []) {
-                return new PhpStanResult($result['findings'], [...$parseNotices, ...$result['notices']]);
+                return new PhpStanResult($result['findings'], [...$notices, ...$parseNotices, ...$result['notices']], $result['filesFound']);
             }
             foreach ($unparsable as $file) {
                 $excluded[] = $file;
@@ -87,7 +93,44 @@ final class PhpStanRunner
     }
 
     /**
-     * @return array{findings: list<Finding>, notices: list<Notice>, unparsable: array<string, list<Notice>>}
+     * Named after its content, so a run with other paths at the same time cannot overwrite
+     * it, while a repeated run reuses the same file and keeps PHPStan's result cache valid.
+     */
+    private function writeConfig(string $workDir, string $config): string
+    {
+        $file = $workDir . '/phpstan-' . md5($config) . '.neon';
+        if (!is_file($file)) {
+            $temporary = $file . '.' . getmypid();
+            if (file_put_contents($temporary, $config) === false || !rename($temporary, $file)) {
+                throw new UsageException('Cannot write ' . $file);
+            }
+        }
+
+        return $file;
+    }
+
+    /**
+     * @return list<Notice>
+     */
+    private function generatedCodeNotices(string $projectRoot): array
+    {
+        if ($this->installPath('bitexpert/phpstan-magento') !== null) {
+            return [];
+        }
+        $generated = $projectRoot . '/generated/code';
+        if (is_dir($generated) && array_diff(scandir($generated) ?: [], ['.', '..']) !== []) {
+            return [];
+        }
+
+        return [new Notice(
+            'generated-code',
+            'generated/code is missing or empty, so the types of factories and proxies are unknown and calls on them are not checked. '
+            . 'Run bin/magento setup:di:compile, or install bitexpert/phpstan-magento in the tool.',
+        )];
+    }
+
+    /**
+     * @return array{findings: list<Finding>, notices: list<Notice>, unparsable: array<string, list<Notice>>, filesFound: bool}
      */
     private function analyse(string $config, string $projectRoot, string $memoryLimit): array
     {
@@ -114,7 +157,7 @@ final class PhpStanRunner
 
         // The paths hold no PHP files at all (for example a theme directory).
         if (str_contains($stdout . $stderr, 'No files found to analyse')) {
-            return ['findings' => [], 'notices' => [], 'unparsable' => []];
+            return ['findings' => [], 'notices' => [], 'unparsable' => [], 'filesFound' => false];
         }
 
         return $this->parse($stdout, $stderr, $projectRoot);
@@ -124,7 +167,7 @@ final class PhpStanRunner
      * @param list<string> $paths
      * @param list<string> $excludePaths test-code patterns and files PHPStan cannot parse
      */
-    private function config(string $projectRoot, array $paths, array $excludePaths, string $cacheDir): string
+    private function config(string $projectRoot, array $paths, array $excludePaths, string $cacheDir, string $indexFingerprint): string
     {
         $includes = [];
         foreach (['extension.neon', 'extension-experimental.neon'] as $file) {
@@ -150,8 +193,12 @@ final class PhpStanRunner
             'bootstrapFiles' => [$projectRoot . '/vendor/autoload.php'],
             'scanDirectories' => $scanDirectories,
             'tmpDir' => $cacheDir,
+            // A worker that times out now fails the run, and the generated configuration is not the user's to edit.
+            'parallel' => ['processTimeout' => 1800.0],
             'reportUnmatchedIgnoredErrors' => false,
-            'magentoPerf' => ['reportUntypedReceivers' => true, 'projectRoot' => $projectRoot],
+            // PHPStan drops its result cache when a parameter changes. PHP rules read the index, so
+            // a changed di.xml must invalidate results for PHP files that did not change.
+            'magentoPerf' => ['reportUntypedReceivers' => true, 'projectRoot' => $projectRoot, 'indexFingerprint' => $indexFingerprint],
         ];
 
         // NEON is a superset of JSON for these values.
@@ -164,7 +211,7 @@ final class PhpStanRunner
      */
     private function json(array $value): string
     {
-        return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR);
     }
 
     private function findPhpstan(): string
@@ -225,7 +272,7 @@ final class PhpStanRunner
     }
 
     /**
-     * @return array{findings: list<Finding>, notices: list<Notice>, unparsable: array<string, list<Notice>>}
+     * @return array{findings: list<Finding>, notices: list<Notice>, unparsable: array<string, list<Notice>>, filesFound: bool}
      */
     private function parse(string $stdout, string $stderr, string $projectRoot): array
     {
@@ -247,7 +294,8 @@ final class PhpStanRunner
             foreach ($fileResult['messages'] ?? [] as $message) {
                 $text = $message['message'] ?? '';
                 $line = $message['line'] ?? 0;
-                if (($message['identifier'] ?? null) === 'phpstan.parse') {
+                // PHPStan discards every finding of the run when it meets one of these, see run().
+                if (($message['identifier'] ?? null) === 'phpstan.parse' || str_starts_with($text, 'Reflection error')) {
                     $unparsable[$this->stripContext($file)][] = new Notice('phpstan-parse', $text, $relative, $line);
                     continue;
                 }
@@ -261,11 +309,12 @@ final class PhpStanRunner
                 }
             }
         }
+        // Errors outside any file mean part of the analysis did not happen: a worker died or hit its memory limit.
         foreach ($data['errors'] ?? [] as $error) {
-            $notices[] = new Notice('phpstan', $error);
+            $notices[] = new Notice(Notice::SOURCE_ANALYSIS_FAILURE, $error);
         }
 
-        return ['findings' => $findings, 'notices' => $notices, 'unparsable' => $unparsable];
+        return ['findings' => $findings, 'notices' => $notices, 'unparsable' => $unparsable, 'filesFound' => true];
     }
 
     /**

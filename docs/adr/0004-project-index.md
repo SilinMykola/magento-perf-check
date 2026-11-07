@@ -27,7 +27,7 @@ The analyzed paths are usually a subset of the project (`app/code`, or one modul
   - observers per event;
   - mview view IDs;
   - tables with a primary key.
-- **Cache:** the index goes to `<system temp>/magento-perf-check/<md5(project root)>/index-<fingerprint>.json`. The fingerprint covers the path, size and mtime of every indexed file, so any change produces a new index. Older index files in that directory are deleted. Nothing is written into the project.
+- **Cache:** the index goes to `<system temp>/magento-perf-check-<uid>/<md5(project root)>/index-<fingerprint>.json`. The fingerprint covers the path, size and mtime of every indexed file, so any change produces a new index. Older index files in that directory are deleted. Nothing is written into the project.
 - **Who builds it:**
   - `magento-perf-check` builds the index before starting PHPStan and passes `magentoPerf.projectRoot`. PHPStan workers then read the cached file.
   - In a project's own PHPStan setup, `ProjectIndexProvider` builds it lazily from `%currentWorkingDirectory%`.

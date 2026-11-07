@@ -76,4 +76,72 @@ final class Example
             $outside->getItems();
         }
     }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function oneFindingPerCollection(array $ids): void
+    {
+        foreach ($ids as $id) {
+            $loaded = $this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->load();
+            $loaded->getSize();
+            $loaded->getItems();
+        }
+        foreach ($ids as $id) {
+            $this->collectionFactory->create()->load()->getItems();
+        }
+        foreach ($ids as $id) {
+            $reused = $this->collectionFactory->create();
+            $reused->load();
+            $reused->getItems();
+            $reused = $this->collectionFactory->create();
+            $reused->getSize();
+        }
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function batches(array $ids): void
+    {
+        foreach (array_chunk($ids, 1000) as $batch) {
+            $this->collectionFactory->create()->addFieldToFilter('parent_id', ['in' => $batch])->getItems();
+        }
+        $batches = array_chunk($ids, 1000);
+        // A closure has its own variables; the ones here are still known after it.
+        $ids = array_filter($ids, static function (int $id): bool {
+            return $id > 0;
+        });
+        foreach ($batches as $batch) {
+            $collection = $this->collectionFactory->create();
+            $collection->addFieldToFilter('parent_id', ['in' => $batch])->load();
+        }
+        foreach (array_chunk($ids, 1000) as $batch) {
+            foreach ($batch as $id) {
+                $this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->load();
+            }
+        }
+    }
+
+    /**
+     * @param list<int> $batches not from array_chunk() in this function
+     */
+    public function sameNameInAnotherFunction(array $batches): void
+    {
+        foreach ($batches as $id) {
+            $this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->getSize();
+        }
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function reassignedAfterChunk(array $ids): void
+    {
+        $list = array_chunk($ids, 1000);
+        $list = $ids;
+        foreach ($list as $id) {
+            $this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->getItems();
+        }
+    }
 }

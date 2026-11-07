@@ -10,6 +10,12 @@ namespace Magento\Catalog\Model {
             return '';
         }
 
+        /** @return list<int> */
+        public function getCategoryIds(): array
+        {
+            return [];
+        }
+
         /** @return int|false */
         public function getIdBySku(string $sku)
         {
@@ -110,6 +116,12 @@ namespace Magento\ConfigurableProduct\Model\ResourceModel\Product\Type {
 namespace Magento\Catalog\Model\ResourceModel\Product {
     class Collection extends \Magento\Framework\Data\Collection\AbstractDb
     {
+        /** @return $this */
+        public function addCategoryIds()
+        {
+            return $this;
+        }
+
         /**
          * @param mixed $condition
          * @return $this
@@ -173,5 +185,34 @@ namespace Magento\Customer\Api {
     interface CustomerRepositoryInterface
     {
         public function get(string $email): object;
+    }
+}
+
+namespace Magento\Directory\Model {
+    class Currency extends \Magento\Framework\Model\AbstractModel
+    {
+    }
+}
+
+namespace Magento\Store\Api {
+    interface StoreRepositoryInterface
+    {
+        public function get(string $code): object;
+
+        public function getById(int $id): object;
+
+        public function getList(): array;
+    }
+
+    interface WebsiteRepositoryInterface
+    {
+        public function get(string $code): object;
+
+        public function getById(int $id): object;
+    }
+
+    interface GroupRepositoryInterface
+    {
+        public function get(int $id): object;
     }
 }

@@ -42,6 +42,19 @@ final class CollectionCountRule implements Rule
         if ($argument === null) {
             return [];
         }
+        // In this hook the collection has just loaded its rows, so count($this) runs no query.
+        if ($argument->value instanceof Node\Expr\Variable && $argument->value->name === 'this'
+            && $scope->getFunctionName() === '_afterLoad'
+        ) {
+            return [];
+        }
+        // A collection kept on the object or returned by its own getter is usually memoized,
+        // and its rows are read elsewhere (often in a template), so count() costs nothing extra.
+        $value = $argument->value;
+        $root = $value instanceof Node\Expr\MethodCall || $value instanceof Node\Expr\PropertyFetch ? $value->var : null;
+        if ($root instanceof Node\Expr\Variable && $root->name === 'this') {
+            return [];
+        }
         $type = $scope->getType($argument->value);
         if (!MagentoTypes::isObjectOf($type, self::DB_COLLECTION)) {
             return [];

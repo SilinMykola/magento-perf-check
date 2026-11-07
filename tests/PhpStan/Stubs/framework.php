@@ -99,6 +99,27 @@ namespace Magento\Framework\Data {
         }
 
         /** @return $this */
+        public function setPage(int $page, int $size)
+        {
+            return $this;
+        }
+
+        /**
+         * @param int|list<int> $ids
+         * @return $this
+         */
+        public function addIdFilter($ids)
+        {
+            return $this;
+        }
+
+        /** @return $this */
+        public function setIdFilter(int $id)
+        {
+            return $this;
+        }
+
+        /** @return $this */
         public function setPageSize(?int $size)
         {
             return $this;

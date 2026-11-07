@@ -17,6 +17,7 @@ final class XmlAnalysisResult
         public readonly array $findings,
         public readonly array $notices,
         public readonly int $filesAnalyzed,
+        public readonly int $filesFound = 0,
     ) {
     }
 }

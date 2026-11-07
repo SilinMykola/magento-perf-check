@@ -16,7 +16,7 @@ final class Configuration
     /**
      * @param ?list<string> $paths
      * @param array<string, RuleSettings> $rules rule ID => settings
-     * @param list<string> $allowlistHandles extra X-LAY-01 allowlist prefixes
+     * @param list<string> $allowlistHandles extra allowlist prefixes of X-LAY-01 and X-LAY-03
      */
     public function __construct(
         public readonly ?array $paths = null,

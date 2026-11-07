@@ -8,7 +8,7 @@
 
 ## What it catches
 
-A declaration of, or an assignment to, the `$_isScopePrivate` property in a subclass of `Magento\Framework\View\Element\AbstractBlock`.
+A declaration with `true`, or an assignment of `true`, to the `$_isScopePrivate` property in a subclass of `Magento\Framework\View\Element\AbstractBlock`.
 
 ## Why it hurts performance
 
