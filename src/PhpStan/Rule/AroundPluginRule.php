@@ -63,6 +63,7 @@ final class AroundPluginRule implements Rule
             || $this->returnsBefore($node->stmts, $call, $finder)
             || !$this->passesArgumentsThrough($node, $call)
             || $this->reassignsArguments($node, $call, $finder)
+            || $this->carriesStateAcrossProceed($node, $call, $finder)
         ) {
             return [];
         }
@@ -190,6 +191,33 @@ final class AroundPluginRule implements Rule
                 $target = $target->var;
             }
             if ($target instanceof Expr\Variable && is_string($target->name) && isset($names[$target->name])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * A local variable assigned before $proceed and read after it holds what the call changes
+     * or deletes (isObjectNew(), an id before save). A before and after pair cannot share it.
+     */
+    private function carriesStateAcrossProceed(Stmt\ClassMethod $method, Expr\FuncCall $call, NodeFinder $finder): bool
+    {
+        $callStart = $call->getStartFilePos();
+        $callEnd = $call->getEndFilePos();
+        $before = [];
+        foreach ($finder->findInstanceOf((array) $method->stmts, Expr\Assign::class) as $assign) {
+            $target = $assign->var;
+            while ($target instanceof Expr\ArrayDimFetch) {
+                $target = $target->var;
+            }
+            if ($assign->getEndFilePos() < $callStart && $target instanceof Expr\Variable && is_string($target->name)) {
+                $before[$target->name] = true;
+            }
+        }
+        foreach ($finder->findInstanceOf((array) $method->stmts, Expr\Variable::class) as $variable) {
+            if ($variable->getStartFilePos() > $callEnd && is_string($variable->name) && isset($before[$variable->name])) {
                 return true;
             }
         }

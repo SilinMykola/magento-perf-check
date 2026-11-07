@@ -16,7 +16,7 @@ namespace Acme\Promo\Block {
 
         public function getGreeting(): string
         {
-            $this->_isScopePrivate = false;
+            $this->_isScopePrivate = true;
 
             return 'Hello ' . (string) $this->customerSession->getCustomerId();
         }
@@ -170,7 +170,7 @@ namespace Acme\Promo\Model\Resolver {
 
         public function resolve(): void
         {
-            $this->response->setHeader('Pragma', 'no-cache');
+            $this->response->setHeader('Cache-Control', 'no-store');
         }
     }
 }
@@ -284,7 +284,7 @@ namespace Acme\Promo\Controller\Download {
 
         public function execute(): mixed
         {
-            $this->response->setHeader('Pragma', 'public', true);
+            $this->response->setHeader('Pragma', 'no-cache', true);
             $this->response->setHeader('Pragma', 'no-cache')->setHeader('Cache-Control', 'no-store');
 
             return null;
@@ -466,6 +466,107 @@ namespace Acme\Promo\Setup\Patch\Data {
         public function apply(): void
         {
             $this->cache->clean();
+        }
+    }
+}
+
+namespace Acme\Promo\Block\NotPrivate {
+    use Magento\Framework\View\Element\AbstractBlock;
+
+    final class ExplicitDefault extends AbstractBlock
+    {
+        protected $_isScopePrivate = false;
+
+        public function reset(): void
+        {
+            $this->_isScopePrivate = false;
+        }
+    }
+}
+
+namespace Acme\Promo\Controller\Status {
+    use Magento\Catalog\Api\ProductRepositoryInterface;
+    use Magento\Catalog\Model\Product;
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+
+    final class Json implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $resultFactory,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            $this->productRepository->save($this->product);
+            $result = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_JSON);
+
+            return $result->setData([]);
+        }
+    }
+
+    final class JsonFromFactory implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $resultJsonFactory,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            $this->productRepository->save($this->product);
+
+            return $this->resultJsonFactory->create()->setData([]);
+        }
+    }
+
+    final class Raw implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $resultRawFactory,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            $this->productRepository->save($this->product);
+
+            return $this->resultRawFactory->create();
+        }
+    }
+}
+
+namespace Acme\Promo\Controller\Feed {
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+    use Magento\Framework\App\Response\Http;
+
+    final class OwnHelper implements HttpGetActionInterface
+    {
+        public function __construct(private readonly Http $response)
+        {
+        }
+
+        public function execute(): mixed
+        {
+            $this->setNoCacheHeaders();
+
+            return null;
+        }
+
+        private function setNoCacheHeaders(): void
+        {
+            $this->response->setHeader('Cache-Control', 'no-store');
+        }
+
+        private function setHeader(string $name, string $value): void
+        {
+            $this->setHeader('Cache-Control', 'no-store');
         }
     }
 }

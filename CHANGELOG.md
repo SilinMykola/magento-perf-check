@@ -6,6 +6,66 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-07
+
+### Added
+
+- Experimental rules, off by default: P-DI-04 at `info`, on a console command that every `bin/magento` run creates with its dependencies; P-COL-04 at `warning`, on a collection walked without a page size in a cron job or console command.
+- Experimental rules, off by default: P-LOOP-04, P-LOOP-06 at `warning`, on a product URL or an attribute option text inside a loop; P-COL-03, X-PLG-02 at `info`, on `addAttributeToSelect('*')` and on a plugin that runs for every rendered block.
+- Experimental rules, off by default: X-GQL-02 at `warning`, on a database query in a resolver of a field on a type returned inside a list; P-FPC-03 at `error`, on a value specific to a visitor or a moment in the HTTP context.
+- New rules in the default set, which can change a CI result: X-LAY-03 at `error`, on `cacheable="false"` in the `default`, `catalog_*` and `cms_*` handles; P-LOOP-05, P-LOOP-09, P-LOOP-10, P-IDX-01 and, back from experimental, P-PLG-01 at `warning`; X-DB-02, X-AREA-01 and X-GQL-03 at `info`. **X-LAY-03 can fail a CI run that passed before.**
+
+### Fixed
+
+- P-FPC-05, in the default set, no longer reports `setHeader('Pragma', 'no-cache')`, which can change a CI result: neither the built-in page cache nor the Varnish configuration reads `Pragma` from a response.
+- A PHPStan worker crash or memory limit no longer ends in exit code 0: the command exits with 2, marks the JSON report `"incomplete": true`, says why on stderr and writes no baseline. **This can change a CI result.**
+- With the `magento-perf-check` command, PHP rules that read XML (P-DI-01, P-FPC-10, P-PLG-01) no longer report stale results from PHPStan's cache after `di.xml` or another indexed file changes. Before this, adding a Proxy changed nothing, and removing one could go unreported.
+- Two runs on one project at the same time no longer return each other's results.
+- A stub of a core class in a module's `Test` directory no longer replaces the real class for all other code. In the calibration corpus, one module's stubs of `Magento\Customer\Model\Session` and `Customer` hid 24 findings in other modules. **This can change a CI result.**
+- `create()` of a factory that is not generated yet is typed from its name, so findings no longer depend on whether `setup:di:compile` has run. On 56 modules without `generated/code`, this adds 54 findings of P-LOOP-01, P-LOOP-02, P-LOOP-03, P-LOOP-07 and P-LOOP-10 and removes none; with generated factories the same findings were there already. **This can change a CI result.**
+- Untyped private properties take their type from the constructor. **This can change a CI result.**
+- P-LOOP-03, P-LOOP-10, P-FPC-06 and X-SETUP-01 also recognize EAV resource models, such as those of products and customers. **This can change a CI result.**
+- A `schema.graphqls` with `//` or `/* */` comments or `extends type`, which Magento reads, is analyzed. Before, it was skipped with a notice, so X-GQL-01 did not see it. **This can change a CI result.**
+- The project index finds a Composer module whose `etc/module.xml` is in `src/`.
+- A single `.phtml` file in `--paths` is analyzed.
+- XML of a module symlinked into the analyzed path is analyzed.
+- A test directory given in `--paths` next to its parent directory is analyzed. Before, the parent excluded it.
+- `--paths` entries with `./` or a repeated entry no longer report the same finding twice, and `--output` cannot overwrite the `--baseline` file through a relative path.
+- A `--generate-baseline` file that cannot be written fails before the analysis.
+
+### Changed
+
+- The experimental P-LOOP-04 and P-LOOP-06 recognize a product typed `ProductInterface`, as a repository returns it. On 56 modules this adds 2 P-LOOP-04 findings.
+- P-LOOP-02 does not report a collection that is created and limited in a `while`, `do` or `for` loop: that is paging. A `foreach`, a `for` over `count()` and a limit of one row are still reported.
+- P-LOOP-09 also counts a `for` with `count()` or `sizeof()` in its condition as a loop over items. **This can change a CI result.**
+- Nothing to analyze is an error, exit code 2, instead of a clean run: a project without `app/code` and `app/design`, or paths with no PHP, template or XML file. **This can change a CI result.**
+- `--paths` entries with `..` are rejected. **This can change a CI result.**
+- P-LOOP-01 no longer reports `Magento\Directory\Model\Currency::load()` or `get()`/`getById()` on the `Magento\Store\Api` store, website and group repositories: no query runs.
+- P-COL-01 no longer reports `count($this)` in a collection's `_afterLoad()`, or a collection on the object itself (`count($this->rows)`, `count($this->getRows())`), which is usually memoized and read elsewhere.
+- X-LAY-01 is split: the `default`, `catalog_*` and `cms_*` handles are now X-LAY-03, which is on by default. X-LAY-01 stays experimental and covers other handles, at `warning`. If you opted in to X-LAY-01, change `perf-ignore X-LAY-01` comments, baseline entries and severity settings for those handles to X-LAY-03.
+- X-LAY-01 and X-LAY-03 no longer report `hyva_checkout_`, `shipping_tracking_`, `productalert_unsubscribe_` and `sendfriend_` handles, or a layout that includes the `customer_account` handle.
+- P-FPC-01 no longer reports `$_isScopePrivate = false`, which is the default and marks nothing private.
+- P-FPC-06 no longer reports actions that return only JSON or raw results: they are sent with no-cache headers.
+- P-LOOP-02 reports one finding per collection, on its first loading call.
+- Loop rules no longer treat the body of a `foreach` over `array_chunk()` as a loop: one query per batch is the fix.
+- X-SETUP-01 reports only writes and reindexing on a matching receiver type, and leaves out calls inside an `if`. It reports every such call instead of the first one per method.
+- P-COL-02 (experimental) accepts a comparison of `getSize()` or `getTotalCount()` with 1, `setPage()` and `setIdFilter()`, and stays silent when the same function uses the rows anyway.
+- P-COL-01 and P-COL-02 count `getColumnValues()` as using the rows.
+- P-FPC-05 no longer reports a controller's own method named `setNoCacheHeaders()` or similar; what it sets inside is still reported.
+- P-PLG-01 no longer reports an around plugin with a local variable assigned before `$proceed` and read after it.
+- P-COL-02 notices about receivers of unknown type appear only when that rule is enabled. It is experimental and off by default, so without this every default run printed a notice about a rule that did not run.
+- Analysis notices reach stderr with `--format=sarif`, `checkstyle` and `github`, and with `--output`.
+- A missing or empty `generated/code` is an analysis notice, because some findings are missed without it.
+- A file PHPStan cannot reflect is skipped with a notice, like a file it cannot parse, because it made PHPStan drop every finding of the run.
+- Workers get 30 minutes instead of PHPStan's default 10.
+- The temp directory is now `magento-perf-check-<uid>`, readable only by your user (with PHP's posix extension). The old `magento-perf-check` directory in the system temp directory can be deleted.
+
+### Documentation
+
+- Analysis runs the project's autoloader, and with it module code: do not analyze untrusted code outside a sandbox.
+- The README lists the default-set rules that look weak on a small sample, and says each finding had one grader.
+- Two checks on modules the rules were not tuned on: [15 modules](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out.md) and [22 more](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out-2.md). Most findings are correct and few matter in practice.
+
 ## [0.1.1] - 2026-11-06
 
 ### Changed
@@ -31,6 +91,7 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/SilinMykola/magento-perf-check/releases/tag/v0.1.0

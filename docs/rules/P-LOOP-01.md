@@ -12,9 +12,13 @@ Inside a loop, either:
 - a call to `load()` on a subtype of `Magento\Framework\Model\AbstractModel`;
 - a call to `get()` or `getById()` on a type that is, or implements, an interface whose name ends with `RepositoryInterface`.
 
+Not reported, because no query runs: `Magento\Directory\Model\Currency::load()`, which only sets the currency code, and the `Magento\Store\Api` store, website and group repositories, which read cached configuration.
+
 "Inside a loop" means:
 - the body of `foreach`, `for`, `while` or `do`;
 - the body of a closure passed straight to `array_map()`, `array_walk()` or a collection's `walk()`.
+
+The body of a `foreach` over `array_chunk()` does not count: it runs once per batch. A loop inside it counts again.
 
 ## Why it hurts performance
 

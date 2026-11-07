@@ -74,13 +74,15 @@ final class NoCacheHeadersRule implements Rule
     {
         $name = $call->name instanceof Node\Identifier ? $call->name->toLowerString() : '';
         if ($name === 'setnocacheheaders' || $name === 'setprivateheaders') {
-            return true;
+            // A controller's own helper with such a name is not the response; what it sets is reported inside it.
+            return !($call->var instanceof Node\Expr\Variable && $call->var->name === 'this');
         }
         $args = $call->getArgs();
         $header = $args[0]->value ?? null;
         if ($name !== 'setheader'
             || !$header instanceof Node\Scalar\String_
-            || !in_array(strtolower($header->value), ['cache-control', 'pragma'], true)
+            // Neither the built-in page cache nor the Varnish configuration reads Pragma from a response.
+            || strtolower($header->value) !== 'cache-control'
         ) {
             return false;
         }

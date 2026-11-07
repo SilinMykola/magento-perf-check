@@ -9,8 +9,10 @@
 ## What it catches
 
 A statement that disables caching, with one finding per statement however many headers it sets:
-- `setNoCacheHeaders()` or `setPrivateHeaders()`;
-- `setHeader()` with a literal `Cache-Control` or `Pragma` name and a value that contains `no-cache`, `no-store` or `private`, or is computed at run time. `Pragma: public` is not reported.
+- `setNoCacheHeaders()` or `setPrivateHeaders()`, on anything but `$this`: a controller's own helper with such a name is not the response;
+- `setHeader()` with a literal `Cache-Control` name and a value that contains `no-cache`, `no-store` or `private`, or is computed at run time.
+
+`Pragma` is not reported, whatever its value: neither [`Kernel::process()`](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/App/PageCache/Kernel.php) nor the Varnish configuration of core reads it from a response, so it does not change what gets cached.
 
 The rule applies in two kinds of classes:
 - a frontend controller that can answer GET (it implements `HttpGetActionInterface`, or no HTTP method interface at all, and is not under `Controller\Adminhtml`);

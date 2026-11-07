@@ -1,6 +1,7 @@
 {
     "packages": [
         {"name": "magento/module-sales", "install-path": "../magento/module-sales"},
-        {"name": "acme/library", "install-path": "../acme/library"}
+        {"name": "acme/library", "install-path": "../acme/library"},
+        {"name": "acme/src-module", "install-path": "../acme/src-module"}
     ]
 }

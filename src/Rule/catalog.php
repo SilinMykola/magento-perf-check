@@ -24,7 +24,7 @@ $extensionPerformance = 'https://developer.adobe.com/commerce/php/best-practices
 $codeReview = 'https://experienceleague.adobe.com/en/docs/commerce-operations/implementation-playbook/best-practices/development/code-review';
 
 return [
-    new RuleDefinition('X-LAY-01', 'Block with cacheable="false" in a frontend layout', Severity::Warning, RuleStatus::Experimental, [
+    new RuleDefinition('X-LAY-01', 'Block with cacheable="false" in a frontend layout, other than the X-LAY-03 handles', Severity::Warning, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/php/development/cache/page/', '"If any block in a layout is designated as uncacheable, the entire page is uncacheable."'),
         $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Using cacheable="false" inside the default.xml file disables caching for all pages on the site."'),
         $b('lib/internal/Magento/Framework/View/Layout.php#L1192-L1210', 'Layout::isCacheable() returns false when any <block cacheable="false"> is present in the layout.'),
@@ -82,6 +82,40 @@ return [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 9.4: server-rendered HTML must not contain user-specific data.'),
         $b('app/code/Magento/Customer/Model/Layout/DepersonalizePlugin.php#L101-L112', 'On cacheable GET pages the customer session is cleared after layout generation.'),
     ], ['magentoPerf.sessionDataInBlock' => null]),
+    new RuleDefinition('P-LOOP-04', 'Product URL built inside a loop without addUrlRewrite()', Severity::Warning, RuleStatus::Experimental, [
+        $b('app/code/Magento/Catalog/Model/Product/Url.php#L154-L183', 'Without a request path on the product, getUrl() looks the rewrite up through findOneByData().'),
+        $b('app/code/Magento/UrlRewrite/Model/Storage/DbStorage.php#L107-L131', 'The lookup runs a query on the url_rewrite table.'),
+        $b('app/code/Magento/Catalog/Model/ResourceModel/Product/Collection.php#L1455-L1504', 'addUrlRewrite() fills the request paths of the whole collection.'),
+    ], ['magentoPerf.loopProductUrl' => null]),
+    new RuleDefinition('P-LOOP-06', 'getAttributeText() or the table source getOptionText() inside a loop', Severity::Warning, RuleStatus::Experimental, [
+        $b('app/code/Magento/Eav/Model/Entity/Attribute/Source/Table.php#L106-L119', 'getSpecificOptions() creates and loads an option collection on every call.'),
+        $b('app/code/Magento/Catalog/Model/Product.php#L1796-L1801', 'getAttributeText() calls getOptionText() of the attribute source.'),
+        new Source(SourceLevel::B, 'https://github.com/magento/magento2/issues/38934', 'Confirmed issue: the table source "loads data from Database every time attribute value is requested". It has no measurements.'),
+    ], ['magentoPerf.loopAttributeText' => null]),
+    new RuleDefinition('P-COL-03', "addAttributeToSelect('*') on an EAV collection", Severity::Info, RuleStatus::Experimental, [
+        $b('app/code/Magento/Eav/Model/Entity/Collection/AbstractCollection.php#L583-L588', "For '*', every attribute of the entity is added to the selected attributes."),
+        $b('app/code/Magento/Eav/Model/Entity/Collection/AbstractCollection.php#L1266-L1297', '_loadAttributes() reads the values of all selected attributes. This shows the mechanism; no source measures the cost.'),
+    ], ['magentoPerf.selectAllAttributes' => null]),
+    new RuleDefinition('X-PLG-02', 'Plugin on a method that runs for every rendered block or layout element', Severity::Info, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/development/components/plugins', 'A plugin on a class also applies to the classes that inherit from it.'),
+        $b('lib/internal/Magento/Framework/View/Element/AbstractBlock.php#L666-L692', 'toHtml() runs once per rendered block. That a plugin here is slow is an inference from how often it runs.'),
+        $b('lib/internal/Magento/Framework/View/Layout.php#L555-L571', 'renderElement() runs once per layout element.'),
+    ], ['magentoPerf.hotRenderPlugin' => null]),
+    new RuleDefinition('P-DI-04', 'Console command in CommandList with dependencies that are not lazy', Severity::Info, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/development/components/proxies', 'Constructor injection instantiates a chain of objects, which costs when a resource-intensive one is not needed; a real instance behind a proxy is created only when one of its methods is called. The page does not mention console commands.'),
+        $b('lib/internal/Magento/Framework/Console/Cli.php#L196-L232', 'Every run on an installed store creates CommandListInterface, and so the objects in its commands argument. That their dependencies are costly is not measured.'),
+    ], ['magentoPerf.commandWithoutProxy' => null]),
+    new RuleDefinition('P-COL-04', 'Collection walked without a page size in a cron job or console command', Severity::Warning, RuleStatus::Experimental, [
+        $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L813-L836', 'loadWithFilter(), which load() runs, adds every fetched row to the collection.'),
+        $b('lib/internal/Magento/Framework/Data/Collection/AbstractDb.php#L756-L763', '_renderLimit() adds a LIMIT only when a page size is set.'),
+    ], ['magentoPerf.unpagedBatchCollection' => null]),
+    new RuleDefinition('P-FPC-03', 'Value specific to a visitor or a moment in the HTTP context', Severity::Error, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Context variables should not be specific to individual users", because each value yields a separate cached copy.'),
+        $b('lib/internal/Magento/Framework/App/Http/Context.php#L107-L135', 'Every non-default value goes into the vary string of the page cache key.'),
+    ], ['magentoPerf.httpContextUserValue' => null]),
+    new RuleDefinition('X-GQL-02', 'Database query in a resolver of a field on a type returned inside a list', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/webapi/graphql/develop/resolvers', '"We recommend using batch resolvers for queries because they improve performance"; loading related products per product "would be expensive performance-wise".'),
+    ], ['magentoPerf.resolverQuery' => null]),
     new RuleDefinition('P-FPC-05', 'No-cache or private headers on cacheable requests', Severity::Warning, RuleStatus::Default, [
         $b('app/code/Magento/PageCache/etc/varnish6.vcl#L191-L200', 'Varnish does not cache responses marked no-cache or private.'),
         $b('lib/internal/Magento/Framework/App/PageCache/Kernel.php#L154-L183', 'The built-in page cache stores only responses with public cache headers.'),
@@ -100,7 +134,7 @@ return [
         $a('https://developer.adobe.com/commerce/php/development/components/indexing/', 'Update on Save indexers reindex the changed entities through plugins or events.'),
         $b('app/code/Magento/Indexer/Model/Indexer.php#L452-L494', 'reindexAll() rebuilds the whole index synchronously.'),
     ], ['magentoPerf.fullReindex' => null]),
-    new RuleDefinition('P-PLG-01', 'around plugin where before/after would do', Severity::Warning, RuleStatus::Experimental, [
+    new RuleDefinition('P-PLG-01', 'around plugin where before/after would do', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/components/plugins', 'Avoid using around method plugins when they are not required, because they increase stack traces and affect performance.'),
     ], ['magentoPerf.unnecessaryAroundPlugin' => null]),
     new RuleDefinition('T-01', 'getLayout()->createBlock() in a template', Severity::Info, RuleStatus::Default, [
@@ -149,5 +183,39 @@ return [
         $b('app/code/Magento/GraphQlCache/Model/CacheableQueryHandler.php#L59-L85', 'A field with @cache but without cacheIdentity marks the whole query as not cacheable.'),
         $b('app/code/Magento/GraphQlCache/Model/Plugin/Query/Resolver.php#L43-L82', 'The resolver plugin collects cache tags only through the field\'s identity class.'),
         $a('https://developer.adobe.com/commerce/webapi/graphql/develop/identity-class', 'Cacheable queries need an identity class that returns the cache tags.'),
+    ]),
+    new RuleDefinition('P-LOOP-09', 'Repository getList() with search criteria once per item of a loop', Severity::Warning, RuleStatus::Default, [
+        $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),
+        $a($codeReview, '"Are queries executed in a loop? This loop can be outside of the edited files."'),
+    ], ['magentoPerf.loopRepositoryList' => null]),
+    new RuleDefinition('P-LOOP-10', 'Resource model load() inside a loop', Severity::Warning, RuleStatus::Default, [
+        $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),
+        $b('lib/internal/Magento/Framework/Model/ResourceModel/Db/AbstractDb.php#L323-L333', 'AbstractDb::load() runs fetchRow() on every call.'),
+    ], ['magentoPerf.loopResourceLoad' => null]),
+    new RuleDefinition('P-LOOP-05', 'Product getCategoryIds() inside a loop', Severity::Warning, RuleStatus::Default, [
+        $b('app/code/Magento/Catalog/Model/Product.php#L753-L769', 'getCategoryIds() asks the resource model when category_ids is not set.'),
+        $b('app/code/Magento/Catalog/Model/ResourceModel/Product/CategoryLink.php#L54-L69', 'Each call runs one fetchAll for one product id.'),
+        $b('app/code/Magento/Catalog/Model/ResourceModel/Product/Collection.php#L2163-L2200', 'addCategoryIds() runs one query for all loaded items.'),
+    ], ['magentoPerf.loopCategoryIds' => null]),
+    new RuleDefinition('P-IDX-01', 'reindexRow()/reindexList() in request code without isScheduled()', Severity::Warning, RuleStatus::Default, [
+        $a('https://experienceleague.adobe.com/en/docs/commerce-operations/implementation-playbook/best-practices/maintenance/indexer-configuration', '"frequent reindexing degrades database performance which slows site performance"'),
+        $b('app/code/Magento/Indexer/Model/Indexer.php#L562-L566', 'Indexer::reindexRow() runs the action without looking at the indexer mode.'),
+        $b('lib/internal/Magento/Framework/Indexer/AbstractProcessor.php#L50-L56', 'Core processors return early when the indexer is scheduled.'),
+    ], ['magentoPerf.directReindex' => null]),
+    new RuleDefinition('X-LAY-03', 'Block with cacheable="false" on the default, catalog or CMS handle', Severity::Error, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/cache/page/', '"If any block in a layout is designated as uncacheable, the entire page is uncacheable."'),
+        $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Using cacheable="false" inside the default.xml file disables caching for all pages on the site."'),
+        $b('lib/internal/Magento/Framework/View/Layout.php#L1192-L1210', 'Layout::isCacheable() returns false when any <block cacheable="false"> is present in the layout.'),
+    ]),
+    new RuleDefinition('X-DB-02', 'db_schema.xml index that duplicates a key or another index', Severity::Info, RuleStatus::Default, [
+        $a($extensionPerformance, 'Indexes "are regenerated during every table INSERT or UPDATE. That can hit performance; only add indexes when necessary."'),
+    ]),
+    new RuleDefinition('X-AREA-01', 'Observer on an admin event declared in the global area', Severity::Info, RuleStatus::Default, [
+        $a($extensionPerformance, '"It is NOT RECOMMENDED to register everything in global area, as the bootstrapping process will become much heavier."'),
+        $a('https://developer.adobe.com/commerce/php/development/components/events-and-observers/', '"Declare the observer in the appropriate area."'),
+    ]),
+    new RuleDefinition('X-GQL-03', 'GraphQL cache id factor added to CacheIdCalculator', Severity::Info, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/webapi/graphql/usage/caching/', '"Adding factors could generate too many unique cache keys, thereby reducing the number of caching hits and affecting performance."'),
+        $b('app/code/Magento/GraphQlCache/Model/CacheId/CacheIdCalculator.php#L89-L104', 'Every provider value goes into the hash of the cache id.'),
     ]),
 ];

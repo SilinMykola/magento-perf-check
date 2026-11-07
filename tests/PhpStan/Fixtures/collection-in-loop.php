@@ -76,4 +76,146 @@ final class Example
             $outside->getItems();
         }
     }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function oneFindingPerCollection(array $ids): void
+    {
+        foreach ($ids as $id) {
+            $loaded = $this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->load();
+            $loaded->getSize();
+            $loaded->getItems();
+        }
+        foreach ($ids as $id) {
+            $this->collectionFactory->create()->load()->getItems();
+        }
+        foreach ($ids as $id) {
+            $reused = $this->collectionFactory->create();
+            $reused->load();
+            $reused->getItems();
+            $reused = $this->collectionFactory->create();
+            $reused->getSize();
+        }
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function batches(array $ids): void
+    {
+        foreach (array_chunk($ids, 1000) as $batch) {
+            $this->collectionFactory->create()->addFieldToFilter('parent_id', ['in' => $batch])->getItems();
+        }
+        $batches = array_chunk($ids, 1000);
+        // A closure has its own variables; the ones here are still known after it.
+        $ids = array_filter($ids, static function (int $id): bool {
+            return $id > 0;
+        });
+        foreach ($batches as $batch) {
+            $collection = $this->collectionFactory->create();
+            $collection->addFieldToFilter('parent_id', ['in' => $batch])->load();
+        }
+        foreach (array_chunk($ids, 1000) as $batch) {
+            foreach ($batch as $id) {
+                $this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->load();
+            }
+        }
+    }
+
+    /**
+     * @param list<int> $batches not from array_chunk() in this function
+     */
+    public function sameNameInAnotherFunction(array $batches): void
+    {
+        foreach ($batches as $id) {
+            $this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->getSize();
+        }
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function reassignedAfterChunk(array $ids): void
+    {
+        $list = array_chunk($ids, 1000);
+        $list = $ids;
+        foreach ($list as $id) {
+            $this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->getItems();
+        }
+    }
+
+    public function pagingInAWhileLoop(int $pages): void
+    {
+        do {
+            $byLimit = $this->collectionFactory->create();
+            $byLimit->getSelect()->limit(500);
+            $byLimit->getItems();
+        } while (--$pages > 0);
+        while (--$pages > 0) {
+            $bySize = $this->collectionFactory->create();
+            $bySize->setPageSize(100);
+            $bySize->load();
+        }
+        for ($page = 1; $page < $pages; $page++) {
+            $this->collectionFactory->create()->setPageSize(100)->setCurPage($page)->load();
+        }
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function limitPerItemIsNotPaging(array $ids): void
+    {
+        foreach ($ids as $id) {
+            $collection = $this->collectionFactory->create();
+            $collection->setPageSize(1);
+            $collection->getFirstItem();
+        }
+        foreach ($ids as $id) {
+            $this->collectionFactory->create()->setPageSize(1)->load();
+        }
+        while (--$ids[0] > 0) {
+            foreach ($ids as $id) {
+                $inner = $this->collectionFactory->create();
+                $inner->setPageSize(1);
+                $inner->load();
+            }
+        }
+    }
+
+    public function pagingWrittenOtherWays(int $pages): void
+    {
+        while (--$pages > 0) {
+            $assigned = $this->collectionFactory->create()->setPageSize(100);
+            $assigned->load();
+        }
+        do {
+            $fluent = $this->collectionFactory->create();
+            $fluent->setPageSize(100)->setCurPage($pages)->load();
+        } while (--$pages > 0);
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function notPagingInAnotherLoop(array $ids, int $page): void
+    {
+        for ($i = 0; $i < count($ids); $i++) {
+            $this->collectionFactory->create()->setPageSize(100)->load();
+        }
+        while ($page-- > 0) {
+            $this->collectionFactory->create()->setPageSize(1)->load();
+        }
+        while ($page-- > 0) {
+            $lookup = $this->collectionFactory->create();
+            $lookup->getSelect()->limit(1);
+            $lookup->getItems();
+        }
+        while ($page-- > 0) {
+            $allRows = $this->collectionFactory->create();
+            $allRows->setCurPage($page);
+            $allRows->load();
+        }
+    }
 }

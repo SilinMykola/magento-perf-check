@@ -65,7 +65,7 @@ final class ApplicationTest extends TestCase
         );
         self::assertSame([
             'P-LOOP-01 app/code/Acme/Promo/Model/PriceExporter.php:23 error',
-            'X-LAY-01 app/code/Acme/Promo/view/frontend/layout/default.xml:4 error',
+            'X-LAY-03 app/code/Acme/Promo/view/frontend/layout/default.xml:4 error',
             'X-LAY-01 app/code/Acme/Warn/view/frontend/layout/contact_index_index.xml:4 warning',
         ], $found);
 
@@ -84,8 +84,8 @@ final class ApplicationTest extends TestCase
         [, $stdout] = $this->runCommand(['--format=json']);
         $report = $this->json($stdout);
 
-        self::assertSame(['phpstan-parse' => 1], $report['summary']['notices']);
-        self::assertSame('app/code/Acme/Promo/Model/Broken.php', $report['notices'][0]['file']);
+        self::assertSame(['generated-code' => 1, 'phpstan-parse' => 1], $report['summary']['notices']);
+        self::assertSame('app/code/Acme/Promo/Model/Broken.php', $report['notices'][1]['file']);
     }
 
     public function testTableReport(): void
@@ -95,7 +95,7 @@ final class ApplicationTest extends TestCase
         self::assertSame(Application::EXIT_FINDINGS, $exitCode);
         self::assertStringContainsString("app/code/Acme/Promo/Model/PriceExporter.php\n     23  error    [P-LOOP-01]", $stdout);
         self::assertStringContainsString('3 finding(s): 2 error, 1 warning, 0 info.', $stdout);
-        self::assertStringContainsString('1 analysis notice(s) not reported as findings (1 phpstan-parse)', $stdout);
+        self::assertStringContainsString('2 analysis notice(s) not reported as findings (1 generated-code, 1 phpstan-parse)', $stdout);
     }
 
     public function testWarningsOnlyExitCleanByDefault(): void
@@ -130,7 +130,7 @@ final class ApplicationTest extends TestCase
             [$plainExitCode, $plainStdout] = $this->runCommand(['--format=json']);
 
             self::assertSame($plainExitCode, $exitCode);
-            self::assertSame('', $stderr);
+            self::assertStringContainsString('analysis notice(s)', $stderr);
             self::assertFileExists($file);
             $report = $this->json((string) file_get_contents($file));
             self::assertSame($this->json($plainStdout)['summary']['findings'], $report['summary']['findings']);
@@ -239,14 +239,14 @@ final class ApplicationTest extends TestCase
         $findings = $this->findings(['--include-tests']);
 
         self::assertContains('P-LOOP-01 app/code/Acme/Promo/Test/Integration/ExportTest.php:21', $findings);
-        self::assertContains('X-LAY-01 app/code/Acme/Promo/Test/Integration/_files/view/frontend/layout/default.xml:4', $findings);
+        self::assertContains('X-LAY-03 app/code/Acme/Promo/Test/Integration/_files/view/frontend/layout/default.xml:4', $findings);
     }
 
     public function testTestDirectoryGivenExplicitlyIsAnalyzed(): void
     {
         self::assertSame([
             'P-LOOP-01 app/code/Acme/Promo/Test/Integration/ExportTest.php:21',
-            'X-LAY-01 app/code/Acme/Promo/Test/Integration/_files/view/frontend/layout/default.xml:4',
+            'X-LAY-03 app/code/Acme/Promo/Test/Integration/_files/view/frontend/layout/default.xml:4',
         ], $this->findings(['--paths=app/code/Acme/Promo/Test']));
     }
 
@@ -265,7 +265,7 @@ final class ApplicationTest extends TestCase
         self::assertSame(Application::EXIT_CLEAN, $exitCode);
         $report = $this->json($stdout);
         self::assertSame(['error' => 0, 'warning' => 1, 'info' => 0], $report['summary']['bySeverity']);
-        self::assertSame('X-LAY-01', $report['findings'][0]['ruleId']);
+        self::assertSame('X-LAY-03', $report['findings'][0]['ruleId']);
     }
 
     public function testExperimentalRuleIsOffWithoutOptIn(): void

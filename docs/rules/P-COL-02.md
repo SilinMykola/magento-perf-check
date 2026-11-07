@@ -10,9 +10,10 @@
 
 A `getFirstItem()` call on a database collection (a subtype of `Magento\Framework\Data\Collection\AbstractDb`) that may load many rows. The rule stays silent when any of these is found on the same collection, earlier in the call chain or in an earlier statement of the same function (same variable or `$this` property):
 
-- **A limit:** `setPageSize()`, `getSelect()->limit()` or `getSelect()->limitPage()`. `setCurPage()` alone does not count: without a page size it adds no `LIMIT`.
+- **A limit:** `setPageSize()`, `setPage()`, `getSelect()->limit()` or `getSelect()->limitPage()`, or a comparison of `getSize()` or `getTotalCount()` with `1`. `setCurPage()` alone does not count: without a page size it adds no `LIMIT`.
 - **An earlier load:** `load()`, `getItems()`, `count()`, `getFirstItem()` or a `foreach` over the collection. The items are already in memory, so `getFirstItem()` runs no query.
-- **A unique-key filter:** `addIdFilter()`, or `addFieldToFilter()`/`addAttributeToFilter()` on `entity_id`, `sku`, `increment_id` or `username` (optionally with a table alias such as `main_table.`), with a plain value or an `['eq' => ...]` condition. At most one row matches.
+- **Rows used anyway:** the same function, before or after the call, iterates the collection or calls `load()`, `getItems()`, `getLastItem()` or `getColumnValues()` on it. Adding a limit would then drop rows the code needs.
+- **A unique-key filter:** `addIdFilter()`, `setIdFilter()`, or `addFieldToFilter()`/`addAttributeToFilter()` on `entity_id`, `sku`, `increment_id` or `username` (optionally with a table alias such as `main_table.`), with a plain value or an `['eq' => ...]` condition. At most one row matches.
 
 ## Why it hurts performance
 

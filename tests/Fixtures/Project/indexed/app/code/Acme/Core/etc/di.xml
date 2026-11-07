@@ -11,6 +11,60 @@
             <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
         </arguments>
     </virtualType>
+    <virtualType name="Acme\Promo\Resolver\VirtualBrand" type="Acme\Promo\Resolver\BaseOfVirtualBrand"/>
+    <type name="Magento\Framework\View\Element\Template">
+        <plugin name="acme_on_template" type="Acme\Render\OnTemplate"/>
+    </type>
+    <type name="Magento\Framework\View\Layout">
+        <plugin name="acme_on_layout" type="Acme\Render\OnLayout"/>
+    </type>
+    <type name="Magento\Catalog\Block\Product\View">
+        <plugin name="acme_on_specific" type="Acme\Render\OnSpecificBlock"/>
+    </type>
+    <type name="Magento\Framework\View\Element\AbstractBlock">
+        <plugin name="acme_disabled" type="Acme\Render\Disabled" disabled="true"/>
+        <plugin name="acme_disabled_elsewhere" disabled="true"/>
+    </type>
+    <type name="Magento\Framework\Console\CommandListInterface">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="sync" xsi:type="object">Acme\Batch\Sync</item>
+                <item name="proxied" xsi:type="object">Acme\Batch\Proxied</item>
+                <item name="light" xsi:type="object">Acme\Batch\Light</item>
+                <item name="virtual" xsi:type="object">Acme\Batch\VirtualCommand</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="on_the_class" xsi:type="object">Acme\Batch\OnTheClass</item>
+                <item name="child" xsi:type="object">Acme\Batch\ProxiedInChild</item>
+                <item name="optional" xsi:type="object">Acme\Batch\OptionalDependency</item>
+                <item name="nullable" xsi:type="object">Acme\Batch\NullableButRequired</item>
+                <item name="inherits" xsi:type="object">Acme\Batch\InheritsConstructor</item>
+                <item name="inherits_proxy" xsi:type="object">Acme\Batch\InheritsConstructorWithProxy</item>
+                <item name="no_constructor" xsi:type="object">Acme\Batch\NoConstructorAnywhere</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Acme\Batch\InheritsConstructorWithProxy">
+        <arguments>
+            <argument name="products" xsi:type="object">Magento\Catalog\Api\ProductRepositoryInterface\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Acme\Batch\ProxiedInParent">
+        <arguments>
+            <argument name="products" xsi:type="object">Magento\Catalog\Api\ProductRepositoryInterface\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Acme\Batch\Proxied">
+        <arguments>
+            <argument name="products" xsi:type="object">Magento\Catalog\Api\ProductRepositoryInterface\Proxy</argument>
+        </arguments>
+    </type>
+    <virtualType name="Acme\Batch\VirtualCommand" type="Acme\Batch\BaseOfVirtual"/>
+    <virtualType name="Acme\Batch\VirtualJob" type="Acme\Batch\BaseOfVirtualJob"/>
     <type name="Magento\Checkout\Model\Cart">
         <plugin name="acme_cart" type="Acme\Promo\Plugin\CartPlugin"/>
         <plugin name="acme_price" type="Acme\Promo\Model\PriceModifier"/>

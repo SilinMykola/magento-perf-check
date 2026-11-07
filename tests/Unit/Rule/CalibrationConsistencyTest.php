@@ -9,15 +9,21 @@ use Silin\MagentoPerfCheck\Rule\RuleStatus;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The registry applies every decision in docs/calibration.md (change m2-calibration, design D4).
+ * The registry applies every decision in docs/calibration.md (change m2-calibration, design D4)
+ * and in later rounds, whose decisions replace the earlier ones.
  */
 final class CalibrationConsistencyTest extends TestCase
 {
     public function testRegistryMatchesTheCalibrationReport(): void
     {
-        $report = (string) file_get_contents(__DIR__ . '/../../../docs/calibration.md');
-        preg_match_all('/^\| \[([A-Z0-9-]+)\]\(rules\/[^)]+\) \| (error|warning|info) \|.*\| ([^|]+) \|$/m', $report, $rows, PREG_SET_ORDER);
-        self::assertNotEmpty($rows);
+        $rows = [];
+        foreach ([__DIR__ . '/../../../docs/calibration.md', __DIR__ . '/../../../docs/calibration/round-2.md'] as $file) {
+            preg_match_all('/^\| \[([A-Z0-9-]+)\]\((?:\.\.\/)?rules\/[^)]+\) \| (error|warning|info) \|.*\| ([^|]+) \|$/m', (string) file_get_contents($file), $matches, PREG_SET_ORDER);
+            self::assertNotEmpty($matches, $file);
+            foreach ($matches as $match) {
+                $rows[$match[1]] = $match;
+            }
+        }
 
         $registry = new RuleRegistry();
         foreach ($rows as [, $id, $measuredSeverity, $decision]) {

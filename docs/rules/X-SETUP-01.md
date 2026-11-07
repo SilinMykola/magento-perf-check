@@ -9,10 +9,10 @@
 ## What it catches
 
 In the `install()` method of a class named `Recurring` or `RecurringData` in a `Setup` namespace, a call to:
-- `load()`, `getItems()`, `getSize()` or `save()`;
-- `reindexAll()`, `reindexList()` or `reindexRow()`.
+- `save()` on a model, a resource model or a repository;
+- `reindexAll()`, `reindexList()` or `reindexRow()` on an indexer.
 
-These calls are found inside loops too. A loop on its own is not heavy work: core loops over lists of table names to add foreign keys, which is cheap. One finding per method points at the first heavy call.
+These calls are found inside loops too. A loop on its own is not heavy work: core loops over lists of table names to add foreign keys, which is cheap. Calls inside a branch of an `if` are not reported, because they do not run every time, and neither are calls on a receiver whose type is unknown or does not match. Reads are not reported: a recurring script may need a few rows to decide what to do. Each heavy call gives one finding.
 
 ## Why it hurts performance
 

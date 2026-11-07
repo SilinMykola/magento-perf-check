@@ -70,11 +70,19 @@ namespace Acme\Other\Setup {
 }
 
 namespace Acme\Third\Setup {
+    use Magento\Catalog\Api\ProductRepositoryInterface;
+    use Magento\Catalog\Model\Product;
+    use Magento\Catalog\Model\ResourceModel\Product\Collection;
+
     final class RecurringData
     {
-        /** @param list<object> $items */
-        public function __construct(private readonly array $items)
-        {
+        /** @param list<Product> $items */
+        public function __construct(
+            private readonly array $items,
+            private readonly Collection $collection,
+            private readonly ProductRepositoryInterface $repository,
+            private readonly Product $product,
+        ) {
         }
 
         public function install(object $setup, object $context): void
@@ -82,6 +90,44 @@ namespace Acme\Third\Setup {
             foreach ($this->items as $item) {
                 $item->save();
             }
+            $this->collection->getItems();
+            $this->collection->getSize();
+            $this->product->load(1);
+            $this->repository->save($this->product);
+        }
+    }
+}
+
+namespace Acme\Fourth\Setup {
+    use Magento\Framework\Data\Collection as MemoryCollection;
+    use Magento\Framework\Indexer\IndexerInterface;
+
+    final class Recurring
+    {
+        public function __construct(
+            private readonly MemoryCollection $configBased,
+            private readonly IndexerInterface $indexer,
+            private readonly object $unknown,
+        ) {
+        }
+
+        public function install(object $setup, object $context): void
+        {
+            // Not a database collection, and not a typed model: nothing to report.
+            $this->configBased->getItems();
+            $this->configBased->load();
+            $this->unknown->save();
+
+            if ($this->needsReindex()) {
+                $this->indexer->reindexAll();
+            } else {
+                $this->indexer->reindexList([1]);
+            }
+        }
+
+        private function needsReindex(): bool
+        {
+            return false;
         }
     }
 }

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<config>
+    <event name="adminhtml_customer_save_after">
+        <observer name="acme_right_area" instance="Acme\Rules\Observer\AdminCustomer"/>
+    </event>
+</config>

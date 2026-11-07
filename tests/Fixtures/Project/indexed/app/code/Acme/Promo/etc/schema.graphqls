@@ -1,0 +1,17 @@
+extends type Single {
+    summary: String
+}
+
+interface ProductInterface {
+    brand: String @resolver(class: "Acme\\Promo\\Resolver\\Brand")
+    brand_note: String @resolver(class: "Acme\\Promo\\Resolver\\Formatter")
+    brand_batch: String @resolver(class: "Acme\\Promo\\Resolver\\BatchBrand")
+    brand_contract: String @resolver(class: "Acme\\Promo\\Resolver\\BatchContract")
+    brand_virtual: String @resolver(class: "Acme\\Promo\\Resolver\\VirtualBrand")
+    brand_constructor: String @resolver(class: "Acme\\Promo\\Resolver\\LoadsInConstructor")
+    brand_foreach_load: String @resolver(class: "Acme\\Promo\\Resolver\\ForeachOverLoad")
+    brand_eav: String @resolver(class: "Acme\\Promo\\Resolver\\ThroughEavResource")
+    brand_deferred: String @resolver(class: "Acme\\Promo\\Resolver\\Deferred")
+    brand_rows: String @resolver(class: "Acme\\Promo\\Resolver\\Rows")
+    brand_store: String @resolver(class: "Acme\\Promo\\Resolver\\Configured")
+}

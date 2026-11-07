@@ -7,10 +7,13 @@ namespace Silin\MagentoPerfCheck\Tests\Unit\Xml\Rule;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Report\Finding;
 use Silin\MagentoPerfCheck\Xml\FileDiscovery;
+use Silin\MagentoPerfCheck\Xml\Rule\CacheIdFactorRule;
 use Silin\MagentoPerfCheck\Xml\Rule\EntityHandleTtlRule;
+use Silin\MagentoPerfCheck\Xml\Rule\GlobalAreaRule;
 use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
+use Silin\MagentoPerfCheck\Xml\Rule\RedundantIndexRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SectionInvalidationRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SynchronousTopicRule;
 use Silin\MagentoPerfCheck\Xml\Rule\TableWithoutPrimaryKeyRule;
@@ -42,6 +45,9 @@ final class XmlRulesGoldenTest extends TestCase
             new SynchronousTopicRule(),
             new IndexerWithoutMviewRule($index),
             new TableWithoutPrimaryKeyRule($index),
+            new RedundantIndexRule(),
+            new GlobalAreaRule(),
+            new CacheIdFactorRule(),
         ]))->analyze(['app/code']);
 
         self::assertSame([], $result->notices);

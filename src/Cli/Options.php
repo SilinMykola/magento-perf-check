@@ -99,7 +99,8 @@ final class Options
         if (isset($values['output'], $values['generate-baseline'])) {
             throw new UsageException('--output and --generate-baseline cannot be used together.');
         }
-        if (isset($values['output'], $values['baseline']) && $inCwd($values['output']) === $inCwd($values['baseline'])) {
+        $resolved = static fn (string $file): string => (realpath(dirname($file)) ?: dirname($file)) . '/' . basename($file);
+        if (isset($values['output'], $values['baseline']) && $resolved($inCwd($values['output'])) === $resolved($inCwd($values['baseline']))) {
             throw new UsageException('--output must not be the --baseline file.');
         }
 
@@ -128,10 +129,19 @@ final class Options
      */
     public static function resolvePaths(string $project, array $paths, string $origin): array
     {
-        $paths = array_values(array_filter(
-            array_map(static fn (string $p): string => trim($p, " /"), $paths),
-            static fn (string $p): bool => $p !== '',
-        ));
+        $normalized = [];
+        foreach ($paths as $path) {
+            $segments = array_filter(explode('/', trim($path)), static fn (string $s): bool => $s !== '' && $s !== '.');
+            if (in_array('..', $segments, true)) {
+                throw new UsageException(sprintf('Path "%s" (%s) must stay inside the project.', $path, $origin));
+            }
+            if ($segments !== []) {
+                $normalized[implode('/', $segments)] = true;
+            } elseif (str_starts_with(trim($path), '.')) {
+                $normalized['.'] = true;
+            }
+        }
+        $paths = array_map('strval', array_keys($normalized));
         if ($paths === []) {
             throw new UsageException($origin . ' is empty.');
         }

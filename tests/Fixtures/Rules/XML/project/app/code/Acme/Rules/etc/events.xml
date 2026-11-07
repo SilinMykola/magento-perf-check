@@ -25,4 +25,16 @@
     <event name="core_collection_abstract_load_after">
         <observer name="acme_any_collection_load" instance="Acme\Rules\Observer\AnyCollectionLoad"/>
     </event>
+    <event name="adminhtml_customer_save_after">
+        <observer name="acme_admin_customer" instance="Acme\Rules\Observer\AdminCustomer"/>
+    </event>
+    <event name="controller_action_predispatch_adminhtml_system_config_save">
+        <observer name="acme_admin_config" instance="Acme\Rules\Observer\AdminConfig"/>
+    </event>
+    <event name="adminhtml_order_shipment_new">
+        <observer name="acme_admin_off" instance="Acme\Rules\Observer\AdminOff" disabled="true"/>
+    </event>
+    <event name="adminhtml_cache_flush_all">
+        <observer name="acme_cache_flush" instance="Acme\Rules\Observer\CacheFlush"/>
+    </event>
 </config>

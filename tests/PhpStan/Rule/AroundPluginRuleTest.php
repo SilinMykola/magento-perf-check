@@ -33,7 +33,9 @@ final class AroundPluginRuleTest extends RuleTestCase
             ['[P-PLG-01] Acme\Promo\Plugin\PricePlugin::aroundGetFinalPrice() calls $proceed' . $suffix, 18],
             ['[P-PLG-01] Acme\Promo\Plugin\PricePlugin::aroundInCondition() calls $proceed' . $suffix, 85],
             ['[P-PLG-01] Acme\Promo\Plugin\PricePlugin::aroundResultIntoArgument() calls $proceed' . $suffix, 97],
-            ['[P-PLG-01] Acme\Promo\Model\PriceModifier::aroundGetPrice() calls $proceed' . $suffix, 121],
+            // A variable read after $proceed cannot move to a before and after pair; aroundStateReadBefore and aroundListBuiltBefore are skipped.
+            ['[P-PLG-01] Acme\Promo\Plugin\PricePlugin::aroundVariableUnusedAfter() calls $proceed' . $suffix, 127],
+            ['[P-PLG-01] Acme\Promo\Model\PriceModifier::aroundGetPrice() calls $proceed' . $suffix, 145],
         ]);
     }
 }

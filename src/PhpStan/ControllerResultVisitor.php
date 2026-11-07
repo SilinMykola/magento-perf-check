@@ -12,12 +12,13 @@ use PhpParser\NodeVisitorAbstract;
 
 /**
  * Marks every method call inside an execute() whose return statements all return a
- * redirect or forward. Varnish and the built-in page cache store only 200 and 404
- * responses, so such actions are never served from cache. The check is syntactic.
+ * redirect, forward, JSON or raw result. Varnish and the built-in page cache store only
+ * 200 and 404 responses, and FrontController sets no-cache headers that only a page result
+ * replaces, so such actions are never served from cache. The check is syntactic.
  */
 final class ControllerResultVisitor extends NodeVisitorAbstract
 {
-    public const IN_REDIRECT_ONLY_EXECUTE = 'magentoPerfInRedirectOnlyExecute';
+    public const IN_UNCACHEABLE_EXECUTE = 'magentoPerfInUncacheableExecute';
 
     private const REDIRECT_METHODS = ['setpath', 'seturl', 'setrefererurl', 'setrefererorbaseurl', '_redirect', '_forward', 'forward'];
 
@@ -36,13 +37,13 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
     public function enterNode(Node $node): ?Node
     {
         if ($node instanceof Stmt\ClassMethod && $node->name->toLowerString() === 'execute' && $node->stmts !== null
-            && $this->returnsOnlyRedirects($node->stmts)
+            && $this->returnsOnlyUncacheableResults($node->stmts)
         ) {
-            $node->setAttribute(self::IN_REDIRECT_ONLY_EXECUTE, true);
+            $node->setAttribute(self::IN_UNCACHEABLE_EXECUTE, true);
             ++$this->depth;
         }
         if ($this->depth > 0 && $node instanceof Expr\MethodCall) {
-            $node->setAttribute(self::IN_REDIRECT_ONLY_EXECUTE, true);
+            $node->setAttribute(self::IN_UNCACHEABLE_EXECUTE, true);
         }
 
         return null;
@@ -50,7 +51,7 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
 
     public function leaveNode(Node $node): ?Node
     {
-        if ($node instanceof Stmt\ClassMethod && $node->getAttribute(self::IN_REDIRECT_ONLY_EXECUTE) === true) {
+        if ($node instanceof Stmt\ClassMethod && $node->getAttribute(self::IN_UNCACHEABLE_EXECUTE) === true) {
             --$this->depth;
         }
 
@@ -60,13 +61,13 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
     /**
      * @param Stmt[] $statements
      */
-    private function returnsOnlyRedirects(array $statements): bool
+    private function returnsOnlyUncacheableResults(array $statements): bool
     {
         $finder = new NodeFinder();
-        $redirectVariables = [];
+        $uncacheableVariables = [];
         foreach ($finder->findInstanceOf($statements, Expr\Assign::class) as $assign) {
-            if ($assign->var instanceof Expr\Variable && is_string($assign->var->name) && $this->isRedirect($assign->expr, [])) {
-                $redirectVariables[$assign->var->name] = true;
+            if ($assign->var instanceof Expr\Variable && is_string($assign->var->name) && $this->isUncacheable($assign->expr, [])) {
+                $uncacheableVariables[$assign->var->name] = true;
             }
         }
         $returns = array_filter(
@@ -77,7 +78,7 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
             return false;
         }
         foreach ($returns as $return) {
-            if ($return->expr === null || !$this->isRedirect($return->expr, $redirectVariables)) {
+            if ($return->expr === null || !$this->isUncacheable($return->expr, $uncacheableVariables)) {
                 return false;
             }
         }
@@ -86,12 +87,12 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * @param array<string, true> $redirectVariables
+     * @param array<string, true> $uncacheableVariables
      */
-    private function isRedirect(Expr $expr, array $redirectVariables): bool
+    private function isUncacheable(Expr $expr, array $uncacheableVariables): bool
     {
         if ($expr instanceof Expr\Variable && is_string($expr->name)) {
-            return isset($redirectVariables[$expr->name]);
+            return isset($uncacheableVariables[$expr->name]);
         }
         while ($expr instanceof Expr\MethodCall) {
             if ($expr->name instanceof Node\Identifier) {
@@ -100,7 +101,7 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
                     return true;
                 }
                 if ($name === 'create'
-                    && (preg_match('/redirect|forward/i', $this->receiverName($expr->var)) === 1 || $this->createsRedirectType($expr))
+                    && (preg_match('/(?i:redirect|forward|json)|Raw|^raw/', $this->receiverName($expr->var)) === 1 || $this->createsUncacheableType($expr))
                 ) {
                     return true;
                 }
@@ -108,18 +109,18 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
             $expr = $expr->var;
         }
 
-        return $expr instanceof Expr\Variable && is_string($expr->name) && isset($redirectVariables[$expr->name]);
+        return $expr instanceof Expr\Variable && is_string($expr->name) && isset($uncacheableVariables[$expr->name]);
     }
 
     /**
-     * resultFactory->create(ResultFactory::TYPE_REDIRECT) or TYPE_FORWARD, matched by constant name.
+     * resultFactory->create(ResultFactory::TYPE_REDIRECT), TYPE_FORWARD, TYPE_JSON or TYPE_RAW, matched by constant name.
      */
-    private function createsRedirectType(Expr\MethodCall $create): bool
+    private function createsUncacheableType(Expr\MethodCall $create): bool
     {
         $type = $create->getArgs()[0]->value ?? null;
 
         return $type instanceof Expr\ClassConstFetch && $type->name instanceof Node\Identifier
-            && in_array($type->name->toString(), ['TYPE_REDIRECT', 'TYPE_FORWARD'], true);
+            && in_array($type->name->toString(), ['TYPE_REDIRECT', 'TYPE_FORWARD', 'TYPE_JSON', 'TYPE_RAW'], true);
     }
 
     private function receiverName(Expr $expr): string

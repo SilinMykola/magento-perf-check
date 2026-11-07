@@ -48,7 +48,7 @@ final class StateChangeOnGetRule implements Rule
             || !MagentoTypes::implements($class, self::GET_ACTION)
             || MagentoTypes::implements($class, self::POST_ACTION)
             || str_contains((string) $class?->getName(), '\\Controller\\Adminhtml\\')
-            || $node->getAttribute(ControllerResultVisitor::IN_REDIRECT_ONLY_EXECUTE) === true
+            || $node->getAttribute(ControllerResultVisitor::IN_UNCACHEABLE_EXECUTE) === true
         ) {
             return [];
         }
@@ -56,7 +56,7 @@ final class StateChangeOnGetRule implements Rule
         $type = $scope->getType($node->var);
         $target = match ($method) {
             'save', 'delete' => $this->types->subtypeOf($type, MagentoTypes::ABSTRACT_MODEL)
-                ?? $this->types->subtypeOf($type, MagentoTypes::RESOURCE_MODEL)
+                ?? $this->types->resourceModel($type)
                 ?? $this->types->repository($type),
             'deletebyid' => $this->types->repository($type),
             'addproduct' => $this->types->subtypeOf($type, self::CART_CLASSES[0]) ?? $this->types->subtypeOf($type, self::CART_CLASSES[1]),

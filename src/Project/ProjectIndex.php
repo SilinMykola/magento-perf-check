@@ -17,6 +17,10 @@ final class ProjectIndex
      * @param array<string, list<array{class: string, area: string, module: string}>> $observers event => observers
      * @param array<string, true> $mviewViews
      * @param array<string, true> $tablesWithPrimaryKey
+     * @param array<string, string> $listFieldResolvers resolver class => a field on a list type it resolves
+     * @param array<string, list<string>> $pluginTargets plugin class => classes it is configured on, outside the admin area
+     * @param array<string, true> $consoleCommands classes in the commands argument of CommandList
+     * @param array<string, true> $cronJobs classes that crontab.xml runs
      */
     public function __construct(
         public readonly int $moduleCount,
@@ -25,6 +29,10 @@ final class ProjectIndex
         private readonly array $observers,
         private readonly array $mviewViews,
         private readonly array $tablesWithPrimaryKey,
+        private readonly array $listFieldResolvers = [],
+        private readonly array $pluginTargets = [],
+        private readonly array $consoleCommands = [],
+        private readonly array $cronJobs = [],
     ) {
     }
 
@@ -68,6 +76,32 @@ final class ProjectIndex
     }
 
     /**
+     * Normalized classes that $class is a plugin on, outside the admin area.
+     *
+     * @return list<string>
+     */
+    public function pluginTargetsOf(string $class): array
+    {
+        return $this->pluginTargets[self::normalizeClass($class)] ?? [];
+    }
+
+    public function isConsoleCommand(string $class): bool
+    {
+        return isset($this->consoleCommands[self::normalizeClass($class)]);
+    }
+
+    public function isCronJob(string $class): bool
+    {
+        return isset($this->cronJobs[self::normalizeClass($class)]);
+    }
+
+    /** "Type.field" when the class resolves a field of a type returned inside a list, else null. */
+    public function listFieldResolvedBy(string $class): ?string
+    {
+        return $this->listFieldResolvers[self::normalizeClass($class)] ?? null;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function toArray(): array
@@ -79,6 +113,10 @@ final class ProjectIndex
             'observers' => $this->observers,
             'mviewViews' => $this->mviewViews,
             'tablesWithPrimaryKey' => $this->tablesWithPrimaryKey,
+            'listFieldResolvers' => $this->listFieldResolvers,
+            'pluginTargets' => $this->pluginTargets,
+            'consoleCommands' => $this->consoleCommands,
+            'cronJobs' => $this->cronJobs,
         ];
     }
 
@@ -87,7 +125,7 @@ final class ProjectIndex
      */
     public static function fromArray(array $data): self
     {
-        /** @var array{moduleCount: int, proxyArguments: array<string, array<string, true>>, pluginClasses: array<string, true>, observers: array<string, list<array{class: string, area: string, module: string}>>, mviewViews: array<string, true>, tablesWithPrimaryKey: array<string, true>} $data */
+        /** @var array{moduleCount: int, proxyArguments: array<string, array<string, true>>, pluginClasses: array<string, true>, observers: array<string, list<array{class: string, area: string, module: string}>>, mviewViews: array<string, true>, tablesWithPrimaryKey: array<string, true>, listFieldResolvers: array<string, string>, pluginTargets: array<string, list<string>>, consoleCommands: array<string, true>, cronJobs: array<string, true>} $data */
         return new self(
             $data['moduleCount'],
             $data['proxyArguments'],
@@ -95,6 +133,10 @@ final class ProjectIndex
             $data['observers'],
             $data['mviewViews'],
             $data['tablesWithPrimaryKey'],
+            $data['listFieldResolvers'],
+            $data['pluginTargets'],
+            $data['consoleCommands'],
+            $data['cronJobs'],
         );
     }
 }

@@ -6,8 +6,6 @@ namespace Silin\MagentoPerfCheck\Xml;
 
 use FilesystemIterator;
 use Silin\MagentoPerfCheck\Project\TestCode;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use SplFileInfo;
 
 /**
@@ -44,7 +42,7 @@ final class FileDiscovery
             $path = trim($path, '/');
             $skipCore = !$this->isInsideCoreVendor($path);
             $skipTests = !$this->includeTests && !TestCode::contains($path);
-            $absolute = $this->projectRoot . '/' . $path;
+            $absolute = $path === '.' ? $this->projectRoot : $this->projectRoot . '/' . $path;
             foreach ($this->xmlFilesUnder($absolute) as $file) {
                 $relative = substr($file, strlen($this->projectRoot) + 1);
                 if ($skipCore && $this->isInsideCoreVendor($relative)) {
@@ -90,15 +88,45 @@ final class FileDiscovery
         if (!is_dir($absolute)) {
             return;
         }
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($absolute, FilesystemIterator::SKIP_DOTS),
-        );
+        yield from $this->xmlFilesIn($absolute, [(string) realpath($absolute)]);
+    }
+
+    /**
+     * Follows symlinks, because modules are often symlinked into app/code, but not a link
+     * that leads back up the path taken: that would be a loop, or a way around the core skip.
+     *
+     * @param list<string> $ancestors real paths of the directories on the way here
+     * @return iterable<string>
+     */
+    private function xmlFilesIn(string $directory, array $ancestors): iterable
+    {
         /** @var SplFileInfo $info */
-        foreach ($iterator as $info) {
-            if ($info->isFile() && in_array($info->getExtension(), ['xml', 'graphqls'], true)) {
-                yield $info->getPathname();
+        foreach (new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS) as $info) {
+            if ($info->isFile()) {
+                if (in_array($info->getExtension(), ['xml', 'graphqls'], true)) {
+                    yield $info->getPathname();
+                }
+            } elseif ($info->isDir()) {
+                $real = (string) $info->getRealPath();
+                if (!$info->isLink() || !self::leadsBack($real, $ancestors)) {
+                    yield from $this->xmlFilesIn($info->getPathname(), [...$ancestors, $real]);
+                }
             }
         }
+    }
+
+    /**
+     * @param list<string> $ancestors
+     */
+    private static function leadsBack(string $target, array $ancestors): bool
+    {
+        foreach ($ancestors as $ancestor) {
+            if ($ancestor === $target || str_starts_with($ancestor, $target . '/')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function describe(string $absolute, string $relative): ?XmlFile

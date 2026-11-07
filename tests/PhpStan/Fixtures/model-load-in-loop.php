@@ -69,4 +69,24 @@ final class Example
             $unknown->getById($id);
         }
     }
+
+    /**
+     * These read a field or cached configuration, not the database.
+     *
+     * @param list<int> $ids
+     */
+    public function loadsThatRunNoQuery(
+        array $ids,
+        \Magento\Directory\Model\Currency $currency,
+        \Magento\Store\Api\StoreRepositoryInterface $stores,
+        \Magento\Store\Api\WebsiteRepositoryInterface $websites,
+        \Magento\Store\Api\GroupRepositoryInterface $groups,
+    ): void {
+        foreach ($ids as $id) {
+            $currency->load((string) $id);
+            $stores->getById($id);
+            $websites->getById($id);
+            $groups->get($id);
+        }
+    }
 }

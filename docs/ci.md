@@ -9,6 +9,8 @@ The examples below assume the tool is installed in the project. If it runs from 
 
 On a project with existing findings, start with a [baseline](baseline.md) so that CI fails only on new ones.
 
+Without `generated/code` the types of proxies and extension attributes are unknown, so some findings are missed and the run reports a `generated-code` notice. Factories do not need it. Run `bin/magento setup:di:compile` before the analysis, or install [bitexpert/phpstan-magento](https://github.com/bitExpert/phpstan-magento).
+
 ## Git pre-commit hook
 
 Save this as `.git/hooks/pre-commit` in the Magento project and make it executable (`chmod +x .git/hooks/pre-commit`):

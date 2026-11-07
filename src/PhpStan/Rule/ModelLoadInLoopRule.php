@@ -24,6 +24,16 @@ final class ModelLoadInLoopRule implements Rule
     public const ID = 'P-LOOP-01';
     public const IDENTIFIER = 'magentoPerf.loopModelLoad';
 
+    /** Currency::load() only sets the currency code. */
+    public const LOAD_WITHOUT_QUERY = ['Magento\Directory\Model\Currency'];
+
+    /** These read cached configuration (the "scopes" section), not the database. */
+    public const REPOSITORIES_WITHOUT_QUERY = [
+        'Magento\Store\Api\StoreRepositoryInterface',
+        'Magento\Store\Api\WebsiteRepositoryInterface',
+        'Magento\Store\Api\GroupRepositoryInterface',
+    ];
+
     private readonly MagentoTypes $types;
 
     public function __construct(ReflectionProvider $reflectionProvider)
@@ -43,6 +53,13 @@ final class ModelLoadInLoopRule implements Rule
         }
         $method = $node->name->toString();
         $type = $scope->getType($node->var);
+
+        $excluded = strtolower($method) === 'load' ? self::LOAD_WITHOUT_QUERY : self::REPOSITORIES_WITHOUT_QUERY;
+        foreach ($excluded as $noQuery) {
+            if (MagentoTypes::isObjectOf($type, $noQuery)) {
+                return [];
+            }
+        }
 
         $class = match (strtolower($method)) {
             'load' => $this->types->subtypeOf($type, MagentoTypes::ABSTRACT_MODEL),

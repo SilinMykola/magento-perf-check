@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <job name="acme_nightly" instance="Acme\Batch\NightlyJob" method="execute">
+            <schedule>0 3 * * *</schedule>
+        </job>
+        <job name="acme_virtual" instance="Acme\Batch\VirtualJob" method="execute">
+            <schedule>0 4 * * *</schedule>
+        </job>
+    </group>
+</config>

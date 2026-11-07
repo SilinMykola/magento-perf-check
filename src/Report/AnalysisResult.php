@@ -76,6 +76,41 @@ final class AnalysisResult
         return $counts;
     }
 
+    /**
+     * @return list<string>
+     */
+    public function analysisFailures(): array
+    {
+        $failures = [];
+        foreach ($this->notices as $notice) {
+            if ($notice->source === Notice::SOURCE_ANALYSIS_FAILURE) {
+                $failures[] = $notice->message;
+            }
+        }
+
+        return $failures;
+    }
+
+    /**
+     * One line for the reader, or null when there are no notices.
+     */
+    public function noticeSummary(): ?string
+    {
+        $parts = [];
+        foreach ($this->countNoticesBySource() as $source => $count) {
+            $parts[] = $count . ' ' . $source;
+        }
+        if ($parts === []) {
+            return null;
+        }
+
+        return sprintf(
+            '%d analysis notice(s) not reported as findings (%s). Use --format=json to list them.',
+            count($this->notices),
+            implode(', ', $parts),
+        );
+    }
+
     public function hasFindingsAtLeast(Severity $threshold): bool
     {
         foreach ($this->findings as $finding) {

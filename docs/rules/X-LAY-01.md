@@ -1,26 +1,28 @@
-# X-LAY-01: block with `cacheable="false"`
+# X-LAY-01: block with `cacheable="false"` on other handles
 
 | | |
 |---|---|
-| Severity | `error` for the `default` handle and handles starting with `catalog_` or `cms_`; `warning` for other handles |
+| Severity | `warning` |
 | Status | experimental, off by default: precision 20 % in [calibration](../calibration.md). Enable it with `enabled: true` in `magento-perf-check.neon` |
 | Analyzer | XML (layout files of area `frontend` or `base`) |
 
 ## What it catches
 
-A `<block>` with `cacheable="false"` in a frontend layout file. This includes module layouts (`view/frontend/layout`, `view/base/layout`) and theme overrides (`app/design/frontend/<Vendor>/<theme>/<Module_Name>/layout`).
+A `<block>` with `cacheable="false"` in a frontend layout file, on any handle except `default`, `catalog_*` and `cms_*`. Those belong to [X-LAY-03](X-LAY-03.md), which is on by default. This includes module layouts (`view/frontend/layout`, `view/base/layout`) and theme overrides (`app/design/frontend/<Vendor>/<theme>/<Module_Name>/layout`).
 
 ## Why it hurts performance
 
-When a layout contains a non-cacheable block, Magento treats the whole page as non-cacheable. No cached copy is stored in Varnish or the built-in Full Page Cache, so every request for every page that uses the handle renders the full page in PHP. In `default.xml` that means every page of the store. In `catalog_*` and `cms_*` handles it hits the highest-traffic pages, which Adobe says must stay cacheable.
-
+When a layout contains a non-cacheable block, Magento treats the whole page as non-cacheable. No cached copy is stored in Varnish or the built-in Full Page Cache, so every request for every page that uses the handle renders the full page in PHP. 
 The rule does not report handles that are personal by nature and not meant to be cached. Default allowlist (handle prefixes):
 - Customer: `customer_`, `loginascustomer_`, `newsletter_manage_`, `review_customer_`, `downloadable_customer_`.
-- Checkout and sales: `checkout_`, `multishipping_`, `sales_`.
+- Checkout and sales: `checkout_`, `hyva_checkout_`, `multishipping_`, `sales_`, `shipping_tracking_`.
 - Payment: `paypal_`, `vault_`, `paymentservicespaypal_vault_`.
 - Lists: `wishlist_`, `catalog_product_compare_`.
+- Forms bound to one customer or email link: `productalert_unsubscribe_`, `sendfriend_`.
 
-The SPEC started with six of these. The rest are the handles that Magento 2.4.9 core itself makes uncacheable, found in the M0 core run ([docs/runs/m0-core.md](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m0-core.md)). `catalog_product_compare_` is allowed even though `catalog_` handles otherwise give an `error`: the compare page is per customer. Add your own prefixes, or replace the list, in `magento-perf-check.neon` (`layout.allowlistHandles`, `layout.replaceAllowlist`).
+A layout that includes `<update handle="customer_account"/>` is personal too and is not reported, whatever its handle is called. The allowlist applies to [X-LAY-03](X-LAY-03.md) as well.
+
+The SPEC started with six of these. The rest are the handles that Magento 2.4.9 core itself makes uncacheable, found in the M0 core run ([docs/runs/m0-core.md](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m0-core.md)). `catalog_product_compare_` is allowed even though X-LAY-03 otherwise reports `catalog_` handles: the compare page is per customer. Add your own prefixes, or replace the list, in `magento-perf-check.neon` (`layout.allowlistHandles`, `layout.replaceAllowlist`).
 
 ## Example
 

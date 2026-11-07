@@ -1,9 +1,15 @@
+X-AREA-01 info app/code/Acme/Rules/etc/events.xml:29
+X-AREA-01 info app/code/Acme/Rules/etc/events.xml:32
 X-DB-01 error app/code/Acme/Rules/etc/db_schema.xml:6
+X-DB-02 info app/code/Acme/Rules/etc/db_schema.xml:21
+X-DB-02 info app/code/Acme/Rules/etc/db_schema.xml:24
+X-DB-02 info app/code/Acme/Rules/etc/db_schema.xml:31
 X-EVT-01 warning app/code/Acme/Rules/etc/events.xml:26
 X-EVT-01 warning app/code/Acme/Rules/etc/events.xml:4
 X-EVT-01 warning app/code/Acme/Rules/etc/events.xml:8
 X-EVT-02 warning app/code/Acme/Rules/etc/events.xml:11
 X-EVT-03 warning app/code/Acme/Rules/etc/events.xml:17
+X-GQL-03 info app/code/Acme/Rules/etc/di.xml:12
 X-IDX-01 warning app/code/Acme/Rules/etc/indexer.xml:3
 X-LAY-02 error app/code/Acme/Rules/view/frontend/layout/catalog_product_view_id_42.xml:4
 X-LAY-02 error app/code/Acme/Rules/view/frontend/layout/catalog_product_view_sku_ABC.xml:4

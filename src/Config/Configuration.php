@@ -16,7 +16,7 @@ final class Configuration
     /**
      * @param ?list<string> $paths
      * @param array<string, RuleSettings> $rules rule ID => settings
-     * @param list<string> $allowlistHandles extra X-LAY-01 allowlist prefixes
+     * @param list<string> $allowlistHandles extra allowlist prefixes of X-LAY-01 and X-LAY-03
      */
     public function __construct(
         public readonly ?array $paths = null,
@@ -25,6 +25,11 @@ final class Configuration
         public readonly array $allowlistHandles = [],
         public readonly bool $replaceAllowlist = false,
     ) {
+    }
+
+    public function isEnabled(string $ruleId, RuleRegistry $registry): bool
+    {
+        return $this->rules[$ruleId]->enabled ?? $registry->find($ruleId)?->status !== RuleStatus::Experimental;
     }
 
     /**
@@ -38,13 +43,9 @@ final class Configuration
     {
         $result = [];
         foreach ($findings as $finding) {
-            $settings = $this->rules[$finding->ruleId] ?? null;
-            if ($settings === null) {
-                if ($registry->find($finding->ruleId)?->status !== RuleStatus::Experimental) {
-                    $result[] = $finding;
-                }
-            } elseif ($settings->enabled) {
-                $result[] = $settings->severity !== null ? $finding->withSeverity($settings->severity) : $finding;
+            if ($this->isEnabled($finding->ruleId, $registry)) {
+                $severity = $this->rules[$finding->ruleId]->severity ?? null;
+                $result[] = $severity !== null ? $finding->withSeverity($severity) : $finding;
             }
         }
 
