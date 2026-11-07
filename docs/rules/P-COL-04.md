@@ -54,10 +54,13 @@ for ($page = 1, $last = $orders->getLastPageNumber(); $page <= $last; $page++) {
 - A filter that leaves few rows by nature, such as a narrow time window or a small table. The rule does not know how many rows match.
 - A collection that a method of its own class limits, such as `$collection->onlyRecent()`.
 - A small collection per item of another loop, such as the lines of one order.
+- A collection limited through a variable, `$select = $c->getSelect(); $select->limit(10);`, or by a helper it is passed to, such as `CollectionProcessor`. Neither appeared in the 78 modules checked: the first by a syntax search of their roughly 5400 PHP files outside test directories, the second by a search of their `Cron` and `Console` directories only.
 
 A collection that a parameter or another method hands over is not reported, because its limit may be set there. These are missed too:
 
 - a job class that calls a service to do the walking;
+- a job whose method is inherited, because the class that declares it is not the one in `crontab.xml`. None of the 47 jobs in those modules is like that;
+- a collection from a getter after `create()`: `$factory->create()->getCollection()`, and also a getter that returns the collection itself, such as `getFiltered()` on a credit memo collection. Only `getItems()` is known to stay on the same collection;
 - rows or a collection kept elsewhere first: `$items = $factory->create()->getItems(); foreach ($items ...)`, or `$this->collection = $factory->create()`;
 - a collection filtered in the `foreach` itself after it was created: `$c = $factory->create(); foreach ($c->addFieldToFilter(...) as ...)`;
 - a collection compared with `getSize() === 1` earlier in the function, or with a filter on one of those four columns that holds an array or matches many rows, such as `sku` on order items.

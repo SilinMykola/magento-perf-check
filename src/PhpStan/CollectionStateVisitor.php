@@ -81,6 +81,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             // "$c = $c->addFieldToFilter(...)" keeps working on the same collection.
             if ($this->rootKey($node->expr) !== $key) {
                 unset($this->frames[count($this->frames) - 1][$key]);
+            } elseif ($this->hasGetter($node->expr)) {
+                // "$c = $c->getCollection()" is something else, with the same variable name.
+                unset($this->frames[count($this->frames) - 1][$key][self::CREATED_HERE]);
             }
             foreach ([self::LIMITED, self::UNIQUE_FILTER, self::CREATED_HERE] as $fact) {
                 if ($this->chainHas($node->expr, $fact)) {
@@ -118,9 +121,11 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
                 }
             }
             $this->record($key, self::LOADED);
-            // The loop assigns a new value to this variable.
-            if ($node->valueVar instanceof Expr\Variable && is_string($node->valueVar->name)) {
-                unset($this->frames[count($this->frames) - 1]['$' . $node->valueVar->name]);
+            // The loop assigns new values to these variables.
+            foreach ((new NodeFinder())->findInstanceOf($node->valueVar, Expr\Variable::class) as $variable) {
+                if (is_string($variable->name)) {
+                    unset($this->frames[count($this->frames) - 1]['$' . $variable->name]);
+                }
             }
 
             return null;
@@ -273,10 +278,32 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             if ($this->establishes($expr, $fact)) {
                 return true;
             }
+            // A getter after create() hands over something else, such as the items of a new order.
+            if ($fact === self::CREATED_HERE && $this->isGetter($expr)) {
+                return false;
+            }
             $expr = $expr->var;
         }
 
         return false;
+    }
+
+    private function hasGetter(Expr $expr): bool
+    {
+        for (; $expr instanceof Expr\MethodCall; $expr = $expr->var) {
+            if ($this->isGetter($expr)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function isGetter(Expr\MethodCall $call): bool
+    {
+        return $call->name instanceof Node\Identifier
+            && str_starts_with($call->name->toLowerString(), 'get')
+            && $call->name->toLowerString() !== 'getitems';
     }
 
     private function establishes(Expr\MethodCall $call, string $fact): bool
@@ -291,12 +318,20 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             return $name === 'create' && !($call->var instanceof Expr\Variable && $call->var->name === 'this');
         }
         if ($fact === self::LIMITED) {
-            // setPageSize(), setPage(), or limit()/limitPage() on getSelect()
-            return $name === 'setpagesize' || $name === 'setpage'
-                || (($name === 'limit' || $name === 'limitpage')
-                    && $call->var instanceof Expr\MethodCall
-                    && $call->var->name instanceof Node\Identifier
-                    && $call->var->name->toLowerString() === 'getselect');
+            // setPageSize(), setPage(), or limit()/limitPage() anywhere after getSelect()
+            if ($name === 'setpagesize' || $name === 'setpage') {
+                return true;
+            }
+            if ($name !== 'limit' && $name !== 'limitpage') {
+                return false;
+            }
+            for ($on = $call->var; $on instanceof Expr\MethodCall; $on = $on->var) {
+                if ($on->name instanceof Node\Identifier && $on->name->toLowerString() === 'getselect') {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         if ($name === 'addidfilter' || $name === 'setidfilter') {

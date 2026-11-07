@@ -170,7 +170,7 @@ namespace Acme\Promo\Model\Resolver {
 
         public function resolve(): void
         {
-            $this->response->setHeader('Pragma', 'no-cache');
+            $this->response->setHeader('Cache-Control', 'no-store');
         }
     }
 }
@@ -284,7 +284,7 @@ namespace Acme\Promo\Controller\Download {
 
         public function execute(): mixed
         {
-            $this->response->setHeader('Pragma', 'public', true);
+            $this->response->setHeader('Pragma', 'no-cache', true);
             $this->response->setHeader('Pragma', 'no-cache')->setHeader('Cache-Control', 'no-store');
 
             return null;
@@ -561,7 +561,7 @@ namespace Acme\Promo\Controller\Feed {
 
         private function setNoCacheHeaders(): void
         {
-            $this->response->setHeader('Pragma', 'no-cache');
+            $this->response->setHeader('Cache-Control', 'no-store');
         }
 
         private function setHeader(string $name, string $value): void

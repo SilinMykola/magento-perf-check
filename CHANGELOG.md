@@ -15,6 +15,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Fixed
 
+- P-FPC-05, in the default set, no longer reports `setHeader('Pragma', 'no-cache')`, which can change a CI result: neither the built-in page cache nor the Varnish configuration reads `Pragma` from a response.
 - A PHPStan worker crash or memory limit no longer ends in exit code 0: the command exits with 2, marks the JSON report `"incomplete": true`, says why on stderr and writes no baseline. **This can change a CI result.**
 - With the `magento-perf-check` command, PHP rules that read XML (P-DI-01, P-FPC-10, P-PLG-01) no longer report stale results from PHPStan's cache after `di.xml` or another indexed file changes. Before this, adding a Proxy changed nothing, and removing one could go unreported.
 - Two runs on one project at the same time no longer return each other's results.

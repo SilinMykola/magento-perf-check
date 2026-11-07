@@ -36,6 +36,9 @@ final class UnpagedBatchCollectionRuleTest extends RuleTestCase
             [$message, 136],
             [$message, 163],
             [$message, 183],
+            [$message, 351],
+            [$message, 360],
+            [$message, 383],
         ]);
     }
 }

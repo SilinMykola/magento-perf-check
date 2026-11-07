@@ -42,7 +42,15 @@
                 <item name="child" xsi:type="object">Acme\Batch\ProxiedInChild</item>
                 <item name="optional" xsi:type="object">Acme\Batch\OptionalDependency</item>
                 <item name="nullable" xsi:type="object">Acme\Batch\NullableButRequired</item>
+                <item name="inherits" xsi:type="object">Acme\Batch\InheritsConstructor</item>
+                <item name="inherits_proxy" xsi:type="object">Acme\Batch\InheritsConstructorWithProxy</item>
+                <item name="no_constructor" xsi:type="object">Acme\Batch\NoConstructorAnywhere</item>
             </argument>
+        </arguments>
+    </type>
+    <type name="Acme\Batch\InheritsConstructorWithProxy">
+        <arguments>
+            <argument name="products" xsi:type="object">Magento\Catalog\Api\ProductRepositoryInterface\Proxy</argument>
         </arguments>
     </type>
     <type name="Acme\Batch\ProxiedInParent">

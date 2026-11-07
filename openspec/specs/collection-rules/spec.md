@@ -142,8 +142,16 @@ P-COL-04 SHALL report, as `warning`, a `foreach` over a database collection, or 
 - **WHEN** `setPageSize()` is called on the collection before the `foreach`
 - **THEN** P-COL-04 reports nothing
 
+#### Scenario: Limit after other select calls
+- **WHEN** `$collection->getSelect()->order('entity_id')->limit(10)` comes before the `foreach`
+- **THEN** P-COL-04 reports nothing
+
+#### Scenario: Variable assigned by the loop
+- **WHEN** an outer `foreach` over `[$collection, $label]` assigns a `$collection` that the function earlier created with `create()`, and an inner `foreach` iterates it
+- **THEN** P-COL-04 reports nothing
+
 #### Scenario: Collection from elsewhere
-- **WHEN** the collection is a parameter, the result of a method of this class such as `$this->getCollection()`, or of a method of what the function created, such as `$order->getItemsCollection()`
+- **WHEN** the collection is a parameter, the result of a method of this class such as `$this->getCollection()`, or of a getter of what the function created, such as `$order->getItemsCollection()` or `$factory->create()->getItemsCollection()`
 - **THEN** P-COL-04 reports nothing
 
 #### Scenario: Request code

@@ -289,3 +289,99 @@ class NullableButRequired extends Command
     {
     }
 }
+
+class CommandBase extends Command
+{
+    public function __construct(ProductRepositoryInterface $products)
+    {
+    }
+}
+
+class InheritsConstructor extends CommandBase
+{
+}
+
+class InheritsConstructorWithProxy extends CommandBase
+{
+}
+
+class NoConstructorAnywhere extends Command
+{
+}
+
+class CommandWithChains extends Command
+{
+    public function collectionOfACreatedObject(OrderFactory $factory): void
+    {
+        foreach ($factory->create()->getItemsCollection() as $item) {
+            unset($item);
+        }
+        $items = $factory->create()->getItemsCollection();
+        foreach ($items as $item) {
+            unset($item);
+        }
+    }
+
+    public function limitAfterOtherSelectCalls(CollectionFactory $factory): void
+    {
+        $collection = $factory->create();
+        $collection->getSelect()->order('entity_id')->limit(10);
+        foreach ($collection as $item) {
+            unset($item);
+        }
+    }
+
+    /** @param list<array{Collection, string}> $pairs */
+    public function reassignedByDestructuring(CollectionFactory $factory, array $pairs): void
+    {
+        $collection = $factory->create();
+        unset($collection);
+        foreach ($pairs as [$collection, $label]) {
+            unset($label);
+            foreach ($collection as $item) {
+                unset($item);
+            }
+        }
+    }
+
+    public function selectWithoutALimit(CollectionFactory $factory): void
+    {
+        $collection = $factory->create();
+        $collection->getSelect()->order('entity_id');
+        foreach ($collection as $item) {
+            unset($item);
+        }
+    }
+
+    public function limitOnSomethingElse(CollectionFactory $factory): void
+    {
+        $collection = $factory->create();
+        $collection->getResource()->limit(10);
+        foreach ($collection as $item) {
+            unset($item);
+        }
+    }
+
+    public function reassignedFromAGetter(OrderFactory $factory): void
+    {
+        $order = $factory->create();
+        $order = $order->getItemsCollection();
+        foreach ($order as $item) {
+            unset($item);
+        }
+        $order = $factory->create();
+        $order = $order->getItemsCollection()->addFieldToFilter('status', 'new');
+        foreach ($order as $item) {
+            unset($item);
+        }
+    }
+
+    public function reassignedByAFilter(CollectionFactory $factory): void
+    {
+        $collection = $factory->create();
+        $collection = $collection->addFieldToFilter('status', 'new');
+        foreach ($collection as $item) {
+            unset($item);
+        }
+    }
+}

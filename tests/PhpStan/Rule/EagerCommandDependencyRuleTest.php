@@ -37,6 +37,7 @@ final class EagerCommandDependencyRuleTest extends RuleTestCase
             [$message('Acme\Batch\Sync', '$products'), 16],
             [$message('Acme\Batch\BaseOfVirtual', '$products, $others'), 48],
             [$message('Acme\Batch\NullableButRequired', '$products'), 288],
+            [$message('Acme\Batch\InheritsConstructor', '$products'), 300],
         ]);
     }
 }

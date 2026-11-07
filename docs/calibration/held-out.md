@@ -1,6 +1,6 @@
 # Calibration on modules the rules were not tuned on
 
-Rounds [1](../calibration.md) and [2](round-2.md) graded findings on the same 25 modules the rules were fixed on, so their figures are optimistic. This page checks the default set on 15 other modules. It decides nothing: the thresholds apply to rounds 1 and 2.
+Rounds [1](../calibration.md) and [2](round-2.md) graded findings on the same 25 modules the rules were fixed on, so their figures are optimistic. This page checks the default set on 15 other modules, and [a second check](held-out-2.md) on 22 more. It decides nothing: the thresholds apply to rounds 1 and 2.
 
 ## Modules
 
@@ -34,7 +34,7 @@ Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded on
 |---|---|---|---|---|---|
 | P-DI-01 | 41 | 12 | 2 | 10 | 0 |
 | P-DI-06 | 18 | 12 | 0 | 10 | 2 |
-| P-FPC-05 | 4 | 4 | 0 | 4 | 0 |
+| P-FPC-05 | 2 | 2 | 0 | 2 | 0 |
 | P-LOOP-01 | 3 | 3 | 0 | 3 | 0 |
 | P-LOOP-03 | 9 | 9 | 0 | 8 | 1 |
 | P-LOOP-10 | 1 | 1 | 0 | 1 | 0 |
@@ -43,14 +43,15 @@ Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded on
 | X-DB-01 | 1 | 1 | 1 | 0 | 0 |
 | X-DB-02 | 1 | 1 | 0 | 1 | 0 |
 | X-EVT-03 | 1 | 1 | 0 | 1 | 0 |
-| **All** | **90** | **55** | **3** | **49** | **3** |
+| **All** | **88** | **53** | **3** | **47** | **3** |
 
-52 of the 55 graded findings are correct, and 3 matter in practice. The tool is right far more often than it is important: most correct findings cost little.
+50 of the 53 graded findings are correct, and 3 matter in practice. The tool is right far more often than it is important: most correct findings cost little.
 
 ## What this run changed
 
 - P-COL-02 (experimental) had 4 false positives of 4: a `getFirstItem()` used as an emptiness check on a collection whose rows the same function reads later. It now stays silent when the function uses the rows anyway, and reports nothing on these modules.
 - P-FPC-05 reported a controller's own private `setNoCacheHeaders()` as well as the `setHeader()` calls inside it. The helper is no longer reported.
+- Two more P-FPC-05 findings, on `Pragma`, were dropped after the [second check](held-out-2.md), which is why the table shows 88 of the 90 findings.
 - Two defects outside the rules came from running the tool module by module: a stub of a core class in one module's `Test` directory hid 24 findings in other modules, and notices of the disabled rule P-COL-02 appeared on every default run.
 
 ## False positives left
@@ -60,7 +61,7 @@ Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded on
 
 ## Limitations
 
-- 15 modules and one grader. 55 findings are a small sample, and a correct verdict can miss a caller outside the files read.
+- 15 modules and one grader. 53 findings are a small sample, and a correct verdict can miss a caller outside the files read.
 - Rules with no finding here (X-LAY-03, P-LOOP-05, P-LOOP-09 and others) were not tested by this run.
 - Impact was judged from the code, not measured.
 
@@ -106,8 +107,6 @@ Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded on
 |---|---|---|
 | app/code/Magmodules/Channable/Controller/Feed/Json.php:102 | TP-low | The header is intended, as the method comment says, on a token-protected feed that also records the last fetch on each request. |
 | app/code/Magmodules/Channable/Controller/Feed/Preview.php:95 | TP-low | The header is deliberate on a token-protected preview response that serves no shoppers. |
-| app/code/Magmodules/Channable/Controller/Feed/Preview.php:96 | TP-low | This `Pragma` header belongs to the same decision as line 95 on a token-protected preview. |
-| app/code/Magmodules/Channable/Controller/Feed/Json.php:103 | TP-low | This `Pragma` header belongs to the same decision as line 102 on a token-protected feed. |
 
 ### P-LOOP-01
 
@@ -204,7 +203,7 @@ Findings of the default set now:
 | Modules | First runs | Now |
 |---|---|---|
 | 25 of the calibration corpus | 218 | 228 |
-| 15 above | 90 | 96 |
+| 15 above | 90 | 94 |
 | 16 GraphQL modules | 8 | 9 |
 
 These projects have some generated factories and the first runs had the stubs, so this table does not show the size of each fix. The table below does for factories, against a run on all 56 modules with no `generated/code` and no factory typing, on a clean autoloader.
@@ -243,6 +242,8 @@ P-DI-04 and P-COL-04 on the same 56 modules, graded by one grader who did not wr
 |---|---|---|---|---|
 | P-DI-04 | 25 | 10 | 15 | 0 |
 | P-COL-04 | 5 | 2 | 3 | 0 |
+
+Two more P-DI-04 findings, on commands that inherit their constructor, came after this grading and are not graded, so the rule now reports 27.
 
 The grader counted a dependency as costly when its constructor does real work or pulls a large object graph, and doubted 7 of the 12 TP grades. Four P-DI-04 findings are TP only for the size of the graph, in `Fastly\Cdn`, and four only because a constructor calls `getConnection()`, which builds the adapter without running a query. If neither counts, P-DI-04 has 2 TP. Both P-COL-04 TP grades are category walks in one module, and the grader doubted that many stores have enough categories for this to matter. Row counts and construction times were not measured. The precision of these rules can look high because of what they say: a command is created on every run whether or not that costs anything.
 

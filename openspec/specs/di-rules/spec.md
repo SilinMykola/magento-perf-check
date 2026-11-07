@@ -91,11 +91,23 @@ P-DI-02 SHALL NOT report classes in Composer packages whose type is `composer-pl
 - **THEN** P-DI-02 reports nothing
 
 ### Requirement: P-DI-04 console command with eager dependencies
-P-DI-04 SHALL report, as `info`, the constructor of a class registered in the `commands` argument of `CommandList` or `CommandListInterface` in a global `di.xml`, when it has required parameters typed with a class that is not a factory, not a `\Proxy`, not one that commands of core already create on every run, and not configured with a `\Proxy` for that argument. One command SHALL give one finding, which names those parameters. It is off by default.
+P-DI-04 SHALL report, as `info`, a class registered in the `commands` argument of `CommandList` or `CommandListInterface` in a global `di.xml`, when its constructor, its own or inherited, has required parameters typed with a class that is not a factory, not a `\Proxy`, not one that commands of core already create on every run or that is cheap to create (`Filesystem`), and not configured with a `\Proxy` for that argument. One command SHALL give one finding, which names those parameters. It is off by default.
 
 #### Scenario: Command with a repository
 - **WHEN** a command registered in `CommandListInterface` takes `ProductRepositoryInterface $products`
 - **THEN** P-DI-04 reports its constructor and names `$products`
+
+#### Scenario: Inherited constructor
+- **WHEN** a registered command has no constructor of its own and its parent takes `ProductRepositoryInterface $products`
+- **THEN** P-DI-04 reports the class and names `$products`
+
+#### Scenario: Inherited constructor with a Proxy on the command
+- **WHEN** `di.xml` configures a `\Proxy` for that argument on the command
+- **THEN** P-DI-04 reports nothing
+
+#### Scenario: No constructor
+- **WHEN** neither a registered command nor its parents have a constructor
+- **THEN** P-DI-04 reports nothing
 
 #### Scenario: Proxy in di.xml
 - **WHEN** `di.xml` configures a `\Proxy` for each class parameter of the command

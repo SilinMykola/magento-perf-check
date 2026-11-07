@@ -81,7 +81,8 @@ final class NoCacheHeadersRule implements Rule
         $header = $args[0]->value ?? null;
         if ($name !== 'setheader'
             || !$header instanceof Node\Scalar\String_
-            || !in_array(strtolower($header->value), ['cache-control', 'pragma'], true)
+            // Neither the built-in page cache nor the Varnish configuration reads Pragma from a response.
+            || strtolower($header->value) !== 'cache-control'
         ) {
             return false;
         }
