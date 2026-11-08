@@ -39,14 +39,14 @@ Modules these depend on were not installed, so types from those stay unknown and
 
 No run failed: 22 modules, with the default set and the experimental rules P-LOOP-04, P-LOOP-06, P-COL-03, P-COL-04, X-PLG-02, X-GQL-02, P-FPC-03 and P-DI-04 on, `incomplete: false`, no notices. Two cold runs gave the same findings. Nine modules have no finding: `Experius_WysiwygDownloads`, `Fooman_PrintOrderPdf`, `Graycore_Cors`, `KiwiCommerce_CronScheduler`, `MagePal_Reindex`, `MagestyApps_WebImages`, `MSP_CmsImportExport`, `Smile_Map` and `Yireo_Whoops`.
 
-Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded once by one grader who did not write the rules, by reading the code. The table shows the findings the rules still report. No time or memory was measured, and the grader marked 25 of the 73 verdicts below as unsure, mostly because they depend on the size of a list or on tools that must see every block.
+Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded once by one grader who did not write the rules, by reading the code. The table shows the findings the rules still report. No time or memory was measured, and the grader marked 24 of the 72 verdicts below as unsure, mostly because they depend on the size of a list or on tools that must see every block.
 
 | Rule | Findings | Graded | TP | TP-low | FP |
 |---|---|---|---|---|---|
 | P-COL-03 (experimental) | 1 | 1 | 0 | 1 | 0 |
 | P-DI-01 | 33 | 8 | 0 | 8 | 0 |
 | P-DI-04 (experimental) | 8 | 8 | 0 | 8 | 0 |
-| P-DI-06 | 5 | 5 | 0 | 5 | 0 |
+| P-DI-06 | 4 | 4 | 0 | 4 | 0 |
 | P-FPC-01 | 1 | 1 | 0 | 1 | 0 |
 | P-FPC-03 (experimental) | 1 | 1 | 1 | 0 | 0 |
 | P-FPC-05 | 1 | 1 | 0 | 1 | 0 |
@@ -58,14 +58,15 @@ Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded on
 | X-DB-02 | 4 | 4 | 0 | 4 | 0 |
 | X-EVT-01 | 2 | 2 | 0 | 2 | 0 |
 | X-PLG-02 (experimental) | 4 | 4 | 0 | 4 | 0 |
-| **All** | **115** | **73** | **3** | **70** | **0** |
+| **All** | **114** | **72** | **3** | **69** | **0** |
 
-All 73 are correct and 3 matter in practice, the same shape as the first check: the rules are right far more often than what they report is important. P-COL-04, P-LOOP-04, P-LOOP-06 and X-GQL-02 report nothing here, so this run did not test them, nor any other rule without a row.
+All 72 are correct and 3 matter in practice, the same shape as the first check: the rules are right far more often than what they report is important. P-COL-04, P-LOOP-04, P-LOOP-06 and X-GQL-02 report nothing here, so this run did not test them, nor any other rule without a row.
 
 ## What this run changed
 
 - P-DI-01 reported 16 sessions in controllers here. Every action starts a session anyway, so it no longer reports those; the 4 of them that were graded were all TP-low.
 - P-FPC-05 reported `setHeader('Pragma', 'no-cache')` as making a response uncacheable. The grader marked this as false, and the code agrees: `Kernel::process()` and `varnish6.vcl` read `Cache-Control` from a response and never `Pragma`. The rule no longer reports it, which removes one finding here and two in the first check, each on the line after a `Cache-Control` finding in the same controller.
+- P-DI-06 reported `$objectManager = ObjectManager::getInstance()` in the constructor of `Magefan\LoginAsCustomer\Model\Login`, where the variable serves only the `?:` fallbacks. The grader marked it TP-low but unsure whether the allowed fallback covers this form. It is the same fallback written in two steps, so the rule no longer reports it, nor the fallback written as `if (!isset($param))`. In the modules of the calibration corpus this removes 6 more findings, in the Magento core 22, and in the first check none.
 
 ## What to read into it
 
@@ -117,7 +118,6 @@ All 73 are correct and 3 matter in practice, the same shape as the first check: 
 | Location | Verdict | Reason |
 |---|---|---|
 | app/code/Bazaarvoice/Connector/Model/ConfigProvider.php:599 | TP-low | The object manager is really called directly to read the module version, but only on the order pixel and in feeds, and the cost is the design issue the rule describes. |
-| app/code/Magefan/LoginAsCustomer/Model/Login.php:116 | TP-low | The code looks like the allowed constructor fallback, but the two parameters are untyped with no di.xml argument, so the object manager always supplies them (unsure: the rule's exemption might be meant to cover this form). |
 | app/code/Mageplaza/DeleteOrders/Controller/Adminhtml/Order/Delete.php:52 | TP-low | The object manager is called directly inside execute() to create the order management service, which could be injected, but this is a rare single-order admin action. |
 | app/code/MultiSafepay/ConnectCore/Util/CustomReturnUrlUtil.php:82 | TP-low | The constructor fetches a service through the object manager behind an outdated Magento 2.3 version check, so it could be injected, but the object is cheap and the effect is on design only. |
 | app/code/MultiSafepay/ConnectCore/Util/ThirdPartyPluginsUtil.php:111 | TP-low | The object manager is called directly to get classes of optional third-party modules, which cannot be constructor arguments, so an injected ObjectManagerInterface is the most that could change and the impact is nil. |

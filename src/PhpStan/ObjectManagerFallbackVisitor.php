@@ -6,12 +6,16 @@ namespace Silin\MagentoPerfCheck\PhpStan;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Stmt;
+use PhpParser\NodeFinder;
 use PhpParser\NodeVisitorAbstract;
 
 /**
  * Marks ObjectManager::getInstance() calls that are the backward-compatible
  * constructor fallback: "$dependency ?: ObjectManager::getInstance()->get(...)" or
- * the same with "??". Adobe documents this pattern as allowed.
+ * the same with "??". Adobe documents this pattern as allowed. In a constructor the
+ * same fallback written as "if (!isset($dependency)) { ... }" counts too, and so does
+ * "$objectManager = ObjectManager::getInstance()" when only fallbacks use the variable.
  */
 final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
 {
@@ -19,6 +23,11 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
 
     public function enterNode(Node $node): ?Node
     {
+        if ($node instanceof Stmt\ClassMethod && $node->name->toLowerString() === '__construct' && $node->stmts !== null) {
+            $this->markConstructor($node->params, $node->stmts);
+
+            return null;
+        }
         $fallback = match (true) {
             $node instanceof Expr\BinaryOp\Coalesce => $node->right,
             $node instanceof Expr\Ternary && $node->if === null => $node->else,
@@ -31,18 +40,216 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
         while ($expr instanceof Expr\MethodCall) {
             $expr = $expr->var;
         }
-        // Names are not resolved yet when this visitor runs, so match "...ObjectManager::getInstance()"
-        // by its last segment; the rule checks the fully qualified name.
-        if ($expr instanceof Expr\StaticCall
-            && $expr->class instanceof Node\Name
-            && $expr->name instanceof Node\Identifier
-            && $expr->name->toLowerString() === 'getinstance'
-            && strtolower($expr->class->getLast()) === 'objectmanager'
-        ) {
+        if ($this->looksLikeGetInstance($expr)) {
             $expr->setAttribute(self::FALLBACK, true);
         }
 
         return null;
+    }
+
+    /**
+     * @param Node\Param[] $params
+     * @param Node\Stmt[] $stmts
+     */
+    private function markConstructor(array $params, array $stmts): void
+    {
+        $names = [];
+        foreach ($params as $param) {
+            if ($param->var instanceof Expr\Variable && is_string($param->var->name)) {
+                $names[] = $param->var->name;
+            }
+        }
+        // Variables holding the object manager, which a fallback block may call.
+        $objectManagers = [];
+        foreach ($this->find($stmts, static fn (Node $node): bool => $node instanceof Expr\Assign) as $assign) {
+            /** @var Expr\Assign $assign */
+            if ($assign->var instanceof Expr\Variable && is_string($assign->var->name)
+                && $this->looksLikeGetInstance($assign->expr)
+            ) {
+                $objectManagers[] = $assign->var->name;
+            }
+        }
+        // Variables at the root of a fallback, the only uses allowed for a local object manager.
+        $inFallback = [];
+        foreach ($this->find($stmts, static fn (Node $node): bool => $node instanceof Expr\BinaryOp\Coalesce
+            || ($node instanceof Expr\Ternary && $node->if === null)) as $node) {
+            /** @var Expr\BinaryOp\Coalesce|Expr\Ternary $node */
+            $expr = $node instanceof Expr\BinaryOp\Coalesce ? $node->right : $node->else;
+            if (!$expr instanceof Expr\MethodCall) {
+                // "$a ?: $objectManager" hands the object manager itself on.
+                continue;
+            }
+            while ($expr instanceof Expr\MethodCall) {
+                $expr = $expr->var;
+            }
+            $inFallback[spl_object_id($expr)] = true;
+        }
+        foreach ($this->find($stmts, static fn (Node $node): bool => $node instanceof Stmt\If_) as $if) {
+            /** @var Stmt\If_ $if */
+            if (!$this->testsMissingParameter($if->cond, $names) || !$this->onlyAssigns($if->stmts, $objectManagers)) {
+                continue;
+            }
+            foreach ($this->find($if->stmts, static fn (Node $node): bool => $node instanceof Expr\MethodCall) as $call) {
+                /** @var Expr\MethodCall $call */
+                $root = $call->var;
+                while ($root instanceof Expr\MethodCall) {
+                    $root = $root->var;
+                }
+                $inFallback[spl_object_id($root)] = true;
+                if ($this->looksLikeGetInstance($root)) {
+                    $root->setAttribute(self::FALLBACK, true);
+                }
+            }
+        }
+        foreach ($this->find($stmts, static fn (Node $node): bool => $node instanceof Expr\Assign) as $assign) {
+            /** @var Expr\Assign $assign */
+            if (!$assign->var instanceof Expr\Variable || !is_string($assign->var->name)
+                || !$this->looksLikeGetInstance($assign->expr)
+            ) {
+                continue;
+            }
+            $name = $assign->var->name;
+            // Closures count here: one that captures the object manager takes it out of the fallback.
+            $uses = (new NodeFinder())->find($stmts, static fn (Node $node): bool => $node instanceof Expr\Variable
+                && $node->name === $name && $node !== $assign->var);
+            $onlyFallbacks = $uses !== [];
+            foreach ($uses as $use) {
+                $onlyFallbacks = $onlyFallbacks && isset($inFallback[spl_object_id($use)]);
+            }
+            if ($onlyFallbacks) {
+                $assign->expr->setAttribute(self::FALLBACK, true);
+            }
+        }
+    }
+
+    /**
+     * A fallback block only fills in dependencies; anything else in it is real work.
+     *
+     * @param Node\Stmt[] $stmts
+     * @param string[] $objectManagers
+     */
+    private function onlyAssigns(array $stmts, array $objectManagers): bool
+    {
+        foreach ($stmts as $stmt) {
+            if (!$stmt instanceof Stmt\Expression || !$stmt->expr instanceof Expr\Assign
+                || !$this->isPlainTarget($stmt->expr->var)
+                || !$this->isDependency($stmt->expr->expr, $objectManagers)
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * "$variable" or "$this->property".
+     */
+    private function isPlainTarget(Expr $expr): bool
+    {
+        return ($expr instanceof Expr\Variable && is_string($expr->name))
+            || ($expr instanceof Expr\PropertyFetch && $expr->var instanceof Expr\Variable
+                && $expr->var->name === 'this');
+    }
+
+    /**
+     * One call on the object manager, such as "->get(...)", or an array of these.
+     *
+     * @param string[] $objectManagers
+     */
+    private function isDependency(Expr $expr, array $objectManagers): bool
+    {
+        if ($expr instanceof Expr\Array_) {
+            foreach ($expr->items as $item) {
+                // @phpstan-ignore identical.alwaysFalse (php-parser 4, bundled with PHPStan 1.12, allows null items)
+                if ($item === null || !$this->isDependency($item->value, $objectManagers)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        if (!$expr instanceof Expr\MethodCall) {
+            return false;
+        }
+
+        return $this->looksLikeGetInstance($expr->var)
+            || ($expr->var instanceof Expr\Variable && in_array($expr->var->name, $objectManagers, true));
+    }
+
+    /**
+     * Like NodeFinder::find(), but closures, functions and classes declared in the
+     * constructor are left out: their code does not run as the constructor's.
+     *
+     * @param mixed[] $nodes
+     * @param callable(Node): bool $filter
+     * @return Node[]
+     */
+    private function find(array $nodes, callable $filter): array
+    {
+        $found = [];
+        foreach ($nodes as $node) {
+            if (is_array($node)) {
+                $found = [...$found, ...$this->find($node, $filter)];
+                continue;
+            }
+            if (!$node instanceof Node) {
+                continue;
+            }
+            if ($filter($node)) {
+                $found[] = $node;
+            }
+            if ($node instanceof Expr\Closure || $node instanceof Expr\ArrowFunction
+                || $node instanceof Stmt\Function_ || $node instanceof Stmt\ClassLike
+            ) {
+                continue;
+            }
+            foreach ($node->getSubNodeNames() as $name) {
+                $found = [...$found, ...$this->find([$node->$name], $filter)];
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * "!isset($p)", "empty($p)", "$p === null", "$p == null", "!$p" or "is_null($p)" on a parameter.
+     *
+     * @param string[] $params
+     */
+    private function testsMissingParameter(Expr $cond, array $params): bool
+    {
+        $tested = match (true) {
+            $cond instanceof Expr\BooleanNot && $cond->expr instanceof Expr\Isset_ && count($cond->expr->vars) === 1
+                => $cond->expr->vars[0],
+            $cond instanceof Expr\BooleanNot => $cond->expr,
+            $cond instanceof Expr\Empty_ => $cond->expr,
+            $cond instanceof Expr\BinaryOp\Identical, $cond instanceof Expr\BinaryOp\Equal
+                => $this->isNull($cond->right) ? $cond->left : ($this->isNull($cond->left) ? $cond->right : null),
+            $cond instanceof Expr\FuncCall && $cond->name instanceof Node\Name
+                && $cond->name->toLowerString() === 'is_null' && count($cond->getArgs()) === 1 => $cond->getArgs()[0]->value,
+            default => null,
+        };
+
+        return $tested instanceof Expr\Variable && in_array($tested->name, $params, true);
+    }
+
+    private function isNull(Expr $expr): bool
+    {
+        return $expr instanceof Expr\ConstFetch && $expr->name->toLowerString() === 'null';
+    }
+
+    /**
+     * Names are not resolved yet when this visitor runs, so match "...ObjectManager::getInstance()"
+     * by its last segment; the rule checks the fully qualified name.
+     */
+    private function looksLikeGetInstance(Expr $expr): bool
+    {
+        return $expr instanceof Expr\StaticCall
+            && $expr->class instanceof Node\Name
+            && $expr->name instanceof Node\Identifier
+            && $expr->name->toLowerString() === 'getinstance'
+            && strtolower($expr->class->getLast()) === 'objectmanager';
     }
 
     public static function isGetInstance(Expr\StaticCall $call): bool

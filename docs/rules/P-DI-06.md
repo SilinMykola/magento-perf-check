@@ -9,7 +9,7 @@
 ## What it catches
 
 `Magento\Framework\App\ObjectManager::getInstance()` in PHP classes. Templates are left to magento-coding-standard. The uses that Adobe documents as allowed are not reported:
-- the backward-compatible constructor fallback: `$dependency ?: ObjectManager::getInstance()->get(...)`, or the same with `??`;
+- the backward-compatible constructor fallback: `$dependency ?: ObjectManager::getInstance()->get(...)`, or the same with `??`. In a constructor it may also be written as an `if` that only tests that a parameter is missing (`!isset($dependency)`, `empty()`, `=== null`, `!$dependency`, `is_null()`) and whose block only assigns the result of one object manager call to a variable or a property, or through a local `$objectManager = ObjectManager::getInstance()` that only such fallbacks call;
 - classes whose name ends in `Factory` or `\Proxy`;
 - `__wakeup()` and `__sleep()`.
 
