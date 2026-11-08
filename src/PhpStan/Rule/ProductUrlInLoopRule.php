@@ -6,6 +6,7 @@ namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
 use Silin\MagentoPerfCheck\PhpStan\CollectionStateVisitor;
 use Silin\MagentoPerfCheck\PhpStan\LoopContextVisitor;
+use Silin\MagentoPerfCheck\PhpStan\LoopExitVisitor;
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -43,6 +44,7 @@ final class ProductUrlInLoopRule implements Rule
     public function processNode(Node $node, Scope $scope): array
     {
         if ($node->getAttribute(LoopContextVisitor::IN_LOOP) !== true
+            || $node->getAttribute(LoopExitVisitor::LEAVES_LOOP) === true
             || !$node->name instanceof Node\Identifier
             || $node->getAttribute(CollectionStateVisitor::URL_REWRITE_ADDED) === true
             || !$this->buildsProductUrl($node, $node->name->toLowerString(), $scope)

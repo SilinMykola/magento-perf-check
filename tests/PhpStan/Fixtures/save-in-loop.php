@@ -233,3 +233,55 @@ final class LeavesLoop
         }
     }
 }
+
+final class SwitchBeforeLeaving
+{
+    /**
+     * @param list<Product> $products
+     */
+    public function allowed(array $products, int $type): int
+    {
+        foreach ($products as $product) {
+            $product->save();
+            switch ($type) {
+                case 1:
+                    $type = 2;
+                    break;
+            }
+
+            return $type;
+        }
+
+        return 0;
+    }
+}
+
+final class StillInLoop
+{
+    /**
+     * @param list<Product> $products
+     */
+    public function reported(array $products, int $type): void
+    {
+        foreach ($products as $product) {
+            foreach ($product->getOptions() as $option) {
+                $product->save();
+                switch ($type) {
+                    case 1:
+                        break 2;
+                }
+
+                return;
+            }
+        }
+        foreach ($products as $product) {
+            $saver = new class () {
+                public function run(Product $other): void
+                {
+                    $other->save();
+                }
+            };
+            break;
+        }
+    }
+}

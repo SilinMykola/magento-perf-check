@@ -10,6 +10,8 @@
 
 `getProductUrl()` or `getUrlInStore()` on a product, or `getProductUrl()`, `getUrl()` or `getUrlInStore()` on `Magento\Catalog\Model\Product\Url`, inside a loop, unless `addUrlRewrite()` was called earlier in the same function.
 
+"Inside a loop" has the meaning given on the [P-LOOP-01 page](P-LOOP-01.md).
+
 ## Why it hurts performance
 
 A product without a request path looks its rewrite up in the `url_rewrite` table, with one query per product. `addUrlRewrite()` on the collection fills the request paths of all its products at once.

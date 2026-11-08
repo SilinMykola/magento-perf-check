@@ -17,46 +17,18 @@ use PhpParser\NodeVisitorAbstract;
  *
  * It stays on the safe side: a continue, break or goto on the way, a call inside try,
  * in a closure or in the condition of an if, and loops in closures are not marked.
+ *
+ * Calls are marked when their function is entered, before any visitor reaches them,
+ * so the order in which visitors are registered does not matter.
  */
 final class LoopExitVisitor extends NodeVisitorAbstract
 {
     public const LEAVES_LOOP = 'magentoPerfLeavesLoop';
 
-    private const STATEMENT = 'magentoPerfStatementLeavesLoop';
-
-    /** @var list<bool> whether calls met now are in a marked statement, one entry per open statement or function */
-    private array $open = [];
-
-    /**
-     * @param Node[] $nodes
-     */
-    public function beforeTraverse(array $nodes): ?array
-    {
-        $this->open = [];
-
-        return null;
-    }
-
     public function enterNode(Node $node): ?Node
     {
         if (($node instanceof Stmt\ClassMethod || $node instanceof Stmt\Function_) && $node->stmts !== null) {
             $this->walk($node->stmts, 0, false, null);
-        }
-        if ($node instanceof Node\FunctionLike) {
-            $this->open[] = false;
-        } elseif ($node instanceof Stmt\Expression || $node instanceof Stmt\Return_) {
-            $this->open[] = $node->getAttribute(self::STATEMENT) === true;
-        } elseif ($node instanceof Expr\MethodCall && end($this->open) === true) {
-            $node->setAttribute(self::LEAVES_LOOP, true);
-        }
-
-        return null;
-    }
-
-    public function leaveNode(Node $node): ?Node
-    {
-        if ($node instanceof Node\FunctionLike || $node instanceof Stmt\Expression || $node instanceof Stmt\Return_) {
-            array_pop($this->open);
         }
 
         return null;
@@ -79,8 +51,8 @@ final class LoopExitVisitor extends NodeVisitorAbstract
 
         foreach ($stmts as $i => $stmt) {
             $leaves = $after[$i];
-            if ($stmt instanceof Stmt\Return_ || ($stmt instanceof Stmt\Expression && $leaves)) {
-                $stmt->setAttribute(self::STATEMENT, true);
+            if (($stmt instanceof Stmt\Return_ || ($stmt instanceof Stmt\Expression && $leaves)) && $stmt->expr !== null) {
+                self::markCalls($stmt->expr);
             }
             if ($stmt instanceof Stmt\If_) {
                 $this->walk($stmt->stmts, $loops, $leaves, $breakLeaves);
@@ -117,12 +89,35 @@ final class LoopExitVisitor extends NodeVisitorAbstract
         if ($stmt instanceof Stmt\Break_) {
             return $stmt->num === null && ($breakLeaves ?? $loops === 1);
         }
+        // A plain break inside a switch leaves the switch, or a loop inside it, and goes on after the switch.
         $jump = (new NodeFinder())->findFirst(
             $stmt,
-            static fn (Node $node): bool => $node instanceof Stmt\Continue_ || $node instanceof Stmt\Break_ || $node instanceof Stmt\Goto_,
+            static fn (Node $node): bool => $node instanceof Stmt\Continue_ || $node instanceof Stmt\Goto_
+                || ($node instanceof Stmt\Break_ && !($stmt instanceof Stmt\Switch_ && $node->num === null)),
         );
 
         return $jump === null && $after;
+    }
+
+    /**
+     * Marks the method calls that run as part of the expression; closures and classes declared in it run later.
+     */
+    private static function markCalls(Node $node): void
+    {
+        if ($node instanceof Expr\Closure || $node instanceof Expr\ArrowFunction || $node instanceof Stmt\ClassLike) {
+            return;
+        }
+        if ($node instanceof Expr\MethodCall) {
+            $node->setAttribute(self::LEAVES_LOOP, true);
+        }
+        foreach ($node->getSubNodeNames() as $name) {
+            $sub = $node->$name;
+            foreach (is_array($sub) ? $sub : [$sub] as $child) {
+                if ($child instanceof Node) {
+                    self::markCalls($child);
+                }
+            }
+        }
     }
 
     /** "throw" is a statement in php-parser 4 and an expression statement in php-parser 5. */

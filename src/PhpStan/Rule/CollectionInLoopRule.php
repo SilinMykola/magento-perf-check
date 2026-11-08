@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
 use Silin\MagentoPerfCheck\PhpStan\LoopContextVisitor;
+use Silin\MagentoPerfCheck\PhpStan\LoopExitVisitor;
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -38,7 +39,10 @@ final class CollectionInLoopRule implements Rule
 
     public function processNode(Node $node, Scope $scope): array
     {
-        if ($node->getAttribute(LoopContextVisitor::CREATED_IN_LOOP) !== true || !$node->name instanceof Node\Identifier) {
+        if ($node->getAttribute(LoopContextVisitor::CREATED_IN_LOOP) !== true
+            || $node->getAttribute(LoopExitVisitor::LEAVES_LOOP) === true
+            || !$node->name instanceof Node\Identifier
+        ) {
             return [];
         }
         $class = $this->types->subtypeOf($scope->getType($node->var), MagentoTypes::DB_COLLECTION);

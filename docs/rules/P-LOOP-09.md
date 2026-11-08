@@ -10,7 +10,7 @@
 
 A call to `getList()` whose first parameter is a `SearchCriteriaInterface`, on a type that is, or implements, an interface whose name ends with `RepositoryInterface`, in the body of a `foreach` or of a closure passed straight to `array_map()`, `array_walk()` or a collection's `walk()`.
 
-Not reported: `while`, `do` and `for` loops, which usually page through one result; a `foreach` over `array_chunk()`, which is one query per batch; and a `getList()` with another first parameter, such as one SKU or an entity type, which no filter can replace. This also leaves out the `Magento\Store\Api` repositories, which take no parameters and read cached configuration.
+Not reported: `while`, `do` and `for` loops, which usually page through one result; a `foreach` over `array_chunk()`, which is one query per batch; a call after which the loop is left, as described on the [P-LOOP-01 page](P-LOOP-01.md); and a `getList()` with another first parameter, such as one SKU or an entity type, which no filter can replace. This also leaves out the `Magento\Store\Api` repositories, which take no parameters and read cached configuration.
 
 ## Why it hurts performance
 

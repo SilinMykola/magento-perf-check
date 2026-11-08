@@ -219,3 +219,41 @@ final class Example
         }
     }
 }
+
+final class LeavesLoop
+{
+    public function __construct(private readonly CollectionFactory $collectionFactory)
+    {
+    }
+
+    /**
+     * @param list<int> $ids
+     * @return mixed
+     */
+    public function first(array $ids)
+    {
+        foreach ($ids as $id) {
+            return $this->collectionFactory->create()->addFieldToFilter('parent_id', $id)->getItems();
+        }
+
+        return null;
+    }
+
+    /**
+     * @param list<int> $ids
+     * @return mixed
+     */
+    public function loadedAgain(array $ids, bool $flag)
+    {
+        $rows = [];
+        foreach ($ids as $id) {
+            $collection = $this->collectionFactory->create()->addFieldToFilter('parent_id', $id);
+            if ($flag) {
+                return $collection->getItems();
+            }
+            $rows[$id] = $collection->getItems();
+        }
+
+        return $rows;
+    }
+}

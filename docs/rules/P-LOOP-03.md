@@ -13,7 +13,7 @@ Inside a loop, any of these calls:
 - `save()` or `delete()` on a resource model (`Model\ResourceModel\Db\AbstractDb` subtype);
 - `save()`, `delete()` or `deleteById()` on a repository (a type named `*RepositoryInterface`, or one that implements such an interface).
 
-A call after which the loop is left in the same iteration runs at most once, so it is not reported: the call is a statement of its own, or a `return`, and what follows it reaches `return`, `throw`, or a `break` out of the only loop around it, with no `continue`, `break` or `goto` on the way. A `break` that leaves a `switch` is passed through: what follows the `switch` decides. Inside `try`, in a closure, or in the condition of an `if`, the call is still reported.
+A call after which the loop is left in the same iteration runs at most once, so it is not reported; the [P-LOOP-01 page](P-LOOP-01.md) gives the exact conditions.
 
 ## Why it hurts performance
 

@@ -12,6 +12,8 @@ Inside a loop, calls to:
 - `getUsedProducts`, `getConfigurableAttributes`, `getChildrenIds`, `getParentIdsByChild`, `getUsedProductIds` or `getAssociatedProducts`, on a product type (`Magento\Catalog\Model\Product\Type\AbstractType` subtype) or on the configurable type resource model;
 - `getIdBySku`, on `Magento\Catalog\Model\Product` or its resource model.
 
+"Inside a loop" has the meaning given on the [P-LOOP-01 page](P-LOOP-01.md).
+
 ## Why it hurts performance
 
 These methods query the database for one product per call. `Configurable::getUsedProducts()` loads a whole child product collection for its parent. A category page or a feed that calls it for every listed product runs one collection load per product. The resource model's `getChildrenIds()` and `getParentIdsByChild()` accept arrays, so one call can serve all products.

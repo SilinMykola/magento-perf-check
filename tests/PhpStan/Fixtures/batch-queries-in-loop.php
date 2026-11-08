@@ -145,3 +145,35 @@ final class Example
         }
     }
 }
+
+final class LeavesLoop
+{
+    public function __construct(
+        private readonly ProductRepositoryInterface $repository,
+        private readonly ProductResource $resource,
+        private readonly SearchCriteriaInterface $criteria,
+    ) {
+    }
+
+    /**
+     * @param list<int> $ids
+     * @param list<Product> $products
+     * @return mixed
+     */
+    public function first(array $ids, array $products, Product $product)
+    {
+        foreach ($ids as $id) {
+            $this->resource->load($product, $id);
+
+            return $product;
+        }
+        foreach ($ids as $id) {
+            return $this->repository->getList($this->criteria);
+        }
+        foreach ($products as $item) {
+            return $item->getCategoryIds();
+        }
+
+        return null;
+    }
+}

@@ -48,3 +48,23 @@ final class Example
         }
     }
 }
+
+final class LeavesLoop
+{
+    public function __construct(private readonly Configurable $configurableType)
+    {
+    }
+
+    /**
+     * @param list<Product> $products
+     * @return mixed
+     */
+    public function first(array $products)
+    {
+        foreach ($products as $product) {
+            return $this->configurableType->getUsedProducts($product);
+        }
+
+        return null;
+    }
+}

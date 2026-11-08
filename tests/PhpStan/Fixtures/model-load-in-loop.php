@@ -90,3 +90,27 @@ final class Example
         }
     }
 }
+
+final class LeavesLoop
+{
+    public function __construct(private readonly ProductRepositoryInterface $productRepository)
+    {
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function first(array $ids, Product $product): ?Product
+    {
+        foreach ($ids as $id) {
+            $product->load($id);
+
+            return $product;
+        }
+        foreach ($ids as $id) {
+            return $this->productRepository->getById($id);
+        }
+
+        return null;
+    }
+}
