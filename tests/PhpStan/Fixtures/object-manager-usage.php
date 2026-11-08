@@ -223,3 +223,107 @@ final class FallbackBlockWithHiddenWork
         return 'b';
     }
 }
+
+final class LazyGetters
+{
+    private ?object $a = null;
+    private ?object $b = null;
+    private ?object $c = null;
+    private ?object $d = null;
+    private ?object $other = null;
+
+    /** @var list<object> */
+    private array $list = [];
+
+    public function allowed(): void
+    {
+        if ($this->a === null) {
+            $this->a = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if (!$this->b) {
+            $this->b = ObjectManager::getInstance()->create(\stdClass::class);
+            // phpcs:enable
+        }
+        if (!$this->c instanceof \stdClass) {
+            $this->c = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if (!is_object($this->d)) {
+            $this->d = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if (empty($this->list)) {
+            $this->list = [ObjectManager::getInstance()->get(\stdClass::class)];
+        }
+    }
+
+    public function reported(?object $local): ?object
+    {
+        if ($this->a === null) {
+            $this->other = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if ($this->a === null) {
+            $this->a = ObjectManager::getInstance()->get(\stdClass::class)->get('x');
+        }
+        if ($this->a === null) {
+            $this->a = ObjectManager::getInstance()->get(\stdClass::class);
+            $this->warmUp();
+        }
+        if ($local === null) {
+            $local = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if (!$this->b instanceof \stdClass) {
+            return ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if (!is_object($this->a, $this->b)) {
+            $this->a = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if (!is_string($this->a)) {
+            $this->a = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if ($this->list[0]->a === null) {
+            $this->a = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if ($this->a === null) {
+            $this->a = ObjectManager::getInstance()->get(\stdClass::class);
+            $this->a = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if ($this->b === null) {
+            $this->b = ObjectManager::getInstance()->get(\stdClass::class, [
+                'inner' => ObjectManager::getInstance()->get(\stdClass::class),
+            ]);
+        }
+
+        return $local;
+    }
+
+    private function warmUp(): void
+    {
+    }
+}
+
+final class FallbackOnLocal
+{
+    public function __construct()
+    {
+        $local = null;
+        if ($local === null) {
+            $local = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+    }
+}
+
+final class FallbackNewForms
+{
+    public function __construct(?object $a = null, ?object $b = null, ?object $c = null)
+    {
+        if (!is_object($a)) {
+            $a = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if (!$b instanceof \stdClass) {
+            $b = ObjectManager::getInstance()->get(\stdClass::class);
+            // phpcs:enable
+        }
+        if ($c === null) {
+            $c = ObjectManager::getInstance()->get(\stdClass::class, ['inner' => ObjectManager::getInstance()->get(\stdClass::class)]);
+        }
+    }
+}

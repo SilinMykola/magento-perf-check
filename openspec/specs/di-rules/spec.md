@@ -69,11 +69,12 @@ P-DI-03 SHALL report, as `error`, a call to `dispatch()` on `Magento\Framework\E
 
 ### Requirement: P-DI-06 direct ObjectManager use
 P-DI-06 SHALL report, as `info`, `ObjectManager::getInstance()` in PHP classes, except where Adobe documents it as allowed:
-- the backward-compatible constructor fallback (`$param ?: ObjectManager::getInstance()->get(...)`, `??`), also written in a constructor as an `if` that only tests that a parameter is missing (`!isset($param)`, `empty($param)`, `$param === null`, `!$param`, `is_null($param)`) and whose block only assigns the result of one object manager call, or an array of them, to a variable or a property, or through a local variable holding the object manager that only such fallbacks use as the object of a call. Closures and classes declared in the constructor do not count as constructor code;
+- the backward-compatible constructor fallback (`$param ?: ObjectManager::getInstance()->get(...)`, `??`), also written in a constructor as an `if` that only tests that a parameter is missing (`!isset($param)`, `empty($param)`, `$param === null`, `!$param`, `is_null($param)`, `!is_object($param)`, `!$param instanceof Type`) and whose block only assigns the result of one object manager call, or an array of them, to a variable or a property, or through a local variable holding the object manager that only such fallbacks use as the object of a call. Closures and classes declared in the constructor do not count as constructor code;
+- outside the constructor, the lazy getter: an `if` that tests in the same ways that a property of `$this` is missing, or not an object of the type, and whose block only assigns the result of one object manager call, or an array of them, to that same property. Unless the property is reset, the object manager is asked once per object. A comment alone at the end of a fallback or getter block does not count as work; calls in the arguments of the dependency call are still reported. A getter that returns the object without keeping it is still reported;
 - classes whose name ends in `Factory` or `\Proxy`;
 - `__wakeup()` and `__sleep()`.
 
-Calibration lowered it from `warning`: most correct findings are lazy BC getters with low impact.
+Calibration lowered it from `warning`: most correct findings were lazy BC getters with low impact, which are no longer reported.
 
 #### Scenario: Service locator in a method
 - **WHEN** a model method calls `ObjectManager::getInstance()->get(Helper::class)`
@@ -100,6 +101,12 @@ Calibration lowered it from `warning`: most correct findings are lazy BC getters
 #### Scenario: Factory class
 - **WHEN** `Acme\Promo\Model\ItemFactory::create()` uses the ObjectManager
 - **THEN** P-DI-06 reports nothing
+
+#### Scenario: Lazy getter
+- **WHEN** a method runs `if ($this->serializer === null) { $this->serializer = ObjectManager::getInstance()->get(Json::class); }`
+- **THEN** P-DI-06 reports nothing
+- **WHEN** the block assigns another property, calls a method on the result, or does other work, or the method returns the object without keeping it
+- **THEN** P-DI-06 reports the call
 
 ### Requirement: P-DI-02 skips code outside the object manager
 P-DI-02 SHALL NOT report classes in Composer packages whose type is `composer-plugin`, nor classes in `magento/magento-coding-standard`. The object manager never builds these, so DI construction rules do not apply.

@@ -9,7 +9,8 @@
 ## What it catches
 
 `Magento\Framework\App\ObjectManager::getInstance()` in PHP classes. Templates are left to magento-coding-standard. The uses that Adobe documents as allowed are not reported:
-- the backward-compatible constructor fallback: `$dependency ?: ObjectManager::getInstance()->get(...)`, or the same with `??`. In a constructor it may also be written as an `if` that only tests that a parameter is missing (`!isset($dependency)`, `empty()`, `=== null`, `!$dependency`, `is_null()`) and whose block only assigns the result of one object manager call to a variable or a property, or through a local `$objectManager = ObjectManager::getInstance()` that only such fallbacks call;
+- the backward-compatible constructor fallback: `$dependency ?: ObjectManager::getInstance()->get(...)`, or the same with `??`. In a constructor it may also be written as an `if` that only tests that a parameter is missing (`!isset($dependency)`, `empty()`, `=== null`, `!$dependency`, `is_null()`, `!is_object()`, `!$dependency instanceof Type`) and whose block only assigns the result of one object manager call to a variable or a property, or through a local `$objectManager = ObjectManager::getInstance()` that only such fallbacks call;
+- outside the constructor, the lazy getter: an `if` that tests in the same ways (also `!is_object()` and `!$dependency instanceof Type`) that a property of `$this` is missing or not an object of the type, and whose block only assigns one object manager call to that same property. Unless the property is reset, the object manager is asked once per object, so the cost is negligible. A getter that returns the object without keeping it is still reported;
 - classes whose name ends in `Factory` or `\Proxy`;
 - `__wakeup()` and `__sleep()`.
 

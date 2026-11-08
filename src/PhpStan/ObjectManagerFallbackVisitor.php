@@ -16,6 +16,10 @@ use PhpParser\NodeVisitorAbstract;
  * the same with "??". Adobe documents this pattern as allowed. In a constructor the
  * same fallback written as "if (!isset($dependency)) { ... }" counts too, and so does
  * "$objectManager = ObjectManager::getInstance()" when only fallbacks use the variable.
+ *
+ * Outside the constructor it also marks the lazy getter that fills a missing property once:
+ * "if ($this->dependency === null) { $this->dependency = ObjectManager::getInstance()->get(...); }".
+ * It runs once per object, so it costs next to nothing.
  */
 final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
 {
@@ -27,6 +31,9 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
             $this->markConstructor($node->params, $node->stmts);
 
             return null;
+        }
+        if ($node instanceof Stmt\ClassMethod && $node->stmts !== null) {
+            $this->markLazyGetters($node->stmts);
         }
         $fallback = match (true) {
             $node instanceof Expr\BinaryOp\Coalesce => $node->right,
@@ -86,18 +93,18 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
         }
         foreach ($this->find($stmts, static fn (Node $node): bool => $node instanceof Stmt\If_) as $if) {
             /** @var Stmt\If_ $if */
-            if (!$this->testsMissingParameter($if->cond, $names) || !$this->onlyAssigns($if->stmts, $objectManagers)) {
+            $tested = $this->testedAsMissing($if->cond);
+            if (!$tested instanceof Expr\Variable || !in_array($tested->name, $names, true)
+                || !$this->onlyAssigns($if->stmts, $objectManagers)
+            ) {
                 continue;
             }
-            foreach ($this->find($if->stmts, static fn (Node $node): bool => $node instanceof Expr\MethodCall) as $call) {
-                /** @var Expr\MethodCall $call */
-                $root = $call->var;
-                while ($root instanceof Expr\MethodCall) {
-                    $root = $root->var;
-                }
-                $inFallback[spl_object_id($root)] = true;
-                if ($this->looksLikeGetInstance($root)) {
-                    $root->setAttribute(self::FALLBACK, true);
+            foreach (self::assignments($if->stmts) as $assign) {
+                foreach (self::dependencyRoots($assign->expr) as $root) {
+                    $inFallback[spl_object_id($root)] = true;
+                    if ($this->looksLikeGetInstance($root)) {
+                        $root->setAttribute(self::FALLBACK, true);
+                    }
                 }
             }
         }
@@ -123,6 +130,75 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
     }
 
     /**
+     * "if ($this->dependency === null) { $this->dependency = ObjectManager::getInstance()->get(...); }":
+     * the block only fills in the property that the condition tests.
+     *
+     * @param Node\Stmt[] $stmts
+     */
+    private function markLazyGetters(array $stmts): void
+    {
+        foreach ($this->find($stmts, static fn (Node $node): bool => $node instanceof Stmt\If_) as $if) {
+            /** @var Stmt\If_ $if */
+            $property = self::propertyOfThis($this->testedAsMissing($if->cond));
+            $assignments = self::assignments($if->stmts);
+            if ($property === null || !$this->onlyAssigns($if->stmts, []) || count($assignments) !== 1
+                || self::propertyOfThis($assignments[0]->var) !== $property
+            ) {
+                continue;
+            }
+            foreach (self::dependencyRoots($assignments[0]->expr) as $root) {
+                $root->setAttribute(self::FALLBACK, true);
+            }
+        }
+    }
+
+    /**
+     * The assignments of a block that onlyAssigns() accepted.
+     *
+     * @param Node\Stmt[] $stmts
+     * @return list<Expr\Assign>
+     */
+    private static function assignments(array $stmts): array
+    {
+        $assignments = [];
+        foreach ($stmts as $stmt) {
+            if ($stmt instanceof Stmt\Expression && $stmt->expr instanceof Expr\Assign) {
+                $assignments[] = $stmt->expr;
+            }
+        }
+
+        return $assignments;
+    }
+
+    /**
+     * What the calls of a dependency that isDependency() accepted are made on: the object manager,
+     * or a variable holding it. Calls in their arguments are not part of the fallback.
+     *
+     * @return list<Expr>
+     */
+    private static function dependencyRoots(Expr $expr): array
+    {
+        if (!$expr instanceof Expr\Array_) {
+            return $expr instanceof Expr\MethodCall ? [$expr->var] : [];
+        }
+        $roots = [];
+        foreach ($expr->items as $item) {
+            $roots = [...$roots, ...self::dependencyRoots($item->value)];
+        }
+
+        return $roots;
+    }
+
+    /**
+     * The name of "$this->name", or null for anything else.
+     */
+    private static function propertyOfThis(?Expr $expr): ?string
+    {
+        return $expr instanceof Expr\PropertyFetch && $expr->var instanceof Expr\Variable && $expr->var->name === 'this'
+            && $expr->name instanceof Node\Identifier ? $expr->name->toString() : null;
+    }
+
+    /**
      * A fallback block only fills in dependencies; anything else in it is real work.
      *
      * @param Node\Stmt[] $stmts
@@ -131,6 +207,10 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
     private function onlyAssigns(array $stmts, array $objectManagers): bool
     {
         foreach ($stmts as $stmt) {
+            // A comment left alone at the end of a block, such as "// phpcs:enable", is a Nop.
+            if ($stmt instanceof Stmt\Nop) {
+                continue;
+            }
             if (!$stmt instanceof Stmt\Expression || !$stmt->expr instanceof Expr\Assign
                 || !$this->isPlainTarget($stmt->expr->var)
                 || !$this->isDependency($stmt->expr->expr, $objectManagers)
@@ -213,15 +293,18 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * "!isset($p)", "empty($p)", "$p === null", "$p == null", "!$p" or "is_null($p)" on a parameter.
-     *
-     * @param string[] $params
+     * What "!isset($x)", "empty($x)", "$x === null", "$x == null", "!$x", "is_null($x)",
+     * "!is_object($x)" or "!$x instanceof Type" tests to be missing.
      */
-    private function testsMissingParameter(Expr $cond, array $params): bool
+    private function testedAsMissing(Expr $cond): ?Expr
     {
-        $tested = match (true) {
+        return match (true) {
             $cond instanceof Expr\BooleanNot && $cond->expr instanceof Expr\Isset_ && count($cond->expr->vars) === 1
                 => $cond->expr->vars[0],
+            $cond instanceof Expr\BooleanNot && $cond->expr instanceof Expr\Instanceof_ => $cond->expr->expr,
+            $cond instanceof Expr\BooleanNot && $cond->expr instanceof Expr\FuncCall && $cond->expr->name instanceof Node\Name
+                && $cond->expr->name->toLowerString() === 'is_object' && count($cond->expr->getArgs()) === 1
+                => $cond->expr->getArgs()[0]->value,
             $cond instanceof Expr\BooleanNot => $cond->expr,
             $cond instanceof Expr\Empty_ => $cond->expr,
             $cond instanceof Expr\BinaryOp\Identical, $cond instanceof Expr\BinaryOp\Equal
@@ -230,8 +313,6 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
                 && $cond->name->toLowerString() === 'is_null' && count($cond->getArgs()) === 1 => $cond->getArgs()[0]->value,
             default => null,
         };
-
-        return $tested instanceof Expr\Variable && in_array($tested->name, $params, true);
     }
 
     private function isNull(Expr $expr): bool
