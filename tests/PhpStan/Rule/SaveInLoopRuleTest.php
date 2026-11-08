@@ -32,6 +32,18 @@ final class SaveInLoopRuleTest extends RuleTestCase
             ['[P-LOOP-03] Magento\Catalog\Model\ResourceModel\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 34],
             ['[P-LOOP-03] Magento\Catalog\Api\ProductRepositoryInterface::deleteById() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 38],
             ['[P-LOOP-03] Magento\Customer\Model\ResourceModel\Customer::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 59],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 150],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 158],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 165],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 172],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 180],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 186],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 191],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 197],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 202],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 209],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 218],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 228],
         ]);
     }
 }

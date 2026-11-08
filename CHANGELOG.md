@@ -10,6 +10,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 - P-DI-01, in the default set, no longer reports a session in the constructor of a controller action: every action starts a session anyway, on the frontend through the customer `ContextPlugin` and in the admin through the request validation. On 78 modules this removes 42 of 182 findings; the 6 of them graded in calibration were all low impact. The cookie manager is still reported there. **This can change a CI result.**
 - P-DI-06, in the default set at `info`, no longer reports the constructor fallback written as an `if` on a missing parameter (`if (!isset($param))`, `empty()`, `=== null`, `!$param`, `is_null()`), nor `$objectManager = ObjectManager::getInstance()` in a constructor when only `?:` and `??` fallbacks use the variable. Calibration graded both as false positives. On 78 modules this removes 7 of 81 findings, in the Magento core 22 of 343.
+- P-LOOP-03, in the default set at `info`, no longer reports a `save()` or `delete()` after which the loop is left in the same iteration by `break`, `return` or `throw`: it runs at most once. In the calibration corpus this removes 1 of 57 findings, in the Magento core 5 of 160.
 
 ## [0.2.0] - 2026-11-07
 
