@@ -6,6 +6,12 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-09
+
+### Fixed
+
+- The loop rules leave out a call after which the loop is left also when the loop is inside a `try`, such as a method body wrapped in `try { ... } catch (\Throwable $e) { ... }` ([#4](https://github.com/SilinMykola/magento-perf-check/issues/4)). An exception reaches that `catch` only after leaving the loop. A `try` inside the loop still counts: its `catch` can go on with the next iteration. In the Magento core this removes 1 of 111 P-LOOP-01 findings, at `error`, and 1 of 155 P-LOOP-03 findings; the calibration corpus has none. **This can change a CI result.**
+
 ## [0.3.0] - 2026-11-09
 
 ### Changed
@@ -101,7 +107,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.0...v0.1.1
