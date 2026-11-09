@@ -32,6 +32,9 @@ final class ModelLoadInLoopRuleTest extends RuleTestCase
             ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 41],
             ['[P-LOOP-01] Magento\Customer\Api\CustomerRepositoryInterface::get()' . $suffix, 44],
             ['[P-LOOP-01] Magento\Catalog\Model\ProductRepository::getById()' . $suffix, 47],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 168],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 176],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 187],
         ]);
     }
 }

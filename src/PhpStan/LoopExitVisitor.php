@@ -15,8 +15,9 @@ use PhpParser\NodeVisitorAbstract;
  * the call is in a statement of its own, or in a return, and every way on from it in the
  * same iteration reaches return, throw, or a break out of the only loop around it.
  *
- * It stays on the safe side: a continue, break or goto on the way, a call inside try,
- * in a closure or in the condition of an if, and loops in closures are not marked.
+ * It stays on the safe side: a continue, break or goto on the way, a call inside a try in the loop,
+ * in a closure or in the condition of an if, and loops in closures are not marked. A try outside
+ * every loop is walked: its catch runs once the loop is left.
  *
  * Calls are marked when their function is entered, before any visitor reaches them,
  * so the order in which visitors are registered does not matter.
@@ -74,6 +75,16 @@ final class LoopExitVisitor extends NodeVisitorAbstract
                 }
             } elseif ($stmt instanceof Stmt\Foreach_ || $stmt instanceof Stmt\For_ || $stmt instanceof Stmt\While_ || $stmt instanceof Stmt\Do_) {
                 $this->walk($stmt->stmts, $loops + 1, false, null);
+            } elseif ($stmt instanceof Stmt\TryCatch && $loops === 0) {
+                // Outside any loop, an exception reaches its catch only after leaving the loops inside the try,
+                // so they are walked as usual. Inside a loop, the catch can go on with the next iteration.
+                $this->walk($stmt->stmts, 0, false, null);
+                foreach ($stmt->catches as $catch) {
+                    $this->walk($catch->stmts, 0, false, null);
+                }
+                if ($stmt->finally !== null) {
+                    $this->walk($stmt->finally->stmts, 0, false, null);
+                }
             }
         }
     }

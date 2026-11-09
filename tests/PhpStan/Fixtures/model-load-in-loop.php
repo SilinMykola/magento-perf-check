@@ -114,3 +114,83 @@ final class LeavesLoop
         return null;
     }
 }
+
+final class TryAroundLoop
+{
+    public function __construct(private readonly ProductRepositoryInterface $productRepository)
+    {
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function leavesLoop(array $ids, bool $skip): ?object
+    {
+        try {
+            foreach ($ids as $id) {
+                return $this->productRepository->getById($id);
+            }
+        } catch (\Throwable $e) {
+            return null;
+        }
+        try {
+            foreach ($ids as $id) {
+                if ($skip) {
+                    return null;
+                } else {
+                    return $this->productRepository->getById($id);
+                }
+            }
+        } finally {
+            foreach ($ids as $id) {
+                $this->productRepository->getById($id);
+                break;
+            }
+        }
+        try {
+            $this->productRepository->getById(0);
+        } catch (\Throwable $e) {
+            foreach ($ids as $id) {
+                return $this->productRepository->getById($id);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function stillInLoop(array $ids): ?object
+    {
+        foreach ($ids as $id) {
+            try {
+                return $this->productRepository->getById($id);
+            } catch (\Throwable $e) {
+                continue;
+            }
+        }
+        try {
+            foreach ($ids as $id) {
+                try {
+                    return $this->productRepository->getById($id);
+                } catch (\Throwable $e) {
+                    continue;
+                }
+            }
+        } catch (\Throwable $e) {
+            return null;
+        }
+        foreach ($ids as $id) {
+            try {
+                foreach ($ids as $other) {
+                    return $this->productRepository->getById($other);
+                }
+            } catch (\Throwable $e) {
+                continue;
+            }
+        }
+
+        return null;
+    }
+}
