@@ -12,8 +12,12 @@ T-03, experimental and off by default, SHALL report as `warning` a named JavaScr
 - **THEN** T-03 reports nothing
 
 ### Requirement: T-04 view model required and never used
-T-04, experimental and off by default, SHALL report as `warning` an assignment in a template of `$viewModels->require(...)`, or of a call chain that starts with it, to a variable the template never reads.
+T-04, experimental and off by default, SHALL report as `warning` an assignment in a template of `$viewModels->require(...)`, of a call chain that starts with it, or of a call chain on a variable holding such a view model, to a variable the template never reads. A template that reads variables by name, through `compact()`, `extract()`, `get_defined_vars()` or `$$name`, SHALL NOT be reported, nor SHALL the inner assignment of `$a = $b = ...`.
 
 #### Scenario: Navigation built and dropped
 - **WHEN** a template runs `$menuItems = $viewModels->require(Navigation::class)->getNavigation(4);` and never reads `$menuItems`
 - **THEN** T-04 reports the assignment
+
+#### Scenario: Call on a held view model
+- **WHEN** a template runs `$navigation = $viewModels->require(Navigation::class);` and `$menuItems = $navigation->getNavigation(4);` and never reads `$menuItems`
+- **THEN** T-04 reports the second assignment

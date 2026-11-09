@@ -34,6 +34,9 @@ final class StateChangeOnGetRuleTest extends RuleTestCase
             ['[P-FPC-06] Acme\\Promo\\Controller\\Payment\\RenderedByHelper handles GET only but calls Magento\\Catalog\\Api\\ProductRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.', 635],
             ['[P-FPC-06] Acme\\Promo\\Controller\\Payment\\RenderedPage handles GET only but calls Magento\\Catalog\\Api\\ProductRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.', 655],
             ['[P-FPC-06] Acme\\Promo\\Controller\\Payment\\RenderedThroughOutput handles GET only but calls Magento\\Catalog\\Api\\ProductRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.', 671],
+            ['[P-FPC-06] Acme\\Promo\\Controller\\Payment\\VoidPublicHeaders handles GET only but calls Magento\\Catalog\\Api\\ProductRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.', 687],
+            ['[P-FPC-06] Acme\\Promo\\Controller\\Payment\\JsonWithPublicHeaders handles GET only but calls Magento\\Catalog\\Api\\ProductRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.', 703],
+            ['[P-FPC-06] Acme\\Promo\\Controller\\Payment\\FallThroughToLayout handles GET only but calls Magento\\Catalog\\Api\\ProductRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.', 743],
         ]);
     }
 }

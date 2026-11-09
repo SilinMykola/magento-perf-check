@@ -35,11 +35,22 @@ final class UnusedViewModelRule implements Rule
             return [];
         }
         $finder = new NodeFinder();
+        // compact(), extract() and $$name read variables that the AST does not show by name.
+        $dynamic = $finder->findFirst($node->getNodes(), static fn (Node $n): bool => ($n instanceof Expr\Variable && !is_string($n->name))
+            || ($n instanceof Expr\FuncCall && $n->name instanceof Node\Name && in_array($n->name->toLowerString(), ['compact', 'extract', 'get_defined_vars'], true)));
+        if ($dynamic !== null) {
+            return [];
+        }
         $reads = [];
         $targets = [];
+        $inner = [];
         foreach ($finder->findInstanceOf($node->getNodes(), Expr\Assign::class) as $assign) {
             if ($assign->var instanceof Expr\Variable) {
                 $targets[spl_object_id($assign->var)] = true;
+            }
+            // In "$a = $b = ...", $a reads what $b gets.
+            if ($assign->expr instanceof Expr\Assign) {
+                $inner[spl_object_id($assign->expr)] = true;
             }
         }
         foreach ($finder->findInstanceOf($node->getNodes(), Expr\Variable::class) as $variable) {
@@ -52,19 +63,31 @@ final class UnusedViewModelRule implements Rule
         // Variables holding a required view model, in source order: "$vm = $viewModels->require(...)".
         $required = [];
         foreach ($finder->findInstanceOf($node->getNodes(), Expr\Assign::class) as $assign) {
-            if (!$assign->var instanceof Expr\Variable || !is_string($assign->var->name) || !self::comesFromRequire($assign->expr, $required)) {
+            if (!$assign->var instanceof Expr\Variable || !is_string($assign->var->name)) {
                 continue;
             }
-            $required[$assign->var->name] = true;
-            if (isset($reads[$assign->var->name])) {
+            $direct = self::comesFromRequire($assign->expr, []);
+            if (!$direct && !self::comesFromRequire($assign->expr, $required)) {
                 continue;
             }
-            $errors[] = RuleErrorBuilder::message(sprintf(
-                '[%s] $%s is set from $viewModels->require() but never used: the call still runs, and Hyvä adds the '
-                . 'view model\'s cache tags to the page when it implements IdentityInterface. Remove the call.',
-                self::ID,
-                $assign->var->name,
-            ))->identifier(self::IDENTIFIER)->line($assign->getStartLine())->build();
+            if ($direct) {
+                $required[$assign->var->name] = true;
+            }
+            if (isset($reads[$assign->var->name]) || isset($inner[spl_object_id($assign)])) {
+                continue;
+            }
+            $errors[] = RuleErrorBuilder::message($direct
+                ? sprintf(
+                    '[%s] $%s is set from $viewModels->require() but never used: the call still runs, and Hyvä adds the '
+                    . 'view model\'s cache tags to the page when it implements IdentityInterface. Remove the call.',
+                    self::ID,
+                    $assign->var->name,
+                )
+                : sprintf(
+                    '[%s] $%s is set from a call on a view model but never used: the call still runs. Remove the call.',
+                    self::ID,
+                    $assign->var->name,
+                ))->identifier(self::IDENTIFIER)->line($assign->getStartLine())->build();
         }
 
         return $errors;

@@ -65,6 +65,10 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
     private function returnsOnlyUncacheableResults(array $statements): bool
     {
         $finder = new NodeFinder();
+        // An action that sets public cache headers itself is cached whatever it returns.
+        if ($this->setsPublicHeaders($statements, $finder)) {
+            return false;
+        }
         $uncacheableVariables = [];
         foreach ($finder->findInstanceOf($statements, Expr\Assign::class) as $assign) {
             if ($assign->var instanceof Expr\Variable && is_string($assign->var->name) && $this->isUncacheable($assign->expr, [])) {
@@ -82,13 +86,44 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
             }
         }
 
-        // No return at all: the same response, unless the action renders a layout, which sets public headers.
-        return $returns !== [] || !$this->mayRenderLayout($statements, $finder);
+        // Reaching the end of execute() is a bare "return;" too.
+        return !self::fallsThrough($statements) || !$this->mayRenderLayout($statements, $finder);
+    }
+
+    /**
+     * @param Stmt[] $statements
+     */
+    private static function fallsThrough(array $statements): bool
+    {
+        $last = end($statements);
+
+        return !$last instanceof Stmt\Return_ && !($last instanceof Stmt\Expression && $last->expr instanceof Expr\Throw_)
+            && !($last instanceof Node && $last->getType() === 'Stmt_Throw');
+    }
+
+    /**
+     * "->setPublicHeaders(...)", or "->setHeader('Cache-Control', ...)".
+     *
+     * @param Stmt[] $statements
+     */
+    private function setsPublicHeaders(array $statements, NodeFinder $finder): bool
+    {
+        foreach ($finder->findInstanceOf($statements, Expr\MethodCall::class) as $call) {
+            $name = $call->name instanceof Node\Identifier ? $call->name->toLowerString() : '';
+            $header = $call->getArgs()[0]->value ?? null;
+            if ($name === 'setpublicheaders'
+                || ($name === 'setheader' && $header instanceof Node\Scalar\String_ && strtolower($header->value) === 'cache-control')
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
      * Whether an execute() that returns nothing may render a page: a layout, render or page call, the
-     * view, or a method of its own class, which could do either.
+     * view, or a method of its own class, which could do either. A redirect sends a 302, which is not cached.
      *
      * @param Stmt[] $statements
      */
@@ -97,7 +132,7 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
         foreach ($finder->findInstanceOf($statements, Expr\MethodCall::class) as $call) {
             $name = $call->name instanceof Node\Identifier ? $call->name->toLowerString() : '';
             if (preg_match('/layout|render/', $name) === 1 || preg_match('/page|layout|view/i', $this->receiverName($call->var)) === 1
-                || ($call->var instanceof Expr\Variable && $call->var->name === 'this' && !in_array($name, ['getrequest', 'getresponse'], true))
+                || ($call->var instanceof Expr\Variable && $call->var->name === 'this' && !in_array($name, ['getrequest', 'getresponse', '_redirect'], true))
             ) {
                 return true;
             }

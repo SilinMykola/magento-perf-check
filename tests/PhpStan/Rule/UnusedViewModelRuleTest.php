@@ -27,7 +27,12 @@ final class UnusedViewModelRuleTest extends RuleTestCase
     {
         $this->analyse([__DIR__ . '/../Fixtures/templates/unused-view-model.phtml'], [
             ['[T-04] $menuItems is set from $viewModels->require() but never used: the call still runs, and Hyvä adds the view model\'s cache tags to the page when it implements IdentityInterface. Remove the call.', 3],
-            ['[T-04] $navigationItems is set from $viewModels->require() but never used: the call still runs, and Hyvä adds the view model\'s cache tags to the page when it implements IdentityInterface. Remove the call.', 13],
+            ['[T-04] $navigationItems is set from a call on a view model but never used: the call still runs. Remove the call.', 13],
         ]);
+    }
+
+    public function testVariablesReadByNameAreNotKnown(): void
+    {
+        $this->analyse([__DIR__ . '/../Fixtures/templates/unused-view-model-compact.phtml'], []);
     }
 }
