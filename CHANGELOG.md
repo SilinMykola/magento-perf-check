@@ -6,6 +6,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-09
+
 ### Changed
 
 - P-DI-01, in the default set, no longer reports a session in the constructor of a controller action: every action starts a session anyway, on the frontend through the customer `ContextPlugin` and in the admin through the request validation. On 78 modules this removes 42 of 182 findings; the 6 of them graded in calibration were all low impact. The cookie manager is still reported there. **This can change a CI result.**
@@ -99,7 +101,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/SilinMykola/magento-perf-check/releases/tag/v0.1.0
