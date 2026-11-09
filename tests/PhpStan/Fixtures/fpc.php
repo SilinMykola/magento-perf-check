@@ -570,3 +570,106 @@ namespace Acme\Promo\Controller\Feed {
         }
     }
 }
+
+namespace Acme\Promo\Controller\Payment {
+    use Magento\Catalog\Api\ProductRepositoryInterface;
+    use Magento\Catalog\Model\Product;
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+
+    final class Apply implements HttpGetActionInterface
+    {
+        public function __construct(private readonly ProductRepositoryInterface $productRepository, private readonly Product $product)
+        {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+        }
+    }
+
+    final class ApplyBare implements HttpGetActionInterface
+    {
+        public function __construct(private readonly ProductRepositoryInterface $productRepository, private readonly Product $product)
+        {
+        }
+
+        public function execute(): void
+        {
+            if ($this->getRequest() === null) {
+                return;
+            }
+            $this->productRepository->save($this->product);
+        }
+
+        private function getRequest(): ?object
+        {
+            return null;
+        }
+    }
+
+    final class RenderedLayout implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $view,
+        ) {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+            $this->view->loadLayout();
+        }
+    }
+
+    final class RenderedByHelper implements HttpGetActionInterface
+    {
+        public function __construct(private readonly ProductRepositoryInterface $productRepository, private readonly Product $product)
+        {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+            $this->show();
+        }
+
+        private function show(): void
+        {
+        }
+    }
+
+    final class RenderedPage implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $resultPageFactory,
+        ) {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+            $this->resultPageFactory->create();
+        }
+    }
+
+    final class RenderedThroughOutput implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $output,
+        ) {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+            $this->output->renderLayout();
+        }
+    }
+}

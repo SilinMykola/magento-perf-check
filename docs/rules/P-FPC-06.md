@@ -16,6 +16,7 @@ Not reported:
 - admin controllers, which are never page-cached;
 - actions whose every `return` gives a redirect or forward, recognized by `setPath`/`setUrl`/`setRefererUrl`/`setRefererOrBaseUrl`, `_redirect()`/`_forward()`, `create()` on a redirect or forward result factory, or `create(ResultFactory::TYPE_REDIRECT)`/`create(ResultFactory::TYPE_FORWARD)` on the generic result factory. Varnish and the built-in page cache store only 200 and 404 responses, so these are never served from cache;
 - actions whose every `return` gives a JSON or raw result, recognized by `create()` on a result factory with `json` or `raw` in its name, or by `TYPE_JSON`/`TYPE_RAW`. [`FrontController`](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/App/FrontController.php#L182) sets no-cache headers before every action, and only a page result replaces them.
+- actions whose `execute()` returns no value, by `return;` or no return at all, and renders no layout: no call whose name contains `layout` or `render`, no call on a page, layout or view object, and no call of the action's own methods other than `getRequest()` and `getResponse()`. Such an action sends its own response, which keeps the no-cache headers; the page cache's [`LayoutPlugin`](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/PageCache/Model/Layout/LayoutPlugin.php#L70-L75) sets public headers only when a layout is generated.
 
 ## Why it hurts performance
 

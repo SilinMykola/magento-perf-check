@@ -12,9 +12,10 @@ use PhpParser\NodeVisitorAbstract;
 
 /**
  * Marks every method call inside an execute() whose return statements all return a
- * redirect, forward, JSON or raw result. Varnish and the built-in page cache store only
- * 200 and 404 responses, and FrontController sets no-cache headers that only a page result
- * replaces, so such actions are never served from cache. The check is syntactic.
+ * redirect, forward, JSON or raw result, or that returns nothing and renders no layout.
+ * Varnish and the built-in page cache store only 200 and 404 responses, and FrontController
+ * sets no-cache headers that only a page result or a rendered layout replaces, so such
+ * actions are never served from cache. The check is syntactic.
  */
 final class ControllerResultVisitor extends NodeVisitorAbstract
 {
@@ -74,16 +75,35 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
             $finder->findInstanceOf($statements, Stmt\Return_::class),
             fn (Stmt\Return_ $return): bool => !$this->isInsideNestedFunction($statements, $return, $finder),
         );
-        if ($returns === []) {
-            return false;
-        }
         foreach ($returns as $return) {
-            if ($return->expr === null || !$this->isUncacheable($return->expr, $uncacheableVariables)) {
+            // A bare "return;" gives the action's own response, which keeps the no-cache headers.
+            if ($return->expr === null ? $this->mayRenderLayout($statements, $finder) : !$this->isUncacheable($return->expr, $uncacheableVariables)) {
                 return false;
             }
         }
 
-        return true;
+        // No return at all: the same response, unless the action renders a layout, which sets public headers.
+        return $returns !== [] || !$this->mayRenderLayout($statements, $finder);
+    }
+
+    /**
+     * Whether an execute() that returns nothing may render a page: a layout, render or page call, the
+     * view, or a method of its own class, which could do either.
+     *
+     * @param Stmt[] $statements
+     */
+    private function mayRenderLayout(array $statements, NodeFinder $finder): bool
+    {
+        foreach ($finder->findInstanceOf($statements, Expr\MethodCall::class) as $call) {
+            $name = $call->name instanceof Node\Identifier ? $call->name->toLowerString() : '';
+            if (preg_match('/layout|render/', $name) === 1 || preg_match('/page|layout|view/i', $this->receiverName($call->var)) === 1
+                || ($call->var instanceof Expr\Variable && $call->var->name === 'this' && !in_array($name, ['getrequest', 'getresponse'], true))
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
