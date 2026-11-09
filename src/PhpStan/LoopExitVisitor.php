@@ -51,7 +51,9 @@ final class LoopExitVisitor extends NodeVisitorAbstract
 
         foreach ($stmts as $i => $stmt) {
             $leaves = $after[$i];
-            if (($stmt instanceof Stmt\Return_ || ($stmt instanceof Stmt\Expression && $leaves)) && $stmt->expr !== null) {
+            // Outside any loop of this function, a return leaves only the function: a method of a class
+            // declared in a loop body is still loop context.
+            if ($loops > 0 && ($stmt instanceof Stmt\Return_ || ($stmt instanceof Stmt\Expression && $leaves)) && $stmt->expr !== null) {
                 self::markCalls($stmt->expr);
             }
             if ($stmt instanceof Stmt\If_) {

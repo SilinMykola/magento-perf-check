@@ -283,5 +283,20 @@ final class StillInLoop
             };
             break;
         }
+        foreach ($products as $product) {
+            $saver = new class () {
+                public function run(Product $other): Product
+                {
+                    $other->save();
+
+                    return $other;
+                }
+
+                public function runReturned(Product $other): Product
+                {
+                    return $other->save();
+                }
+            };
+        }
     }
 }
