@@ -11,7 +11,6 @@ use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Report\AnalysisResult;
 use Silin\MagentoPerfCheck\Report\CheckstyleReporter;
-use Silin\MagentoPerfCheck\Report\Finding;
 use Silin\MagentoPerfCheck\Report\GithubReporter;
 use Silin\MagentoPerfCheck\Report\JsonReporter;
 use Silin\MagentoPerfCheck\Report\Notice;
@@ -180,38 +179,35 @@ final class Application
     }
 
     /**
-     * A module set to 0 in app/etc/config.php does not run, so its findings become notices.
+     * One notice for each module disabled in app/etc/config.php that lies in, or holds, an analyzed path:
+     * Magento does not run it, so it is not analyzed.
      *
-     * @param list<Finding> $findings
-     * @param array<string, string> $disabledRoots module root => module name
-     * @return array{list<Finding>, list<Notice>}
+     * @param list<string> $paths
+     * @param array<string, string> $disabledRoots directory => module name
+     * @return list<Notice>
      */
-    private static function withoutDisabledModules(array $findings, array $disabledRoots, string $projectRoot): array
+    private static function disabledModuleNotices(array $paths, array $disabledRoots, string $projectRoot): array
     {
-        $prefixes = [];
-        foreach ($disabledRoots as $root => $name) {
-            if (str_starts_with($root, $projectRoot . '/')) {
-                $prefixes[substr($root, strlen($projectRoot) + 1) . '/'] = $name;
-            }
-        }
-        $kept = [];
         $notices = [];
-        foreach ($findings as $finding) {
-            foreach ($prefixes as $prefix => $name) {
-                if (str_starts_with($finding->file, $prefix)) {
-                    $notices[] = new Notice(
+        foreach ($disabledRoots as $root => $name) {
+            if (!str_starts_with($root, $projectRoot . '/')) {
+                continue;
+            }
+            $relative = substr($root, strlen($projectRoot) + 1);
+            foreach ($paths as $path) {
+                $path = trim($path, '/');
+                if ($path === '.' || str_starts_with($relative . '/', $path . '/') || str_starts_with($path . '/', $relative . '/')) {
+                    $notices[$name] = new Notice(
                         Notice::SOURCE_DISABLED_MODULE,
-                        sprintf('%s (%s is disabled in app/etc/config.php)', $finding->message, $name),
-                        $finding->file,
-                        $finding->line,
+                        sprintf('%s is disabled in app/etc/config.php and was not analyzed.', $name),
+                        $relative,
                     );
-                    continue 2;
+                    break;
                 }
             }
-            $kept[] = $finding;
         }
 
-        return [$kept, $notices];
+        return array_values($notices);
     }
 
     private function analyze(Options $options): AnalysisResult
@@ -245,20 +241,19 @@ final class Application
             new GlobalAreaRule(),
             new CacheIdFactorRule(),
         ];
-        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests), $xmlRules))->analyze($paths);
+        // A module disabled in app/etc/config.php does not run: neither its PHP nor its XML is analyzed.
+        $disabledRoots = $indexBuilder->disabledModuleRoots($options->projectRoot);
+        $disabledNotices = self::disabledModuleNotices($paths, $disabledRoots, $options->projectRoot);
+        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests, array_keys($disabledRoots)), $xmlRules))->analyze($paths);
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
-            ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests);
+            ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests, array_keys($disabledRoots));
 
-        if ($xml->filesFound === 0 && !$php->filesAnalyzed) {
+        if ($xml->filesFound === 0 && !$php->filesAnalyzed && $disabledNotices === []) {
             throw new UsageException(self::nothingToAnalyze($paths, $php->notices, $includeTests));
         }
 
-        // Configuration first, then disabled modules, then the baseline; --fail-on looks at what is left.
-        [$findings, $disabledNotices] = self::withoutDisabledModules(
-            $config->apply([...$xml->findings, ...$php->findings], $registry),
-            $indexBuilder->disabledModuleRoots($options->projectRoot),
-            $options->projectRoot,
-        );
+        // Configuration first, then the baseline; --fail-on looks at what is left.
+        $findings = $config->apply([...$xml->findings, ...$php->findings], $registry);
         $hidden = null;
         $unmatched = null;
         if ($options->baselineFile !== null) {

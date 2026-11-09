@@ -37,8 +37,9 @@ final class PhpStanRunner
 
     /**
      * @param list<string> $paths relative to the project root
+     * @param list<string> $excludedDirs absolute directories left out of the analysis, such as modules disabled in app/etc/config.php
      */
-    public function run(string $projectRoot, array $paths, string $memoryLimit, bool $includeTests = false): PhpStanResult
+    public function run(string $projectRoot, array $paths, string $memoryLimit, bool $includeTests = false, array $excludedDirs = []): PhpStanResult
     {
         $absolutePaths = array_values(array_filter(
             array_map(static fn (string $p): string => $projectRoot . '/' . $p, $paths),
@@ -70,12 +71,14 @@ final class PhpStanRunner
             }
         }
 
+        // A pattern, not the directory: PHPStan 1.12 would also leave out a sibling whose name starts the same.
+        $excludedPatterns = array_map(static fn (string $dir): string => $dir . '/*', $excludedDirs);
         $excluded = [];
         $parseNotices = [];
         for ($pass = 1; $pass <= self::MAX_PASSES; ++$pass) {
             $config = $this->writeConfig(
                 $workDir,
-                $this->config($projectRoot, $absolutePaths, $testPatterns, $excluded, $workDir . '/cache', $indexFingerprint),
+                $this->config($projectRoot, $absolutePaths, $testPatterns, [...$excludedPatterns, ...$excluded], $workDir . '/cache', $indexFingerprint),
             );
             $result = $this->analyse($config, $projectRoot, $memoryLimit);
             $unparsable = array_diff(array_keys($result['unparsable']), $excluded);
@@ -169,7 +172,7 @@ final class PhpStanRunner
     /**
      * @param list<string> $paths
      * @param list<string> $testPatterns test code, left out of symbol discovery too: a stub of a core class in a module's Test directory must not replace the real class for all other code
-     * @param list<string> $unparsable files PHPStan cannot parse
+     * @param list<string> $unparsable files PHPStan cannot parse, and directories left out of the analysis
      */
     private function config(string $projectRoot, array $paths, array $testPatterns, array $unparsable, string $cacheDir, string $indexFingerprint): string
     {
@@ -295,7 +298,7 @@ final class PhpStanRunner
         $findings = [];
         $notices = [];
         $unparsable = [];
-        // Trait code is analysed once per class that uses it; the findings of the first class stand for all.
+        // Trait code is analysed once per class that uses it; a finding the first class gives stands for the same finding of the others.
         $firstContext = [];
         foreach ($data['files'] as $file => $fileResult) {
             $relative = $this->relative($file, $projectRoot);
@@ -309,7 +312,7 @@ final class PhpStanRunner
                 }
                 $match = $this->ruleFor($message['identifier'] ?? null, $text);
                 if ($match !== null) {
-                    $key = $match[0]->id . "\0" . $relative . "\0" . $line;
+                    $key = $match[0]->id . "\0" . $relative . "\0" . $line . "\0" . $text;
                     if (($firstContext[$key] ??= $file) !== $file) {
                         continue;
                     }

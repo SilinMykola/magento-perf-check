@@ -64,15 +64,25 @@ final class ProjectIndexBuilder
     }
 
     /**
-     * Roots of the modules set to 0 in app/etc/config.php: Magento loads neither their code nor their configuration.
+     * Directories of the modules set to 0 in app/etc/config.php: Magento loads neither their code
+     * nor their configuration. A Composer package is listed both as installed (vendor/..., which
+     * may be a symlink) and resolved, since files are found under either.
      *
-     * @return array<string, string> module root => module name
+     * @return array<string, string> directory => module name
      */
     public function disabledModuleRoots(string $projectRoot): array
     {
         $disabled = self::disabledModules($projectRoot);
+        $roots = [];
+        foreach ($this->allModuleRoots($projectRoot, $asInstalled) as $root => $name) {
+            if (isset($disabled[$name])) {
+                $roots[$root] = $name;
+                $roots[$asInstalled[$root]] = $name;
+            }
+        }
+        ksort($roots);
 
-        return array_filter($this->allModuleRoots($projectRoot), static fn (string $name): bool => isset($disabled[$name]));
+        return $roots;
     }
 
     /**
@@ -84,7 +94,15 @@ final class ProjectIndexBuilder
     public static function disabledModules(string $projectRoot): array
     {
         $content = @file_get_contents($projectRoot . '/' . self::MODULE_CONFIG);
-        if (!is_string($content) || preg_match('/([\'"])modules\1\s*=>\s*(?:array\s*\(|\[)([^\])]*)/i', $content, $list) !== 1) {
+        if (!is_string($content)) {
+            return [];
+        }
+        // Tokenizing does not run the file; comments go, so a bracket or a module name in one does not count.
+        $code = '';
+        foreach (token_get_all($content) as $token) {
+            $code .= is_array($token) ? (in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true) ? ' ' : $token[1]) : $token;
+        }
+        if (preg_match('/([\'"])modules\1\s*=>\s*(?:array\s*\(|\[)([^\])]*)/i', $code, $list) !== 1) {
             return [];
         }
         preg_match_all('/([\'"])([A-Za-z0-9]+_[A-Za-z0-9]+)\1\s*=>\s*(?:0|false)\b/i', $list[2], $matches);
@@ -93,13 +111,17 @@ final class ProjectIndexBuilder
     }
 
     /**
+     * @param ?array<string, string> $asInstalled
+     * @param-out array<string, string> $asInstalled module root => the same directory as Composer installed it, before symlinks
      * @return array<string, string> module root => module name
      */
-    private function allModuleRoots(string $projectRoot): array
+    private function allModuleRoots(string $projectRoot, ?array &$asInstalled = null): array
     {
         $roots = [];
+        $asInstalled = [];
         foreach (glob($projectRoot . '/app/code/*/*/etc/module.xml') ?: [] as $moduleXml) {
             $roots[dirname($moduleXml, 2)] = $moduleXml;
+            $asInstalled[dirname($moduleXml, 2)] = dirname($moduleXml, 2);
         }
 
         $installed = $projectRoot . '/vendor/composer/installed.json';
@@ -110,13 +132,15 @@ final class ProjectIndexBuilder
             if (!is_array($package) || !is_string($package['install-path'] ?? null)) {
                 continue;
             }
-            $root = realpath($projectRoot . '/vendor/composer/' . $package['install-path']);
+            $path = self::normalize($projectRoot . '/vendor/composer/' . $package['install-path']);
+            $root = realpath($path);
             if ($root === false) {
                 continue;
             }
-            foreach ([$root, $root . '/src'] as $candidate) {
-                if (is_file($candidate . '/etc/module.xml')) {
-                    $roots[$candidate] = $candidate . '/etc/module.xml';
+            foreach (['', '/src'] as $suffix) {
+                if (is_file($root . $suffix . '/etc/module.xml')) {
+                    $roots[$root . $suffix] = $root . $suffix . '/etc/module.xml';
+                    $asInstalled[$root . $suffix] = $path . $suffix;
                 }
             }
         }
@@ -129,6 +153,23 @@ final class ProjectIndexBuilder
         ksort($modules);
 
         return $modules;
+    }
+
+    /**
+     * Resolves "." and ".." in an absolute path without following symlinks.
+     */
+    private static function normalize(string $path): string
+    {
+        $parts = [];
+        foreach (explode('/', $path) as $part) {
+            if ($part === '..') {
+                array_pop($parts);
+            } elseif ($part !== '.' && $part !== '') {
+                $parts[] = $part;
+            }
+        }
+
+        return '/' . implode('/', $parts);
     }
 
     /**

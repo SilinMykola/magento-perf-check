@@ -65,7 +65,7 @@ Exit codes:
 
 Some files cannot be analyzed, such as XML that does not parse, PHP with syntax errors, or a class PHPStan cannot reflect. They are skipped and counted as analysis notices in the summary; `--format=json` lists them. With `--format=sarif`, `checkstyle` or `github`, or with `--output`, that summary goes to stderr.
 
-A module set to `0` in the `modules` list of `app/etc/config.php` does not run, so its findings are not reported: each one is listed as a `disabled-module` notice instead, and its configuration does not count for other modules (a Proxy in its `di.xml`, for example). The file is read as text, not run. A module missing from that list counts as enabled.
+A module set to `0` in the `modules` list of `app/etc/config.php` does not run, so it is not analyzed: one `disabled-module` notice names it when it lies in the analyzed paths, and its configuration does not count for other modules (a Proxy in its `di.xml`, for example). The file is read as text, not run. A module missing from that list counts as enabled.
 
 ## Security
 

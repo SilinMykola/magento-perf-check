@@ -202,7 +202,7 @@ final class ProjectIndexBuilderTest extends TestCase
         $config = $copy . '/app/etc/config.php';
 
         // Acme_Core configures the Proxy; Acme_Gift is missing from the list and stays enabled.
-        file_put_contents($config, "<?php\nreturn [\n    'modules' => [\n        'Acme_Core' => false,\n        'Acme_Promo' => 1,\n    ],\n    'Acme_Gift' => 0,\n];\n");
+        file_put_contents($config, "<?php\nreturn [\n    'modules' => [\n        'Magento_Store' => 1, // kept (see notes)\n        // 'Acme_Promo' => 0,\n        'Acme_Core' => false,\n        'Acme_Promo' => 1,\n    ],\n    'Acme_Gift' => 0,\n];\n");
         $index = $builder->build($copy);
         self::assertFalse($index->hasProxyArgument('Acme\Promo\Block\Banner', 'customerSession'));
         self::assertSame(4, $index->moduleCount);

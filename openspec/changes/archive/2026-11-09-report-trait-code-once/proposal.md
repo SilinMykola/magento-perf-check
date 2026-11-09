@@ -6,7 +6,7 @@ PHPStan analyses the code of a trait once for each class that uses it. A finding
 
 ## What Changes
 
-- **Report:** a finding of a rule at one line of a trait is reported once, from the first class that uses the trait. A finding that only some of the using classes give is still reported.
+- **Report:** a finding at one line of a trait is reported once, from the first class that uses the trait. A finding whose message names the using class stays one per class, and a finding that only some of the using classes give is still reported.
 - **P-DI-06:** the message names the trait for code in a trait.
 
 ## Impact

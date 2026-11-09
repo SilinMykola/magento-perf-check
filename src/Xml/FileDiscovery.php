@@ -25,9 +25,13 @@ final class FileDiscovery
     /** @var array<string, ?string> */
     private array $themeAreaByDir = [];
 
+    /**
+     * @param list<string> $excludedDirs absolute directories left out, such as modules disabled in app/etc/config.php
+     */
     public function __construct(
         private readonly string $projectRoot,
         private readonly bool $includeTests = false,
+        private readonly array $excludedDirs = [],
     ) {
     }
 
@@ -50,6 +54,11 @@ final class FileDiscovery
                 }
                 if ($skipTests && TestCode::contains($relative)) {
                     continue;
+                }
+                foreach ($this->excludedDirs as $dir) {
+                    if (str_starts_with($file, $dir . '/')) {
+                        continue 2;
+                    }
                 }
                 $xmlFile = $this->describe($file, $relative);
                 if ($xmlFile !== null) {

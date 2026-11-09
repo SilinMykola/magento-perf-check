@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Merged report
-The command SHALL run both the XML and the PHP analysis and report their findings together. Each finding SHALL carry rule ID, severity, file path relative to the project, line, message and documentation link. Code in a trait SHALL give one finding per rule and line, however many classes use the trait; a finding that only some of those classes give SHALL still be reported.
+The command SHALL run both the XML and the PHP analysis and report their findings together. Each finding SHALL carry rule ID, severity, file path relative to the project, line, message and documentation link. Code in a trait SHALL give each finding once, however many classes use the trait. A finding whose message names the using class SHALL be reported for each such class, and a finding that only some of those classes give SHALL still be reported.
 
 #### Scenario: Findings from both analyzers in one report
 - **WHEN** the analyzed paths contain both an X-LAY-01 violation and a P-LOOP-01 violation

@@ -12,7 +12,7 @@ The index SHALL be built from every module of the project:
 
 This scope SHALL hold regardless of `--paths` and test exclusion. Findings SHALL still be reported only for files under the analyzed paths.
 
-A module set to `0` in the `modules` list of `app/etc/config.php` SHALL be left out of the index, and findings in its files SHALL NOT be reported: each SHALL become a `disabled-module` notice that names the rule, the location and the module. A module missing from that list, or a project without the file, SHALL count as enabled. The file SHALL be read as text, never run. The list of indexed modules SHALL be part of the cache key, so a module enabled, disabled or added SHALL invalidate cached results.
+A module set to `0` in the `modules` list of `app/etc/config.php` SHALL be left out of the index and out of the analysis, under the directory Composer installed it in and the one it resolves to; when it lies in or holds an analyzed path, one `disabled-module` notice SHALL name it. A module missing from that list, or a project without the file, SHALL count as enabled. The file SHALL be read as text, never run. The list of indexed modules SHALL be part of the cache key, so a module enabled, disabled or added SHALL invalidate cached results.
 
 #### Scenario: Proxy configured in another module
 - **WHEN** `app/code/Acme/Promo` is analyzed and a `di.xml` in `app/code/Acme/Core` configures a Proxy for a `Acme\Promo` class argument
@@ -24,7 +24,7 @@ A module set to `0` in the `modules` list of `app/etc/config.php` SHALL be left 
 
 #### Scenario: Disabled module
 - **WHEN** `app/etc/config.php` sets `Acme_Old` to `0`
-- **THEN** findings in `app/code/Acme/Old` are listed as `disabled-module` notices, not as findings
+- **THEN** nothing in `app/code/Acme/Old` is analyzed and one `disabled-module` notice names `Acme_Old`
 - **AND** a Proxy configured in its `di.xml` does not count for other modules
 
 #### Scenario: Module not listed yet

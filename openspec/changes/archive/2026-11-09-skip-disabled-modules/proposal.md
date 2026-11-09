@@ -7,7 +7,7 @@ A module set to `0` in `app/etc/config.php` does not run: Magento loads neither 
 ## What Changes
 
 - **Project index:** a module set to `0` in the `modules` list of `app/etc/config.php` is left out of the index, so its plugins, observers, Proxy arguments and other configuration do not count. A module missing from the list, or a project without the file, counts as enabled: a new module that has not been enabled yet is still checked. The module list is part of the cache key, so enabling or disabling a module, or adding one with no indexed file, invalidates the cached index and PHPStan's cached results.
-- **Report:** findings in files of such a module are not reported. Each one becomes a `disabled-module` notice that names the rule, the location and the module, so the summary line says how many were left out.
+- **Analysis:** such a module is not analyzed, neither its PHP nor its XML, under the directory Composer installed it in and the one it resolves to. One `disabled-module` notice names each such module that lies in the analyzed paths.
 - `app/etc/config.php` is read as text, not run.
 
 ## Impact

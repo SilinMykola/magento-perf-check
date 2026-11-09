@@ -492,34 +492,58 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame(['X-EVT-01'], $this->ruleIds($project));
     }
 
-    public function testFindingsOfADisabledModuleBecomeNotices(): void
+    public function testDisabledModuleIsNotAnalyzed(): void
     {
         $locator = static fn (string $module): string => "<?php\nnamespace Acme\\{$module}\\Model;\nclass Foo\n{\n"
             . "    public function get(): object\n    {\n        return \\Magento\\Framework\\App\\ObjectManager::getInstance()->get(\\stdClass::class);\n    }\n}\n";
+        $schema = '<?xml version="1.0"?><schema><table name="acme_old"><column name="id"/>'
+            . '<constraint xsi:type="primary" referenceId="PRIMARY"><column name="id"/></constraint></table></schema>';
         $project = $this->project([
-            'app/etc/config.php' => "<?php\nreturn array (\n  'modules' => \n  array (\n    'Acme_Old' => 0,\n    'Acme_Demo' => 1,\n  ),\n);\n",
+            'app/etc/config.php' => "<?php\nreturn array (\n  'modules' => \n  array (\n    'Acme_Old' => 0,\n    'Acme_Gone' => 0,\n    'Acme_Demo' => 1,\n  ),\n);\n",
             'app/code/Acme/Old/etc/module.xml' => '<?xml version="1.0"?><config><module name="Acme_Old"/></config>',
+            'app/code/Acme/Old/etc/db_schema.xml' => $schema,
             'app/code/Acme/Old/Model/Foo.php' => $locator('Old'),
             'app/code/Acme/OldNew/etc/module.xml' => '<?xml version="1.0"?><config><module name="Acme_OldNew"/></config>',
             'app/code/Acme/OldNew/Model/Foo.php' => $locator('OldNew'),
+            // A Composer path repository: vendor/acme/module-gone is a symlink to packages/acme/module-gone.
+            'packages/acme/module-gone/etc/module.xml' => '<?xml version="1.0"?><config><module name="Acme_Gone"/></config>',
+            'packages/acme/module-gone/Model/Foo.php' => $locator('Gone'),
+            'vendor/composer/installed.json' => '{"packages": [{"name": "acme/module-gone", "install-path": "../acme/module-gone"}]}',
         ]);
+        mkdir($project . '/vendor/acme');
+        symlink('../../packages/acme/module-gone', $project . '/vendor/acme/module-gone');
 
-        [, $stdout, $stderr] = $this->runCommand($project, ['--format=json']);
+        [, $stdout, $stderr] = $this->runCommand($project, ['--format=json', '--paths=app/code,vendor/acme/module-gone']);
         $report = json_decode($stdout, true);
         self::assertIsArray($report, $stderr);
-        /** @var array{findings: list<array{ruleId: string, file: string}>, notices: list<array{source: string, message: string, file: string, line: int}>} $report */
+        /** @var array{findings: list<array{ruleId: string, file: string}>, notices: list<array{source: string, message: string, file: string}>} $report */
 
         // Acme_OldNew is not in the list yet, so it counts as enabled; its path starts like Acme/Old.
+        // The table of Acme_Old has a primary key: leaving the module out must not turn it into an X-DB-01 finding.
         self::assertSame(['P-DI-06 app/code/Acme/OldNew/Model/Foo.php'], array_map(static fn (array $f): string => $f['ruleId'] . ' ' . $f['file'], $report['findings']));
         $disabled = array_values(array_filter($report['notices'], static fn (array $n): bool => $n['source'] === 'disabled-module'));
-        self::assertCount(1, $disabled);
-        self::assertSame(['app/code/Acme/Old/Model/Foo.php', 7], [$disabled[0]['file'], $disabled[0]['line']]);
-        self::assertStringStartsWith('[P-DI-06] ', $disabled[0]['message']);
-        self::assertStringEndsWith('(Acme_Old is disabled in app/etc/config.php)', $disabled[0]['message']);
+        self::assertSame([
+            ['app/code/Acme/Old', 'Acme_Old is disabled in app/etc/config.php and was not analyzed.'],
+            ['vendor/acme/module-gone', 'Acme_Gone is disabled in app/etc/config.php and was not analyzed.'],
+        ], array_map(static fn (array $n): array => [$n['file'], $n['message']], $disabled));
 
-        // A rule switched off gives no notice either.
-        $this->write($project . '/off.neon', "magentoPerf:\n    rules:\n        P-DI-06:\n            enabled: false\n");
-        [, $stdout] = $this->runCommand($project, ['--format=json', '--config=' . $project . '/off.neon']);
+        // The package seen both where Composer installed it and where it really is gives one notice.
+        [, $stdout] = $this->runCommand($project, ['--format=json', '--paths=packages,vendor/acme/module-gone']);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        /** @var array{notices: list<array{source: string, message: string}>} $report */
+        self::assertCount(1, array_filter($report['notices'], static fn (array $n): bool => str_starts_with($n['message'], 'Acme_Gone ')));
+
+        // Only a disabled module asked for: a clean run that says why, not "nothing to analyze".
+        [$exitCode, $stdout] = $this->runCommand($project, ['--format=json', '--paths=app/code/Acme/Old']);
+        self::assertSame(Application::EXIT_CLEAN, $exitCode, $stdout);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        /** @var array{notices: list<array{source: string}>} $report */
+        self::assertContains('disabled-module', array_column($report['notices'], 'source'));
+
+        // A disabled module outside the analyzed paths is not mentioned.
+        [, $stdout] = $this->runCommand($project, ['--format=json', '--paths=app/code/Acme/OldNew']);
         $report = json_decode($stdout, true);
         self::assertIsArray($report);
         /** @var array{notices: list<array{source: string}>} $report */
@@ -578,6 +602,37 @@ final class AnalysisIntegrityTest extends TestCase
             array_map(static fn (array $f): string => sprintf('%s %s:%d', $f['ruleId'], $f['file'], $f['line']), $report['findings']),
         );
         self::assertStringContainsString('in Acme\Demo\Block\Shared.', $report['findings'][0]['message']);
+    }
+
+    public function testTraitFindingThatNamesItsClassIsKeptPerClass(): void
+    {
+        $trait = <<<'PHP'
+            <?php
+            namespace Acme\Demo\Block;
+            trait Shared
+            {
+                public function __construct(private \Magento\Framework\Event\ManagerInterface $events)
+                {
+                    $this->events->dispatch('acme_created');
+                }
+            }
+            PHP;
+        $user = static fn (string $name): string => "<?php\nnamespace Acme\\Demo\\Block;\nclass {$name}\n{\n    use Shared;\n}\n";
+        $project = $this->project([
+            'app/code/Acme/Demo/Block/Shared.php' => $trait,
+            'app/code/Acme/Demo/Block/First.php' => $user('First'),
+            'app/code/Acme/Demo/Block/Second.php' => $user('Second'),
+        ]);
+
+        [, $stdout, $stderr] = $this->runCommand($project, ['--format=json']);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report, $stderr);
+        /** @var array{findings: list<array{ruleId: string, message: string}>} $report */
+        $named = array_map(static fn (array $f): string => $f['ruleId'] . ' ' . (preg_match('/constructor of (\S+):/', $f['message'], $m) === 1 ? $m[1] : '?'), $report['findings']);
+        sort($named);
+
+        // Each message names its class, so each is its own finding and stays the same when another class starts to use the trait.
+        self::assertSame(['P-DI-03 Acme\Demo\Block\First', 'P-DI-03 Acme\Demo\Block\Second'], $named);
     }
 
     public function testTraitFindingOfOneUserOnlyIsKept(): void
