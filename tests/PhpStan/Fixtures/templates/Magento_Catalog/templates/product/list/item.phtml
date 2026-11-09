@@ -1,0 +1,15 @@
+<?php
+/** @var \Magento\Framework\View\Element\Template $block */
+$uniqueId = '_' . uniqid();
+?>
+<div class="product-item">
+    <script>
+        function initPriceBox<?= $uniqueId ?>() {
+            return {};
+        }
+        function initWishlist() {
+            return {};
+        }
+    </script>
+    <button onclick="function notInScript() {}">Add</button>
+</div>

@@ -140,6 +140,14 @@ return [
     new RuleDefinition('T-01', 'getLayout()->createBlock() in a template', Severity::Info, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 6.2.6: "Templates MUST NOT instantiate objects. All objects MUST be passed from the Block objects."'),
     ], ['magentoPerf.createBlockInTemplate' => null]),
+    new RuleDefinition('T-03', 'JavaScript function declared once per item in a template', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-default-theme/blob/c74658fdeddfb03255516b1ff3cf77b940b8dede/Magento_Catalog/layout/catalog_list_item.xml#L42-L43', 'The Hyvä default theme renders the product list JavaScript (compare, wishlist) in separate blocks, once per list.'),
+        new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-default-theme/blob/c74658fdeddfb03255516b1ff3cf77b940b8dede/Magento_Catalog/templates/product/list/js/wishlist.phtml#L19-L20', 'initWishlist() is declared there, outside the template rendered for each product.'),
+    ], ['magentoPerf.repeatedScriptFunction' => null]),
+    new RuleDefinition('T-04', 'Result of $viewModels->require() never used in a template', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-theme-module/blob/6c922be3cd2e9ff9512447c681f388ca829a9c25/src/Model/ViewModelRegistry.php#L60-L78', 'require() gets the view model and passes it to ViewModelCacheTags::collectFrom().'),
+        new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-theme-module/blob/6c922be3cd2e9ff9512447c681f388ca829a9c25/src/Model/ViewModelCacheTags.php#L36-L38', 'collectFrom() keeps a view model that implements IdentityInterface; its identities become cache tags of the page.'),
+    ], ['magentoPerf.unusedViewModel' => null]),
     new RuleDefinition('X-SETUP-01', 'Heavy work in Setup/Recurring or RecurringData', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/prepare/extension-lifecycle', 'The Recurring schema class runs after every schema installation or upgrade stage; RecurringData after every data stage.'),
         $b('setup/src/Magento/Setup/Model/Installer.php#L1159-L1174', 'The installer runs the Recurring script of every module.'),

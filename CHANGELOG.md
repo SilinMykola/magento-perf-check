@@ -8,6 +8,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Added
 
+- Experimental rules, off by default: T-03 at `warning`, on a named JavaScript function declared in a `<script>` that a template renders once per item, inside a template loop or in Hyvä's product list `item.phtml`; T-04 at `warning`, on the result of Hyvä's `$viewModels->require()`, or of a call on it, kept in a variable the template never reads. On a Magento 2.4.5 project with a Hyvä child theme they give 2 and 8 findings, all correct; the other projects have none.
 - P-LOOP-11, in the default set at `error`: `get()` or `create()` on the object manager inside a loop, through `ObjectManager::getInstance()` or an injected `ObjectManagerInterface`. Factories and proxies are left out. It also finds a `create(Model::class)->load($id)` per id, which P-LOOP-01 cannot see because the created model is untyped. In the calibration corpus it gives 10 findings, in the Magento core 79, mostly `get()` of classes named in configured pools. **This can change a CI result.**
 
 ### Changed
