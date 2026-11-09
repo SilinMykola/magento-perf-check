@@ -11,6 +11,7 @@ use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Report\AnalysisResult;
 use Silin\MagentoPerfCheck\Report\CheckstyleReporter;
+use Silin\MagentoPerfCheck\Report\Finding;
 use Silin\MagentoPerfCheck\Report\GithubReporter;
 use Silin\MagentoPerfCheck\Report\JsonReporter;
 use Silin\MagentoPerfCheck\Report\Notice;
@@ -178,6 +179,41 @@ final class Application
         return $message;
     }
 
+    /**
+     * A module set to 0 in app/etc/config.php does not run, so its findings become notices.
+     *
+     * @param list<Finding> $findings
+     * @param array<string, string> $disabledRoots module root => module name
+     * @return array{list<Finding>, list<Notice>}
+     */
+    private static function withoutDisabledModules(array $findings, array $disabledRoots, string $projectRoot): array
+    {
+        $prefixes = [];
+        foreach ($disabledRoots as $root => $name) {
+            if (str_starts_with($root, $projectRoot . '/')) {
+                $prefixes[substr($root, strlen($projectRoot) + 1) . '/'] = $name;
+            }
+        }
+        $kept = [];
+        $notices = [];
+        foreach ($findings as $finding) {
+            foreach ($prefixes as $prefix => $name) {
+                if (str_starts_with($finding->file, $prefix)) {
+                    $notices[] = new Notice(
+                        Notice::SOURCE_DISABLED_MODULE,
+                        sprintf('%s (%s is disabled in app/etc/config.php)', $finding->message, $name),
+                        $finding->file,
+                        $finding->line,
+                    );
+                    continue 2;
+                }
+            }
+            $kept[] = $finding;
+        }
+
+        return [$kept, $notices];
+    }
+
     private function analyze(Options $options): AnalysisResult
     {
         $started = microtime(true);
@@ -191,7 +227,8 @@ final class Application
         $includeTests = $options->includeTests || ($config->includeTests ?? false);
 
         // Built once here; PHPStan workers then read the cached index.
-        $index = (new ProjectIndexBuilder())->build($options->projectRoot);
+        $indexBuilder = new ProjectIndexBuilder();
+        $index = $indexBuilder->build($options->projectRoot);
 
         $xmlRules = [
             new NonCacheableBlockRule($config->allowlistHandles, $config->replaceAllowlist),
@@ -216,8 +253,12 @@ final class Application
             throw new UsageException(self::nothingToAnalyze($paths, $php->notices, $includeTests));
         }
 
-        // Configuration first, then the baseline; --fail-on looks at what is left.
-        $findings = $config->apply([...$xml->findings, ...$php->findings], $registry);
+        // Configuration first, then disabled modules, then the baseline; --fail-on looks at what is left.
+        [$findings, $disabledNotices] = self::withoutDisabledModules(
+            $config->apply([...$xml->findings, ...$php->findings], $registry),
+            $indexBuilder->disabledModuleRoots($options->projectRoot),
+            $options->projectRoot,
+        );
         $hidden = null;
         $unmatched = null;
         if ($options->baselineFile !== null) {
@@ -232,7 +273,7 @@ final class Application
 
         return new AnalysisResult(
             $findings,
-            [...$xml->notices, ...$phpNotices],
+            [...$xml->notices, ...$phpNotices, ...$disabledNotices],
             $options->projectRoot,
             $paths,
             microtime(true) - $started,

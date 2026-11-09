@@ -192,6 +192,37 @@ final class ProjectIndexBuilderTest extends TestCase
         exec('rm -rf ' . escapeshellarg($copy));
     }
 
+    public function testDisabledModuleLeftOutAndCacheFollowsConfig(): void
+    {
+        $source = realpath(__DIR__ . '/../../Fixtures/Project/indexed');
+        self::assertIsString($source);
+        $copy = sys_get_temp_dir() . '/mpr-index-project-' . bin2hex(random_bytes(4));
+        exec('cp -R ' . escapeshellarg($source) . ' ' . escapeshellarg($copy));
+        $builder = new ProjectIndexBuilder($this->cacheDir);
+        $config = $copy . '/app/etc/config.php';
+
+        // Acme_Core configures the Proxy; Acme_Gift is missing from the list and stays enabled.
+        file_put_contents($config, "<?php\nreturn [\n    'modules' => [\n        'Acme_Core' => false,\n        'Acme_Promo' => 1,\n    ],\n    'Acme_Gift' => 0,\n];\n");
+        $index = $builder->build($copy);
+        self::assertFalse($index->hasProxyArgument('Acme\Promo\Block\Banner', 'customerSession'));
+        self::assertSame(4, $index->moduleCount);
+        self::assertSame([$copy . '/app/code/Acme/Core' => 'Acme_Core'], $builder->disabledModuleRoots($copy));
+
+        file_put_contents($config, "<?php\nreturn ['modules' => ['Acme_Core' => 1, 'Acme_Promo' => 1]];\n");
+        touch($config, time() + 5);
+        self::assertTrue($builder->build($copy)->hasProxyArgument('Acme\Promo\Block\Banner', 'customerSession'));
+        self::assertSame([], $builder->disabledModuleRoots($copy));
+
+        // A module with no indexed file changes no file list, only the module count.
+        mkdir($copy . '/app/code/Acme/Bare/etc', 0777, true);
+        file_put_contents($copy . '/app/code/Acme/Bare/etc/module.xml', '<?xml version="1.0"?><config><module name="Acme_Bare"/></config>');
+        self::assertSame(6, $builder->build($copy)->moduleCount);
+        file_put_contents($config, "<?php\nreturn ['modules' => ['Acme_Bare' => 0, 'Acme_Core' => 1]];\n");
+        touch($config, time() + 10);
+        self::assertSame(5, $builder->build($copy)->moduleCount);
+        exec('rm -rf ' . escapeshellarg($copy));
+    }
+
     public function testBuildingWritesNothingIntoTheProject(): void
     {
         $root = realpath(__DIR__ . '/../../Fixtures/Project/indexed');

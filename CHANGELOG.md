@@ -6,8 +6,13 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Changed
+
+- Findings in a module set to `0` in the `modules` list of `app/etc/config.php` are not reported: Magento does not run that module. Each one is listed as a `disabled-module` notice instead, and the module's configuration no longer counts for others, such as a Proxy in its `di.xml`. A module missing from the list counts as enabled. In the Magento core of the calibration project, where `Magento_TwoFactorAuth` is disabled, this removes 16 of 895 findings; on a Magento 2.3.3 project with four disabled modules, 43 of 169. **This can change a CI result.**
+
 ### Fixed
 
+- The project index is rebuilt when a module is added, enabled or disabled. Before, a new module with no `di.xml`, `events.xml` or other indexed file kept an outdated index from the cache.
 - Code in a trait gives one finding per rule and line, however many classes use the trait. Before, PHPStan analysed the trait once for each such class and every finding was repeated: in the calibration corpus one line of a blog module's trait gave 8 extra P-DI-06 findings. P-DI-06 now names the trait in its message, so a baseline that holds such a finding lists it again until the baseline is generated anew.
 
 ## [0.3.1] - 2026-11-09

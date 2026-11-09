@@ -492,6 +492,54 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame(['X-EVT-01'], $this->ruleIds($project));
     }
 
+    public function testFindingsOfADisabledModuleBecomeNotices(): void
+    {
+        $locator = static fn (string $module): string => "<?php\nnamespace Acme\\{$module}\\Model;\nclass Foo\n{\n"
+            . "    public function get(): object\n    {\n        return \\Magento\\Framework\\App\\ObjectManager::getInstance()->get(\\stdClass::class);\n    }\n}\n";
+        $project = $this->project([
+            'app/etc/config.php' => "<?php\nreturn array (\n  'modules' => \n  array (\n    'Acme_Old' => 0,\n    'Acme_Demo' => 1,\n  ),\n);\n",
+            'app/code/Acme/Old/etc/module.xml' => '<?xml version="1.0"?><config><module name="Acme_Old"/></config>',
+            'app/code/Acme/Old/Model/Foo.php' => $locator('Old'),
+            'app/code/Acme/OldNew/etc/module.xml' => '<?xml version="1.0"?><config><module name="Acme_OldNew"/></config>',
+            'app/code/Acme/OldNew/Model/Foo.php' => $locator('OldNew'),
+        ]);
+
+        [, $stdout, $stderr] = $this->runCommand($project, ['--format=json']);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report, $stderr);
+        /** @var array{findings: list<array{ruleId: string, file: string}>, notices: list<array{source: string, message: string, file: string, line: int}>} $report */
+
+        // Acme_OldNew is not in the list yet, so it counts as enabled; its path starts like Acme/Old.
+        self::assertSame(['P-DI-06 app/code/Acme/OldNew/Model/Foo.php'], array_map(static fn (array $f): string => $f['ruleId'] . ' ' . $f['file'], $report['findings']));
+        $disabled = array_values(array_filter($report['notices'], static fn (array $n): bool => $n['source'] === 'disabled-module'));
+        self::assertCount(1, $disabled);
+        self::assertSame(['app/code/Acme/Old/Model/Foo.php', 7], [$disabled[0]['file'], $disabled[0]['line']]);
+        self::assertStringStartsWith('[P-DI-06] ', $disabled[0]['message']);
+        self::assertStringEndsWith('(Acme_Old is disabled in app/etc/config.php)', $disabled[0]['message']);
+
+        // A rule switched off gives no notice either.
+        $this->write($project . '/off.neon', "magentoPerf:\n    rules:\n        P-DI-06:\n            enabled: false\n");
+        [, $stdout] = $this->runCommand($project, ['--format=json', '--config=' . $project . '/off.neon']);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        /** @var array{notices: list<array{source: string}>} $report */
+        self::assertNotContains('disabled-module', array_column($report['notices'], 'source'));
+    }
+
+    public function testProxyConfiguredInADisabledModuleDoesNotCount(): void
+    {
+        $files = [
+            'app/code/Acme/Demo/Block/Foo.php' => self::SESSION_BLOCK,
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Old/etc/module.xml' => '<?xml version="1.0"?><config><module name="Acme_Old"/></config>',
+            'app/code/Acme/Old/etc/di.xml' => self::PROXY_DI,
+        ];
+        $enabled = "<?php\nreturn ['modules' => ['Acme_Demo' => 1, 'Acme_Old' => 1]];\n";
+
+        self::assertSame([], $this->ruleIds($this->project(['app/etc/config.php' => $enabled, ...$files])));
+        self::assertSame(['P-DI-01'], $this->ruleIds($this->project(['app/etc/config.php' => str_replace("'Acme_Old' => 1", "'Acme_Old' => 0", $enabled), ...$files])));
+    }
+
     public function testTraitCodeIsReportedOnceWhateverUsesIt(): void
     {
         $trait = <<<'PHP'

@@ -21,6 +21,8 @@ final class ProjectIndexBuilder
     /** Part of the cache key: raise it when the same files start to give a different index. */
     private const INDEX_VERSION = 4;
 
+    private const MODULE_CONFIG = 'app/etc/config.php';
+
     private const FILES = ['di.xml', '*/di.xml', 'events.xml', '*/events.xml', 'mview.xml', 'db_schema.xml', 'schema.graphqls', 'crontab.xml'];
 
     private const COMMAND_LISTS = ['magento\\framework\\console\\commandlist', 'magento\\framework\\console\\commandlistinterface'];
@@ -34,7 +36,7 @@ final class ProjectIndexBuilder
         $modules = $this->moduleRoots($projectRoot);
         $files = $this->indexedFiles($projectRoot, $modules);
 
-        $cacheFile = $this->cacheFile($projectRoot, $this->fingerprintOf($files));
+        $cacheFile = $this->cacheFile($projectRoot, $this->fingerprintOf($modules, $files));
         if (is_file($cacheFile)) {
             $data = json_decode((string) file_get_contents($cacheFile), true);
             if (is_array($data)) {
@@ -55,6 +57,45 @@ final class ProjectIndexBuilder
      * @return array<string, string> module root => module name
      */
     private function moduleRoots(string $projectRoot): array
+    {
+        $disabled = self::disabledModules($projectRoot);
+
+        return array_filter($this->allModuleRoots($projectRoot), static fn (string $name): bool => !isset($disabled[$name]));
+    }
+
+    /**
+     * Roots of the modules set to 0 in app/etc/config.php: Magento loads neither their code nor their configuration.
+     *
+     * @return array<string, string> module root => module name
+     */
+    public function disabledModuleRoots(string $projectRoot): array
+    {
+        $disabled = self::disabledModules($projectRoot);
+
+        return array_filter($this->allModuleRoots($projectRoot), static fn (string $name): bool => isset($disabled[$name]));
+    }
+
+    /**
+     * Module names set to 0 or false in the modules list of app/etc/config.php. The file is read
+     * as text, never run; a module missing from the list counts as enabled.
+     *
+     * @return array<string, true>
+     */
+    public static function disabledModules(string $projectRoot): array
+    {
+        $content = @file_get_contents($projectRoot . '/' . self::MODULE_CONFIG);
+        if (!is_string($content) || preg_match('/([\'"])modules\1\s*=>\s*(?:array\s*\(|\[)([^\])]*)/i', $content, $list) !== 1) {
+            return [];
+        }
+        preg_match_all('/([\'"])([A-Za-z0-9]+_[A-Za-z0-9]+)\1\s*=>\s*(?:0|false)\b/i', $list[2], $matches);
+
+        return array_fill_keys($matches[2], true);
+    }
+
+    /**
+     * @return array<string, string> module root => module name
+     */
+    private function allModuleRoots(string $projectRoot): array
     {
         $roots = [];
         foreach (glob($projectRoot . '/app/code/*/*/etc/module.xml') ?: [] as $moduleXml) {
@@ -119,15 +160,19 @@ final class ProjectIndexBuilder
      */
     public function fingerprint(string $projectRoot): string
     {
-        return $this->fingerprintOf($this->indexedFiles($projectRoot, $this->moduleRoots($projectRoot)));
+        $modules = $this->moduleRoots($projectRoot);
+
+        return $this->fingerprintOf($modules, $this->indexedFiles($projectRoot, $modules));
     }
 
     /**
+     * @param array<string, string> $modules module root => module name
      * @param list<array{path: string, module: string, area: string, name: string}> $files
      */
-    private function fingerprintOf(array $files): string
+    private function fingerprintOf(array $modules, array $files): string
     {
-        $fingerprint = self::INDEX_VERSION . "\n";
+        // The module list counts too: a module added, enabled or disabled changes the index without changing a file.
+        $fingerprint = self::INDEX_VERSION . "\n" . implode("\n", array_keys($modules)) . "\n";
         foreach ($files as $file) {
             $fingerprint .= $file['path'] . '|' . (int) @filesize($file['path']) . '|' . (int) @filemtime($file['path']) . "\n";
         }

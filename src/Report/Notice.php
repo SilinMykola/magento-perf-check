@@ -13,6 +13,8 @@ final class Notice
     /** Part of the analysis did not run, so the result cannot be trusted. */
     public const SOURCE_ANALYSIS_FAILURE = 'analysis-failure';
     public const SOURCE_UNTYPED_RECEIVER = 'untyped-receiver';
+    /** A finding in a module disabled in app/etc/config.php, which does not run. */
+    public const SOURCE_DISABLED_MODULE = 'disabled-module';
 
     public function __construct(
         public readonly string $source,
