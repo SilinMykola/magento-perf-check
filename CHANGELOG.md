@@ -8,6 +8,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Changed
 
+- P-DI-06, in the default set at `info`, also leaves out the lazy getter that keeps the object in its data: `$viewModel = $this->getData('key'); if (!$viewModel) { $viewModel = ObjectManager::getInstance()->get(...); $this->setData('key', $viewModel); }`, or the same without the variable. The object manager is asked once per object. In the calibration corpus this removes 2 findings of a blog module, graded as false positives; the Magento core does not change.
 - Findings in a module set to `0` in the `modules` list of `app/etc/config.php` are not reported: Magento does not run that module. Each one is listed as a `disabled-module` notice instead, and the module's configuration no longer counts for others, such as a Proxy in its `di.xml`. A module missing from the list counts as enabled. In the Magento core of the calibration project, where `Magento_TwoFactorAuth` is disabled, this removes 16 of 895 findings; on a Magento 2.3.3 project with four disabled modules, 43 of 169. **This can change a CI result.**
 
 ### Fixed

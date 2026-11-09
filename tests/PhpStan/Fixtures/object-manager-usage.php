@@ -327,3 +327,98 @@ final class FallbackNewForms
         }
     }
 }
+
+final class DataLazyGetters extends \Magento\Framework\DataObject
+{
+    public function allowed(): object
+    {
+        $model = $this->getData('style_view_model');
+        if (!$model) {
+            $model = ObjectManager::getInstance()->get(\stdClass::class);
+            $this->setData('style_view_model', $model);
+        }
+        if (!$this->getData('other')) {
+            $this->setData('other', ObjectManager::getInstance()->get(\stdClass::class));
+        }
+
+        return $model;
+    }
+
+    public function reported(string $key): ?object
+    {
+        $model = $this->getData('first');
+        if (!$model) {
+            $model = ObjectManager::getInstance()->get(\stdClass::class);
+            $this->setData('second', $model);
+        }
+        if (!$this->getData('third')) {
+            $model = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if (!$this->getData($key)) {
+            $this->setData($key, ObjectManager::getInstance()->get(\stdClass::class));
+        }
+        if (!$this->getData('fourth')) {
+            $this->setData('fourth', ObjectManager::getInstance()->get(\stdClass::class));
+            $this->warmUp();
+        }
+        if (!$model) {
+            $other = ObjectManager::getInstance()->get(\stdClass::class);
+            $this->setData('first', $model);
+        }
+        if (!$this->other('fifth')) {
+            $this->setData('fifth', ObjectManager::getInstance()->get(\stdClass::class));
+        }
+
+        return $model;
+    }
+
+    public function alsoReported(\Magento\Framework\DataObject $row): ?object
+    {
+        $twoKeys = $this->getData('a');
+        $twoKeys = $this->getData('b');
+        if (!$twoKeys) {
+            $twoKeys = ObjectManager::getInstance()->get(\stdClass::class);
+            $this->setData('a', $twoKeys);
+        }
+        if (!$this->getData('list')) {
+            $this->setData('list', [ObjectManager::getInstance()->get(\stdClass::class), $this->other('x')]);
+        }
+        $list = $this->getData('list2');
+        if (!$list) {
+            $list = [ObjectManager::getInstance()->get(\stdClass::class), $this->other('x')];
+            $this->setData('list2', $list);
+        }
+        $kept = $this->getData('kept');
+        if (!$kept) {
+            $kept = ObjectManager::getInstance()->get(\stdClass::class);
+            $this->setData('kept', $twoKeys);
+        }
+        $busy = $this->getData('busy');
+        if (!$busy) {
+            $busy = ObjectManager::getInstance()->get(\stdClass::class);
+            $this->warmUp();
+            $this->setData('busy', $busy);
+        }
+        $item = $this->getData('items', 0);
+        if (!$item) {
+            $item = ObjectManager::getInstance()->get(\stdClass::class);
+            $this->setData('items', $item);
+        }
+        $foreign = $row->getData('foreign');
+        if (!$foreign) {
+            $foreign = ObjectManager::getInstance()->get(\stdClass::class);
+            $row->setData('foreign', $foreign);
+        }
+
+        return $item;
+    }
+
+    private function other(string $key): ?object
+    {
+        return null;
+    }
+
+    private function warmUp(): void
+    {
+    }
+}
