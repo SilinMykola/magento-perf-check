@@ -38,6 +38,10 @@ final class SessionWithoutProxyRuleTest extends RuleTestCase
                 '[P-DI-01] Acme\Promo\Block\Badge receives $cookieManager (Magento\Framework\Stdlib\CookieManagerInterface) without a Proxy: the Technical guidelines (9.10) forbid injecting it into constructors. Configure Magento\Framework\Stdlib\CookieManagerInterface\Proxy for this argument in di.xml; do not type-hint the Proxy.',
                 27,
             ],
+            [
+                '[P-DI-01] Acme\Promo\Controller\Account\Edit receives $cookieManager (Magento\Framework\Stdlib\CookieManagerInterface) without a Proxy: the Technical guidelines (9.10) forbid injecting it into constructors. Configure Magento\Framework\Stdlib\CookieManagerInterface\Proxy for this argument in di.xml; do not type-hint the Proxy.',
+                75,
+            ],
         ]);
     }
 }

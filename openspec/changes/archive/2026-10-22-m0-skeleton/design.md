@@ -6,7 +6,7 @@ The repository has no code yet. See proposal.md (Why) for motivation, and specs/
 
 Facts checked on 2026-10-21 that shape the approach:
 
-- Test project `~/projects/magento-2.4.9.ddev`:
+- Test project `/path/to/magento-2.4.9`:
   - Locks `phpstan/phpstan` 1.12.33 (`require-dev: ^1.9`), `nikic/php-parser` v5.8.0 and `magento/magento-coding-standard` 40.
   - Has neither `bitexpert/phpstan-magento` nor `phpstan/extension-installer`.
   - Core lives in `vendor/magento` (about 410 packages), not in `app/code/Magento`. `app/code` holds 4 custom modules.

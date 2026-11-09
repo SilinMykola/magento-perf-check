@@ -237,6 +237,8 @@ final class LoopContextVisitor extends NodeVisitorAbstract
         if (!$node instanceof Expr\MethodCall || !$node->name instanceof Node\Identifier
             || !in_array($node->name->toLowerString(), self::LOADING_METHODS, true)
             || $node->getAttribute(self::COVERED_BY_CHAIN) === true
+            // A load the loop is left right after runs once: it must not take the one mark of its collection.
+            || $node->getAttribute(LoopExitVisitor::LEAVES_LOOP) === true
         ) {
             return;
         }

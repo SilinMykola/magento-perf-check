@@ -12,7 +12,7 @@ context: |
   Every rule ships with positive and negative fixtures and docs/rules/<ID>.md with a
   Basis section. Do not reimplement magento/magento-coding-standard checks (SPEC 4.9).
   Must support PHPStan 1.12 (Magento 2.4.9 pins phpstan/phpstan ^1.9, 1.12.33 locked).
-  Host: macOS, PHP 8.5, Composer 2.10. Test Magento at ~/projects/magento-2.4.9.ddev is
+  Host: macOS, PHP 8.5, Composer 2.10. Test Magento at /path/to/magento-2.4.9 is
   read-only: run the tool against it with --project, never install into it.
   All artifacts, code and docs in English.
 

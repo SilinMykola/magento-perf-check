@@ -39,14 +39,14 @@ Modules these depend on were not installed, so types from those stay unknown and
 
 No run failed: 22 modules, with the default set and the experimental rules P-LOOP-04, P-LOOP-06, P-COL-03, P-COL-04, X-PLG-02, X-GQL-02, P-FPC-03 and P-DI-04 on, `incomplete: false`, no notices. Two cold runs gave the same findings. Nine modules have no finding: `Experius_WysiwygDownloads`, `Fooman_PrintOrderPdf`, `Graycore_Cors`, `KiwiCommerce_CronScheduler`, `MagePal_Reindex`, `MagestyApps_WebImages`, `MSP_CmsImportExport`, `Smile_Map` and `Yireo_Whoops`.
 
-Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded once by one grader who did not write the rules, by reading the code. The table shows the findings the rules still report. No time or memory was measured, and the grader marked 25 of the 77 verdicts below as unsure, mostly because they depend on the size of a list or on tools that must see every block.
+Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded once by one grader who did not write the rules, by reading the code. The table shows the findings the rules still report. No time or memory was measured, and the grader marked 24 of the 72 verdicts below as unsure, mostly because they depend on the size of a list or on tools that must see every block.
 
 | Rule | Findings | Graded | TP | TP-low | FP |
 |---|---|---|---|---|---|
 | P-COL-03 (experimental) | 1 | 1 | 0 | 1 | 0 |
-| P-DI-01 | 49 | 12 | 0 | 12 | 0 |
+| P-DI-01 | 33 | 8 | 0 | 8 | 0 |
 | P-DI-04 (experimental) | 8 | 8 | 0 | 8 | 0 |
-| P-DI-06 | 5 | 5 | 0 | 5 | 0 |
+| P-DI-06 | 4 | 4 | 0 | 4 | 0 |
 | P-FPC-01 | 1 | 1 | 0 | 1 | 0 |
 | P-FPC-03 (experimental) | 1 | 1 | 1 | 0 | 0 |
 | P-FPC-05 | 1 | 1 | 0 | 1 | 0 |
@@ -58,13 +58,15 @@ Up to 12 findings per rule were drawn with a fixed seed (20261107) and graded on
 | X-DB-02 | 4 | 4 | 0 | 4 | 0 |
 | X-EVT-01 | 2 | 2 | 0 | 2 | 0 |
 | X-PLG-02 (experimental) | 4 | 4 | 0 | 4 | 0 |
-| **All** | **131** | **77** | **3** | **74** | **0** |
+| **All** | **114** | **72** | **3** | **69** | **0** |
 
-All 77 are correct and 3 matter in practice, the same shape as the first check: the rules are right far more often than what they report is important. P-COL-04, P-LOOP-04, P-LOOP-06 and X-GQL-02 report nothing here, so this run did not test them, nor any other rule without a row.
+All 72 are correct and 3 matter in practice, the same shape as the first check: the rules are right far more often than what they report is important. P-COL-04, P-LOOP-04, P-LOOP-06 and X-GQL-02 report nothing here, so this run did not test them, nor any other rule without a row.
 
 ## What this run changed
 
+- P-DI-01 reported 16 sessions in controllers here. Every action starts a session anyway, so it no longer reports those; the 4 of them that were graded were all TP-low.
 - P-FPC-05 reported `setHeader('Pragma', 'no-cache')` as making a response uncacheable. The grader marked this as false, and the code agrees: `Kernel::process()` and `varnish6.vcl` read `Cache-Control` from a response and never `Pragma`. The rule no longer reports it, which removes one finding here and two in the first check, each on the line after a `Cache-Control` finding in the same controller.
+- P-DI-06 reported `$objectManager = ObjectManager::getInstance()` in the constructor of `Magefan\LoginAsCustomer\Model\Login`, where the variable serves only the `?:` fallbacks. The grader marked it TP-low but unsure whether the allowed fallback covers this form. It is the same fallback written in two steps, so the rule no longer reports it, nor the fallback written as `if (!isset($param))`. In the modules of the calibration corpus this removes 6 more findings, in the Magento core 22, and in the first check none.
 
 ## What to read into it
 
@@ -92,12 +94,8 @@ All 77 are correct and 3 matter in practice, the same shape as the first check: 
 | app/code/Bold/OrderComment/Model/OrderCommentConfigProvider.php:40 | TP-low | No Proxy is configured, but this config provider is registered only for the frontend checkout config and reads the checkout session as soon as it runs on that uncached page. |
 | app/code/Magefan/LoginAsCustomer/Model/Login.php:99 | TP-low | No Proxy is configured, but the model is built only in the login-as-customer admin and frontend controllers, where a session is already running. |
 | app/code/Mageplaza/Blog/Block/Adminhtml/Category/Tree.php:69 | TP-low | No Proxy is configured, but this admin block needs the argument for its core parent class and the admin auth session is already started on every admin page. |
-| app/code/Mageplaza/Blog/Controller/Post/EditPost.php:89 | TP-low | The session is injected without a Proxy and is never read in this class, but this frontend action already gets a session from the core customer context plugin on any dispatch. |
-| app/code/Mageplaza/Blog/Controller/Post/Manage.php:136 | TP-low | The session is injected without a Proxy and is never read in this class, but this is a POST frontend action that already gets a session from the core customer context plugin. |
 | app/code/Mageplaza/Blog/Helper/Data.php:160 | TP-low | The helper starts a session without a Proxy on frontend actions, where core starts one anyway, and on the ACL-protected REST routes through BlogRepository (unsure: the REST start is real cost, but I judged that traffic to be rare). |
 | app/code/MultiSafepay/ConnectCore/Util/TaxUtil.php:64 | TP-low | The session is read only when customer group auto-assign is on, so a Proxy would help, but the class is reached only while building payment requests and refunds, which are already slow. |
-| app/code/TIG/PostNL/Controller/AbstractDeliveryOptions.php:57 | TP-low | No Proxy is configured, but this base class only serves checkout AJAX frontend actions that use the checkout session and already have a session from core. |
-| app/code/TIG/PostNL/Controller/DeliveryOptions/Timeframes.php:29 | TP-low | No Proxy is configured, but this checkout AJAX frontend action already has a session from core and works on the current quote. |
 | app/code/TIG/PostNL/Plugin/Quote/ResetDeliveryDate.php:21 | TP-low | The global plugin starts a session for add-to-cart, also in REST and GraphQL, but it reads the session at once so a Proxy would not avoid it (unsure: the start is a real cost in headless add-to-cart, which is an already expensive write). |
 | app/code/TIG/PostNL/Service/Carrier/Price/TaxedFee.php:16 | TP-low | No Proxy is configured, but its only users are checkout config classes registered in the frontend area, where the session is needed anyway. |
 | app/code/TIG/PostNL/Service/Quote/CheckIfQuoteHasOption.php:26 | TP-low | No Proxy is configured, which also undoes the Proxy given to its caller IsShippingOptionsActive, but its users are frontend checkout config classes that need the session anyway. |
@@ -120,7 +118,6 @@ All 77 are correct and 3 matter in practice, the same shape as the first check: 
 | Location | Verdict | Reason |
 |---|---|---|
 | app/code/Bazaarvoice/Connector/Model/ConfigProvider.php:599 | TP-low | The object manager is really called directly to read the module version, but only on the order pixel and in feeds, and the cost is the design issue the rule describes. |
-| app/code/Magefan/LoginAsCustomer/Model/Login.php:116 | TP-low | The code looks like the allowed constructor fallback, but the two parameters are untyped with no di.xml argument, so the object manager always supplies them (unsure: the rule's exemption might be meant to cover this form). |
 | app/code/Mageplaza/DeleteOrders/Controller/Adminhtml/Order/Delete.php:52 | TP-low | The object manager is called directly inside execute() to create the order management service, which could be injected, but this is a rare single-order admin action. |
 | app/code/MultiSafepay/ConnectCore/Util/CustomReturnUrlUtil.php:82 | TP-low | The constructor fetches a service through the object manager behind an outdated Magento 2.3 version check, so it could be injected, but the object is cheap and the effect is on design only. |
 | app/code/MultiSafepay/ConnectCore/Util/ThirdPartyPluginsUtil.php:111 | TP-low | The object manager is called directly to get classes of optional third-party modules, which cannot be constructor arguments, so an injected ObjectManagerInterface is the most that could change and the impact is nil. |

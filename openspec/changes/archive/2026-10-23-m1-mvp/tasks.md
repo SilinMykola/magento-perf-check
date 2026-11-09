@@ -26,7 +26,7 @@ Each group may be committed on its own once its tasks are done.
 
   Verify: unit tests on a fixture project cover every scenario in `specs/project-index/spec.md`, including the cache rebuild after a `di.xml` change.
 - [x] 2.2 Expose the index to PHP rules through the `magentoPerf.projectRoot` parameter and a lazily loaded service. The runner builds the index before PHPStan starts. Verify: tests cover both "Project index available to PHP rules" scenarios in `specs/phpstan-extension/spec.md`.
-- [x] 2.3 Time the index build on `~/projects/magento-2.4.9.ddev`, cold and cached. Verify: both times are recorded for `docs/runs/m1-core.md`, and the test project is unchanged (`find -newer` marker).
+- [x] 2.3 Time the index build on `/path/to/magento-2.4.9`, cold and cached. Verify: both times are recorded for `docs/runs/m1-core.md`, and the test project is unchanged (`find -newer` marker).
 - [x] 2.4 Write ADR 0004 (project index). Verify: the file exists with Context, Decision and Consequences, and cites the measured build time.
 
 ## 3. Configuration
@@ -108,7 +108,7 @@ Each group may be committed on its own once its tasks are done.
 
 ## 14. Acceptance
 
-- [x] 14.1 Run `magento-perf-check` on `~/projects/magento-2.4.9.ddev` twice: with default paths, and with `--paths=vendor/magento` (cold cache). Record findings per rule, notices, wall time and peak RSS in `docs/runs/m1-core.md`. Verify: exit code 0 or 1, and the test project is unchanged.
+- [x] 14.1 Run `magento-perf-check` on `/path/to/magento-2.4.9` twice: with default paths, and with `--paths=vendor/magento` (cold cache). Record findings per rule, notices, wall time and peak RSS in `docs/runs/m1-core.md`. Verify: exit code 0 or 1, and the test project is unchanged.
 - [x] 14.2 Spot-check up to 10 core findings per new rule, and again 10 for P-COL-02 after the fixes. Mark each TP or FP with a reason in `docs/runs/m1-core.md`, and list the rules that need a fix or a severity change before M2. Verify: every rule with findings has a spot-check table.
 - [x] 14.3 Run the full check: `composer test`, `bin/test-phpstan1`, `composer analyse`, and `openspec validate m1-mvp --strict`. Verify: all exit 0.
 

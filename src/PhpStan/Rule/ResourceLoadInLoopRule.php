@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
 use Silin\MagentoPerfCheck\PhpStan\LoopContextVisitor;
+use Silin\MagentoPerfCheck\PhpStan\LoopExitVisitor;
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -38,6 +39,7 @@ final class ResourceLoadInLoopRule implements Rule
     public function processNode(Node $node, Scope $scope): array
     {
         if ($node->getAttribute(LoopContextVisitor::IN_LOOP) !== true
+            || $node->getAttribute(LoopExitVisitor::LEAVES_LOOP) === true
             || !$node->name instanceof Node\Identifier
             || $node->name->toLowerString() !== 'load'
         ) {

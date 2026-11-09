@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
 use Silin\MagentoPerfCheck\PhpStan\LoopContextVisitor;
+use Silin\MagentoPerfCheck\PhpStan\LoopExitVisitor;
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -14,7 +15,8 @@ use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 
 /**
- * P-LOOP-03: save() or delete() of a model, repository or resource model inside a loop.
+ * P-LOOP-03: save() or delete() of a model, repository or resource model inside a loop,
+ * unless the loop is left right after it.
  *
  * @implements Rule<MethodCall>
  */
@@ -37,7 +39,10 @@ final class SaveInLoopRule implements Rule
 
     public function processNode(Node $node, Scope $scope): array
     {
-        if ($node->getAttribute(LoopContextVisitor::IN_LOOP) !== true || !$node->name instanceof Node\Identifier) {
+        if ($node->getAttribute(LoopContextVisitor::IN_LOOP) !== true
+            || $node->getAttribute(LoopExitVisitor::LEAVES_LOOP) === true
+            || !$node->name instanceof Node\Identifier
+        ) {
             return [];
         }
         $method = $node->name->toLowerString();

@@ -100,6 +100,14 @@ Calibration lowered it from `warning`: most correct findings loop over small, ca
 - **WHEN** `save()` is called once after the loop
 - **THEN** P-LOOP-03 reports nothing
 
+#### Scenario: Save followed by leaving the loop
+- **WHEN** a `foreach` runs `if ($bookmark->getCurrent()) { $this->bookmarkRepository->save($bookmark); break; }`
+- **THEN** P-LOOP-03 reports nothing
+- **WHEN** the save is followed by `return` or `throw`, or sits in a nested `if` that the `break` follows
+- **THEN** P-LOOP-03 reports nothing
+- **WHEN** a `continue` comes between the save and the `break`, or the `break` only leaves an inner loop or a `switch` that the loop goes on after
+- **THEN** P-LOOP-03 reports the call
+
 ### Requirement: P-LOOP-07 composite product type methods in a loop
 P-LOOP-07 SHALL report, as `warning`, calls in loop context to:
 - `getUsedProducts`, `getConfigurableAttributes`, `getChildrenIds`, `getParentIdsByChild`, `getUsedProductIds` or `getAssociatedProducts`, on a subtype of `Magento\Catalog\Model\Product\Type\AbstractType` or on a configurable product type resource model;
@@ -244,3 +252,24 @@ P-LOOP-04 and P-LOOP-06 SHALL treat a receiver typed `Magento\Catalog\Api\Data\P
 #### Scenario: Category IDs on the interface
 - **WHEN** a loop calls `getCategoryIds()` on a variable typed `ProductInterface`
 - **THEN** P-LOOP-05 reports nothing
+
+### Requirement: Calls the loop is left right after are not loop context
+A method call SHALL NOT count as loop context for the loop rules when it is in a statement of its own, or in a `return`, and every way on from it in the same iteration reaches `return`, `throw`, or a `break` that leaves the only loop of the function around it, with no `continue`, `break` or `goto` on the way. Such a call runs at most once per run of the loop. For P-LOOP-02 it SHALL NOT take the one finding of its collection either.
+
+#### Scenario: Load returned from a loop
+- **WHEN** a `foreach` over ids runs `return $this->productRepository->getById($id);`
+- **THEN** P-LOOP-01 reports nothing
+
+#### Scenario: Resource load before return
+- **WHEN** a `foreach` runs `$this->resource->load($product, $id);` and then `return $product;`
+- **THEN** P-LOOP-10 reports nothing
+
+#### Scenario: Collection loaded again after a leaving load
+- **WHEN** a `foreach` creates a collection, returns `$collection->getItems()` inside an `if`, and otherwise calls `$collection->getItems()` again
+- **THEN** P-LOOP-02 reports the second call
+
+#### Scenario: Calls that still count
+- **WHEN** a `break` inside a `switch` is followed, after the `switch`, by the end of the loop body
+- **THEN** the call before it counts as loop context
+- **WHEN** the call is inside `try`, in a closure, or in the condition of an `if`, or the `break` leaves only an inner loop
+- **THEN** the call counts as loop context

@@ -28,6 +28,10 @@ services:
         tags:
             - phpstan.parser.richParserNodeVisitor
     -
+        class: Silin\MagentoPerfCheck\PhpStan\LoopExitVisitor
+        tags:
+            - phpstan.parser.richParserNodeVisitor
+    -
         class: Silin\MagentoPerfCheck\PhpStan\ObjectManagerFallbackVisitor
         tags:
             - phpstan.parser.richParserNodeVisitor

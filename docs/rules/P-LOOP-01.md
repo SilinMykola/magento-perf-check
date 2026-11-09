@@ -20,6 +20,8 @@ Not reported, because no query runs: `Magento\Directory\Model\Currency::load()`,
 
 The body of a `foreach` over `array_chunk()` does not count: it runs once per batch. A loop inside it counts again.
 
+A call after which the loop is left in the same iteration does not count either: it runs at most once. The call is a statement of its own, or a `return`, and what follows it reaches `return`, `throw`, or a `break` out of the only loop around it, with no `continue`, `break` or `goto` on the way. A `break` that leaves a `switch` is passed through: what follows the `switch` decides. Inside `try`, in a closure, or in the condition of an `if`, the call still counts.
+
 ## Why it hurts performance
 
 Each `load()` is at least one database round trip, and for EAV entities such as products it is several. A repository `getById()` calls `load()` for every id that is not cached yet. A loop over 100 ids therefore runs hundreds of queries where one collection or `getList()` query would do. Adobe's extension guidance names "loading models in a loop" as a typical bottleneck.

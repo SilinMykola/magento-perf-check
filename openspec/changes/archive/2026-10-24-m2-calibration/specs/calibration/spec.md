@@ -26,11 +26,11 @@ The calibration corpus SHALL consist of two parts, each pinned to a version:
 - **THEN** the manifest records it as skipped with the reason, and the next package by downloads takes its place
 
 ### Requirement: Corpus is built without touching the test project
-The corpus SHALL be built under `var/corpus/` in this repository, a git-ignored directory. The Magento 2.4.9 part is a copy of `~/projects/magento-2.4.9.ddev`, and that project SHALL NOT be written to.
+The corpus SHALL be built under `var/corpus/` in this repository, a git-ignored directory. The Magento 2.4.9 part is a copy of `/path/to/magento-2.4.9`, and that project SHALL NOT be written to.
 
 #### Scenario: Source project unchanged
 - **WHEN** the corpus build finishes
-- **THEN** no file under `~/projects/magento-2.4.9.ddev` is newer than the start of the build
+- **THEN** no file under `/path/to/magento-2.4.9` is newer than the start of the build
 
 ### Requirement: Sampling
 For each default rule, up to 30 findings SHALL be sampled from the corpus run with a fixed, recorded seed, after test code and sample-data modules are excluded. If a rule has 30 findings or fewer, all of them are graded. The sample SHALL be stored in `docs/calibration/`.

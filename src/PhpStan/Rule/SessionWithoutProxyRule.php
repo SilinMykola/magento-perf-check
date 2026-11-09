@@ -27,6 +27,7 @@ final class SessionWithoutProxyRule implements Rule
 
     private const SESSION = 'Magento\Framework\Session\SessionManagerInterface';
     private const COOKIE_MANAGER = 'Magento\Framework\Stdlib\CookieManagerInterface';
+    private const ACTION = 'Magento\Framework\App\ActionInterface';
 
     public function __construct(private readonly ProjectIndexProvider $index)
     {
@@ -64,6 +65,12 @@ final class SessionWithoutProxyRule implements Rule
                 continue;
             }
             if (MagentoTypes::isObjectOf($type, self::SESSION)) {
+                // An action is built only to run, and every action starts a session anyway: on the
+                // frontend through the customer ContextPlugin, in the admin through the request
+                // validation (login, or form key on POST).
+                if ($class->implementsInterface(self::ACTION)) {
+                    continue;
+                }
                 $identifier = self::IDENTIFIER_SESSION;
             } elseif (MagentoTypes::isObjectOf($type, self::COOKIE_MANAGER)) {
                 $identifier = self::IDENTIFIER_COOKIE;

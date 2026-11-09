@@ -8,7 +8,7 @@
 
 ## What it catches
 
-Inside a loop, a database collection is created by `create()` and loaded by `load()`, `getItems()`, `getSize()`, `getFirstItem()` or `count()` within the same iteration. The collection can be created in the same call chain, or assigned to a variable inside the loop body. Loop context is the same as for [P-LOOP-01](P-LOOP-01.md): loop bodies, and closures passed to `array_map()`, `array_walk()` or `->walk()`. One collection gives one finding, on its first loading call. A `foreach` over `array_chunk()` is one query per batch, which is the fix, and is not reported.
+Inside a loop, a database collection is created by `create()` and loaded by `load()`, `getItems()`, `getSize()`, `getFirstItem()` or `count()` within the same iteration. The collection can be created in the same call chain, or assigned to a variable inside the loop body. Loop context is the same as for [P-LOOP-01](P-LOOP-01.md): loop bodies, and closures passed to `array_map()`, `array_walk()` or `->walk()`. One collection gives one finding, on its first loading call; a load after which the loop is left in the same iteration ([P-LOOP-01](P-LOOP-01.md) gives the conditions) runs at most once, so it is not reported and does not take that finding. A `foreach` over `array_chunk()` is one query per batch, which is the fix, and is not reported.
 
 ## Why it hurts performance
 

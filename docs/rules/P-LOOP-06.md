@@ -10,6 +10,8 @@
 
 `getAttributeText()` on a product, or `getOptionText()` on `Magento\Eav\Model\Entity\Attribute\Source\Table`, inside a loop.
 
+"Inside a loop" has the meaning given on the [P-LOOP-01 page](P-LOOP-01.md).
+
 ## Why it hurts performance
 
 The table source model creates and loads an option collection on every `getOptionText()` call, and nothing caches the result. It is the default source of a select or multiselect attribute. `getAttributeText()` goes through it.

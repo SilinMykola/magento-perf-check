@@ -19,8 +19,7 @@ Handles still reported that are personal or private by design: `mailchimp_cart_l
 
 ## P-DI-02 and P-DI-06: backward-compatible fallbacks
 
-- `if (!isset($x))` / `if (empty($x))` fallbacks in the constructor, the same pattern as the allowed `??` and `?:` (P-DI-06 rows 4, 5).
-- `ObjectManager::getInstance()` kept in a local variable, or an injected or inherited `$objectManager`/`$_objectManager`, used for the fallback (P-DI-06 23; P-DI-02 8, 16, 17, 21).
+- `ObjectManager::getInstance()` kept in a local variable, or an injected or inherited `$objectManager`/`$_objectManager`, used for the fallback (P-DI-02 8, 16, 17, 21).
 - Classes built with `new`, not by the object manager: exceptions, value objects, ZF1 and MFTF code (P-DI-02 3, 10, 22, 23).
 
 ## X-AREA-01: dead observers
@@ -34,8 +33,6 @@ See [held-out.md](held-out.md): a save behind a check on an id in the loop, and 
 ## Low impact
 
 These rules are correct but report mostly negligible cases; calibration lowers their severity through the impact share. A narrower scope could raise it again:
-- P-DI-01: sessions in frontend actions, which `ContextPlugin` starts anyway (see the [rule page](../rules/P-DI-01.md)).
-- P-DI-06: lazy BC getters that create a dependency on first use.
 - P-LOOP-03: saves in loops over small, capped sets in cron and setup.
 - P-FPC-01: blocks placed only on uncacheable pages.
 - P-LOOP-09, P-LOOP-10, P-IDX-01: all graded findings so far are admin-only or capped.

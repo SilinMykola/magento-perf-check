@@ -55,6 +55,7 @@ final class CollectionInLoopRuleTest extends RuleTestCase
             ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (load()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 208],
             ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (getItems()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 213],
             ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (load()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 218],
+            ['[P-LOOP-02] Magento\Catalog\Model\ResourceModel\Product\Collection is created and loaded (getItems()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.', 254],
         ]);
     }
 }

@@ -145,3 +145,16 @@ final class ProductInterfaces
         }
     }
 }
+
+final class LeavesLoop
+{
+    /** @param list<Product> $products */
+    public function first(array $products): string
+    {
+        foreach ($products as $product) {
+            return $product->getProductUrl() . $product->getAttributeText('color');
+        }
+
+        return '';
+    }
+}
