@@ -300,3 +300,51 @@ final class StillInLoop
         }
     }
 }
+
+final class Holder extends \Magento\Framework\Model\AbstractModel
+{
+    public function setTarget(): \Magento\Framework\DataObject
+    {
+        return new \Magento\Framework\DataObject();
+    }
+}
+
+/**
+ * @method \Magento\Framework\DataObject setOther()
+ */
+final class Annotated extends \Magento\Framework\Model\AbstractModel
+{
+}
+
+final class MagicSetters
+{
+    /**
+     * @param list<Product> $products
+     */
+    public function reported(array $products): void
+    {
+        foreach ($products as $product) {
+            $product->setStatus(1)->save();
+            $product->unsFlag()->setName('x')->save();
+        }
+    }
+
+    /**
+     * @param list<Product> $products
+     * @param list<Holder> $holders
+     * @param list<Annotated> $annotated
+     */
+    public function notReported(array $products, array $holders, array $annotated, \Magento\Framework\DataObject $row): void
+    {
+        foreach ($products as $product) {
+            $product->getStatus()->save();
+            $row->setStatus(1)->save();
+        }
+        foreach ($holders as $holder) {
+            $holder->setTarget()->save();
+        }
+        foreach ($annotated as $item) {
+            $item->setOther()->save();
+        }
+    }
+}

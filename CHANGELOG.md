@@ -12,6 +12,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Fixed
 
+- A magic `set*()` or `uns*()` of a `DataObject` subclass, such as a model, keeps the model's type, so a chain like `$model->setStatus(1)->save()` in a loop is reported. Before, PHPStan typed the magic call as `mixed` and the loop rules missed the call after it. In the calibration corpus this adds 1 P-LOOP-03 finding, in the Magento core 3; all are saves in a loop. **This can change a CI result.**
 - The project index is rebuilt when a module is added, enabled or disabled. Before, a new module with no `di.xml`, `events.xml` or other indexed file kept an outdated index from the cache.
 - Code in a trait gives one finding per rule and line, however many classes use the trait. Before, PHPStan analysed the trait once for each such class and every finding was repeated: in the calibration corpus one line of a blog module's trait gave 8 extra P-DI-06 findings. P-DI-06 now names the trait in its message, so a baseline that holds such a finding lists it again until the baseline is generated anew.
 

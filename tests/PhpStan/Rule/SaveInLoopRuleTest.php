@@ -48,6 +48,8 @@ final class SaveInLoopRuleTest extends RuleTestCase
             ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 281],
             ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 290],
             ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 297],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 327],
+            ['[P-LOOP-03] Magento\Catalog\Model\Product::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.', 328],
         ]);
     }
 }
