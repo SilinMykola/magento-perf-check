@@ -52,7 +52,7 @@
 
 ## 8. Acceptance run and docs
 
-- [x] 8.1 Run `php bin/magento-perf-check --project=$HOME/projects/magento-2.4.9.ddev` with the default paths, and record findings per rule and the run time. Verify: exit code 0 or 1 (not 2), and the test project's `git status` or file mtimes are unchanged.
+- [x] 8.1 Run `php bin/magento-perf-check --project=/path/to/magento-2.4.9` with the default paths, and record findings per rule and the run time. Verify: exit code 0 or 1 (not 2), and the test project's `git status` or file mtimes are unchanged.
 - [x] 8.2 Run the same with `--paths=vendor/magento` (core). Record findings per rule, notice counts (including unknown-type `getFirstItem` receivers), wall time and peak memory in `docs/runs/m0-core.md`. Verify: the run completes with exit code 0 or 1 and the report file holds the numbers.
 - [x] 8.3 Spot-check up to 10 core findings per rule by hand and note obvious false positives in `docs/runs/m0-core.md`. This is not calibration; it decides whether a rule needs a fix before M1. Verify: each spot-checked finding is marked TP or FP with a one-line reason.
 - [x] 8.4 Update `README.md`: installation, the `magento-perf-check` usage with `--project`/`--paths`, the three rules with their source levels, and a link to `docs/source-audit.md`. Verify: the commands in the README run as written against the test project.

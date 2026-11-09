@@ -31,7 +31,7 @@ Between releases the constant carries a `-dev` suffix (for example `0.2.0-dev`),
 Packagist serves GitHub's `git archive` zip, which honors `export-ignore`. Ignored: `tests/`, `openspec/`, `docs/calibration/`, `docs/runs/`, `docs/SPEC.md`, `docs/source-audit.md`, `docs/adr/`, `bin/calibration/`, `bin/test-phpstan1`, `phpunit.xml.dist`, `phpstan.neon.dist`, `.github/`, `AGENTS.md`, `.gitattributes`, `.gitignore`. Kept: everything users read or execute. A test runs `git archive HEAD --format=tar | tar -t` and checks the list, so a new top-level directory has to be classified on purpose. ADRs and the SPEC stay on GitHub, which the README links.
 
 ### D4. Install check in a disposable copy
-A fresh `rsync` copy of `~/projects/magento-2.4.9.ddev` under `var/install-check/` (git-ignored; rsync time not counted). In the copy:
+A fresh `rsync` copy of `/path/to/magento-2.4.9` under `var/install-check/` (git-ignored; rsync time not counted). In the copy:
 1. build the dist archive with `git archive --format=zip`, as Packagist will serve it, and offer it through a `package` repository with version 0.1.0 and a `file://` dist URL;
 2. `time composer require --dev silin/magento-perf-check:0.1.0` with the copy's own lock file;
 3. `time vendor/bin/magento-perf-check` from the copy's root.

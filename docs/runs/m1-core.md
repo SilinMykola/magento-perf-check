@@ -3,7 +3,7 @@
 - **Date:** 2026-10-22.
 - **Tool:** `magento-perf-check` from change m1-mvp, with 29 rules and PHPStan 2.3.1.
 - **Host:** Apple M4, 10 cores, 16 GB, macOS, PHP 8.5.11.
-- **Project:** `~/projects/magento-2.4.9.ddev` (`magento/magento2-base` 2.4.9, with `generated/code`, without bitexpert/phpstan-magento).
+- **Project:** `/path/to/magento-2.4.9` (`magento/magento2-base` 2.4.9, with `generated/code`, without bitexpert/phpstan-magento).
 
 This is the M1 smoke test, not a precision measurement; calibration with thresholds is M2. The spot checks decide which rules need changes before or during M2.
 
@@ -17,7 +17,7 @@ This is the M1 smoke test, not a precision measurement; calibration with thresho
 
 - **Peak RSS** is the sum over the command and all PHPStan worker processes, sampled every second.
 - **Project index:** a cold build took 1.67 s for 390 modules, and loading it from the cache took 0.04 s ([ADR 4](../adr/0004-project-index.md)).
-- **Project left unchanged:** after each run, `find ~/projects/magento-2.4.9.ddev -newer <marker>` found no files.
+- **Project left unchanged:** after each run, `find /path/to/magento-2.4.9 -newer <marker>` found no files.
 - **Faster than M0:** the M0 cold run took 227 s. Test code is now skipped by default, which removes most of `dev/tests` and every `Test/` directory.
 
 ### Problems found by this run and fixed in M1

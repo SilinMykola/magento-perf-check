@@ -33,7 +33,7 @@ The analyzed paths are usually a subset of the project (`app/code`, or one modul
   - In a project's own PHPStan setup, `ProjectIndexProvider` builds it lazily from `%currentWorkingDirectory%`.
 - **Empty index:** when no module is found, the index is empty, and index-dependent rules report nothing instead of guessing.
 
-Measured on 2026-10-22 on `~/projects/magento-2.4.9.ddev` (Apple M4, PHP 8.5.11), 390 modules:
+Measured on 2026-10-22 on `/path/to/magento-2.4.9` (Apple M4, PHP 8.5.11), 390 modules:
 - cold build: 1.67 s;
 - cached load: 0.04 s;
 - peak memory: 7 MB.

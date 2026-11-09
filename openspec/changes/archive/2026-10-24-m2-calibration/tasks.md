@@ -28,7 +28,7 @@ Groups may be committed one at a time.
 
 ## 3. Corpus
 
-- [x] 3.1 Add `composer/semver` as a dev dependency. Write `bin/calibration/build-corpus` for the Magento copy (design D1). Verify: `var/corpus/magento` exists, `var/` is git-ignored, and `find ~/projects/magento-2.4.9.ddev -newer <marker>` reports nothing.
+- [x] 3.1 Add `composer/semver` as a dev dependency. Write `bin/calibration/build-corpus` for the Magento copy (design D1). Verify: `var/corpus/magento` exists, `var/` is git-ignored, and `find /path/to/magento-2.4.9 -newer <marker>` reports nothing.
 - [x] 3.2 Select, download and place the 25 Packagist modules, recording skipped packages with reasons. Write `docs/calibration/corpus.json`. Verify: 25 modules under `var/corpus/magento/app/code`, each with name, version and SHA-256 in the manifest; `php bin/magento-perf-check --project=var/corpus/magento --paths=app/code` exits 0 or 1.
 - [x] 3.3 Mage-OS: the install hung three times, and the owner decided on 2026-10-24 to calibrate without it. Record it in the manifest as not included, with the reason. Verify: `docs/calibration/corpus.json` has a `mage-os` entry with `included: false` and the reason; the calibration spec and design reflect the decision.
 

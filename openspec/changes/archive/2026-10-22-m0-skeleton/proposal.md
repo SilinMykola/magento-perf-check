@@ -47,4 +47,4 @@ None (no existing specs).
   - `phpstan/phpstan` `^1.12 || ^2.0`.
   - Dev only: PHPUnit and `phpstan/extension-installer`.
   - bitExpert/phpstan-magento only as a suggestion (see design).
-- The test Magento project at `~/projects/magento-2.4.9.ddev` is read and never modified.
+- The test Magento project at `/path/to/magento-2.4.9` is read and never modified.

@@ -3,7 +3,7 @@
 - **Date:** 2026-10-21.
 - **Tool:** `magento-perf-check` from change m0-skeleton, running PHPStan 2.3.1.
 - **Host:** Apple M4, 10 cores, 16 GB, macOS, PHP 8.5.11.
-- **Project:** `~/projects/magento-2.4.9.ddev` (`magento/magento2-base` 2.4.9). It has a `generated/code` directory, which the runner scans. bitexpert/phpstan-magento is not installed.
+- **Project:** `/path/to/magento-2.4.9` (`magento/magento2-base` 2.4.9). It has a `generated/code` directory, which the runner scans. bitexpert/phpstan-magento is not installed.
 
 This is a smoke test of the architecture, not a precision measurement: calibration is M2. The spot checks below decide only what has to change before M1.
 
@@ -11,11 +11,11 @@ This is a smoke test of the architecture, not a precision measurement: calibrati
 
 | Command | Exit | Wall time | Peak RSS | Findings | Notices |
 |---|---|---|---|---|---|
-| `php bin/magento-perf-check --project=~/projects/magento-2.4.9.ddev` (default `app/code`, `app/design`; 4 custom modules) | 0 | 4 s | 0.4 GB | 0 | 0 |
-| `php bin/magento-perf-check --project=~/projects/magento-2.4.9.ddev --paths=vendor/magento` (about 29,700 PHP files) | 1 | 227 s | 4.5 GB | 513 | 175 |
+| `php bin/magento-perf-check --project=/path/to/magento-2.4.9` (default `app/code`, `app/design`; 4 custom modules) | 0 | 4 s | 0.4 GB | 0 | 0 |
+| `php bin/magento-perf-check --project=/path/to/magento-2.4.9 --paths=vendor/magento` (about 29,700 PHP files) | 1 | 227 s | 4.5 GB | 513 | 175 |
 
 - **How peak RSS was measured:** the summed RSS of the command and all its child processes (PHPStan's parallel workers), sampled every second. Memory per worker was not measured separately. The run used the default `--memory-limit=2G` and finished without running out of memory.
-- **Project left unchanged:** `find ~/projects/magento-2.4.9.ddev -newer <marker created before the runs>` returned no files.
+- **Project left unchanged:** `find /path/to/magento-2.4.9 -newer <marker created before the runs>` returned no files.
 
 ### Findings on core (`--paths=vendor/magento`)
 

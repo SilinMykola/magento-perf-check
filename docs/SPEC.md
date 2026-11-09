@@ -278,9 +278,9 @@ The finding message contains a short explanation and a link to the rule page.
 
 ## 9a. Development environment
 
-- Repository: [SilinMykola/magento-perf-check](https://github.com/SilinMykola/magento-perf-check), local copy `~/projects/magento-contribution-skills/magento-perf-check` (macOS, PHP 8.5 and Composer 2.10 on the host).
-- Test Magento: `~/projects/magento-2.4.9.ddev` (DDEV, PHP 8.4 in the container, Mutagen). Vendor is synced to the host.
-- **The tool runs on the host against the Magento folder**, without being installed into the project: `php bin/magento-perf-check --project=~/projects/magento-2.4.9.ddev`. Static analysis needs neither the container nor the database.
+- Repository: [SilinMykola/magento-perf-check](https://github.com/SilinMykola/magento-perf-check), developed on macOS with PHP 8.5 and Composer 2.10 on the host.
+- Test Magento: a Composer project of Magento 2.4.9 on DDEV, written as `/path/to/magento-2.4.9` in this repository (PHP 8.4 in the container, Mutagen). Vendor is synced to the host.
+- **The tool runs on the host against the Magento folder**, without being installed into the project: `php bin/magento-perf-check --project=/path/to/magento-2.4.9`. Static analysis needs neither the container nor the database.
 - **Do not install the package into a Magento project through a Composer path repository with a symlink.** Mutagen in DDEV syncs symbolic links in portable mode, and a link from `vendor` out of the project may not sync. The Composer install check is done in M3 in a separate copy of the project, through a path repository in copy mode (`"symlink": false`). In M3 a path repository turned out to mirror the whole development checkout, including the git-ignored `var/`, so the check installed the `git archive` zip instead, which is what Packagist serves ([`docs/runs/m3-install.md`](runs/m3-install.md)).
 - That is why the `--project=<path>` option is mandatory from M0: it also provides the CI mode of running without installing the module.
 

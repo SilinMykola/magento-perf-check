@@ -3,7 +3,7 @@
 - **Date:** 2026-10-24.
 - **Package:** `silin/magento-perf-check` 0.1.0, before publication.
 - **Host:** Apple M4, 10 cores, 16 GB, macOS, PHP 8.5.11, Composer 2.10.3.
-- **Project:** a copy of `~/projects/magento-2.4.9.ddev` (`magento/magento2-base` 2.4.9, locked `phpstan/phpstan` 1.12.33, two custom modules in `app/code`). The copy was made with `rsync` into `var/install-check/` without `pub/media`, `var` and `.ddev`; the copy time is not counted. The original's `composer.json` and `composer.lock` checksums were the same before and after.
+- **Project:** a copy of `/path/to/magento-2.4.9` (`magento/magento2-base` 2.4.9, locked `phpstan/phpstan` 1.12.33, two custom modules in `app/code`). The copy was made with `rsync` into `var/install-check/` without `pub/media`, `var` and `.ddev`; the copy time is not counted. The original's `composer.json` and `composer.lock` checksums were the same before and after.
 
 Acceptance criterion (SPEC section 9, M3): the package installs and works on a clean project within 2 minutes.
 
