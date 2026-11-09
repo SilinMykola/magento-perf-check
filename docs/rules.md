@@ -1,6 +1,6 @@
 # Rules
 
-33 rules in the default set and 12 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+34 rules in the default set and 12 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -18,7 +18,7 @@ Severity is the default; change it per rule in [`magento-perf-check.neon`](confi
 | [P-COL-01](rules/P-COL-01.md) | count() on a database collection instead of getSize() | warning | B |
 | [P-DI-01](rules/P-DI-01.md) | Session or cookie manager injected without a Proxy | warning (session), info (cookie manager) | A, B |
 | [P-DI-03](rules/P-DI-03.md) | Event dispatched in a constructor | error | A |
-| [P-DI-06](rules/P-DI-06.md) | Direct ObjectManager::getInstance() in PHP classes | info | A |
+| [P-DI-06](rules/P-DI-06.md) | Direct ObjectManager::getInstance() in PHP classes | warning | A |
 | [P-FPC-01](rules/P-FPC-01.md) | $_isScopePrivate in a block | info | A, B |
 | [P-FPC-05](rules/P-FPC-05.md) | No-cache or private headers on cacheable requests | warning | A, B |
 | [P-FPC-06](rules/P-FPC-06.md) | State change in a GET-only controller | error | A |
@@ -38,6 +38,7 @@ Severity is the default; change it per rule in [`magento-perf-check.neon`](confi
 | [P-LOOP-05](rules/P-LOOP-05.md) | Product getCategoryIds() inside a loop | warning | B |
 | [P-LOOP-09](rules/P-LOOP-09.md) | Repository getList() with search criteria once per item of a loop | warning | A |
 | [P-LOOP-10](rules/P-LOOP-10.md) | Resource model load() inside a loop | warning | A, B |
+| [P-LOOP-11](rules/P-LOOP-11.md) | ObjectManager get() or create() inside a loop | error | A, B |
 | [P-IDX-01](rules/P-IDX-01.md) | reindexRow()/reindexList() in request code without isScheduled() | warning | A, B |
 | [X-LAY-03](rules/X-LAY-03.md) | Block with cacheable="false" on the default, catalog or CMS handle | error | A, B |
 | [X-DB-02](rules/X-DB-02.md) | db_schema.xml index that duplicates a key or another index | info | A |

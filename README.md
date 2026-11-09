@@ -43,7 +43,7 @@ It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpsta
 
 ## What it finds
 
-45 rules: 33 on by default, 12 experimental. A few of them:
+46 rules: 34 on by default, 12 experimental. A few of them:
 
 - **Queries in loops:** `load()`, `getById()`, `getList()` or a new collection inside a loop (P-LOOP-01, P-LOOP-02, P-LOOP-09, P-LOOP-10).
 - **Full Page Cache breakers:** `cacheable="false"` on the default, catalog and CMS handles (X-LAY-03), state changes in GET-only controllers (P-FPC-06), no-cache headers on cacheable pages (P-FPC-05), cache flushes and `reindexAll()` from request code (P-FPC-09, P-FPC-10), ESI blocks on entity pages (X-LAY-02).

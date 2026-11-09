@@ -6,9 +6,14 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Added
+
+- P-LOOP-11, in the default set at `error`: `get()` or `create()` on the object manager inside a loop, through `ObjectManager::getInstance()` or an injected `ObjectManagerInterface`. Factories and proxies are left out. It also finds a `create(Model::class)->load($id)` per id, which P-LOOP-01 cannot see because the created model is untyped. In the calibration corpus it gives 10 findings, in the Magento core 79, mostly `get()` of classes named in configured pools. **This can change a CI result.**
+
 ### Changed
 
-- P-DI-06, in the default set at `info`, also leaves out the lazy getter that keeps the object in its data: `$viewModel = $this->getData('key'); if (!$viewModel) { $viewModel = ObjectManager::getInstance()->get(...); $this->setData('key', $viewModel); }`, or the same without the variable. The object manager is asked once per object. In the calibration corpus this removes 2 findings of a blog module, graded as false positives; the Magento core does not change.
+- P-DI-06 is raised from `info` to `warning` by the maintainer's decision ([calibration round 3](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-3.md)): a direct object manager call hides the dependency from DI configuration, whatever its cost. **This can change a CI result.**
+- P-DI-06 also leaves out the lazy getter that keeps the object in its data: `$viewModel = $this->getData('key'); if (!$viewModel) { $viewModel = ObjectManager::getInstance()->get(...); $this->setData('key', $viewModel); }`, or the same without the variable. The object manager is asked once per object. In the calibration corpus this removes 2 findings of a blog module, graded as false positives; the Magento core does not change.
 - Findings in a module set to `0` in the `modules` list of `app/etc/config.php` are not reported: Magento does not run that module. Each one is listed as a `disabled-module` notice instead, and the module's configuration no longer counts for others, such as a Proxy in its `di.xml`. A module missing from the list counts as enabled. In the Magento core of the calibration project, where `Magento_TwoFactorAuth` is disabled, this removes 16 of 895 findings; on a Magento 2.3.3 project with four disabled modules, 43 of 169. **This can change a CI result.**
 
 ### Fixed

@@ -71,17 +71,39 @@ namespace Magento\Framework\Event {
     }
 }
 
+namespace Magento\Framework {
+    interface ObjectManagerInterface
+    {
+        /** @param array<string, mixed> $arguments */
+        public function create(string $type, array $arguments = []): object;
+
+        public function get(string $type): object;
+
+        /** @param array<string, mixed> $configuration */
+        public function configure(array $configuration): void;
+    }
+}
+
 namespace Magento\Framework\App {
-    class ObjectManager
+    class ObjectManager implements \Magento\Framework\ObjectManagerInterface
     {
         public static function getInstance(): self
         {
             return new self();
         }
 
+        public function create(string $type, array $arguments = []): object
+        {
+            return new \stdClass();
+        }
+
         public function get(string $type): object
         {
             return new \stdClass();
+        }
+
+        public function configure(array $configuration): void
+        {
         }
     }
 }

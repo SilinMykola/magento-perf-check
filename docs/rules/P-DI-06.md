@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Severity | `info`; was `warning` until calibration: most findings are correct but low impact ([calibration](../calibration.md)) |
+| Severity | `warning`: calibration had lowered it to `info` ([calibration](../calibration.md)); the maintainer raised it again in [round 3](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-3.md) |
 | Status | default set |
 | Analyzer | PHPStan, identifier `magentoPerf.objectManagerUsage` |
 

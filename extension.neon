@@ -75,5 +75,6 @@ rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\AroundPluginRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\RepositoryListInLoopRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\ResourceLoadInLoopRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\ObjectManagerInLoopRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\CategoryIdsInLoopRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\DirectReindexRule
