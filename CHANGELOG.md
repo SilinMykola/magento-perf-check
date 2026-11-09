@@ -6,6 +6,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Fixed
+
+- Code in a trait gives one finding per rule and line, however many classes use the trait. Before, PHPStan analysed the trait once for each such class and every finding was repeated: in the calibration corpus one line of a blog module's trait gave 8 extra P-DI-06 findings. P-DI-06 now names the trait in its message, so a baseline that holds such a finding lists it again until the baseline is generated anew.
+
 ## [0.3.1] - 2026-11-09
 
 ### Fixed

@@ -295,6 +295,8 @@ final class PhpStanRunner
         $findings = [];
         $notices = [];
         $unparsable = [];
+        // Trait code is analysed once per class that uses it; the findings of the first class stand for all.
+        $firstContext = [];
         foreach ($data['files'] as $file => $fileResult) {
             $relative = $this->relative($file, $projectRoot);
             foreach ($fileResult['messages'] ?? [] as $message) {
@@ -307,6 +309,10 @@ final class PhpStanRunner
                 }
                 $match = $this->ruleFor($message['identifier'] ?? null, $text);
                 if ($match !== null) {
+                    $key = $match[0]->id . "\0" . $relative . "\0" . $line;
+                    if (($firstContext[$key] ??= $file) !== $file) {
+                        continue;
+                    }
                     $findings[] = new Finding($match[0]->id, $match[1], $relative, $line, $text);
                 } elseif (str_starts_with($text, NoticePrefix::UNTYPED_RECEIVER)) {
                     $notices[] = new Notice(Notice::SOURCE_UNTYPED_RECEIVER, $text, $relative, $line);

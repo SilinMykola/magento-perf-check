@@ -491,4 +491,117 @@ final class AnalysisIntegrityTest extends TestCase
 
         self::assertSame(['X-EVT-01'], $this->ruleIds($project));
     }
+
+    public function testTraitCodeIsReportedOnceWhateverUsesIt(): void
+    {
+        $trait = <<<'PHP'
+            <?php
+            namespace Acme\Demo\Block;
+            trait Shared
+            {
+                public function logger(): object
+                {
+                    return \Magento\Framework\App\ObjectManager::getInstance()->get(\stdClass::class);
+                }
+
+                /** @param list<int> $ids */
+                public function loadAll(\Magento\Catalog\Model\Product $product, array $ids): void
+                {
+                    foreach ($ids as $id) {
+                        $product->load($id);
+                    }
+                }
+            }
+            PHP;
+        $user = static fn (string $name): string => "<?php\nnamespace Acme\\Demo\\Block;\nclass {$name}\n{\n    use Shared;\n}\n";
+        $project = $this->project([
+            'app/code/Acme/Demo/Block/Shared.php' => $trait,
+            'app/code/Acme/Demo/Block/First.php' => $user('First'),
+            'app/code/Acme/Demo/Block/Second.php' => $user('Second'),
+        ]);
+
+        [, $stdout, $stderr] = $this->runCommand($project, ['--format=json']);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report, $stderr);
+        /** @var array{findings: list<array{ruleId: string, file: string, line: int, message: string}>} $report */
+
+        self::assertSame(
+            ['P-DI-06 app/code/Acme/Demo/Block/Shared.php:7', 'P-LOOP-01 app/code/Acme/Demo/Block/Shared.php:14'],
+            array_map(static fn (array $f): string => sprintf('%s %s:%d', $f['ruleId'], $f['file'], $f['line']), $report['findings']),
+        );
+        self::assertStringContainsString('in Acme\Demo\Block\Shared.', $report['findings'][0]['message']);
+    }
+
+    public function testTraitFindingOfOneUserOnlyIsKept(): void
+    {
+        $trait = <<<'PHP'
+            <?php
+            namespace Acme\Demo\Block;
+            trait Shared
+            {
+                /** @param list<int> $ids */
+                public function loadAll(\Magento\Catalog\Model\Product $product, array $ids): void
+                {
+                    foreach ($ids as $id) {
+                        $product->load($id);
+                        $this->model->load($id);
+                    }
+                }
+            }
+            PHP;
+        $user = static fn (string $name, string $type): string => "<?php\nnamespace Acme\\Demo\\Block;\nclass {$name}\n{\n"
+            . "    use Shared;\n    public function __construct(private {$type} \$model)\n    {\n    }\n}\n";
+        $project = $this->project([
+            'app/code/Acme/Demo/Block/Shared.php' => $trait,
+            'app/code/Acme/Demo/Block/Plain.php' => "<?php\nnamespace Acme\\Demo\\Block;\nclass Plain\n{\n    public function load(int \$id): void\n    {\n    }\n}\n",
+            'app/code/Acme/Demo/Block/Alpha.php' => $user('Alpha', 'Plain'),
+            'app/code/Acme/Demo/Block/Beta.php' => $user('Beta', '\Magento\Catalog\Model\Product'),
+        ]);
+
+        [, $stdout, $stderr] = $this->runCommand($project, ['--format=json']);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report, $stderr);
+        /** @var array{findings: list<array{ruleId: string, file: string, line: int}>} $report */
+
+        self::assertSame(
+            ['P-LOOP-01 app/code/Acme/Demo/Block/Shared.php:9', 'P-LOOP-01 app/code/Acme/Demo/Block/Shared.php:10'],
+            array_map(static fn (array $f): string => sprintf('%s %s:%d', $f['ruleId'], $f['file'], $f['line']), $report['findings']),
+        );
+    }
+
+    public function testTraitFindingsOfTwoRulesOnOneLineAreKept(): void
+    {
+        $trait = <<<'PHP'
+            <?php
+            namespace Acme\Demo\Block;
+            trait Shared
+            {
+                /** @param list<int> $ids */
+                public function loadAll(array $ids): void
+                {
+                    foreach ($ids as $id) {
+                        $this->model->load($id); \Magento\Framework\App\ObjectManager::getInstance();
+                    }
+                }
+            }
+            PHP;
+        $user = static fn (string $name, string $type): string => "<?php\nnamespace Acme\\Demo\\Block;\nclass {$name}\n{\n"
+            . "    use Shared;\n    public function __construct(private {$type} \$model)\n    {\n    }\n}\n";
+        $project = $this->project([
+            'app/code/Acme/Demo/Block/Shared.php' => $trait,
+            'app/code/Acme/Demo/Block/Plain.php' => "<?php\nnamespace Acme\\Demo\\Block;\nclass Plain\n{\n    public function load(int \$id): void\n    {\n    }\n}\n",
+            // A factory leaves out P-DI-06, a plain model leaves out P-LOOP-01: each rule fires in one class only.
+            'app/code/Acme/Demo/Block/AlphaFactory.php' => $user('AlphaFactory', '\Magento\Catalog\Model\Product'),
+            'app/code/Acme/Demo/Block/Beta.php' => $user('Beta', 'Plain'),
+        ]);
+
+        [, $stdout, $stderr] = $this->runCommand($project, ['--format=json']);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report, $stderr);
+        /** @var array{findings: list<array{ruleId: string, file: string, line: int}>} $report */
+        $found = array_map(static fn (array $f): string => sprintf('%s %s:%d', $f['ruleId'], $f['file'], $f['line']), $report['findings']);
+        sort($found);
+
+        self::assertSame(['P-DI-06 app/code/Acme/Demo/Block/Shared.php:9', 'P-LOOP-01 app/code/Acme/Demo/Block/Shared.php:9'], $found);
+    }
 }

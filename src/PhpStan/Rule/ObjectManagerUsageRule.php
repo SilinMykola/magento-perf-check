@@ -42,12 +42,15 @@ final class ObjectManagerUsageRule implements Rule
             return [];
         }
 
+        // In a trait, name the trait: the same line is analysed once for each class that uses it.
+        $owner = $scope->getTraitReflection()?->getName() ?? $class;
+
         return [
             RuleErrorBuilder::message(sprintf(
                 '[%s] ObjectManager::getInstance() is used directly%s. Inject the dependency through the constructor '
                 . '(a factory or Proxy if it must be created lazily).',
                 self::ID,
-                $class !== '' ? ' in ' . $class : '',
+                $owner !== '' ? ' in ' . $owner : '',
             ))->identifier(self::IDENTIFIER)->build(),
         ];
     }
