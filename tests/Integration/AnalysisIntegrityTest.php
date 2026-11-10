@@ -927,4 +927,28 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame(['P-API-01'], $this->ruleIds($project, [$config]));
         self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
     }
+
+    public function testLoopCallFollowsAChangedCalledMethod(): void
+    {
+        $reader = static fn (string $body): string => "<?php\nnamespace Acme\\Demo\\Model;\nclass Reader\n{\n"
+            . "    public function __construct(private \\Magento\\Catalog\\Api\\ProductRepositoryInterface \$repository)\n    {\n    }\n\n"
+            . "    public function name(int \$id): string\n    {\n        {$body}\n    }\n}\n";
+        $project = $this->project([
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Model/Reader.php' => $reader("return (string) \$id;"),
+            'app/code/Acme/Demo/Model/Listing.php' => "<?php\nnamespace Acme\\Demo\\Model;\nclass Listing\n{\n"
+                . "    public function __construct(private Reader \$reader)\n    {\n    }\n\n"
+                . "    /** @param list<int> \$ids */\n    public function names(array \$ids): array\n    {\n        \$names = [];\n"
+                . "        foreach (\$ids as \$id) {\n            \$names[] = \$this->reader->name(\$id);\n        }\n\n        return \$names;\n    }\n}\n",
+            'on.neon' => "magentoPerf:\n    rules:\n        P-LOOP-12:\n            enabled: true\n",
+        ]);
+        $config = '--config=' . $project . '/on.neon';
+
+        self::assertSame([], $this->ruleIds($project, [$config]), 'name() does not query yet');
+
+        // Only Reader.php changes, and the finding is in Listing.php: the report must follow the called method.
+        file_put_contents($project . '/app/code/Acme/Demo/Model/Reader.php', $reader("return (string) \$this->repository->getById(\$id)->getName();"));
+        self::assertSame(['P-LOOP-12'], $this->ruleIds($project, [$config]));
+        self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
+    }
 }

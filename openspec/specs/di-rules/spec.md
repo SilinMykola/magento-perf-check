@@ -35,7 +35,7 @@ P-DI-01 SHALL NOT report generated classes (names ending in `\Proxy`, `\Intercep
 P-DI-02 SHALL report, as `warning`, a `__construct` that contains anything other than the allowed statements:
 - assignments, to properties or to local variables, of parameters, literals, constants and casts of these;
 - the same assignments with a `??` or `?:` fallback whose default is one of these values, a `new` expression, or `ObjectManager::getInstance()->get(...)`;
-- `parent::__construct(...)`;
+- `parent::__construct(...)`, also written as `return parent::__construct(...)`;
 - `if` or `foreach` blocks whose only effect is throwing an exception (argument validation).
 
 One finding per constructor SHALL point at the first offending statement.
@@ -59,6 +59,10 @@ One finding per constructor SHALL point at the first offending statement.
 #### Scenario: Fallback to a local variable
 - **WHEN** a constructor assigns `$resolver = $resolver ?? ObjectManager::getInstance()->get(Resolver::class)` before using it
 - **THEN** P-DI-02 reports nothing for that statement
+
+#### Scenario: Parent call with a return
+- **WHEN** a constructor contains only `return parent::__construct($context);`
+- **THEN** P-DI-02 reports nothing
 
 ### Requirement: P-DI-03 event dispatched in constructor
 P-DI-03 SHALL report, as `error`, a call to `dispatch()` on `Magento\Framework\Event\ManagerInterface` inside `__construct`.

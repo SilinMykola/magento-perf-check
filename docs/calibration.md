@@ -9,6 +9,7 @@ Defined in [`calibration/corpus.json`](https://github.com/SilinMykola/magento-pe
 - Magento 2.4.9 core (`vendor/magento`)
 - 25 most-downloaded `magento2-module` packages from Packagist that install on that version (`app/code` of the corpus copy)
 - Not included: Mage-OS. composer create-project mage-os/project-community-edition from https://repo.mage-os.org/ hung three times on 2026-10-23/24 on stalled downloads (no CPU use, no file written for 10 minutes), also with COMPOSER_MAX_PARALLEL_HTTP=4 and with a GitHub token. The owner decided to calibrate without it; Mage-OS is a fork of the same core.
+- Not used on this page: a second part, `extended`, with the next 100 modules and Hyvä Theme 1.5.3, which [round 6](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-6.md) uses for the experimental rules
 
 Test code is excluded (the tool's default), and so are `*-sample-data` modules at sampling time.
 

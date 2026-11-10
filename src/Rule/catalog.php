@@ -229,6 +229,12 @@ return [
         $b('lib/internal/Magento/Framework/ObjectManager/ObjectManager.php#L57-L60', 'create() builds a new instance through the factory on every call.'),
         $b('lib/internal/Magento/Framework/ObjectManager/ObjectManager.php#L68-L76', 'get() builds the shared instance on the first call and returns it from _sharedInstances afterwards.'),
     ], ['magentoPerf.loopObjectManager' => null]),
+    new RuleDefinition('P-LOOP-12', 'Method that runs a query, called inside a loop', Severity::Warning, RuleStatus::Experimental, [
+        $a($codeReview, '"Are queries executed in a loop? This loop can be outside of the edited files."'),
+        $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),
+        $b('lib/internal/Magento/Framework/Model/AbstractModel.php#L564-L568', 'AbstractModel::load() delegates to the resource model: one database round trip per call.'),
+        $b('lib/internal/Magento/Framework/Model/ResourceModel/Db/AbstractDb.php#L323-L333', 'AbstractDb::load() runs fetchRow() on every call.'),
+    ], ['magentoPerf.loopCallQuery' => null]),
     new RuleDefinition('P-LOOP-05', 'Product getCategoryIds() inside a loop', Severity::Warning, RuleStatus::Default, [
         $b('app/code/Magento/Catalog/Model/Product.php#L753-L769', 'getCategoryIds() asks the resource model when category_ids is not set.'),
         $b('app/code/Magento/Catalog/Model/ResourceModel/Product/CategoryLink.php#L54-L69', 'Each call runs one fetchAll for one product id.'),

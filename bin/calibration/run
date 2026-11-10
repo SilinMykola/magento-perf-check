@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Runs magento-perf-check on the three parts of the calibration corpus and stores the
 # JSON reports, with the tool commit, wall time and peak RSS, in docs/calibration/runs/.
-# Usage: run [core] [packagist] [mage-os]   (no argument: all three)
+# Usage: run [core] [packagist] [extended] [mage-os]   (no argument: all of them)
+# The extended run enables the experimental rules too and writes to runs/extended/, apart from the
+# round 1 runs that bin/calibration/sample and report read (change extend-calibration-corpus).
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/../.." && pwd -P)"
@@ -13,6 +15,7 @@ commit="$(git -C "$root" rev-parse --short HEAD)"
 runs=(
     "core|var/corpus/magento|vendor/magento"
     "packagist|var/corpus/magento|app/code"
+    "extended|var/corpus/extended|app/code,app/design"
     "mage-os|var/corpus/mage-os|vendor/mage-os"
 )
 # Mage-OS is not part of the M2 corpus (docs/calibration/corpus.json); run it only when installed.
@@ -28,8 +31,27 @@ for run in "${runs[@]}"; do
         echo "skipping $name: $project is not installed" >&2
         continue
     fi
+    config=()
+    out="$root/docs/calibration/runs"
+    if [ "$name" = extended ]; then
+        out="$out/extended"
+        mkdir -p "$out"
+        config_dir="$(mktemp -d)"
+        # The directory goes also when the generator below fails under set -e.
+        trap 'rm -rf "$config_dir"' EXIT
+        config_file="$config_dir/all-rules.neon"
+        php -r 'require $argv[1] . "/vendor/autoload.php";
+            $rules = "";
+            foreach (require $argv[1] . "/src/Rule/catalog.php" as $rule) {
+                if ($rule->status === Silin\MagentoPerfCheck\Rule\RuleStatus::Experimental) {
+                    $rules .= "        " . $rule->id . ":\n            enabled: true\n";
+                }
+            }
+            echo "magentoPerf:\n    rules:\n" . $rules;' "$root" > "$config_file"
+        config=(--config="$config_file")
+    fi
     start=$(date +%s)
-    php "$root/bin/magento-perf-check" --project="$root/$project" --paths="$paths" --format=json > "$out/$name.json" &
+    php "$root/bin/magento-perf-check" --project="$root/$project" --paths="$paths" ${config[@]+"${config[@]}"} --format=json > "$out/$name.json" &
     pid=$!
     peak=0
     # Sum the RSS of the command and its children (PHPStan workers) once per second.

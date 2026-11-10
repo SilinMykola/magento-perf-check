@@ -202,5 +202,858 @@
     "mage-os": {
         "included": false,
         "reason": "composer create-project mage-os/project-community-edition from https://repo.mage-os.org/ hung three times on 2026-10-23/24 on stalled downloads (no CPU use, no file written for 10 minutes), also with COMPOSER_MAX_PARALLEL_HTTP=4 and with a GitHub token. The owner decided to calibrate without it; Mage-OS is a fork of the same core."
+    },
+    "extended": {
+        "selection": "the next 100 packages of type magento2-module by downloads after the packagist part, chosen the same way, Hyvä packages included; a package whose registration.php holds more than the standard register() call is skipped",
+        "date": "2026-11-10",
+        "paths": [
+            "app/code",
+            "app/design"
+        ],
+        "hyva": [
+            {
+                "name": "hyva-themes/magento2-theme-module",
+                "version": "1.5.3",
+                "commit": "6c922be3cd2e9ff9512447c681f388ca829a9c25",
+                "source": "https://codeload.github.com/hyva-themes/magento2-theme-module/tar.gz/refs/tags/1.5.3",
+                "path": "app/code/Hyva/Theme",
+                "sha256": "9eda6af8d5766490d1b716fdbfa20883ad43631a873d6c780b87bf4bfc5ceb3a",
+                "removed": [
+                    "cli_commands.php"
+                ]
+            },
+            {
+                "name": "hyva-themes/magento2-base-layout-reset",
+                "version": "2.0.5",
+                "commit": "f39cf05a0e69c4ece318703c567a91d585ad89f7",
+                "source": "https://codeload.github.com/hyva-themes/magento2-base-layout-reset/tar.gz/refs/tags/2.0.5",
+                "path": "app/code/Hyva/BaseLayoutReset",
+                "sha256": "b207a7c35064f1dd81a7b8c78e138a88c2c1c482f82c8881cb478691050eadd2"
+            },
+            {
+                "name": "hyva-themes/magento2-email-module",
+                "version": "1.0.6",
+                "commit": "aa5dc55e5e66cadf578bdb339a5d76b2a5a94097",
+                "source": "https://codeload.github.com/hyva-themes/magento2-email-module/tar.gz/refs/tags/1.0.6",
+                "path": "app/code/Hyva/Email",
+                "sha256": "79d53c189988db98d8fd6501c2ff4b36da2e9fd5ed69726a510427082451d970"
+            },
+            {
+                "name": "hyva-themes/magento2-order-cancellation-webapi",
+                "version": "1.0.1",
+                "commit": "e3b2e4d74bc2501c926ce5b8f9ac126f523bd07e",
+                "source": "https://codeload.github.com/hyva-themes/magento2-order-cancellation-webapi/tar.gz/refs/tags/1.0.1",
+                "path": "app/code/Hyva/OrderCancellationWebapi",
+                "sha256": "a9c476286d1ca8123c8183174a03405ba154913b9a72468485e498e69b612582"
+            },
+            {
+                "name": "hyva-themes/magento2-default-theme",
+                "version": "1.5.3",
+                "commit": "c74658fdeddfb03255516b1ff3cf77b940b8dede",
+                "source": "https://codeload.github.com/hyva-themes/magento2-default-theme/tar.gz/refs/tags/1.5.3",
+                "path": "app/design/frontend/Hyva/default",
+                "sha256": "43c110770d355d3ec2ab696ca7c833d17c0c7089795da7cf6d50291515799cf0"
+            }
+        ],
+        "modules": [
+            {
+                "name": "hyva-themes/magento2-graphql-view-model",
+                "version": "1.0.5",
+                "module": "Hyva_GraphqlViewModel",
+                "downloads": 3450542,
+                "sha256": "0573da630a120917f8c31885152e89511a017129c26588436d9fdec02e7b6314"
+            },
+            {
+                "name": "hyva-themes/magento2-graphql-tokens",
+                "version": "1.0.4",
+                "module": "Hyva_GraphqlTokens",
+                "downloads": 3427049,
+                "sha256": "88284a61a4c9698e7b81c89d2424cd7cf3c8f16b0ce311e832d17c703fbd5866"
+            },
+            {
+                "name": "magepal/magento2-googletagmanager",
+                "version": "3.0.2",
+                "module": "MagePal_GoogleTagManager",
+                "downloads": 1672686,
+                "sha256": "79373ea9c2ecdf5b2e4885a610d7731c9c388eb727924c3b42bbdeb7640dc0c1"
+            },
+            {
+                "name": "magmodules/magento2-channable",
+                "version": "1.25.0",
+                "module": "Magmodules_Channable",
+                "downloads": 1672337,
+                "sha256": "183e607c77e96e2b213dcfe2464ef619bcdc847e10a00eb7fa4a37e990e99977"
+            },
+            {
+                "name": "ampersand/magento2-disable-stock-reservation",
+                "version": "1.3.4",
+                "module": "Ampersand_DisableStockReservation",
+                "downloads": 1669701,
+                "sha256": "2c58f1e80d8b508ed35924891193cea63682ca7717393f74924c2b8e65351acd"
+            },
+            {
+                "name": "mollie/magento2-hyva-compatibility",
+                "version": "v3.2.0",
+                "module": "Mollie_HyvaCompatibility",
+                "downloads": 1480746,
+                "sha256": "4d1fb53d6a283af7cbf9e9db78d2db0080fd64f6ca82a7c01fb898b53757a764"
+            },
+            {
+                "name": "yireo/magento2-webp2",
+                "version": "0.14.3",
+                "module": "Yireo_Webp2",
+                "downloads": 1436979,
+                "sha256": "3fbeb45153ec21d7ccf33bb67b8df6446d489c2245d13d001599e98e26345471"
+            },
+            {
+                "name": "yireo/magento2-next-gen-images",
+                "version": "0.5.16",
+                "module": "Yireo_NextGenImages",
+                "downloads": 1373574,
+                "sha256": "47ccdd424d4db36397aaa958368a2b22799ef443b9faaff817167a32199a9835"
+            },
+            {
+                "name": "msp/common",
+                "version": "0.1.7",
+                "module": "MSP_Common",
+                "downloads": 1366356,
+                "sha256": "8e4941ea74a1216de7c1b0a765cc94de9b42b8a47361e2b68308e83c32137456"
+            },
+            {
+                "name": "firegento/fastsimpleimport",
+                "version": "2.1.1",
+                "module": "FireGento_FastSimpleImport",
+                "downloads": 1280545,
+                "sha256": "ca9fa56f548597c433e2bcb8ae432c429a6d40acb72eb0f3a6a9ede85fa7c4c0"
+            },
+            {
+                "name": "mageplaza/magento-2-social-login",
+                "version": "4.1.24",
+                "module": "Mageplaza_SocialLogin",
+                "downloads": 1258735,
+                "sha256": "0da40668a1f21613dfba9aaefceb01c026059fd7be43edc25aecff42cb5c7066"
+            },
+            {
+                "name": "mageplaza/module-google-recaptcha",
+                "version": "4.0.5",
+                "module": "Mageplaza_GoogleRecaptcha",
+                "downloads": 1182905,
+                "sha256": "7d27d210d51e65b0eb58bf50b6b13abb69ba6ad136c84461963731c7544bde83"
+            },
+            {
+                "name": "yireo/magento2-googletagmanager2",
+                "version": "3.10.8",
+                "module": "Yireo_GoogleTagManager2",
+                "downloads": 1161411,
+                "sha256": "ccd629949d03e37f5e572c2d45832194567b3aa0b6fdbd810bc5c619d075d989"
+            },
+            {
+                "name": "shipperhq/module-shipper",
+                "version": "20.61.11",
+                "module": "ShipperHQ_Shipper",
+                "downloads": 1097224,
+                "sha256": "bf37b5152ea570c76ad6cdd6c8c67a6529d3f0fffa2296a4d0ef6773ebb73014"
+            },
+            {
+                "name": "smile/module-elasticsuite-cms-search",
+                "version": "2.12.0",
+                "module": "Smile_ElasticsuiteCms",
+                "downloads": 1036599,
+                "sha256": "4e65e0313ad8fa0c7653314d4fbc77305b62ab3be8214492d60f543eb31dfeb3"
+            },
+            {
+                "name": "fooman/emailattachments-implementation-m2",
+                "version": "107.6.0",
+                "module": "Fooman_EmailAttachments",
+                "downloads": 1015858,
+                "sha256": "cdbe60f51d3fe83e5cc93395c60a74f3ffc92eb7da418876edc38f62d722a63d"
+            },
+            {
+                "name": "trustpilot/module-reviews",
+                "version": "2.6.580",
+                "module": "Trustpilot_Reviews",
+                "downloads": 997907,
+                "sha256": "cb52eb19c1c7dbed365a0c3885576fad7e3a576745bea4becfefbc96a6bef9bd"
+            },
+            {
+                "name": "experius/module-wysiwygdownloads",
+                "version": "1.3.0",
+                "module": "Experius_WysiwygDownloads",
+                "downloads": 954287,
+                "sha256": "a6528100d4ce57d70ee34ddd9ada8f060716c8ed54ecf0c28720a54a57855d50"
+            },
+            {
+                "name": "yireo/magento2-csp-utilities",
+                "version": "1.0.2",
+                "module": "Yireo_CspUtilities",
+                "downloads": 933582,
+                "sha256": "31b4838ff5882d28cb2d3500a5304920f042a2e07d79ad8ff95da5b11ca98608"
+            },
+            {
+                "name": "owebia/magento2-module-advanced-shipping",
+                "version": "6.1.5",
+                "module": "Owebia_AdvancedShipping",
+                "downloads": 903186,
+                "sha256": "7e23d9c1c15a4803cf7f9f7c22b92044c893ee6244779ed7b45ef8a631a63846"
+            },
+            {
+                "name": "baldwin/magento2-module-url-data-integrity-checker",
+                "version": "v1.6.1",
+                "module": "Baldwin_UrlDataIntegrityChecker",
+                "downloads": 898775,
+                "sha256": "b65239bee73e8d1bc6843f21cd92b823a108ecaa07eb05727dc1e85972065872"
+            },
+            {
+                "name": "boldcommerce/magento2-ordercomments",
+                "version": "1.9.0",
+                "module": "Bold_OrderComment",
+                "downloads": 842259,
+                "sha256": "821256094fbbb36251c4a7c2685329c6487f38e08e97695e38687eb5f37f317b"
+            },
+            {
+                "name": "yireo/magento2-whoops",
+                "version": "0.2.5",
+                "module": "Yireo_Whoops",
+                "downloads": 825700,
+                "sha256": "e36754165dc728cb36233df9d85b1e0c7d59df4d3eec5a63762f1af463516b80"
+            },
+            {
+                "name": "mageplaza/magento-2-blog-extension",
+                "version": "4.3.5",
+                "module": "Mageplaza_Blog",
+                "downloads": 821376,
+                "sha256": "f93a729186341634ecfe97fba0811688f39f0e195417bb6b822087fb7cbd6113"
+            },
+            {
+                "name": "fooman/printorderpdf-implementation-m2",
+                "version": "105.5.0",
+                "module": "Fooman_PrintOrderPdf",
+                "downloads": 783485,
+                "sha256": "8a4e51a0d98850e096c4fb4c7093bba888fa10ec63bbc14ca204f87a7bbec486"
+            },
+            {
+                "name": "multisafepay/magento2-core",
+                "version": "3.21.0",
+                "module": "MultiSafepay_ConnectCore",
+                "downloads": 779809,
+                "sha256": "21fa41fe40f277950855fd365f332288b693843883de4bf1a655943eb72878e8"
+            },
+            {
+                "name": "magepal/magento2-reindex",
+                "version": "1.2.1",
+                "module": "MagePal_Reindex",
+                "downloads": 776888,
+                "sha256": "f6fbdeaf5e831fa9b11c077d62d58d9b8973648018089b54b53489d4a206636c"
+            },
+            {
+                "name": "multisafepay/magento2-frontend",
+                "version": "3.2.0",
+                "module": "MultiSafepay_ConnectFrontend",
+                "downloads": 775810,
+                "sha256": "ba6eb63f6dad5a2abae948a9ebf426744f09ea1868e9e76d324242e05a1ef60e"
+            },
+            {
+                "name": "magestyapps/module-web-images",
+                "version": "1.2.1",
+                "module": "MagestyApps_WebImages",
+                "downloads": 728987,
+                "sha256": "cea3e4e48179e84d49768b21e99ece7b4cd1fde78f392ce64e603bca03b204a4"
+            },
+            {
+                "name": "graycore/magento2-cors",
+                "version": "v2.1.3",
+                "module": "Graycore_Cors",
+                "downloads": 711945,
+                "sha256": "7917e4f97c2a6c297db67c043d08e7de978f0ae139484198ed6a7c95d88c35aa"
+            },
+            {
+                "name": "mageplaza/module-delete-orders",
+                "version": "4.0.4",
+                "module": "Mageplaza_DeleteOrders",
+                "downloads": 675154,
+                "sha256": "880c33bda73d471afa08bc9f62a3b0ecee93d0e90dcb10ac1b97d2e7b5b1f236"
+            },
+            {
+                "name": "msp/devtools",
+                "version": "1.2.18",
+                "module": "MSP_DevTools",
+                "downloads": 673132,
+                "sha256": "278bfaf590a7a188ec33bf0171be21ea94e4ee886ffba7677094351f7bcddde3"
+            },
+            {
+                "name": "magefan/module-login-as-customer",
+                "version": "2.3.6",
+                "module": "Magefan_LoginAsCustomer",
+                "downloads": 647282,
+                "sha256": "8900f99ffffcd0529c9ddbfeb4066350f2b1fb3335197b457f43560cab8ebebd"
+            },
+            {
+                "name": "tig/postnl-magento2",
+                "version": "1.27",
+                "module": "TIG_PostNL",
+                "downloads": 615903,
+                "sha256": "ab9478740aaf14de9654f225a612d1e32e867ca59fb35176a2b77fea880e32df"
+            },
+            {
+                "name": "bazaarvoice/bazaarvoice-magento2-ext",
+                "version": "9.1.11",
+                "module": "Bazaarvoice_Connector",
+                "downloads": 612220,
+                "sha256": "53f57e6b5f3e88857d8803e82afb24c3019b8f0fef562172bd7f5114f9b4caf6"
+            },
+            {
+                "name": "kiwicommerce/module-cron-scheduler",
+                "version": "1.0.0",
+                "module": "KiwiCommerce_CronScheduler",
+                "downloads": 610110,
+                "sha256": "773b5ddb25a4a3a1d392144209f39c8b5f6a7925d76b87e561ec0af974415d35"
+            },
+            {
+                "name": "honl/magento2-templatehints",
+                "version": "0.6.0",
+                "module": "Ho_Templatehints",
+                "downloads": 606240,
+                "sha256": "ea2c426bffcd01d5bbca2842d20cb296aa335e6d7b19162d4ac773771746bb78"
+            },
+            {
+                "name": "msp/cmsimportexport",
+                "version": "1.1.2",
+                "module": "MSP_CmsImportExport",
+                "downloads": 591082,
+                "sha256": "9320752553b709aa6ec881158374aebef66abe4988f8f0b73e71f1e2ed4e7f1a"
+            },
+            {
+                "name": "smile/module-map",
+                "version": "2.1.3",
+                "module": "Smile_Map",
+                "downloads": 578048,
+                "sha256": "09cc3624eac25cae5f13b90b4b95cbe07790cf1965aacac6128dc2fc4af67ea3"
+            },
+            {
+                "name": "smile/module-retailer",
+                "version": "2.0.3",
+                "module": "Smile_Retailer",
+                "downloads": 564877,
+                "sha256": "5b2bd39f1cf4888cbb849df099c5e4160860c8cf31a8aa121da3e12b3b1c5b79"
+            },
+            {
+                "name": "yireo/magento2-checkouttester2",
+                "version": "1.0.4",
+                "module": "Yireo_CheckoutTester2",
+                "downloads": 564139,
+                "sha256": "b1eb2a731ac6d830c417b23453991373d7729460a86f0027e5a78f109410062e"
+            },
+            {
+                "name": "mageplaza/magento-2-seo-extension",
+                "version": "4.4.10",
+                "module": "Mageplaza_Seo",
+                "downloads": 560596,
+                "sha256": "78c0ecc21cf1c8e557906fa02793b6fab87b7a2c9cdd9be5d2f9d4c760c6d055"
+            },
+            {
+                "name": "mageplaza/module-banner-slider",
+                "version": "4.1.2",
+                "module": "Mageplaza_BannerSlider",
+                "downloads": 559689,
+                "sha256": "9cb78ef2a35506352c339d3ce2b5e958cd7b12b2c5222daa665d0c9e5b8e1da0"
+            },
+            {
+                "name": "smile/module-store-locator",
+                "version": "2.2.3",
+                "module": "Smile_StoreLocator",
+                "downloads": 554919,
+                "sha256": "cf05d9cdcd148eb46fb75b353039ab7ab925e902f7e4dd6384dc8db50c317e5c"
+            },
+            {
+                "name": "swissup/module-rtl",
+                "version": "1.3.11",
+                "module": "Swissup_Rtl",
+                "downloads": 553463,
+                "sha256": "d8ddb15fc073feb168e7a5589e5c0f2b4ca73316a75f8abc926a6a0e88e97cfc"
+            },
+            {
+                "name": "veriteworks/cookiefix",
+                "version": "3.2.2",
+                "module": "Veriteworks_CookieFix",
+                "downloads": 515358,
+                "sha256": "48b5b5110002afb64c0d9ee3223cf04c8f0d3233ee74572b9261ba8944aece41"
+            },
+            {
+                "name": "swissup/module-codemirror",
+                "version": "1.1.21",
+                "module": "Swissup_Codemirror",
+                "downloads": 514461,
+                "sha256": "dff5164194ce07d2c2871ccdbc9d6cdbd0ff342c3e42386e9f613ed602850a49"
+            },
+            {
+                "name": "redchamps/module-clean-admin-menu",
+                "version": "1.1.7",
+                "module": "RedChamps_CleanMenu",
+                "downloads": 504277,
+                "sha256": "9a0d5049978b0c00866d07dffdd7ab72ad4f0576012c659cb9d08dbe529e5e3f"
+            },
+            {
+                "name": "taxjar/module-taxjar",
+                "version": "4.0.2",
+                "module": "Taxjar_SalesTax",
+                "downloads": 500596,
+                "sha256": "3191424c3364dd87311d294dfabd9bb56f0e549a5ee7796883e297254e6cd8a1"
+            },
+            {
+                "name": "shipperhq/module-address-autocomplete",
+                "version": "21.1.2",
+                "module": "ShipperHQ_AddressAutocomplete",
+                "downloads": 485340,
+                "sha256": "30fcc97b5396c5e01a3b206c6c3de15dac232019f20678fb0ab5902064484af2"
+            },
+            {
+                "name": "yireo/magento2-emailtester2",
+                "version": "1.8.2",
+                "module": "Yireo_EmailTester2",
+                "downloads": 483379,
+                "sha256": "46d637a4efd0025fd3d28abad57656000661318121f6e2b3f0f0aa106847df3f"
+            },
+            {
+                "name": "swissup/module-marketplace",
+                "version": "1.12.1",
+                "module": "Swissup_Marketplace",
+                "downloads": 477521,
+                "sha256": "cf17d0db2847f2405067d6be61c95c0d6f0fe4116f910ffc8334c79baa440178"
+            },
+            {
+                "name": "payone-gmbh/magento-2",
+                "version": "3.17.2",
+                "module": "Payone_Core",
+                "downloads": 473978,
+                "sha256": "6e544ef9c105062be4e0f664dae3a4a6673d7f104bb4c5079ebc235e17464d5f"
+            },
+            {
+                "name": "payu/magento24-payment-gateway",
+                "version": "2.2.2",
+                "module": "PayU_PaymentGateway",
+                "downloads": 471455,
+                "sha256": "aae89ea0bf95c60bec324b7d66521b22fa3f4a5376c333a3161b370c0fbfa614"
+            },
+            {
+                "name": "hyva-themes/module-magento2-admin",
+                "version": "1.1.28",
+                "module": "Hyva_Admin",
+                "downloads": 463088,
+                "sha256": "ad1cd71642831777f2f8a863fd99e1a024f54268ff1c811c8fa4fea890c4845e"
+            },
+            {
+                "name": "yireo/magento2-disable-service-worker-in-admin",
+                "version": "0.0.2",
+                "module": "Yireo_DisableServiceWorkerInAdmin",
+                "downloads": 456861,
+                "sha256": "46399adda247b1165de041265aa8e4b2aa6fcdef133997ad88d3829747d4a7cc"
+            },
+            {
+                "name": "bitexpert/magento2-force-customer-login",
+                "version": "5.5.0",
+                "module": "BitExpert_ForceCustomerLogin",
+                "downloads": 447679,
+                "sha256": "b7d086bd9a03121c851af19c5dcac830a758712d56b3079b6781fdfe19181306"
+            },
+            {
+                "name": "buckaroo/magento2",
+                "version": "v2.7.5",
+                "module": "Buckaroo_Magento2",
+                "downloads": 447592,
+                "sha256": "08d42a5626a97702910df37fccda1cd4d2dec5f4ece76f3e521a9779592ff3f8"
+            },
+            {
+                "name": "mage-os/module-theme-adminhtml-switcher",
+                "version": "1.2.1",
+                "module": "MageOS_ThemeAdminhtmlSwitcher",
+                "downloads": 441065,
+                "sha256": "930ad3575024dab4f321558ce5e42125d3eda0b52748551ddd0b29a016fd0f6d"
+            },
+            {
+                "name": "dotdigital/dotdigital-magento2-extension",
+                "version": "4.38.0",
+                "module": "Dotdigitalgroup_Email",
+                "downloads": 432712,
+                "sha256": "2eba9196e68b47060f6f5c028f30c031610a54efeebc5c1bb869a8e0decaf008"
+            },
+            {
+                "name": "kiwicommerce/module-admin-activity",
+                "version": "1.0.1",
+                "module": "KiwiCommerce_AdminActivity",
+                "downloads": 423907,
+                "sha256": "1434488a760ecb00abf18412d0ea27e3107a5b122bc5aa7613ac3f7c03e7827b"
+            },
+            {
+                "name": "postcode-nl/api-magento2-module",
+                "version": "4.2.1",
+                "module": "PostcodeEu_AddressValidation",
+                "downloads": 401805,
+                "sha256": "82979b93e617ad4edadc8b14ba2f9876ff9d4a797731f2ba8cebe09ece68f059"
+            },
+            {
+                "name": "ctidigital/magento2-configurator",
+                "version": "4.0.1",
+                "module": "CtiDigital_Configurator",
+                "downloads": 400844,
+                "sha256": "0160de3cc88e4fdfd4d563b57d518100b255a4577b85b03d6f4e81e7db4a1902"
+            },
+            {
+                "name": "netresearch/config-fields-m2",
+                "version": "1.4.1",
+                "module": "Netresearch_ConfigFields",
+                "downloads": 396608,
+                "sha256": "1b50c7ff49ff3e43bf877f6ee8d0f333077e052892084f9eda5fec69e2ed3394"
+            },
+            {
+                "name": "mageplaza/module-ajax-layered-navigation",
+                "version": "4.1.6",
+                "module": "Mageplaza_AjaxLayer",
+                "downloads": 391255,
+                "sha256": "15342f39f7bf139eb512099f0efe74a36c4d9dad7bd2d7d66b0c166f26dafc06"
+            },
+            {
+                "name": "yireo/magento2-disablelog2",
+                "version": "0.0.7",
+                "module": "Yireo_DisableLog2",
+                "downloads": 390583,
+                "sha256": "fc321de106a34f6c3cc102ec45b065e0c38f8c0f1cece994377efe3ca2259b46"
+            },
+            {
+                "name": "firegento/magesetup2",
+                "version": "v1.3.0",
+                "module": "FireGento_MageSetup",
+                "downloads": 378450,
+                "sha256": "f2abb313e981da575a3f1b6f86162f1008acb8df33d9ba63ac995953c89891f0"
+            },
+            {
+                "name": "smile/module-store-delivery",
+                "version": "2.0.1",
+                "module": "Smile_StoreDelivery",
+                "downloads": 376387,
+                "sha256": "f1a97a671b1215693deef16b142e119090e3be1c114de58574406ce530a972a0"
+            },
+            {
+                "name": "swissup/module-tippyjs",
+                "version": "6.0.1",
+                "module": "Swissup_Tippyjs",
+                "downloads": 376029,
+                "sha256": "f0ee3e9dbeb28b2ecb415eb793c3081c1b14b7ce664436fe2bc7dcfe6ae50928"
+            },
+            {
+                "name": "vpietri/adm-quickdevbar",
+                "version": "0.4.0",
+                "module": "ADM_QuickDevBar",
+                "downloads": 375816,
+                "sha256": "3fce6283cd8b30cef8e330ff55fd2114ff4ab82479a571d64bf2a4cefb5a4e5c"
+            },
+            {
+                "name": "reviewscouk/reviews",
+                "version": "0.1.1",
+                "module": "Reviewscouk_Reviews",
+                "downloads": 374104,
+                "sha256": "e1c58882d0c9fe1bb7b1ec4d73ca7362a5339151020822156965c5641676a812"
+            },
+            {
+                "name": "mageplaza/module-geoip",
+                "version": "4.0.4",
+                "module": "Mageplaza_GeoIP",
+                "downloads": 371014,
+                "sha256": "1e2129c1a601f869b9cab2b68f3cd1f39260125b33794d057024b38a7ea0b98c"
+            },
+            {
+                "name": "magepow/core",
+                "version": "1.1.2",
+                "module": "Magepow_Core",
+                "downloads": 366634,
+                "sha256": "139b2830efab30aad677f697546a0f96facb6c003d1e6019c6762b5ffc367af5"
+            },
+            {
+                "name": "sansec/magento2-module-shield",
+                "version": "1.0.26",
+                "module": "Sansec_Shield",
+                "downloads": 366570,
+                "sha256": "822674f85e73330a184e8ed8eb0bb8a172418ccf8e031002bd321640ccb08a22"
+            },
+            {
+                "name": "magento-hackathon/module-eavcleaner-m2",
+                "version": "1.7.1",
+                "module": "Hackathon_EAVCleaner",
+                "downloads": 364373,
+                "sha256": "8576b0430b23fc965ed5f04ce5fd2648cfbbacfbb1b6b09be12dcefd0cf9fc09"
+            },
+            {
+                "name": "paynl/magento2-plugin",
+                "version": "4.1.0",
+                "module": "Paynl_Payment",
+                "downloads": 361879,
+                "sha256": "c9c71b5538229a08b4db889f1f186e97166c0afaac40be55903c5b01cb456934"
+            },
+            {
+                "name": "tweakwise/magento2-tweakwise",
+                "version": "v11.2.0",
+                "module": "Tweakwise_Magento2Tweakwise",
+                "downloads": 356679,
+                "sha256": "6f8c939a8732de319a119ab5f2735ee362dd33b8e28507035f674c0115f7d54f"
+            },
+            {
+                "name": "msp/adminrestriction",
+                "version": "1.4.0",
+                "module": "MSP_AdminRestriction",
+                "downloads": 353484,
+                "sha256": "1ba6f9dd96c5712a747b4f1ce422661e7282d519a901596c7f83314e6940de7d"
+            },
+            {
+                "name": "magenest/core",
+                "version": "1.3.2",
+                "module": "Magenest_Core",
+                "downloads": 348278,
+                "sha256": "f9c195e4f553cbe86aeded95c4524b476ab9d220befee754ab4d1937ea8ee748"
+            },
+            {
+                "name": "integer-net/magento2-session-unblocker",
+                "version": "v0.1.5",
+                "module": "IntegerNet_SessionUnblocker",
+                "downloads": 346460,
+                "sha256": "3120be52cc8f5661a78f7bc15ec60a99e8d268209bc0da6226384837447dea6f"
+            },
+            {
+                "name": "mollie/magento2-hyva-checkout",
+                "version": "v3.0.4",
+                "module": "Mollie_HyvaCheckout",
+                "downloads": 337704,
+                "sha256": "0e560440bbc3eeb322ea7757f2958c2ad29ea73bd03e188b179c4ce088b954cb"
+            },
+            {
+                "name": "magemojo/m2-ce-cron",
+                "version": "1.4.3-stable",
+                "module": "MageMojo_Cron",
+                "downloads": 336773,
+                "sha256": "0bb6e5c0a662ab378dc86c8fcb62a9cb7f6691893f93f01bf89124c4f455ef7d"
+            },
+            {
+                "name": "magepal/magento2-edit-order-email",
+                "version": "1.1.11",
+                "module": "MagePal_EditOrderEmail",
+                "downloads": 329872,
+                "sha256": "ecac91ed09377351ef940cc60d5639b83f90d75a83525c62dec8aafc2cd23af7"
+            },
+            {
+                "name": "mageworx/module-searchsuiteautocomplete",
+                "version": "2.2.0",
+                "module": "MageWorx_SearchSuiteAutocomplete",
+                "downloads": 314266,
+                "sha256": "2aaa5aef5205f32075e9eac7ee664c95c0e66d7f409531f505b08ed974ff8e4b"
+            },
+            {
+                "name": "magefan/module-translation",
+                "version": "2.8.2",
+                "module": "Magefan_Translation",
+                "downloads": 300114,
+                "sha256": "e972c18714c1ddfc6954e79bae208647d87c7e8d00378bf75c4748e7fc326aa3"
+            },
+            {
+                "name": "emico/m2-attributelanding",
+                "version": "v8.3.0",
+                "module": "Emico_AttributeLanding",
+                "downloads": 293017,
+                "sha256": "64eb3fe957c04c13abef1016d0881b5a888339f235d62568cbf73f5c56c7550c"
+            },
+            {
+                "name": "mageplaza/module-reports",
+                "version": "4.1.7",
+                "module": "Mageplaza_Reports",
+                "downloads": 289621,
+                "sha256": "00fd1e160b241a988a6aab13043ea018a24ba4d263cd50cd016f7c88599f5e8b"
+            },
+            {
+                "name": "magefan/module-geoip",
+                "version": "2.4.1",
+                "module": "Magefan_GeoIp",
+                "downloads": 287700,
+                "sha256": "12eb55095ace2357a800dbcee1b0b50fdc2c570638c88a53661674a56c2d9092"
+            },
+            {
+                "name": "swissup/module-core",
+                "version": "1.16.0",
+                "module": "Swissup_Core",
+                "downloads": 283998,
+                "sha256": "e4ba332534e1b2222ae1eca41558410eb02912b9338296fef0a87c7e75ef3a61"
+            },
+            {
+                "name": "ghostunicorns/module-webapi-logs",
+                "version": "1.3.7",
+                "module": "GhostUnicorns_WebapiLogs",
+                "downloads": 275718,
+                "sha256": "79f49cb3f5fbb6a27d712c1cc8d09e554aeca98b3018918a5fa499b1f38f3ca5"
+            },
+            {
+                "name": "clerk/magento2",
+                "version": "4.9.2",
+                "module": "Clerk_Clerk",
+                "downloads": 274087,
+                "sha256": "a2cb4ab979d420ee109cdf09b51546944d75202ec02a42226e8e70c9767b1898"
+            },
+            {
+                "name": "ghoster/changecustomerpassword",
+                "version": "v1.1.2",
+                "module": "GhoSter_ChangeCustomerPassword",
+                "downloads": 273950,
+                "sha256": "2c4d0c693af7d8a2f9973ad0a2cb69f8cfbef259caef95dd097b9a8b1565a255"
+            },
+            {
+                "name": "ctidigital/magento2-csp-whitelist",
+                "version": "1.0.1",
+                "module": "CtiDigital_CspWhitelist",
+                "downloads": 262302,
+                "sha256": "a83922e8fab3592d76a445659cc4a6d216e55503b07324a5b6dd587584e19df8"
+            },
+            {
+                "name": "scandipwa/persisted-query",
+                "version": "3.1.1",
+                "module": "ScandiPWA_PersistedQuery",
+                "downloads": 262080,
+                "sha256": "d0b015a5735d70814d8d47565a9e96c9fc0b28155d6f0ddf3dfc1e522c3a3b7f"
+            },
+            {
+                "name": "sivaschenko/magento2-clean-media",
+                "version": "1.1.1",
+                "module": "Sivaschenko_CleanMedia",
+                "downloads": 261297,
+                "sha256": "b4f3a63fcaa5c7c1e62ec6b533f14a7919b9d284b758c274be7d59e04678bd99"
+            },
+            {
+                "name": "aregowe/magento2-module-polyshell-protection",
+                "version": "1.3.5",
+                "module": "Aregowe_PolyShellProtection",
+                "downloads": 250401,
+                "sha256": "44e1212dfff9ad31eacf381dff5e875828f928b99954385fdd4a4fad950b7f35"
+            },
+            {
+                "name": "mageplaza/magento-2-product-slider",
+                "version": "4.0.5",
+                "module": "Mageplaza_Productslider",
+                "downloads": 241482,
+                "sha256": "9b2da0e4480a8a35eeb175fc6494c294fc44044e84bf66e81eba8bba2e50cf1f"
+            },
+            {
+                "name": "monsoonconsulting/magento2-hyva-ajax-add-to-cart",
+                "version": "1.2.4",
+                "module": "Monsoon_HyvaAjaxAddToCart",
+                "downloads": 238736,
+                "sha256": "ef251adf52a4b21ee6e7e1e24b064b8fd277a1cdd22e59d96b8f883de226d001"
+            },
+            {
+                "name": "mageplaza/module-share-cart",
+                "version": "4.0.6",
+                "module": "Mageplaza_ShareCart",
+                "downloads": 236795,
+                "sha256": "4e94192c13e7b490f0763365c77f5213d4e65afbb17fa185cbd4d5744dfa9bb9"
+            },
+            {
+                "name": "magefan/module-blog-comments-recaptcha",
+                "version": "2.1.9",
+                "module": "Magefan_BlogCommentsReCaptcha",
+                "downloads": 222791,
+                "sha256": "6752868bebe6d0ac877956283b2354d2d8c59ac5dc59e40360c65a0da477e8c5"
+            }
+        ],
+        "skipped": [
+            {
+                "name": "semaio/magento2-configimportexport",
+                "reason": "type none"
+            },
+            {
+                "name": "akeneo/module-magento2-connector-community",
+                "reason": "type none"
+            },
+            {
+                "name": "nosto/module-nostotagging",
+                "reason": "registration.php is missing or holds more than the standard register() call"
+            },
+            {
+                "name": "m2epro/magento2-extension",
+                "reason": "registration.php is missing or holds more than the standard register() call"
+            },
+            {
+                "name": "gene/module-encryption-key-manager",
+                "reason": "no stable version"
+            },
+            {
+                "name": "amzn/amazon-pay-magento-2-module",
+                "reason": "registration.php is missing or holds more than the standard register() call"
+            },
+            {
+                "name": "tddwizard/magento2-fixtures",
+                "reason": "type none"
+            },
+            {
+                "name": "magento/module-upward-connector",
+                "reason": "Magento core package"
+            },
+            {
+                "name": "smile/module-elasticsuite-shared-catalog",
+                "reason": "type none"
+            },
+            {
+                "name": "amasty/module-mage-248-fix",
+                "reason": "type none"
+            },
+            {
+                "name": "fishpig/magento2-wordpress-integration",
+                "reason": "registration.php is missing or holds more than the standard register() call"
+            },
+            {
+                "name": "yireo/magento2-linkpreload",
+                "reason": "type none"
+            },
+            {
+                "name": "run-as-root/magento2-prometheus-exporter",
+                "reason": "registration.php is missing or holds more than the standard register() call"
+            },
+            {
+                "name": "doofinder/doofinder-magento2",
+                "reason": "no etc/module.xml at the package root"
+            },
+            {
+                "name": "mgtcommerce/module-mgtdevelopertoolbar",
+                "reason": "no etc/module.xml at the package root"
+            },
+            {
+                "name": "checkoutcom/magento2",
+                "reason": "registration.php is missing or holds more than the standard register() call"
+            },
+            {
+                "name": "fisheye/module-url-rewrite-optimiser",
+                "reason": "abandoned"
+            },
+            {
+                "name": "smile/module-debug-toolbar",
+                "reason": "registration.php is missing or holds more than the standard register() call"
+            },
+            {
+                "name": "integer-net/magento2-sansec-watch",
+                "reason": "type none"
+            },
+            {
+                "name": "sapient/module-worldpay",
+                "reason": "type none"
+            },
+            {
+                "name": "paradoxlabs/tokenbase",
+                "reason": "registration.php is missing or holds more than the standard register() call"
+            },
+            {
+                "name": "dmatthew/magento2-widget-parameters",
+                "reason": "abandoned"
+            },
+            {
+                "name": "magenizr/magento2-resetuibookmarks",
+                "reason": "type none"
+            },
+            {
+                "name": "splashlab/magento-2-cors-requests",
+                "reason": "type none"
+            }
+        ]
     }
 }

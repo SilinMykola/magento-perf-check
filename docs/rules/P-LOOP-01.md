@@ -62,7 +62,7 @@ $product = $this->productRepository->getById($id);
 
 - `ProductRepository` caches products by id, so repeated calls with the same id within one request are cheap. The rule cannot see whether the ids repeat.
 - Loops with a small, fixed bound (for example two or three iterations) cost little. Suppress with a reason.
-- The rule does not follow calls into other methods: a loop that calls a method which loads a model is not reported (cross-method analysis is planned for M4).
+- The rule does not follow calls into other methods: a loop that calls a method which loads a model is reported by the experimental [P-LOOP-12](P-LOOP-12.md).
 
 ## Basis
 

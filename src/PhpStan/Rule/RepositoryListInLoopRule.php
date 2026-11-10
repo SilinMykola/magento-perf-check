@@ -6,7 +6,7 @@ namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
 use Silin\MagentoPerfCheck\PhpStan\LoopContextVisitor;
 use Silin\MagentoPerfCheck\PhpStan\LoopExitVisitor;
-use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
+use Silin\MagentoPerfCheck\PhpStan\QueryCall;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
@@ -27,11 +27,11 @@ final class RepositoryListInLoopRule implements Rule
     public const ID = 'P-LOOP-09';
     public const IDENTIFIER = 'magentoPerf.loopRepositoryList';
 
-    private readonly MagentoTypes $types;
+    private readonly QueryCall $queries;
 
     public function __construct(ReflectionProvider $reflectionProvider)
     {
-        $this->types = new MagentoTypes($reflectionProvider);
+        $this->queries = new QueryCall($reflectionProvider);
     }
 
     public function getNodeType(): string
@@ -48,9 +48,8 @@ final class RepositoryListInLoopRule implements Rule
         ) {
             return [];
         }
-        $type = $scope->getType($node->var);
-        $class = $this->types->repository($type);
-        if ($class === null || !MagentoTypes::takesSearchCriteria($type, $scope)) {
+        $class = $this->queries->repositoryList($node, $scope);
+        if ($class === null) {
             return [];
         }
 

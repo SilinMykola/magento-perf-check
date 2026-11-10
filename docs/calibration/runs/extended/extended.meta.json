@@ -1,0 +1,1 @@
+{"run": "extended", "project": "var/corpus/extended", "paths": "app/code,app/design", "toolCommit": "9f688ef", "exitCode": 1, "wallSeconds": 22, "peakRssMb": 199, "date": "2026-11-10"}

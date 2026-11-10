@@ -8,6 +8,7 @@ declare(strict_types=1);
  *
  *   build-corpus magento     copy of the Magento project at CORPUS_SOURCE_PROJECT, an absolute path (read-only source)
  *   build-corpus packagist   the 25 most-downloaded installable magento2-module packages
+ *   build-corpus extended    a second copy with the next 100 modules and Hyvä Theme (change extend-calibration-corpus)
  *   build-corpus mage-os     composer install of mage-os/project-community-edition
  *   build-corpus --clean     remove var/corpus
  *   build-corpus pick <name> show which version of a package would be taken, and why
@@ -16,6 +17,7 @@ declare(strict_types=1);
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__ . '/registration-check.php';
 
 use Composer\Semver\Semver;
 use Composer\Semver\VersionParser;
@@ -24,6 +26,7 @@ const ROOT = __DIR__ . '/../..';
 const CORPUS = ROOT . '/var/corpus';
 const MANIFEST = ROOT . '/docs/calibration/corpus.json';
 const MODULE_COUNT = 25;
+const EXTENDED_COUNT = 100;
 const TARGET_PHP = '8.4.0';
 
 function fail(string $message): never
@@ -199,12 +202,13 @@ function moduleName(string $dir): ?string
     return preg_match('#<module\s[^>]*name\s*=\s*"([A-Za-z0-9]+_[A-Za-z0-9]+)"#', (string) file_get_contents($moduleXml), $m) === 1 ? $m[1] : null;
 }
 
-function buildPackagist(): void
+/**
+ * Packagist packages of type magento2-module, most downloaded first.
+ *
+ * @return list<array<string, mixed>>
+ */
+function candidatesByDownloads(): array
 {
-    if (!is_dir(CORPUS . '/magento')) {
-        fail('run "build-corpus magento" first');
-    }
-    $installed = installedVersions();
     $candidates = [];
     for ($page = 1; $page <= 130; ++$page) {
         $result = fetchJson('https://packagist.org/search.json?type=magento2-module&per_page=100&page=' . $page);
@@ -217,21 +221,103 @@ function buildPackagist(): void
     }
     usort($candidates, static fn (array $a, array $b): int => $b['downloads'] <=> $a['downloads']);
 
+    return $candidates;
+}
+
+/**
+ * Downloads an archive to $file; checks the published SHA-1 when there is one.
+ */
+function download(string $url, string $file, string $sha1 = ''): ?string
+{
+    $archive = @file_get_contents($url, false, stream_context_create([
+        // GitHub's zipball API rejects requests without a User-Agent.
+        'http' => ['timeout' => 120, 'user_agent' => 'magento-perf-check calibration', 'follow_location' => 1],
+    ]));
+    if ($archive === false) {
+        return 'download failed';
+    }
+    file_put_contents($file, $archive);
+    if ($sha1 !== '' && sha1_file($file) !== $sha1) {
+        return 'SHA-1 mismatch';
+    }
+
+    return null;
+}
+
+/**
+ * The single top directory of an extracted archive, or the extraction directory itself.
+ */
+function archiveRoot(string $extract): string
+{
+    $entries = array_values(array_diff(scandir($extract) ?: [], ['.', '..']));
+
+    return count($entries) === 1 && is_dir($extract . '/' . $entries[0]) ? $extract . '/' . $entries[0] : $extract;
+}
+
+/**
+ * Besides registration.php, Magento's app/etc/registration_globlist.php makes the autoloader run
+ * app/code/<Vendor>/<Module>/cli_commands.php. The analysis does not need it, so the copy leaves it out.
+ *
+ * @return list<string> the files removed
+ */
+function removeAutoloadedFiles(string $moduleDir): array
+{
+    $removed = [];
+    foreach (['cli_commands.php'] as $file) {
+        if (file_exists($moduleDir . '/' . $file) || is_link($moduleDir . '/' . $file)) {
+            unlink($moduleDir . '/' . $file);
+            $removed[] = $file;
+        }
+    }
+
+    return $removed;
+}
+
+/** The registration.php that the autoloader would run: a regular file with only the standard call. */
+function hasStandardRegistration(string $root): bool
+{
+    $file = $root . '/registration.php';
+
+    return is_file($file) && !is_link($file) && isStandardRegistration((string) file_get_contents($file));
+}
+
+/**
+ * Copies the most-downloaded installable modules into app/code of $project.
+ *
+ * @param list<string> $exclude package names to pass over
+ * @return array{modules: list<array<string, mixed>>, skipped: list<array{name: string, reason: string}>}
+ */
+function selectModules(string $project, int $count, array $exclude, bool $hyvaPresent, bool $checkRegistration): array
+{
+    $installed = installedVersions();
     $modules = [];
     $skipped = [];
     $work = sys_get_temp_dir() . '/corpus-dist-' . getmypid();
     mkdir($work);
-    foreach ($candidates as $candidate) {
-        if (count($modules) >= MODULE_COUNT) {
+    // fail() exits; the downloads must not stay behind.
+    register_shutdown_function(static function () use ($work): void {
+        if (is_dir($work)) {
+            exec('rm -rf ' . escapeshellarg($work));
+        }
+    });
+    foreach (candidatesByDownloads() as $candidate) {
+        if (count($modules) >= $count) {
             break;
         }
         $name = $candidate['name'];
+        if (in_array($name, $exclude, true)) {
+            continue;
+        }
         if (($candidate['abandoned'] ?? false) !== false) {
             $skipped[] = skip($name, 'abandoned');
             continue;
         }
-        if (str_starts_with($name, 'hyva-themes/') || str_starts_with($name, 'magento/')) {
-            $skipped[] = skip($name, str_starts_with($name, 'magento/') ? 'Magento core package' : 'needs the Hyvä theme stack');
+        if (str_starts_with($name, 'magento/')) {
+            $skipped[] = skip($name, 'Magento core package');
+            continue;
+        }
+        if (!$hyvaPresent && str_starts_with($name, 'hyva-themes/')) {
+            $skipped[] = skip($name, 'needs the Hyvä theme stack');
             continue;
         }
         [$version, $reason] = pickVersion($name, $installed);
@@ -240,24 +326,14 @@ function buildPackagist(): void
             continue;
         }
         $zip = $work . '/' . str_replace('/', '_', $name) . '.zip';
-        $archive = @file_get_contents($version['dist']['url'], false, stream_context_create([
-            // GitHub's zipball API rejects requests without a User-Agent.
-            'http' => ['timeout' => 120, 'user_agent' => 'magento-perf-check calibration', 'follow_location' => 1],
-        ]));
-        if ($archive === false) {
-            $skipped[] = skip($name, 'download failed');
-            continue;
-        }
-        file_put_contents($zip, $archive);
-        $published = $version['dist']['shasum'] ?? '';
-        if ($published !== '' && sha1_file($zip) !== $published) {
-            $skipped[] = skip($name, 'SHA-1 mismatch');
+        $failure = download($version['dist']['url'], $zip, $version['dist']['shasum'] ?? '');
+        if ($failure !== null) {
+            $skipped[] = skip($name, $failure);
             continue;
         }
         $extract = $work . '/' . str_replace('/', '_', $name);
         run(['unzip', '-q', '-o', $zip, '-d', $extract]);
-        $entries = array_values(array_diff(scandir($extract) ?: [], ['.', '..']));
-        $root = count($entries) === 1 && is_dir($extract . '/' . $entries[0]) ? $extract . '/' . $entries[0] : $extract;
+        $root = archiveRoot($extract);
         // Some packages keep the module in src/.
         if (moduleName($root) === null && moduleName($root . '/src') !== null) {
             $root .= '/src';
@@ -267,8 +343,12 @@ function buildPackagist(): void
             $skipped[] = skip($name, 'no etc/module.xml at the package root');
             continue;
         }
+        if ($checkRegistration && !hasStandardRegistration($root)) {
+            $skipped[] = skip($name, 'registration.php is missing or holds more than the standard register() call');
+            continue;
+        }
         [$vendor, $short] = explode('_', $module, 2);
-        $target = CORPUS . '/magento/app/code/' . $vendor . '/' . $short;
+        $target = $project . '/app/code/' . $vendor . '/' . $short;
         if (is_dir($target)) {
             $skipped[] = skip($name, "module $module already present");
             continue;
@@ -277,26 +357,143 @@ function buildPackagist(): void
             mkdir(dirname($target), 0777, true);
         }
         run(['cp', '-R', $root, $target]);
-        $modules[] = [
+        $entry = [
             'name' => $name,
             'version' => $version['version'],
             'module' => $module,
             'downloads' => $candidate['downloads'],
             'sha256' => hash_file('sha256', $zip),
         ];
-        echo sprintf("packagist: %-45s %-10s %s\n", $name, $version['version'], $module);
+        $removed = $checkRegistration ? removeAutoloadedFiles($target) : [];
+        if ($removed !== []) {
+            $entry['removed'] = $removed;
+        }
+        $modules[] = $entry;
+        echo sprintf("%-45s %-10s %s\n", $name, $version['version'], $module);
     }
     run(['rm', '-rf', $work]);
-    if (count($modules) < MODULE_COUNT) {
+    if (count($modules) < $count) {
         fail(sprintf('only %d installable modules found', count($modules)));
     }
+
+    return ['modules' => $modules, 'skipped' => $skipped];
+}
+
+function buildPackagist(): void
+{
+    if (!is_dir(CORPUS . '/magento')) {
+        fail('run "build-corpus magento" first');
+    }
+    $selection = selectModules(CORPUS . '/magento', MODULE_COUNT, [], false, false);
     $manifest = manifest();
     $manifest['packagist'] = [
         'selection' => sprintf('first %d packages of type magento2-module by downloads that are not abandoned and whose magento/*, laminas/*, symfony/* and php requirements the Magento copy satisfies (PHP %s)', MODULE_COUNT, TARGET_PHP),
         'date' => date('Y-m-d'),
         'path' => 'app/code',
-        'modules' => $modules,
-        'skipped' => $skipped,
+        ...$selection,
+    ];
+    saveManifest($manifest);
+}
+
+/**
+ * Hyvä Theme is not on Packagist; these are the tags that the default theme 1.5.3 requires
+ * (design D4). Repository => [tag, target relative to the project]. The manifest records each tag's
+ * commit, and a rebuild stops when a tag has moved.
+ */
+const HYVA = [
+    'magento2-theme-module' => ['1.5.3', 'app/code/Hyva/Theme'],
+    'magento2-base-layout-reset' => ['2.0.5', 'app/code/Hyva/BaseLayoutReset'],
+    'magento2-email-module' => ['1.0.6', 'app/code/Hyva/Email'],
+    'magento2-order-cancellation-webapi' => ['1.0.1', 'app/code/Hyva/OrderCancellationWebapi'],
+    'magento2-default-theme' => ['1.5.3', 'app/design/frontend/Hyva/default'],
+];
+
+/**
+ * @return list<array<string, string>>
+ */
+function installHyva(string $project): array
+{
+    $installed = [];
+    $work = sys_get_temp_dir() . '/corpus-hyva-' . getmypid();
+    mkdir($work);
+    // fail() exits; the downloads must not stay behind.
+    register_shutdown_function(static function () use ($work): void {
+        if (is_dir($work)) {
+            exec('rm -rf ' . escapeshellarg($work));
+        }
+    });
+    foreach (HYVA as $repository => [$tag, $target]) {
+        // The tag's commit pins the code; a generated archive of it need not stay byte-identical.
+        $commit = (string) (fetchJson(sprintf('https://api.github.com/repos/hyva-themes/%s/commits/%s', $repository, $tag))['sha'] ?? '');
+        if (preg_match('/^[0-9a-f]{40}$/', $commit) !== 1) {
+            fail("hyva-themes/$repository $tag: no commit for the tag");
+        }
+        foreach (manifest()['extended']['hyva'] ?? [] as $known) {
+            if ($known['name'] === 'hyva-themes/' . $repository && $known['version'] === $tag && ($known['commit'] ?? $commit) !== $commit) {
+                fail("hyva-themes/$repository $tag: the tag now points at $commit, not at the commit in the manifest");
+            }
+        }
+        $url = sprintf('https://codeload.github.com/hyva-themes/%s/tar.gz/%s', $repository, $commit);
+        $archive = $work . '/' . $repository . '.tar.gz';
+        $failure = download($url, $archive);
+        if ($failure !== null) {
+            fail("hyva-themes/$repository $tag: $failure");
+        }
+        $extract = $work . '/' . $repository;
+        mkdir($extract);
+        run(['tar', '-xzf', $archive, '-C', $extract]);
+        $root = archiveRoot($extract);
+        if (is_file($root . '/src/registration.php')) {
+            $root .= '/src';
+        }
+        if (!hasStandardRegistration($root)) {
+            fail("hyva-themes/$repository $tag: registration.php holds more than the standard register() call");
+        }
+        if (!is_dir(dirname($project . '/' . $target))) {
+            mkdir(dirname($project . '/' . $target), 0777, true);
+        }
+        run(['cp', '-R', $root, $project . '/' . $target]);
+        $entry = [
+            'name' => 'hyva-themes/' . $repository,
+            'version' => $tag,
+            'commit' => $commit,
+            'source' => $url,
+            'path' => $target,
+            'sha256' => hash_file('sha256', $archive),
+        ];
+        $removed = removeAutoloadedFiles($project . '/' . $target);
+        if ($removed !== []) {
+            $entry['removed'] = $removed;
+        }
+        $installed[] = $entry;
+        echo sprintf("%-45s %-10s %s\n", 'hyva-themes/' . $repository, $tag, $target);
+    }
+    run(['rm', '-rf', $work]);
+
+    return $installed;
+}
+
+function buildExtended(): void
+{
+    $first = manifest()['packagist']['modules'] ?? null;
+    if (!is_dir(CORPUS . '/magento') || !is_array($first)) {
+        fail('build the magento and packagist parts first');
+    }
+    $target = CORPUS . '/extended';
+    if (is_dir($target)) {
+        run(['rm', '-rf', $target]);
+    }
+    run(['rsync', '-a', '--exclude', '/app/code/', CORPUS . '/magento/', $target . '/']);
+    mkdir($target . '/app/code', 0777, true);
+    $hyva = installHyva($target);
+    $selection = selectModules($target, EXTENDED_COUNT, array_column($first, 'name'), true, true);
+    $manifest = manifest();
+    $manifest['extended'] = [
+        'selection' => sprintf('the next %d packages of type magento2-module by downloads after the packagist part, chosen the same way, Hyvä packages included; a package whose registration.php holds more than the standard register() call is skipped', EXTENDED_COUNT),
+        'date' => date('Y-m-d'),
+        'paths' => ['app/code', 'app/design'],
+        'hyva' => $hyva,
+        ...$selection,
     ];
     saveManifest($manifest);
 }
@@ -339,11 +536,12 @@ $command = $argv[1] ?? '';
 match ($command) {
     'magento' => buildMagento(),
     'packagist' => buildPackagist(),
+    'extended' => buildExtended(),
     'mage-os' => buildMageOs(),
     '--clean' => run(['rm', '-rf', CORPUS]),
     'pick' => (static function () use ($argv): void {
         [$version, $reason] = pickVersion($argv[2] ?? fail('pick needs a package name'), installedVersions());
         echo $version !== null ? $version['version'] . "\n" : "none: $reason\n";
     })(),
-    default => fail('usage: build-corpus magento|packagist|mage-os|--clean'),
+    default => fail('usage: build-corpus magento|packagist|extended|mage-os|--clean'),
 };

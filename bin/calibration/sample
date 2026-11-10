@@ -7,6 +7,9 @@ declare(strict_types=1);
  * Draws up to 30 findings per default rule from docs/calibration/runs/*.json and writes
  * one grading file per rule to docs/calibration/graded/<RULE>.md (design D2).
  * Existing grading files are kept unless --force is given.
+ *
+ * "sample extended" does the same for the experimental rules on the extended corpus part, from
+ * docs/calibration/runs/extended/, into docs/calibration/graded/round-6/ (change extend-calibration-corpus).
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
@@ -15,14 +18,18 @@ use Silin\MagentoPerfCheck\Rule\RuleRegistry;
 use Silin\MagentoPerfCheck\Rule\RuleStatus;
 
 const ROOT = __DIR__ . '/../..';
-const SEED = 20261023;
 const SAMPLE_SIZE = 30;
-const RECHECK = 3;
 const CONTEXT_LINES = 6;
 
 $force = in_array('--force', $argv, true);
-$runsDir = ROOT . '/docs/calibration/runs';
-$gradedDir = ROOT . '/docs/calibration/graded';
+$extended = in_array('extended', $argv, true);
+$seed = $extended ? 20261110 : 20261023;
+// Round 1 marked three verdicts per rule for an owner re-check; the owner decided on 2026-10-24
+// not to re-check (docs/calibration.md), so round 6 marks none.
+$recheck = $extended ? 0 : 3;
+$status = $extended ? RuleStatus::Experimental : RuleStatus::Default;
+$runsDir = ROOT . '/docs/calibration/runs' . ($extended ? '/extended' : '');
+$gradedDir = ROOT . '/docs/calibration/graded' . ($extended ? '/round-6' : '');
 if (!is_dir($gradedDir)) {
     mkdir($gradedDir, 0777, true);
 }
@@ -48,7 +55,7 @@ foreach (glob($runsDir . '/*.json') ?: [] as $file) {
 $registry = new RuleRegistry();
 $written = 0;
 foreach ($registry->all() as $rule) {
-    if ($rule->status !== RuleStatus::Default || !isset($findings[$rule->id])) {
+    if ($rule->status !== $status || !isset($findings[$rule->id])) {
         continue;
     }
     $target = $gradedDir . '/' . $rule->id . '.md';
@@ -58,7 +65,7 @@ foreach ($registry->all() as $rule) {
     $all = $findings[$rule->id];
     usort($all, static fn (array $a, array $b): int => [$a['run'], $a['file'], $a['line'], $a['message']] <=> [$b['run'], $b['file'], $b['line'], $b['message']]);
     // Seeded Fisher-Yates shuffle: the same runs and seed always give the same sample.
-    mt_srand(SEED);
+    mt_srand($seed);
     for ($i = count($all) - 1; $i > 0; --$i) {
         $j = mt_rand(0, $i);
         [$all[$i], $all[$j]] = [$all[$j], $all[$i]];
@@ -66,7 +73,7 @@ foreach ($registry->all() as $rule) {
     $sample = array_slice($all, 0, SAMPLE_SIZE);
 
     $out = sprintf("# %s: calibration sample\n\n", $rule->id);
-    $out .= sprintf("%d of %d findings (seed %d). Verdicts: TP, TP-low, FP, unclear. ", count($sample), count($all), SEED);
+    $out .= sprintf("%d of %d findings (seed %d). Verdicts: TP, TP-low, FP, unclear. ", count($sample), count($all), $seed);
     $out .= sprintf("Rows marked `re-check` are for the owner: put `✓` in the owner column, or `was <verdict>` after changing the verdict.\n\n");
     foreach ($sample as $n => $finding) {
         $out .= sprintf("## %d. `%s:%d` (%s)\n\n%s\n\n", $n + 1, $finding['file'], $finding['line'], $finding['run'], $finding['message']);
@@ -80,9 +87,9 @@ foreach ($registry->all() as $rule) {
     }
     $out .= "## Grades\n\n| # | location | verdict | reason | recheck | owner |\n|---|---|---|---|---|---|\n";
     foreach ($sample as $n => $finding) {
-        $out .= sprintf("| %d | `%s:%d` |  |  | %s |  |\n", $n + 1, $finding['file'], $finding['line'], $n < RECHECK ? 're-check' : '');
+        $out .= sprintf("| %d | `%s:%d` |  |  | %s |  |\n", $n + 1, $finding['file'], $finding['line'], $n < $recheck ? 're-check' : '');
     }
     file_put_contents($target, $out);
     ++$written;
 }
-echo "wrote $written grading files to docs/calibration/graded\n";
+echo "wrote $written grading files to $gradedDir\n";

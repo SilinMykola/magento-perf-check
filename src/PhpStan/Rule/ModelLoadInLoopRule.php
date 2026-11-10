@@ -6,7 +6,7 @@ namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
 use Silin\MagentoPerfCheck\PhpStan\LoopContextVisitor;
 use Silin\MagentoPerfCheck\PhpStan\LoopExitVisitor;
-use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
+use Silin\MagentoPerfCheck\PhpStan\QueryCall;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
@@ -35,11 +35,11 @@ final class ModelLoadInLoopRule implements Rule
         'Magento\Store\Api\GroupRepositoryInterface',
     ];
 
-    private readonly MagentoTypes $types;
+    private readonly QueryCall $queries;
 
     public function __construct(ReflectionProvider $reflectionProvider)
     {
-        $this->types = new MagentoTypes($reflectionProvider);
+        $this->queries = new QueryCall($reflectionProvider);
     }
 
     public function getNodeType(): string
@@ -55,21 +55,7 @@ final class ModelLoadInLoopRule implements Rule
         ) {
             return [];
         }
-        $method = $node->name->toString();
-        $type = $scope->getType($node->var);
-
-        $excluded = strtolower($method) === 'load' ? self::LOAD_WITHOUT_QUERY : self::REPOSITORIES_WITHOUT_QUERY;
-        foreach ($excluded as $noQuery) {
-            if (MagentoTypes::isObjectOf($type, $noQuery)) {
-                return [];
-            }
-        }
-
-        $class = match (strtolower($method)) {
-            'load' => $this->types->subtypeOf($type, MagentoTypes::ABSTRACT_MODEL),
-            'get', 'getbyid' => $this->types->repository($type),
-            default => null,
-        };
+        $class = $this->queries->modelOrRepositoryGet($node, $scope);
         if ($class === null) {
             return [];
         }
@@ -80,7 +66,7 @@ final class ModelLoadInLoopRule implements Rule
                 . 'Fetch all items before the loop with a collection or getList().',
                 self::ID,
                 $class,
-                $method,
+                $node->name->toString(),
             ))->identifier(self::IDENTIFIER)->build(),
         ];
     }

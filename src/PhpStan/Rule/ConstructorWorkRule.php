@@ -93,14 +93,15 @@ final class ConstructorWorkRule implements Rule
         if ($statement instanceof Stmt\If_ || $statement instanceof Stmt\Foreach_) {
             return $this->onlyThrows($statement);
         }
+        // `return parent::__construct(...)` is the parent call written with a return.
+        if ($statement instanceof Stmt\Return_ && $statement->expr !== null) {
+            return self::isParentConstructorCall($statement->expr);
+        }
         if (!$statement instanceof Stmt\Expression) {
             return false;
         }
         $expr = $statement->expr;
-        if ($expr instanceof Expr\StaticCall
-            && $expr->class instanceof Node\Name && $expr->class->toLowerString() === 'parent'
-            && $expr->name instanceof Node\Identifier && $expr->name->toLowerString() === '__construct'
-        ) {
+        if (self::isParentConstructorCall($expr)) {
             return true;
         }
 
@@ -111,6 +112,13 @@ final class ConstructorWorkRule implements Rule
         return $expr instanceof Expr\Assign
             && ($toProperty || $target instanceof Expr\Variable)
             && $this->isPlainValue($expr->expr);
+    }
+
+    private static function isParentConstructorCall(Expr $expr): bool
+    {
+        return $expr instanceof Expr\StaticCall
+            && $expr->class instanceof Node\Name && $expr->class->toLowerString() === 'parent'
+            && $expr->name instanceof Node\Identifier && $expr->name->toLowerString() === '__construct';
     }
 
     /**
