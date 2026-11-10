@@ -40,6 +40,7 @@ final class NonCacheableBlockRule implements XmlRule
         // checkout and sales
         'checkout_',
         'hyva_checkout_',
+        'onestepcheckout_', // the checkout page of one-step checkout modules
         'multishipping_',
         'sales_',
         'shipping_tracking_',
@@ -53,6 +54,20 @@ final class NonCacheableBlockRule implements XmlRule
         // forms bound to one customer or email link
         'productalert_unsubscribe_',
         'sendfriend_',
+        // personal pages of known modules (docs/calibration/round-8.md)
+        'connector_', // Dotdigital: passcode-gated endpoints its servers fetch, mostly one customer's email content
+        'paynl_order_', // Pay.nl: return pages after payment
+        'paynl_checkout_',
+        'payone_onepage_', // Payone: checkout steps of the current quote
+        'payone_amazon_',
+        'buckaroo_mrcash_pay', // Buckaroo: one transaction's payment page
+        'mpblog_post_history', // Mageplaza Blog: the author's own pages
+        'mpblog_post_preview',
+        'mpblog_author_information',
+        'clerk_clerk_powerstep_', // Clerk: recommendations for what was just added to the cart
+        'sharecart_index_download', // Mageplaza Share Cart: a PDF of the current cart
+        'mailchimp_cart_loadquote', // Mailchimp: a cart restored from an email link
+        'blog_non_cacheable', // Magefan Blog: post preview
     ];
 
     /** @var list<string> */

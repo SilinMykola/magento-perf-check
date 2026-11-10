@@ -2,10 +2,6 @@
 
 Recurring false-positive patterns found while grading the M2 calibration samples. Fixing them changes what a rule's spec says it reports, so they are left for a later change. Row numbers refer to the grading table of the rule's file in [`graded/`](graded/). Patterns fixed since are removed; see [round 2](round-2.md).
 
-## X-LAY-01: allowlist gaps
-
-Handles still reported that are personal or private by design: `mailchimp_cart_loadquote` (a cart restored from an email link) and `blog_non_cacheable` (blog post preview). Both are specific to one module, so they stay out of the default allowlist.
-
 ## P-COL-02: collections that load at most one row
 
 - Filters on a column that is unique in practice: `setUserFilter()` on one user's role, `level = 0` for the tree root (2, 4, 7, 9, 11, 13, 16, 17).
@@ -42,7 +38,6 @@ The rules cannot tell these cases from real findings without guessing. They stay
 
 Row numbers refer to [`graded/round-6/`](graded/round-6/).
 
-- **X-LAY-01.** Handles that are private by design under prefixes the allowlist does not cover: Dotdigital email content endpoints `connector_*` (one customer's basket, order or coupon from the URL), payment return and checkout-step pages (`paynl_order_*`, `paynl_checkout_*`, `payone_onepage_*`, `payone_amazon_*`, `buckaroo_*_pay`), and Mageplaza Blog's post history and preview for the logged-in author.
 - **P-COL-02.** Filters that match one row through a unique index in `db_schema.xml`, `_uniqueFields`, a primary key under another name or a token; a page size set by the caller before it passes the collection in; a collection that an earlier call already loaded.
 - **P-FPC-02.** Blocks and view models that render only on pages without full page cache (cart, checkout, customer account, layouts with `cacheable="false"`), or whose session read is not reached while a cacheable page renders.
 - **P-DI-02.** Value and SDK objects that code creates with `new`, not the object manager; `return $this;` in a constructor that otherwise only assigns; a full ternary that falls back to an array literal, which the `?:` and `??` forms already allow. Getters on the context object (`$context->getRequest()` and the like) are correct but always negligible.

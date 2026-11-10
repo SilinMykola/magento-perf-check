@@ -17,6 +17,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 - Upgrade rules and `--target-version=<version>`: rules with the `U-` prefix find code that breaks with a change in a Magento release, and run when the installed version (read from `vendor/magento/magento2-base`) or the target version has that change. A rule can name a first version per release line, for changes that also shipped in patch releases. Without a known version, as on Mage-OS, they do not run and an `upgrade-version` notice says so.
 - U-CLI-01, experimental, off by default, at `error`, the first upgrade rule (2.4.9): a console command whose `execute()` has no `int` return type. Magento 2.4.9 requires Symfony Console 7.4, so PHP cannot load such a class, and one registered as a command in `di.xml` makes every `bin/magento` call fail. On the calibration corpus it gives 9 findings, all correct: 1 in the 25 modules, 8 in the extended part, none in the core.
 
+### Changed
+
+- X-LAY-01 (experimental) no longer reports the personal pages of known modules: the endpoints that Dotdigital's servers fetch (`connector_`), Pay.nl, Payone and Buckaroo payment return and checkout pages, the post author's own pages of Mageplaza Blog, Clerk's add-to-cart popup, Mageplaza Share Cart's cart PDF, Mailchimp's restored cart and Magefan Blog's preview. It also leaves out the checkout page of one-step checkout modules (`onestepcheckout_`). On the extended part of the calibration corpus its findings go from 47 to 3. X-LAY-03 shares the allowlist and does not change.
+
 ### Fixed
 
 - P-DI-02 (experimental) no longer reports a constructor that calls `return parent::__construct(...)`, which is the parent call its spec allows, written with a return. On the extended part of the calibration corpus this removes 15 of 367 findings.
