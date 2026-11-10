@@ -87,6 +87,7 @@ Static analysis gives heuristics, not guarantees: treat each finding as a reason
 
 ## Related
 
+- [magento/magento-coding-standard](https://github.com/magento/magento-coding-standard): Adobe's PHP_CodeSniffer rules. Run it next to this tool. It already checks `array_merge()` in a loop, the object manager and `$this->helper()` in templates, a Proxy or Interceptor named in a constructor, and `sleep()` or `session_*()` calls, so this tool does not repeat them ([SPEC section 4.9](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/SPEC.md#49-deliberately-not-implemented)).
 - [magento2-best-practices](https://github.com/SilinMykola/magento2-best-practices-skill): Magento coding rules, test layers, fixtures and PHPUnit conventions; detects a magento/magento2 checkout.
 
 ## Documentation
