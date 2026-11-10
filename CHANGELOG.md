@@ -6,6 +6,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-10
+
 ### Added
 
 - Experimental rules, off by default: T-03 at `warning`, on a named JavaScript function declared in a `<script>` that a template renders once per item, inside a template loop or in Hyvä's product list `item.phtml`; T-04 at `warning`, on the result of Hyvä's `$viewModels->require()`, or of a call on it or on a variable holding it, kept in a variable the template never reads. On a Magento 2.4.5 project with a Hyvä child theme they give 2 and 8 findings, all correct; the other projects have none.
@@ -125,7 +127,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.1...v0.2.0

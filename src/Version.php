@@ -10,7 +10,7 @@ namespace Silin\MagentoPerfCheck;
  */
 final class Version
 {
-    public const VERSION = '0.4.0-dev';
+    public const VERSION = '0.4.0';
 
     public const REPOSITORY = 'https://github.com/SilinMykola/magento-perf-check';
 
