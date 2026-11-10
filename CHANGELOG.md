@@ -6,6 +6,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Fixed
+
+- In a project with `phpstan/extension-installer`, the `magento-perf-check` command now runs only its own rules. In 0.4.0 and before, the installer also added every other PHPStan extension the project has, and their errors showed as `phpstan` notices: on one module of the calibration corpus with `phpstan/phpstan-strict-rules` and `phpstan/phpstan-deprecation-rules` installed, 634 notices next to 27 findings, now none. On that module the findings do not change. A `bitexpert/phpstan-magento` that only the project's installer lists, with the tool installed elsewhere, is no longer loaded: without `generated/code`, calls on generated proxies and extension attributes are then skipped and a notice says so. **This can change a CI result.**
+
 ## [0.4.0] - 2026-11-10
 
 ### Added

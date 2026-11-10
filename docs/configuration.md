@@ -107,7 +107,7 @@ The tool rejects unknown keys, unknown rule IDs and invalid values with exit cod
 
 PHPStan's result cache does not see XML here: after changing `di.xml` or another configuration file, run `phpstan clear-result-cache`. The `magento-perf-check` command handles this itself.
 
-The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) they are picked up automatically; otherwise include `vendor/silin/magento-perf-check/extension.neon` in your `phpstan.neon`. They report at every level. The `magento-perf-check` command installed in the project works with the installer too. Other extensions that the installer loads, such as `phpstan/phpstan-strict-rules`, then run in its analysis as well, and their errors show as `phpstan` notices. To suppress one finding, use its identifier and give a reason:
+The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) they are picked up automatically; otherwise include `vendor/silin/magento-perf-check/extension.neon` in your `phpstan.neon`. They report at every level. The `magento-perf-check` command runs only its own rules, and `bitexpert/phpstan-magento` when it is installed next to the tool: other extensions that the installer would add, such as `phpstan/phpstan-strict-rules`, are left out of its analysis. To suppress one finding, use its identifier and give a reason:
 
 ```php
 // @phpstan-ignore magentoPerf.loopModelLoad (the caller passes at most 3 ids)
@@ -124,4 +124,4 @@ parameters:
 
 The XML rules and `magento-perf-check.neon` only apply when you run `magento-perf-check`. To analyze templates in your own setup, add `phtml` to PHPStan's `fileExtensions`.
 
-`create()` of a generated factory is typed from the factory's name, so `generated/code` is not needed for it. Generated proxies and extension attributes are typed only when `generated/code` exists or [bitexpert/phpstan-magento](https://github.com/bitExpert/phpstan-magento) is installed. Without either, calls on them are skipped rather than reported ([ADR 2](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0002-bitexpert-phpstan-magento-as-suggestion.md)).
+`create()` of a generated factory is typed from the factory's name, so `generated/code` is not needed for it. Generated proxies and extension attributes are typed only when `generated/code` exists or [bitexpert/phpstan-magento](https://github.com/bitExpert/phpstan-magento) is installed next to the tool. Without either, calls on them are skipped rather than reported ([ADR 2](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0002-bitexpert-phpstan-magento-as-suggestion.md)).

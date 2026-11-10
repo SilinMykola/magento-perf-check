@@ -310,24 +310,71 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame([], (array) $report['summary']['notices']);
     }
 
-    public function testExtensionsThatTheInstallerIncludesAreNotIncludedTwice(): void
+    /**
+     * @return array<string, array{bool}>
+     */
+    public static function installerLists(): array
+    {
+        return ['with this package' => [true], 'without this package' => [false]];
+    }
+
+    /**
+     * @dataProvider installerLists
+     */
+    public function testExtensionsOfTheInstallerAreLeftOut(bool $listsThisPackage): void
     {
         $package = (string) realpath(__DIR__ . '/../..');
+        $noisyRule = <<<'PHP'
+            <?php
+            namespace Acme\Noisy;
+            /** @implements \PHPStan\Rules\Rule<\PhpParser\Node\Stmt\Class_> */
+            final class EveryClassRule implements \PHPStan\Rules\Rule
+            {
+                public function getNodeType(): string
+                {
+                    return \PhpParser\Node\Stmt\Class_::class;
+                }
+                public function processNode(\PhpParser\Node $node, \PHPStan\Analyser\Scope $scope): array
+                {
+                    return [\PHPStan\Rules\RuleErrorBuilder::message('noisy')->identifier('acme.noisy')->build()];
+                }
+            }
+            PHP;
+        $extensionWithRule = "services:\n    -\n        class: Acme\\Noisy\\EveryClassRule\n        tags: [phpstan.rules.rule]\n";
         $project = $this->project([
             'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
             'app/code/Acme/Demo/Block/Foo.php' => self::SESSION_BLOCK,
-            'bitexpert/extension.neon' => "parameters: []\n",
+            'bitexpert/extension.neon' => $extensionWithRule,
+            'noisy/EveryClassRule.php' => $noisyRule,
+            'noisy/extension.neon' => $extensionWithRule,
         ]);
-        // What phpstan/extension-installer generates in a project that has this package and bitexpert/phpstan-magento.
+        // What phpstan/extension-installer generates in a project that has this package, bitexpert/phpstan-magento and another extension.
         $extensions = [
+            'acme/noisy' => ['install_path' => $project . '/noisy', 'extra' => ['includes' => ['extension.neon']]],
             'bitexpert/phpstan-magento' => ['install_path' => $project . '/bitexpert', 'extra' => ['includes' => ['extension.neon']]],
-            'silin/magento-perf-check' => ['install_path' => $package, 'extra' => ['includes' => ['extension.neon']]],
         ];
+        if ($listsThisPackage) {
+            $extensions['silin/magento-perf-check'] = ['install_path' => $package, 'extra' => ['includes' => ['extension.neon']]];
+        }
         $this->write($project . '/vendor/phpstan/extension-installer/src/GeneratedConfig.php', sprintf(
             "<?php\nnamespace PHPStan\\ExtensionInstaller;\nfinal class GeneratedConfig\n{\n    public const EXTENSIONS = %s;\n    public const NOT_INSTALLED = [];\n    public const PHPSTAN_VERSION_CONSTRAINT = null;\n}\n",
             var_export($extensions, true),
         ));
-        file_put_contents($project . '/vendor/autoload.php', "require_once __DIR__ . '/phpstan/extension-installer/src/GeneratedConfig.php';\n", FILE_APPEND);
+        // Loaded on demand, as Composer's autoloader does, and ahead of the tool's own autoloader, as when
+        // the tool is installed in the project: the project's installer list is the one PHPStan finds.
+        $classes = [
+            'PHPStan\\ExtensionInstaller\\GeneratedConfig' => $project . '/vendor/phpstan/extension-installer/src/GeneratedConfig.php',
+            'Acme\\Noisy\\EveryClassRule' => $project . '/noisy/EveryClassRule.php',
+        ];
+        file_put_contents(
+            $project . '/vendor/autoload.php',
+            sprintf(
+                "require_once %s;\nspl_autoload_register(static function (string \$class): void {\n    \$file = %s[\$class] ?? null;\n    if (\$file !== null) {\n        require \$file;\n    }\n}, true, true);\n",
+                var_export($package . '/vendor/autoload.php', true),
+                var_export($classes, true),
+            ),
+            FILE_APPEND,
+        );
 
         [$exitCode, $stdout, $stderr] = $this->runCommand($project, ['--format=json']);
 
@@ -335,12 +382,12 @@ final class AnalysisIntegrityTest extends TestCase
         $report = json_decode($stdout, true);
         self::assertIsArray($report);
         self::assertSame(['P-DI-01'], array_column($report['findings'], 'ruleId'));
-        self::assertSame([], (array) $report['summary']['notices'], 'bitexpert/phpstan-magento is loaded by the installer');
+        self::assertSame(['generated-code' => 1], (array) $report['summary']['notices'], 'neither the other extension nor the project\'s bitexpert/phpstan-magento runs');
         $configs = glob(WorkDirectory::forProject($project) . '/phpstan-*.neon') ?: [];
         self::assertCount(1, $configs);
         $config = (string) file_get_contents($configs[0]);
-        self::assertStringContainsString('/extension-experimental.neon"', $config, 'the installer does not include the experimental rules');
-        self::assertStringNotContainsString('/extension.neon"', $config);
+        self::assertStringContainsString('/extension.neon"', $config);
+        self::assertStringContainsString('/extension-experimental.neon"', $config);
     }
 
     public function testXmlOfASymlinkedModuleIsAnalyzed(): void
