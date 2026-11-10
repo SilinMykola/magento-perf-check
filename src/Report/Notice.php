@@ -15,6 +15,8 @@ final class Notice
     public const SOURCE_UNTYPED_RECEIVER = 'untyped-receiver';
     /** A finding in a module disabled in app/etc/config.php, which does not run. */
     public const SOURCE_DISABLED_MODULE = 'disabled-module';
+    /** magento/magento-coding-standard is missing, or its phpcs failed (S-* rules). */
+    public const SOURCE_CODING_STANDARD = 'coding-standard';
 
     public function __construct(
         public readonly string $source,

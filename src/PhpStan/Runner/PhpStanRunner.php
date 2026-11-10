@@ -7,6 +7,7 @@ namespace Silin\MagentoPerfCheck\PhpStan\Runner;
 use Composer\InstalledVersions;
 use JsonException;
 use Silin\MagentoPerfCheck\Cli\UsageException;
+use Silin\MagentoPerfCheck\Process\Subprocess;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Project\TestCode;
 use Silin\MagentoPerfCheck\Project\WorkDirectory;
@@ -173,7 +174,7 @@ final class PhpStanRunner
             '--configuration=' . $config,
             '--autoload-file=' . $autoloadFile,
         ];
-        [$exitCode, $stdout, $stderr] = $this->execute($command, $projectRoot);
+        [$exitCode, $stdout, $stderr] = Subprocess::run($command, $projectRoot, 'PHPStan');
 
         // 0: no errors, 1: errors found. Anything else is a crash (out of memory, fatal error).
         if ($exitCode !== 0 && $exitCode !== 1) {
@@ -276,43 +277,6 @@ final class PhpStanRunner
         $path = InstalledVersions::getInstallPath($package);
 
         return $path !== null ? (realpath($path) ?: $path) : null;
-    }
-
-    /**
-     * @param list<string> $command
-     * @return array{int, string, string}
-     */
-    private function execute(array $command, string $cwd): array
-    {
-        $process = proc_open($command, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $cwd);
-        if (!is_resource($process)) {
-            throw new UsageException('Cannot start PHPStan.');
-        }
-        // Read both pipes without blocking each other: PHPStan can write a lot to either.
-        stream_set_blocking($pipes[1], false);
-        stream_set_blocking($pipes[2], false);
-        $stdout = '';
-        $stderr = '';
-        while (!feof($pipes[1]) || !feof($pipes[2])) {
-            $read = array_values(array_filter([$pipes[1], $pipes[2]], static fn ($pipe): bool => !feof($pipe)));
-            $write = null;
-            $except = null;
-            if (stream_select($read, $write, $except, 1) === false) {
-                break;
-            }
-            foreach ($read as $pipe) {
-                $chunk = (string) fread($pipe, 65536);
-                if ($pipe === $pipes[1]) {
-                    $stdout .= $chunk;
-                } else {
-                    $stderr .= $chunk;
-                }
-            }
-        }
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-
-        return [proc_close($process), $stdout, $stderr];
     }
 
     /**

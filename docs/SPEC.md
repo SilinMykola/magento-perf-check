@@ -199,20 +199,34 @@ Legend:
 
 The group is off by default: `env.php` is usually not in the repository, and it is not code.
 
+### 4.8a Run through magento-coding-standard
+
+These rules are not implemented here: the command runs the sniff of the project's magento/magento-coding-standard through its phpcs, only when the rule is enabled ([ADR 7](adr/0007-run-magento-coding-standard-performance-sniffs.md)). Their only sources are the sniffs, so they stay 🧪.
+
+| ID | Sniff | Sev | MVP | Source |
+|---|---|---|---|---|
+| S-PERF-01 | `Magento2.Performance.ForeachArrayMerge`: `array_merge()` in a loop | warning | 🧪 | C: [ForeachArrayMergeSniff](https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Performance/ForeachArrayMergeSniff.php#L21) |
+| S-TPL-01 | `Magento2.Templates.ThisInTemplate`: `$this` or a helper in a template | warning | 🧪 | C: [ThisInTemplateSniff](https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Templates/ThisInTemplateSniff.php#L16-L17) |
+| S-TPL-02 | `Magento2.Templates.ObjectManager`: the object manager in a template | warning | 🧪 | C: [ObjectManagerSniff](https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Templates/ObjectManagerSniff.php#L23-L29) |
+| S-DI-01 | `Magento2.Classes.DiscouragedDependencies`: a Proxy or Interceptor named in a constructor | warning | 🧪 | C: [DiscouragedDependenciesSniff](https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Classes/DiscouragedDependenciesSniff.php#L25) |
+| S-FN-01 | `Magento2.Functions.DiscouragedFunction`, only `sleep()`, `time_nanosleep()` and `session_*()` | warning | 🧪 | C: [DiscouragedFunctionSniff](https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Functions/DiscouragedFunctionSniff.php#L125-L150) |
+
 ### 4.9 Deliberately NOT implemented
+
+The first four rows are run through magento-coding-standard instead (section 4.8a).
 
 | Idea | Reason |
 |---|---|
 | `array_merge` in foreach | already in MCS (`Magento2.Performance.ForeachArrayMerge`) |
 | ObjectManager and `$this->helper()` in templates | already in MCS (`Templates.ObjectManager`, `Templates.ThisInTemplate`) |
 | A Proxy or Interceptor requested explicitly in a constructor | already in MCS (`Classes.DiscouragedDependencies`) |
-| `sleep`, `usleep`, `session_*` | already in MCS (`Functions.DiscouragedFunction`) |
+| `sleep`, `time_nanosleep`, `session_*` | already in MCS (`Functions.DiscouragedFunction`) |
 | `count()` in a `for` condition, try/catch in a loop | negligible effect, present in ECG and the guidelines; noise without benefit |
 | Slow SQL (GROUP BY, DISTINCT, LIKE, UNION) | very high FP, the constructs are often needed |
 | FK without an index in db_schema | InnoDB creates an index for a foreign key itself; the benefit is doubtful |
 | Registry, `shared="false"`, scopeConfig in a loop, `getMediaGalleryImages` in a loop, a product collection without visibility/status filters, many `<update handle>`, `cache_lifetime=null` | no primary source links this to performance, or it is not an anti-pattern by itself |
 
-**Total:** 61 rules. Default set (✅): **34**. After calibration (⏳): 4 (including C-01). Experimental (🧪): 23. Statuses, severities and sources were checked by the audit in M0 (2026-10-21); details and the reasoning for each change are in [`docs/source-audit.md`](source-audit.md). In M1, X-GQL-01 was split into X-GQL-01 (✅) and X-GQL-04 (🧪). In M2, after [calibration](calibration.md), X-LAY-01, P-COL-02, P-DI-02, P-FPC-02 and P-PLG-01 moved to 🧪, P-DI-01 was lowered to warning, and P-LOOP-03, P-DI-06, P-FPC-01 and T-01 to info. After [round 2](calibration/round-2.md), P-PLG-01 returned to the default set; X-LAY-03 was split from X-LAY-01 and joined it with P-LOOP-05, P-LOOP-09, P-LOOP-10, P-IDX-01, X-DB-02, X-AREA-01 and X-GQL-03. In [round 3](calibration/round-3.md), by the maintainer's decision, P-DI-06 was raised to warning and P-LOOP-11 joined the default set at error.
+**Total:** 66 rules. Default set (✅): **34**. After calibration (⏳): 4 (including C-01). Experimental (🧪): 28. Statuses, severities and sources were checked by the audit in M0 (2026-10-21); details and the reasoning for each change are in [`docs/source-audit.md`](source-audit.md). In M1, X-GQL-01 was split into X-GQL-01 (✅) and X-GQL-04 (🧪). In M2, after [calibration](calibration.md), X-LAY-01, P-COL-02, P-DI-02, P-FPC-02 and P-PLG-01 moved to 🧪, P-DI-01 was lowered to warning, and P-LOOP-03, P-DI-06, P-FPC-01 and T-01 to info. After [round 2](calibration/round-2.md), P-PLG-01 returned to the default set; X-LAY-03 was split from X-LAY-01 and joined it with P-LOOP-05, P-LOOP-09, P-LOOP-10, P-IDX-01, X-DB-02, X-AREA-01 and X-GQL-03. In [round 3](calibration/round-3.md), by the maintainer's decision, P-DI-06 was raised to warning and P-LOOP-11 joined the default set at error.
 
 ---
 

@@ -34,6 +34,7 @@
     "require-dev": {
         "composer/semver": "^3.4",
         "justinrainbow/json-schema": "^6.13",
+        "magento/magento-coding-standard": "^41",
         "phpstan/extension-installer": "^1.4",
         "phpunit/phpunit": "^10.5",
         "symfony/yaml": "^6.4 || ^7.0"
@@ -68,7 +69,8 @@
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "phpstan/extension-installer": true
+            "phpstan/extension-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
         }
     },
     "scripts": {

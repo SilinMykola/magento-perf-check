@@ -67,6 +67,8 @@ Some files cannot be analyzed, such as XML that does not parse, PHP with syntax 
 
 A module set to `0` in the `modules` list of `app/etc/config.php` does not run, so it is not analyzed: one `disabled-module` notice names it when it lies in the analyzed paths, and its configuration does not count for other modules (a Proxy in its `di.xml`, for example). The file is read as text, not run. A module missing from that list counts as enabled.
 
+The experimental S-* rules ([S-PERF-01](rules/S-PERF-01.md) and the others) are sniffs of magento/magento-coding-standard. When one of them is enabled, the command runs the project's phpcs (`vendor/squizlabs/php_codesniffer`) with the project's coding standard and only those sniffs, on the same paths; test code and disabled modules are left out as for the other rules. The coding standard's own ruleset leaves some sniffs out of more files, such as `Fixtures` directories. Without phpcs or the coding standard in the project, one `coding-standard` notice says so and the other rules run as usual.
+
 ## Security
 
 Analysis runs code from the project. PHPStan loads the project's `vendor/autoload.php`, which in a stock Magento project requires the `registration.php` of every module in `app/code`. Do not analyze code you do not trust outside a sandbox.

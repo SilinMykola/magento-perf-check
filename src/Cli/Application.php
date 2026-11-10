@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Silin\MagentoPerfCheck\Cli;
 
 use Silin\MagentoPerfCheck\Baseline\Baseline;
+use Silin\MagentoPerfCheck\CodingStandard\CodingStandardRunner;
 use Silin\MagentoPerfCheck\Config\ConfigLoader;
 use Silin\MagentoPerfCheck\PhpStan\Rule\GetFirstItemWithoutLimitRule;
 use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
@@ -247,13 +248,20 @@ final class Application
         $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests, array_keys($disabledRoots)), $xmlRules))->analyze($paths);
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
             ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests, array_keys($disabledRoots));
+        [$codingStandardFindings, $codingStandardNotices] = (new CodingStandardRunner($registry))->run(
+            $options->projectRoot,
+            array_values(array_filter(array_keys(CodingStandardRunner::SNIFFS), static fn (string $id): bool => $config->isEnabled($id, $registry))),
+            $paths,
+            $includeTests,
+            array_keys($disabledRoots),
+        );
 
         if ($xml->filesFound === 0 && !$php->filesAnalyzed && $disabledNotices === []) {
             throw new UsageException(self::nothingToAnalyze($paths, $php->notices, $includeTests));
         }
 
         // Configuration first, then the baseline; --fail-on looks at what is left.
-        $findings = $config->apply([...$xml->findings, ...$php->findings], $registry);
+        $findings = $config->apply([...$xml->findings, ...$php->findings, ...$codingStandardFindings], $registry);
         $hidden = null;
         $unmatched = null;
         if ($options->baselineFile !== null) {
@@ -268,7 +276,7 @@ final class Application
 
         return new AnalysisResult(
             $findings,
-            [...$xml->notices, ...$phpNotices, ...$disabledNotices],
+            [...$xml->notices, ...$phpNotices, ...$codingStandardNotices, ...$disabledNotices],
             $options->projectRoot,
             $paths,
             microtime(true) - $started,

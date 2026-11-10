@@ -148,6 +148,22 @@ return [
         new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-theme-module/blob/6c922be3cd2e9ff9512447c681f388ca829a9c25/src/Model/ViewModelRegistry.php#L60-L78', 'require() gets the view model and passes it to ViewModelCacheTags::collectFrom().'),
         new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-theme-module/blob/6c922be3cd2e9ff9512447c681f388ca829a9c25/src/Model/ViewModelCacheTags.php#L36-L38', 'collectFrom() keeps a view model that implements IdentityInterface; its identities become cache tags of the page.'),
     ], ['magentoPerf.unusedViewModel' => null]),
+    // Run through the project's magento/magento-coding-standard (ADR 7); the sniffs are the source, pinned to v41.
+    new RuleDefinition('S-PERF-01', 'array_merge() inside a loop (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Performance/ForeachArrayMergeSniff.php#L21', 'Magento2.Performance.ForeachArrayMerge: "array_merge(...) is used in a loop and is a resources greedy construction."'),
+    ]),
+    new RuleDefinition('S-TPL-01', '$this or a helper in a template (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Templates/ThisInTemplateSniff.php#L16-L17', 'Magento2.Templates.ThisInTemplate: $this in templates is deprecated, helpers are discouraged; use $block and view models.'),
+    ]),
+    new RuleDefinition('S-TPL-02', 'Object manager in a template (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Templates/ObjectManagerSniff.php#L23-L29', 'Magento2.Templates.ObjectManager: templates must not instantiate objects; all objects come from the block.'),
+    ]),
+    new RuleDefinition('S-DI-01', 'Proxy or Interceptor requested in a constructor (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Classes/DiscouragedDependenciesSniff.php#L25', 'Magento2.Classes.DiscouragedDependencies: "Proxies and interceptors MUST never be explicitly requested in constructors."'),
+    ]),
+    new RuleDefinition('S-FN-01', 'sleep(), time_nanosleep() or session_*() call (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Functions/DiscouragedFunctionSniff.php#L125-L150', 'Magento2.Functions.DiscouragedFunction lists session_*, sleep and time_nanosleep among discouraged functions.'),
+    ]),
     new RuleDefinition('X-SETUP-01', 'Heavy work in Setup/Recurring or RecurringData', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/prepare/extension-lifecycle', 'The Recurring schema class runs after every schema installation or upgrade stage; RecurringData after every data stage.'),
         $b('setup/src/Magento/Setup/Model/Installer.php#L1159-L1174', 'The installer runs the Recurring script of every module.'),

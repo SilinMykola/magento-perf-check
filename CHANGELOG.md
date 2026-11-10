@@ -6,6 +6,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Added
+
+- Experimental rules, off by default, that run sniffs of the project's magento/magento-coding-standard through its phpcs ([ADR 7](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0007-run-magento-coding-standard-performance-sniffs.md)), all at `warning`: S-PERF-01 (`array_merge()` in a loop), S-TPL-01 (`$this` or a helper in a template), S-TPL-02 (object manager in a template), S-DI-01 (a Proxy or Interceptor named in a constructor) and S-FN-01 (`sleep()`, `time_nanosleep()` or `session_*()`). phpcs runs only when one of them is enabled; findings share the report, configuration and baseline with the other rules. On the calibration corpus, with coding standard version 40, they give 33, 28, 0, 8 and 2 findings.
+
 ### Fixed
 
 - With `bitexpert/phpstan-magento` installed next to the tool, its own rules, such as "Use service contracts to persist entities", no longer run in the analysis; only its types are used. On the calibration corpus they gave 198 `phpstan` notices, now none, and the 221 findings do not change.

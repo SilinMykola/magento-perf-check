@@ -462,6 +462,46 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame(['setTemplateDisallowedForBlockClasses' => false], $parameters['extdn'] ?? null);
     }
 
+    public function testEnabledCodingStandardRuleIsInTheReport(): void
+    {
+        $merge = "<?php\nnamespace Acme\\Demo;\nclass Export\n{\n    public function run(array \$groups): array\n    {\n        \$result = [];\n"
+            . "        foreach (\$groups as \$group) {\n            \$result = array_merge(\$result, \$group);\n        }\n        return \$result;\n    }\n}\n";
+        $project = $this->project([
+            'app/etc/config.php' => "<?php\nreturn ['modules' => ['Acme_Demo' => 1, 'Acme_Off' => 0]];\n",
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Model/Export.php' => $merge,
+            'app/code/Acme/Demo/Test/Unit/ExportTest.php' => $merge,
+            'app/code/Acme/Off/etc/module.xml' => '<?xml version="1.0"?><config><module name="Acme_Off"/></config>',
+            'app/code/Acme/Off/Model/Export.php' => $merge,
+        ]);
+        $vendor = (string) realpath(__DIR__ . '/../../vendor');
+        mkdir($project . '/vendor/magento', 0777, true);
+        symlink($vendor . '/squizlabs', $project . '/vendor/squizlabs');
+        symlink($vendor . '/magento/magento-coding-standard', $project . '/vendor/magento/magento-coding-standard');
+
+        self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
+
+        file_put_contents($project . '/magento-perf-check.neon', "magentoPerf:\n    rules:\n        S-PERF-01:\n            enabled: true\n            severity: info\n");
+        $found = function (array $argv) use ($project): array {
+            [, $stdout] = $this->runCommand($project, ['--format=json', ...$argv]);
+            $report = json_decode($stdout, true);
+            self::assertIsArray($report);
+
+            return [
+                array_map(static fn (array $f): string => sprintf('%s %s:%d %s', $f['ruleId'], $f['file'], $f['line'], $f['severity']), $report['findings']),
+                (array) $report['summary']['notices'],
+            ];
+        };
+        self::assertSame([['S-PERF-01 app/code/Acme/Demo/Model/Export.php:9 info'], ['disabled-module' => 1, 'generated-code' => 1]], $found([]));
+        self::assertSame(
+            ['S-PERF-01 app/code/Acme/Demo/Model/Export.php:9 info', 'S-PERF-01 app/code/Acme/Demo/Test/Unit/ExportTest.php:9 info'],
+            $found(['--include-tests'])[0],
+        );
+
+        unlink($project . '/vendor/squizlabs');
+        self::assertSame([[], ['coding-standard' => 1, 'disabled-module' => 1, 'generated-code' => 1]], $found([]));
+    }
+
     public function testXmlOfASymlinkedModuleIsAnalyzed(): void
     {
         $events = '<?xml version="1.0"?><config><event name="catalog_product_load_after">'
