@@ -47,10 +47,12 @@ final class PhpStanRunner
 
     /**
      * @param ?string $phpstanBinary path to the phpstan launcher; found through Composer when null
+     * @param ?string $bitExpertRoot where bitexpert/phpstan-magento is installed; found through Composer when null
      */
     public function __construct(
         private readonly RuleRegistry $registry,
         private readonly ?string $phpstanBinary = null,
+        private readonly ?string $bitExpertRoot = null,
     ) {
     }
 
@@ -140,7 +142,7 @@ final class PhpStanRunner
      */
     private function generatedCodeNotices(string $projectRoot): array
     {
-        if ($this->installPath('bitexpert/phpstan-magento') !== null) {
+        if ($this->bitExpertRoot() !== null) {
             return [];
         }
         $generated = $projectRoot . '/generated/code';
@@ -201,8 +203,9 @@ final class PhpStanRunner
         foreach (['extension.neon', 'extension-experimental.neon'] as $file) {
             $includes[] = realpath(self::PACKAGE_ROOT . '/' . $file) ?: self::PACKAGE_ROOT . '/' . $file;
         }
-        $bitExpert = $this->installPath('bitexpert/phpstan-magento');
-        if ($bitExpert !== null && is_file($bitExpert . '/extension.neon')) {
+        $bitExpert = $this->bitExpertRoot();
+        $bitExpertIncluded = $bitExpert !== null && is_file($bitExpert . '/extension.neon');
+        if ($bitExpertIncluded) {
             $includes[] = $bitExpert . '/extension.neon';
         }
 
@@ -230,6 +233,12 @@ final class PhpStanRunner
             // a changed di.xml must invalidate results for PHP files that did not change.
             'magentoPerf' => ['reportUntypedReceivers' => true, 'projectRoot' => $projectRoot, 'indexFingerprint' => $indexFingerprint],
         ];
+        if ($bitExpertIncluded) {
+            // Its types are what the analysis needs; its own rules are not about performance. Every version that
+            // installs next to PHPStan 1.12 or 2.x (0.32.0 and 0.40.0 on) has these switches.
+            $parameters['magento'] = ['checkCollectionViaFactory' => false, 'checkServiceContracts' => false, 'checkResourceModelsUsedDirectly' => false];
+            $parameters['extdn'] = ['setTemplateDisallowedForBlockClasses' => false];
+        }
 
         // NEON is a superset of JSON for these values.
         return 'includes: ' . $this->json($includes) . "\n"
@@ -252,6 +261,11 @@ final class PhpStanRunner
         }
 
         return $root . '/phpstan';
+    }
+
+    private function bitExpertRoot(): ?string
+    {
+        return $this->bitExpertRoot ?? $this->installPath('bitexpert/phpstan-magento');
     }
 
     private function installPath(string $package): ?string

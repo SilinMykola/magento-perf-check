@@ -390,6 +390,78 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertStringContainsString('/extension-experimental.neon"', $config);
     }
 
+    public function testOwnRulesOfBitExpertAreSwitchedOff(): void
+    {
+        $rule = <<<'PHP'
+            <?php
+            namespace Acme\BitExpert;
+            /** @implements \PHPStan\Rules\Rule<\PhpParser\Node\Stmt\Class_> */
+            final class ServiceContractRule implements \PHPStan\Rules\Rule
+            {
+                public function getNodeType(): string
+                {
+                    return \PhpParser\Node\Stmt\Class_::class;
+                }
+                public function processNode(\PhpParser\Node $node, \PHPStan\Analyser\Scope $scope): array
+                {
+                    return [\PHPStan\Rules\RuleErrorBuilder::message('use service contracts')->identifier('acme.serviceContract')->build()];
+                }
+            }
+            PHP;
+        // The parameters and switches of bitexpert/phpstan-magento 0.44.0, with one rule standing in for its own rules.
+        $neon = <<<'NEON'
+            parameters:
+                magento:
+                    checkCollectionViaFactory: true
+                    checkServiceContracts: true
+                    checkResourceModelsUsedDirectly: true
+                    magentoRoot: %currentWorkingDirectory%
+                extdn:
+                    setTemplateDisallowedForBlockClasses: true
+            parametersSchema:
+                magento: structure([
+                    checkCollectionViaFactory: bool()
+                    checkServiceContracts: bool()
+                    checkResourceModelsUsedDirectly: bool()
+                    magentoRoot: string()
+                ])
+                extdn: structure([
+                    setTemplateDisallowedForBlockClasses: bool()
+                ])
+            conditionalTags:
+                Acme\BitExpert\ServiceContractRule:
+                    phpstan.rules.rule: %magento.checkServiceContracts%
+            services:
+                -
+                    class: Acme\BitExpert\ServiceContractRule
+
+            NEON;
+        $project = $this->project([
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Block/Foo.php' => self::SESSION_BLOCK,
+            'bitexpert/extension.neon' => $neon,
+            'bitexpert/ServiceContractRule.php' => $rule,
+        ]);
+        file_put_contents($project . '/vendor/autoload.php', "require_once __DIR__ . '/../bitexpert/ServiceContractRule.php';\n", FILE_APPEND);
+        $runner = new PhpStanRunner(new RuleRegistry(), null, $project . '/bitexpert');
+
+        [$exitCode, $stdout, $stderr] = $this->runCommand($project, ['--format=json'], $runner);
+
+        self::assertNotSame(Application::EXIT_ERROR, $exitCode, $stderr);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        self::assertSame(['P-DI-01'], array_column($report['findings'], 'ruleId'));
+        self::assertSame([], (array) $report['summary']['notices'], 'its own rule is off');
+        $configs = glob(WorkDirectory::forProject($project) . '/phpstan-*.neon') ?: [];
+        self::assertCount(1, $configs);
+        $lines = file($configs[0], FILE_IGNORE_NEW_LINES) ?: [];
+        self::assertStringContainsString('"' . $project . '/bitexpert/extension.neon"', $lines[0] ?? '');
+        $parameters = json_decode(substr($lines[1] ?? '', strlen('parameters: ')), true);
+        self::assertIsArray($parameters);
+        self::assertSame(['checkCollectionViaFactory' => false, 'checkServiceContracts' => false, 'checkResourceModelsUsedDirectly' => false], $parameters['magento'] ?? null);
+        self::assertSame(['setTemplateDisallowedForBlockClasses' => false], $parameters['extdn'] ?? null);
+    }
+
     public function testXmlOfASymlinkedModuleIsAnalyzed(): void
     {
         $events = '<?xml version="1.0"?><config><event name="catalog_product_load_after">'
