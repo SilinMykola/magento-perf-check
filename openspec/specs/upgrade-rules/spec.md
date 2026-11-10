@@ -1,4 +1,9 @@
-## ADDED Requirements
+# upgrade-rules Specification
+
+## Purpose
+Upgrade rules: find code in the project that breaks with a change in a Magento release, and run them by the installed version and the version given with `--target-version`.
+
+## Requirements
 
 ### Requirement: Upgrade rules run by version
 Every upgrade rule SHALL list, per release line, the first Magento version that has the change it checks. A rule applies to a version when that version is at or above the version listed for its line, or when its line is newer than every line listed. The rule SHALL run when it applies to the installed version or to the value of `--target-version`.
@@ -35,7 +40,7 @@ Versions SHALL be compared as `x.y.z` with an optional `-pN` patch number; a pre
 - **THEN** it counts as 2.4.9
 
 ### Requirement: Target version input
-An invalid `--target-version` SHALL end the command with exit code 2. When the project has no `vendor/magento/magento2-base/composer.json`, as on Mage-OS or in a core checkout, and no `--target-version` is given, upgrade rules SHALL NOT run, and one notice SHALL say so. Upgrade rules SHALL follow their status: an experimental one runs only when enabled.
+An invalid `--target-version` SHALL end the command with exit code 2. When the Magento version cannot be read from `vendor/magento/magento2-base/composer.json`, as on Mage-OS or in a core checkout, and no `--target-version` is given, upgrade rules SHALL NOT run, and while one of them is enabled one notice SHALL say so. An enabled upgrade rule that does not run because neither version has its change SHALL be named in a notice too. Upgrade rules SHALL follow their status: an experimental one runs only when enabled.
 
 #### Scenario: Invalid target
 - **WHEN** the command runs with `--target-version=latest`
@@ -46,7 +51,7 @@ An invalid `--target-version` SHALL end the command with exit code 2. When the p
 - **THEN** no upgrade rule runs and the report has one notice about it
 
 ### Requirement: U-CLI-01 console command without the Symfony 7.4 return type
-U-CLI-01 SHALL report a class that extends `Symfony\Component\Console\Command\Command` and declares `execute()` without a native `int` return type. Its version SHALL be 2.4.9, and it SHALL start as experimental. It SHALL NOT report a class declared inside a conditional statement.
+U-CLI-01 SHALL report a class that extends `Symfony\Component\Console\Command\Command` and declares `execute()` without a native `int` return type. Its version SHALL be 2.4.9, and it SHALL start as experimental. It SHALL also report such an `execute()` that comes from a trait, at the class. It SHALL NOT report a named class declared in an `if`, `elseif` or `else` branch, nor a class in a Composer plugin package, which `bin/magento` does not load.
 
 #### Scenario: Missing return type
 - **WHEN** a command class declares `protected function execute(InputInterface $input, OutputInterface $output)`
@@ -54,4 +59,8 @@ U-CLI-01 SHALL report a class that extends `Symfony\Component\Console\Command\Co
 
 #### Scenario: Declared under a version check
 - **WHEN** the same class is declared inside an `if` block
+- **THEN** U-CLI-01 reports nothing
+
+#### Scenario: Command of a Composer plugin
+- **WHEN** a command without the return type is in a package of type `composer-plugin`
 - **THEN** U-CLI-01 reports nothing

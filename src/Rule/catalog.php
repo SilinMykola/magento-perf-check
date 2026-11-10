@@ -229,6 +229,12 @@ return [
         $b('lib/internal/Magento/Framework/ObjectManager/ObjectManager.php#L57-L60', 'create() builds a new instance through the factory on every call.'),
         $b('lib/internal/Magento/Framework/ObjectManager/ObjectManager.php#L68-L76', 'get() builds the shared instance on the first call and returns it from _sharedInstances afterwards.'),
     ], ['magentoPerf.loopObjectManager' => null]),
+    new RuleDefinition('U-CLI-01', 'Console command whose execute() has no int return type (Magento 2.4.9, Symfony Console 7.4)', Severity::Error, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/development/backward-incompatible-changes/', 'Symfony 7.4 LTS support (2.4.9): "Custom classes that extend Symfony core classes must have updated type declarations and method signatures aligned with Symfony 7.4".'),
+        $b('composer.json#L89', 'Magento requires symfony/console ^7.4.'),
+        new Source(SourceLevel::B, 'https://github.com/symfony/console/blob/92f58bc4bf97a92ed1b9f367f0cd44f20bde0e87/Command/Command.php#L240', 'Symfony Console 7.4: Command::execute() declares the return type int.'),
+        $b('lib/internal/Magento/Framework/Console/Cli.php#L196-L222', 'bin/magento creates every registered command through CommandListInterface when it builds its default command list.'),
+    ], ['magentoPerf.consoleCommandReturnType' => null], ['2.4.9']),
     new RuleDefinition('P-LOOP-12', 'Method that runs a query, called inside a loop', Severity::Warning, RuleStatus::Experimental, [
         $a($codeReview, '"Are queries executed in a loop? This loop can be outside of the edited files."'),
         $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),

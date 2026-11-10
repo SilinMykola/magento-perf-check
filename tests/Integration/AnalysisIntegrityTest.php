@@ -951,4 +951,42 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame(['P-LOOP-12'], $this->ruleIds($project, [$config]));
         self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
     }
+
+    public function testUpgradeRulesFollowTheInstalledAndTheTargetVersion(): void
+    {
+        $stubs = (string) realpath(__DIR__ . '/../PhpStan/Stubs');
+        $project = $this->project([
+            'vendor/autoload.php' => sprintf("<?php\nrequire_once %s;\nrequire_once %s;\n", var_export($stubs . '/framework.php', true), var_export($stubs . '/fpc.php', true)),
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Console/Sync.php' => "<?php\nnamespace Acme\\Demo\\Console;\nclass Sync extends \\Symfony\\Component\\Console\\Command\\Command\n{\n"
+                . "    public function execute(\\Symfony\\Component\\Console\\Input\\InputInterface \$input, \\Symfony\\Component\\Console\\Output\\OutputInterface \$output)\n    {\n        return 0;\n    }\n}\n",
+            'on.neon' => "magentoPerf:\n    rules:\n        U-CLI-01:\n            enabled: true\n",
+        ]);
+        $config = '--config=' . $project . '/on.neon';
+        $notices = function (array $argv) use ($project): array {
+            [, $stdout] = $this->runCommand($project, ['--format=json', ...$argv]);
+            $report = json_decode($stdout, true);
+            self::assertIsArray($report);
+
+            return array_column($report['notices'] ?? [], 'source');
+        };
+
+        // No magento2-base: the version is unknown, and a notice says why the rule did not run.
+        self::assertSame([], $this->ruleIds($project, [$config]));
+        self::assertContains('upgrade-version', $notices([$config]));
+        self::assertNotContains('upgrade-version', $notices([]), 'no notice while the rule is off');
+        self::assertSame(['U-CLI-01'], $this->ruleIds($project, [$config, '--target-version=2.4.9']));
+
+        $this->write($project . '/vendor/magento/magento2-base/composer.json', '{"name": "magento/magento2-base", "version": "2.4.8-p2"}');
+        self::assertSame([], $this->ruleIds($project, [$config]), 'the installed 2.4.8 does not have the change');
+        self::assertContains('upgrade-version', $notices([$config]), 'the skipped rule is named');
+        self::assertNotContains('upgrade-version', $notices([$config, '--target-version=2.4.9']));
+        self::assertSame(['U-CLI-01'], $this->ruleIds($project, [$config, '--target-version=2.4.9']));
+
+        $this->write($project . '/vendor/magento/magento2-base/composer.json', '{"name": "magento/magento2-base", "version": "2.4.9"}');
+        self::assertSame(['U-CLI-01'], $this->ruleIds($project, [$config]), 'already broken on the installed 2.4.9');
+        self::assertSame(['U-CLI-01'], $this->ruleIds($project, [$config, '--target-version=2.4.8']), 'a lower target hides nothing');
+        self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
+        self::assertNotContains('upgrade-version', $notices([]), 'no notice while the rule is off');
+    }
 }
