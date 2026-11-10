@@ -30,6 +30,14 @@ Observers on `controller_action_postdispatch_adminhtml_catalog_product_*` never 
 
 See [held-out.md](held-out.md): a save behind a check on an id in the loop, and classes that a library builds by name.
 
+## P-LOOP-02 and P-LOOP-03: a `switch` case that matches one item
+
+Seen in November 2026 on archived projects. A query or a save sits in a `switch` case inside a loop, and in practice the case matches one item. The rules do not know which items a case matches, so they report it. Two shapes were seen:
+- `switch ($key)` inside `foreach ($items as $key => $item)`. Array keys are unique only by `===`, while `switch` compares with `==`: the keys `1` and `'1.0'` both match `case 1`. An iterator or a generator can also yield the same key twice. In the case seen, the loop ran over the result of `json_decode()`, which PHPStan does not type as an array.
+- `switch ($item->getCode())` on a code that Magento keeps unique, such as `customer_group_code`. The check runs on save in `_initUniqueFields()` ([Group.php#L62-L67](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Customer/Model/ResourceModel/Group.php#L62-L67)). The database index on that column is not unique ([db_schema.xml#L433-L435](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Customer/etc/db_schema.xml#L433-L435)). The rules cannot see this check, and the same shape on a getter whose value repeats is a real N+1.
+
+The rules cannot tell these cases from real findings without guessing. They stay reported and need a suppression with a reason.
+
 ## Low impact
 
 These rules are correct but report mostly negligible cases; calibration lowers their severity through the impact share. A narrower scope could raise it again:
