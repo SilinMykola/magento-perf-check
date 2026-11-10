@@ -156,9 +156,12 @@ return [
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Templates/ThisInTemplateSniff.php#L16-L17', 'Magento2.Templates.ThisInTemplate: $this in templates is deprecated, helpers are discouraged; use $block and view models.'),
     ]),
     new RuleDefinition('S-TPL-02', 'Object manager in a template (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines#presentation-layer', 'Section 6.2.6: "Templates MUST NOT instantiate objects. All objects MUST be passed from the Block objects."'),
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Templates/ObjectManagerSniff.php#L23-L29', 'Magento2.Templates.ObjectManager: templates must not instantiate objects; all objects come from the block.'),
     ]),
     new RuleDefinition('S-DI-01', 'Proxy or Interceptor requested in a constructor (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines#class-design', 'Section 2.5: "Proxies and interceptors MUST NEVER be explicitly requested in constructors."'),
+        $b('lib/internal/Magento/Framework/ObjectManager/Code/Generator/Proxy.php#L113-L120', 'A generated Proxy builds the real object on its first use.'),
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Classes/DiscouragedDependenciesSniff.php#L25', 'Magento2.Classes.DiscouragedDependencies: "Proxies and interceptors MUST never be explicitly requested in constructors."'),
     ]),
     new RuleDefinition('S-FN-01', 'sleep(), time_nanosleep() or session_*() call (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [

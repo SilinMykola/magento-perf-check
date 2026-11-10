@@ -67,8 +67,8 @@ These are not in the default set: calibration measured them below their precisio
 | [T-04](rules/T-04.md) | Result of $viewModels->require() never used in a template | warning | C |
 | [S-PERF-01](rules/S-PERF-01.md) | array_merge() inside a loop, through magento-coding-standard | warning | C |
 | [S-TPL-01](rules/S-TPL-01.md) | $this or a helper in a template, through magento-coding-standard | warning | C |
-| [S-TPL-02](rules/S-TPL-02.md) | Object manager in a template, through magento-coding-standard | warning | C |
-| [S-DI-01](rules/S-DI-01.md) | Proxy or Interceptor requested in a constructor, through magento-coding-standard | warning | C |
+| [S-TPL-02](rules/S-TPL-02.md) | Object manager in a template, through magento-coding-standard | warning | A, C |
+| [S-DI-01](rules/S-DI-01.md) | Proxy or Interceptor requested in a constructor, through magento-coding-standard | warning | A, B, C |
 | [S-FN-01](rules/S-FN-01.md) | sleep(), time_nanosleep() or session_*() call, through magento-coding-standard | warning | C |
 
 ## Planned

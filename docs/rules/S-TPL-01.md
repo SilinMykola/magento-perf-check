@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Severity | `warning` |
-| Status | experimental, off by default: its only source is the magento-coding-standard sniff, and it is not calibrated yet. Enable it with `enabled: true` in `magento-perf-check.neon` |
+| Status | experimental, off by default: its only source is the sniff, and in [calibration round 4](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-4.md) none of 28 findings had a performance cost. Enable it with `enabled: true` in `magento-perf-check.neon` |
 | Analyzer | phpcs of the project, sniff `Magento2.Templates.ThisInTemplate` of [magento/magento-coding-standard](https://github.com/magento/magento-coding-standard) ([ADR 7](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0007-run-magento-coding-standard-performance-sniffs.md)) |
 
 ## What it catches
