@@ -8,7 +8,7 @@
 
 ## 1. Goal
 
-A static analyzer that finds **performance and Full Page Cache anti-patterns** in Magento 2 / Mage-OS code before they reach production. Principles:
+A static analyzer that finds **performance and Full Page Cache anti-patterns** in Magento 2 / Mage-OS code before they reach production. It also takes design and compatibility rules that an official source states, such as the Technical guidelines or a change in a Magento release ([ADR 8](adr/0008-scope-beyond-performance.md)). Principles:
 
 1. **Works without configuration.** `composer require --dev`, one command, an immediate result.
 2. **Precision over quantity.** A noisy tool gets switched off within a week. A rule with low precision does not enter the default set until it is calibrated (section 7).
