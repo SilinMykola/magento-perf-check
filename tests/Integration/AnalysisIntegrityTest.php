@@ -899,4 +899,32 @@ final class AnalysisIntegrityTest extends TestCase
 
         self::assertSame(['P-DI-06 app/code/Acme/Demo/Block/Shared.php:9', 'P-LOOP-01 app/code/Acme/Demo/Block/Shared.php:9'], $found);
     }
+
+    public function testWebapiInputTypeFollowsAChangedServiceInterface(): void
+    {
+        $service = static fn (string $parameter): string => "<?php\nnamespace Acme\\Demo\\Api;\ninterface SearchInterface\n{\n"
+            . "    /**\n     * @param {$parameter}\n     * @return int\n     */\n    public function search({$parameter}): int;\n}\n";
+        $project = $this->project([
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/etc/webapi.xml' => '<?xml version="1.0"?><routes><route url="/V1/acme/search" method="POST">'
+                . '<service class="Acme\Demo\Api\SearchInterface" method="search"/></route></routes>',
+            'app/code/Acme/Demo/etc/di.xml' => '<?xml version="1.0"?><config>'
+                . '<preference for="Acme\Demo\Api\Data\RequestInterface" type="Acme\Demo\Model\Request"/></config>',
+            'app/code/Acme/Demo/Api/SearchInterface.php' => $service('string $query'),
+            'app/code/Acme/Demo/Api/Data/RequestInterface.php' => "<?php\nnamespace Acme\\Demo\\Api\\Data;\ninterface RequestInterface\n{\n"
+                . "    public function getPoint(): \\stdClass;\n}\n",
+            'app/code/Acme/Demo/Model/Request.php' => "<?php\nnamespace Acme\\Demo\\Model;\nclass Request implements \\Acme\\Demo\\Api\\Data\\RequestInterface\n{\n"
+                . "    public function __construct(private \\stdClass \$point)\n    {\n    }\n\n"
+                . "    public function getPoint(): \\stdClass\n    {\n        return \$this->point;\n    }\n}\n",
+            'on.neon' => "magentoPerf:\n    rules:\n        P-API-01:\n            enabled: true\n",
+        ]);
+        $config = '--config=' . $project . '/on.neon';
+
+        self::assertSame([], $this->ruleIds($project, [$config]), 'RequestInterface is not an input type yet');
+
+        // Only the service interface changes; PHPStan's result cache keeps the result of Request.php.
+        file_put_contents($project . '/app/code/Acme/Demo/Api/SearchInterface.php', $service('\Acme\Demo\Api\Data\RequestInterface $request'));
+        self::assertSame(['P-API-01'], $this->ruleIds($project, [$config]));
+        self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
+    }
 }

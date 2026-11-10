@@ -8,6 +8,10 @@ services:
             reportUntypedReceivers: %magentoPerf.reportUntypedReceivers%
         tags:
             - phpstan.rules.rule
+    -
+        class: Silin\MagentoPerfCheck\PhpStan\WebapiConstructorCollector
+        tags:
+            - phpstan.collector
 
 rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\ConstructorWorkRule
@@ -23,3 +27,4 @@ rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\UnpagedBatchCollectionRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\RepeatedScriptFunctionRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\UnusedViewModelRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\WebapiConstructorParameterRule

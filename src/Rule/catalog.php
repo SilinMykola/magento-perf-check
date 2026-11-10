@@ -137,6 +137,11 @@ return [
     new RuleDefinition('P-PLG-01', 'around plugin where before/after would do', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/components/plugins', 'Avoid using around method plugins when they are not required, because they increase stack traces and affect performance.'),
     ], ['magentoPerf.unnecessaryAroundPlugin' => null]),
+    new RuleDefinition('P-API-01', 'Web API input field that only an unsupported constructor parameter could set', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/development/components/web-api/services', 'REST API constructor parameter validation (APSB25-88): supported parameter types are simple types and *\\Api\\Data\\*Interface classes; "Unsupported parameters will not be instantiated from REST payloads."'),
+        $b('lib/internal/Magento/Framework/Webapi/ServiceInputProcessor.php#L290-L296', 'A constructor parameter gets a request value only when its type is simple or matches \\Vendor\\Module\\Api\\Data\\.'),
+        $b('lib/internal/Magento/Framework/Webapi/ServiceInputProcessor.php#L346-L398', 'Any other field is set through the setter of the requested type; a field without one fails with "%fieldName" is not supported.'),
+    ], ['magentoPerf.webapiConstructorParameter' => null]),
     new RuleDefinition('T-01', 'getLayout()->createBlock() in a template', Severity::Info, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 6.2.6: "Templates MUST NOT instantiate objects. All objects MUST be passed from the Block objects."'),
     ], ['magentoPerf.createBlockInTemplate' => null]),

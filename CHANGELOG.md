@@ -9,6 +9,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 ### Added
 
 - Experimental rules, off by default, that run sniffs of the project's magento/magento-coding-standard through its phpcs ([ADR 7](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0007-run-magento-coding-standard-performance-sniffs.md)), all at `warning`: S-PERF-01 (`array_merge()` in a loop), S-TPL-01 (`$this` or a helper in a template), S-TPL-02 (object manager in a template), S-DI-01 (a Proxy or Interceptor named in a constructor) and S-FN-01 (`sleep()`, `time_nanosleep()` or `session_*()`). phpcs runs only when one of them is enabled; findings share the report, configuration and baseline with the other rules. On the calibration corpus, with coding standard version 40, they give 33, 28, 0, 8 and 2 findings.
+- P-API-01, experimental, off by default, at `warning`: a constructor parameter of a class that a REST or SOAP request builds, when since APSB25-88 the request cannot fill it and the requested type has a getter but no setter for the field. A request with that field then fails with `"%fieldName" is not supported`. Input types come from `webapi.xml` and the classes built from `di.xml` preferences, which the project index now reads. In the Magento 2.4.9 core it gives 1 finding, `sort` of the in-store pickup search request, confirmed on a running store; the 25 Packagist modules of the calibration corpus give none.
 
 ### Fixed
 

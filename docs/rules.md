@@ -1,6 +1,6 @@
 # Rules
 
-34 rules in the default set and 19 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+34 rules in the default set and 20 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -70,6 +70,7 @@ These are not in the default set: calibration measured them below their precisio
 | [S-TPL-02](rules/S-TPL-02.md) | Object manager in a template, through magento-coding-standard | warning | A, C |
 | [S-DI-01](rules/S-DI-01.md) | Proxy or Interceptor requested in a constructor, through magento-coding-standard | warning | A, B, C |
 | [S-FN-01](rules/S-FN-01.md) | sleep(), time_nanosleep() or session_*() call, through magento-coding-standard | warning | C |
+| [P-API-01](rules/P-API-01.md) | Web API input field that only an unsupported constructor parameter could set | warning | A, B |
 
 ## Planned
 

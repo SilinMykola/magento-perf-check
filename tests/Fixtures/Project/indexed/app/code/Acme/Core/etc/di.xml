@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="Acme\Pickup\Api\Data\SearchRequestInterface" type="Acme\Pickup\Model\SearchRequest"/>
+    <preference for="\Acme\Pickup\Api\Data\ResultInterface" type="Acme\Pickup\Model\Result"/>
+    <preference for="Acme\Pickup\Api\Data\ContactInterface" type="Acme\Pickup\Model\Contact"/>
+    <preference for="Acme\Pickup\Model\Contact" type="Acme\Pickup\Model\CustomContact"/>
     <type name="Acme\Promo\Block\Banner">
         <arguments>
             <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
