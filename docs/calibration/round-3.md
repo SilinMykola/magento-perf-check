@@ -22,3 +22,7 @@ Each finding was graded once, by one grader, with the verdicts of round 1.
 
 - **P-DI-06** on the project. The 2 false positives were a lazy getter that keeps the object in the block's data; the rule leaves that form out since this round. The 3 findings that matter create a helper per rendered price box, or per deal in a list.
 - **P-LOOP-11** is new. It reported 10 findings in the corpus and 6 on the project, 4 of them in the same blog module in both, so 12 distinct findings were graded. The 2 that matter: a product `create()->load()` per id in a batch export, and a product type `create()` per cart item in a frontend observer. The others are admin actions, an import and a self-test; two of them, admin mass actions, also hide a `create()->load()` per id. P-LOOP-01 does not see such loads, because a model created by class name through the object manager is untyped. In the Magento core the rule gives 79 findings, most of them `get()` of a class named in a configured list (pools and composites); they were not graded.
+
+## Static methods, 2026-11-10
+
+On another project, not public, P-DI-06 reported 2 calls of `ObjectManager::getInstance()` in a static method of a file uploader copied from core, where constructor injection is not possible. They were graded as false positives. The maintainer decided they stay reported, for the same reason as above: the call hides the dependency wherever it is. The rule page no longer lists static methods as a known false positive; such a call is suppressed with a reason.
