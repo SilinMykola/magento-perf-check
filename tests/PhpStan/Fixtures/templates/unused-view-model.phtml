@@ -1,0 +1,21 @@
+<?php
+/** @var \Hyva\Theme\Model\ViewModelRegistry $viewModels */
+$menuItems = $viewModels->require(\stdClass::class)->getNavigation(4);
+$heroicons = $viewModels->require(\stdClass::class);
+$unrelated = $block->getData('x');
+$counted = $viewModels->require(\stdClass::class);
+$loaded = $loader->require('config.php');
+?>
+<div><?= $heroicons->arrowSvg() ?></div>
+<div><?= count([$counted]) ?></div>
+<?php
+$viewModelNavigation = $viewModels->require(\stdClass::class);
+$navigationItems = $viewModelNavigation->getNavigation(4);
+$plainObject = new \ArrayObject();
+$plainCount = $plainObject->count();
+$first = $second = $viewModels->require(\stdClass::class);
+?>
+<div><?= $first->name() ?></div>
+<?php
+$topNavigation = $viewModelNavigation->getNavigation(1);
+$firstEntry = $topNavigation->first();

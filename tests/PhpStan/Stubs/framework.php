@@ -6,7 +6,7 @@
 declare(strict_types=1);
 
 namespace Magento\Framework\Model {
-    abstract class AbstractModel
+    abstract class AbstractModel extends \Magento\Framework\DataObject
     {
         /**
          * @param mixed $modelId
@@ -200,6 +200,15 @@ namespace Magento\Framework {
     {
         /** @return mixed */
         public function getId()
+        {
+            return null;
+        }
+
+        /**
+         * @param array<mixed> $args
+         * @return mixed
+         */
+        public function __call(string $method, array $args)
         {
             return null;
         }

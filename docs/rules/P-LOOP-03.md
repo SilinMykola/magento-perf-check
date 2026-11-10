@@ -47,6 +47,7 @@ $this->ruleRepository->save($rule);
 - Loops in import, cron or CLI code where no batch API exists. The rule is `info` for this reason.
 - Loops with a small fixed bound.
 - A save inside an `if` in the loop that matches at most one key, such as an id, so it runs once. With a `break` or `return` after the save, the rule already leaves it out.
+- A save in a `switch` case that matches one item is reported when the loop goes on after the `switch`. A `break` in the case leaves only the `switch`; see [follow-ups](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/follow-ups.md).
 
 ## Basis
 

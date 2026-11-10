@@ -17,7 +17,7 @@ final class CalibrationConsistencyTest extends TestCase
     public function testRegistryMatchesTheCalibrationReport(): void
     {
         $rows = [];
-        foreach ([__DIR__ . '/../../../docs/calibration.md', __DIR__ . '/../../../docs/calibration/round-2.md'] as $file) {
+        foreach ([__DIR__ . '/../../../docs/calibration.md', __DIR__ . '/../../../docs/calibration/round-2.md', __DIR__ . '/../../../docs/calibration/round-3.md'] as $file) {
             preg_match_all('/^\| \[([A-Z0-9-]+)\]\((?:\.\.\/)?rules\/[^)]+\) \| (error|warning|info) \|.*\| ([^|]+) \|$/m', (string) file_get_contents($file), $matches, PREG_SET_ORDER);
             self::assertNotEmpty($matches, $file);
             foreach ($matches as $match) {
@@ -34,7 +34,7 @@ final class CalibrationConsistencyTest extends TestCase
                 continue;
             }
             self::assertSame(RuleStatus::Default, $rule->status, $id);
-            $expected = str_starts_with($decision, 'downgraded to ') ? substr($decision, strlen('downgraded to ')) : $measuredSeverity;
+            $expected = preg_match('/^(?:downgraded|raised) to (\w+)$/', $decision, $changed) === 1 ? $changed[1] : $measuredSeverity;
             self::assertSame($expected, $rule->severity->value, sprintf('%s: %s', $id, $decision));
         }
     }

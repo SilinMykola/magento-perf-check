@@ -54,6 +54,19 @@ final class ObjectManagerUsageRuleTest extends RuleTestCase
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\LazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 291],
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackOnLocal. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 309],
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackNewForms. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 326],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 351],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 355],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 358],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 361],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 365],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 369],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 380],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 384],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 388],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 393],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 398],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 404],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 409],
         ]);
     }
 }

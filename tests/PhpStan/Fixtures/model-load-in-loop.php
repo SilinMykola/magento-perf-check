@@ -194,3 +194,28 @@ final class TryAroundLoop
         return null;
     }
 }
+
+final class MagicRepository extends ProductRepository
+{
+    /**
+     * @param array<mixed> $args
+     * @return mixed
+     */
+    public function __call(string $method, array $args)
+    {
+        return null;
+    }
+}
+
+final class MagicSetterOutsideDataObject
+{
+    /**
+     * @param list<int> $ids
+     */
+    public function notReported(MagicRepository $repository, array $ids): void
+    {
+        foreach ($ids as $id) {
+            $repository->setStoreId(1)->getById($id);
+        }
+    }
+}

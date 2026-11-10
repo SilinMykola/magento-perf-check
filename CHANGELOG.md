@@ -6,6 +6,27 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-10
+
+### Added
+
+- Experimental rules, off by default: T-03 at `warning`, on a named JavaScript function declared in a `<script>` that a template renders once per item, inside a template loop or in Hyvä's product list `item.phtml`; T-04 at `warning`, on the result of Hyvä's `$viewModels->require()`, or of a call on it or on a variable holding it, kept in a variable the template never reads. On a Magento 2.4.5 project with a Hyvä child theme they give 2 and 8 findings, all correct; the other projects have none.
+- P-LOOP-11, in the default set at `error`: `get()` or `create()` on the object manager inside a loop, through `ObjectManager::getInstance()` or an injected `ObjectManagerInterface`. Factories and proxies are left out. It also finds a `create(Model::class)->load($id)` per id, which P-LOOP-01 cannot see because the created model is untyped. In the calibration corpus it gives 10 findings, in the Magento core 79, mostly `get()` of classes named in configured pools. **This can change a CI result.**
+
+### Changed
+
+- P-DI-06 is raised from `info` to `warning` by the maintainer's decision ([calibration round 3](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-3.md)): a direct object manager call hides the dependency from DI configuration, whatever its cost. **This can change a CI result.**
+- P-DI-06 also leaves out the lazy getter that keeps the object in its data: `$viewModel = $this->getData('key'); if (!$viewModel) { $viewModel = ObjectManager::getInstance()->get(...); $this->setData('key', $viewModel); }`, or the same without the variable. The object manager is asked once per object. In the calibration corpus this removes 2 findings of a blog module, graded as false positives; the Magento core does not change.
+- A module set to `0` in the `modules` list of `app/etc/config.php` is not analyzed: Magento does not run it. One `disabled-module` notice names it when it lies in the analyzed paths, and its configuration no longer counts for others, such as a Proxy in its `di.xml`. A module missing from the list counts as enabled. In the Magento core of the calibration project, where `Magento_TwoFactorAuth` is disabled, this removes 16 of 895 findings; on a Magento 2.3.3 project with four disabled modules, 43 of 169. **This can change a CI result.**
+
+### Fixed
+
+- The `magento-perf-check` command runs in a project with `phpstan/extension-installer` ([#6](https://github.com/SilinMykola/magento-perf-check/issues/6)). Before, it stopped with exit code 2: the installer already includes this package's `extension.neon` and that of `bitexpert/phpstan-magento`, and the command included them again. Now it reads the installer's list, from the project's autoloader first as PHPStan does, and leaves those files to it.
+- P-FPC-06 no longer reports a GET action whose `execute()` returns no value and renders no layout: it sends its own response, which keeps the no-cache headers that `FrontController` sets before every action. A layout or render call, a call on a page, layout or view object, or a call of the action's own methods other than `_redirect()` still counts as a possible page. An action that sets public headers itself, with `setPublicHeaders()` or `setHeader('Cache-Control', ...)`, is now reported whatever it returns, JSON and raw results included: the page cache stores it. On four projects this removes 1 finding, graded as a false positive; the calibration corpus and the Magento core do not change. **This can change a CI result.**
+- A magic `set*()` or `uns*()` of a `DataObject` subclass, such as a model, keeps the model's type, so a chain like `$model->setStatus(1)->save()` in a loop is reported. Before, PHPStan typed the magic call as `mixed` and the loop rules missed the call after it. In the calibration corpus this adds 1 P-LOOP-03 finding, in the Magento core 3; all are saves in a loop. **This can change a CI result.**
+- The project index is rebuilt when a module is added, enabled or disabled. Before, a new module with no `di.xml`, `events.xml` or other indexed file kept an outdated index from the cache.
+- Code in a trait gives each finding once, however many classes use the trait; a rule whose message names the class, such as P-DI-03 or P-IDX-01, still reports each class. Before, PHPStan analysed the trait once for each such class and every finding was repeated: in the calibration corpus one line of a blog module's trait gave 8 extra P-DI-06 findings. P-DI-06 now names the trait in its message, so a baseline that holds such a finding lists it again until the baseline is generated anew.
+
 ## [0.3.1] - 2026-11-09
 
 ### Fixed
@@ -107,7 +128,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.1.1...v0.2.0

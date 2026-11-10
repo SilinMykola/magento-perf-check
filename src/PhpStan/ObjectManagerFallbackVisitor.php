@@ -139,7 +139,15 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
     {
         foreach ($this->find($stmts, static fn (Node $node): bool => $node instanceof Stmt\If_) as $if) {
             /** @var Stmt\If_ $if */
-            $property = self::propertyOfThis($this->testedAsMissing($if->cond));
+            $tested = $this->testedAsMissing($if->cond);
+            $stored = $tested !== null ? $this->storedInData($tested, $if->stmts, $stmts) : null;
+            if ($stored !== null) {
+                foreach (self::dependencyRoots($stored) as $root) {
+                    $root->setAttribute(self::FALLBACK, true);
+                }
+                continue;
+            }
+            $property = self::propertyOfThis($tested);
             $assignments = self::assignments($if->stmts);
             if ($property === null || !$this->onlyAssigns($if->stmts, []) || count($assignments) !== 1
                 || self::propertyOfThis($assignments[0]->var) !== $property
@@ -150,6 +158,72 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
                 $root->setAttribute(self::FALLBACK, true);
             }
         }
+    }
+
+    /**
+     * The same lazy getter kept in the object's data under one key: "if (!$this->getData('key'))",
+     * or a variable read once from it, with a block that only does "$this->setData('key', <dependency>)",
+     * or "$variable = <dependency>; $this->setData('key', $variable)". Returns that dependency.
+     *
+     * @param Node\Stmt[] $block
+     * @param Node\Stmt[] $method
+     */
+    private function storedInData(Expr $tested, array $block, array $method): ?Expr
+    {
+        $key = self::dataKey($tested, 'getdata');
+        $variable = $tested instanceof Expr\Variable && is_string($tested->name) ? $tested->name : null;
+        if ($key === null && $variable !== null) {
+            $keys = [];
+            $reads = $this->find($method, static fn (Node $node): bool => $node instanceof Expr\Assign
+                && $node->var instanceof Expr\Variable && $node->var->name === $variable);
+            foreach ($reads as $assign) {
+                /** @var Expr\Assign $assign */
+                $read = self::dataKey($assign->expr, 'getdata');
+                if ($read !== null) {
+                    $keys[$read] = true;
+                }
+            }
+            $key = count($keys) === 1 ? (string) array_key_first($keys) : null;
+        }
+        $work = array_values(array_filter($block, static fn (Node\Stmt $stmt): bool => !$stmt instanceof Stmt\Nop));
+        $store = $work !== [] ? end($work) : null;
+        if ($key === null || !$store instanceof Stmt\Expression || self::dataKey($store->expr, 'setdata') !== $key) {
+            return null;
+        }
+        /** @var Expr\MethodCall $setData */
+        $setData = $store->expr;
+        $value = $setData->getArgs()[1]->value ?? null;
+        if (count($work) === 1) {
+            return $value !== null && $this->isDependency($value, []) ? $value : null;
+        }
+        $first = $work[0];
+        if (count($work) !== 2 || $variable === null || !$value instanceof Expr\Variable || $value->name !== $variable
+            || !$first instanceof Stmt\Expression || !$first->expr instanceof Expr\Assign
+            || !$first->expr->var instanceof Expr\Variable || $first->expr->var->name !== $variable
+            || !$this->isDependency($first->expr->expr, [])
+        ) {
+            return null;
+        }
+
+        return $first->expr->expr;
+    }
+
+    /**
+     * The key of "$this->getData('key')" or "$this->setData('key', ...)", by the lower-case method name.
+     */
+    private static function dataKey(Expr $expr, string $method): ?string
+    {
+        if (!$expr instanceof Expr\MethodCall || !$expr->var instanceof Expr\Variable || $expr->var->name !== 'this'
+            || !$expr->name instanceof Node\Identifier || $expr->name->toLowerString() !== $method
+        ) {
+            return null;
+        }
+        $args = $expr->getArgs();
+        if (count($args) !== ($method === 'setdata' ? 2 : 1) || !$args[0]->value instanceof Node\Scalar\String_) {
+            return null;
+        }
+
+        return $args[0]->value->value;
     }
 
     /**

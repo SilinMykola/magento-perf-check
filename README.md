@@ -12,11 +12,11 @@ Finds performance and Full Page Cache anti-patterns in Magento 2 and Mage-OS cod
 $ vendor/bin/magento-perf-check --paths=app/code/Mollie/Payment/Controller/Express/Process.php,app/code/Magefan/Community/Model/GetCategoryByProduct.php
 app/code/Magefan/Community/Model/GetCategoryByProduct.php
      73  error    [P-LOOP-01] Magento\Catalog\Api\CategoryRepositoryInterface::get() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().
-         https://github.com/SilinMykola/magento-perf-check/blob/v0.3.1/docs/rules/P-LOOP-01.md
+         https://github.com/SilinMykola/magento-perf-check/blob/v0.4.0/docs/rules/P-LOOP-01.md
 
 app/code/Mollie/Payment/Controller/Express/Process.php
      58  error    [P-FPC-06] Mollie\Payment\Controller\Express\Process handles GET only but calls Magento\Quote\Api\CartRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.
-         https://github.com/SilinMykola/magento-perf-check/blob/v0.3.1/docs/rules/P-FPC-06.md
+         https://github.com/SilinMykola/magento-perf-check/blob/v0.4.0/docs/rules/P-FPC-06.md
 
 2 finding(s): 2 error, 0 warning, 0 info. Analyzed app/code/Mollie/Payment/Controller/Express/Process.php, app/code/Magefan/Community/Model/GetCategoryByProduct.php in 0.8 s.
 ```
@@ -43,7 +43,7 @@ It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpsta
 
 ## What it finds
 
-45 rules: 33 on by default, 12 experimental. A few of them:
+48 rules: 34 on by default, 14 experimental. A few of them:
 
 - **Queries in loops:** `load()`, `getById()`, `getList()` or a new collection inside a loop (P-LOOP-01, P-LOOP-02, P-LOOP-09, P-LOOP-10).
 - **Full Page Cache breakers:** `cacheable="false"` on the default, catalog and CMS handles (X-LAY-03), state changes in GET-only controllers (P-FPC-06), no-cache headers on cacheable pages (P-FPC-05), cache flushes and `reindexAll()` from request code (P-FPC-09, P-FPC-10), ESI blocks on entity pages (X-LAY-02).

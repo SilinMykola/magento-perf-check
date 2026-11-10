@@ -12,9 +12,10 @@ use PhpParser\NodeVisitorAbstract;
 
 /**
  * Marks every method call inside an execute() whose return statements all return a
- * redirect, forward, JSON or raw result. Varnish and the built-in page cache store only
- * 200 and 404 responses, and FrontController sets no-cache headers that only a page result
- * replaces, so such actions are never served from cache. The check is syntactic.
+ * redirect, forward, JSON or raw result, or that returns nothing and renders no layout.
+ * Varnish and the built-in page cache store only 200 and 404 responses, and FrontController
+ * sets no-cache headers that only a page result or a rendered layout replaces, so such
+ * actions are never served from cache. The check is syntactic.
  */
 final class ControllerResultVisitor extends NodeVisitorAbstract
 {
@@ -64,6 +65,10 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
     private function returnsOnlyUncacheableResults(array $statements): bool
     {
         $finder = new NodeFinder();
+        // An action that sets public cache headers itself is cached whatever it returns.
+        if ($this->setsPublicHeaders($statements, $finder)) {
+            return false;
+        }
         $uncacheableVariables = [];
         foreach ($finder->findInstanceOf($statements, Expr\Assign::class) as $assign) {
             if ($assign->var instanceof Expr\Variable && is_string($assign->var->name) && $this->isUncacheable($assign->expr, [])) {
@@ -74,16 +79,66 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
             $finder->findInstanceOf($statements, Stmt\Return_::class),
             fn (Stmt\Return_ $return): bool => !$this->isInsideNestedFunction($statements, $return, $finder),
         );
-        if ($returns === []) {
-            return false;
-        }
         foreach ($returns as $return) {
-            if ($return->expr === null || !$this->isUncacheable($return->expr, $uncacheableVariables)) {
+            // A bare "return;" gives the action's own response, which keeps the no-cache headers.
+            if ($return->expr === null ? $this->mayRenderLayout($statements, $finder) : !$this->isUncacheable($return->expr, $uncacheableVariables)) {
                 return false;
             }
         }
 
-        return true;
+        // Reaching the end of execute() is a bare "return;" too.
+        return !self::fallsThrough($statements) || !$this->mayRenderLayout($statements, $finder);
+    }
+
+    /**
+     * @param Stmt[] $statements
+     */
+    private static function fallsThrough(array $statements): bool
+    {
+        $last = end($statements);
+
+        return !$last instanceof Stmt\Return_ && !($last instanceof Stmt\Expression && $last->expr instanceof Expr\Throw_)
+            && !($last instanceof Node && $last->getType() === 'Stmt_Throw');
+    }
+
+    /**
+     * "->setPublicHeaders(...)", or "->setHeader('Cache-Control', ...)".
+     *
+     * @param Stmt[] $statements
+     */
+    private function setsPublicHeaders(array $statements, NodeFinder $finder): bool
+    {
+        foreach ($finder->findInstanceOf($statements, Expr\MethodCall::class) as $call) {
+            $name = $call->name instanceof Node\Identifier ? $call->name->toLowerString() : '';
+            $header = $call->getArgs()[0]->value ?? null;
+            if ($name === 'setpublicheaders'
+                || ($name === 'setheader' && $header instanceof Node\Scalar\String_ && strtolower($header->value) === 'cache-control')
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Whether an execute() that returns nothing may render a page: a layout, render or page call, the
+     * view, or a method of its own class, which could do either. A redirect sends a 302, which is not cached.
+     *
+     * @param Stmt[] $statements
+     */
+    private function mayRenderLayout(array $statements, NodeFinder $finder): bool
+    {
+        foreach ($finder->findInstanceOf($statements, Expr\MethodCall::class) as $call) {
+            $name = $call->name instanceof Node\Identifier ? $call->name->toLowerString() : '';
+            if (preg_match('/layout|render/', $name) === 1 || preg_match('/page|layout|view/i', $this->receiverName($call->var)) === 1
+                || ($call->var instanceof Expr\Variable && $call->var->name === 'this' && !in_array($name, ['getrequest', 'getresponse', '_redirect'], true))
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -21,3 +21,5 @@ rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\HotRenderPluginRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\EagerCommandDependencyRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\UnpagedBatchCollectionRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\RepeatedScriptFunctionRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\UnusedViewModelRule

@@ -53,6 +53,7 @@ Still reported: a limit in a `foreach` or in a `for` with `count()` or `sizeof()
 ## Known false positives
 
 - Loops with a small fixed bound, such as iterating over two or three store views, cost little. Suppress with a reason.
+- A collection loaded in a `switch` case that matches one item, such as one key, is still reported. The rule does not know which items a case matches; see [follow-ups](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/follow-ups.md).
 - A collection created in a loop by a helper method and loaded in the loop is not recognized as created in the loop. That is a missed finding, not a false one; cross-method analysis is planned for M4.
 
 ## Basis

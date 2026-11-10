@@ -21,6 +21,8 @@ final class ProjectIndexBuilder
     /** Part of the cache key: raise it when the same files start to give a different index. */
     private const INDEX_VERSION = 4;
 
+    private const MODULE_CONFIG = 'app/etc/config.php';
+
     private const FILES = ['di.xml', '*/di.xml', 'events.xml', '*/events.xml', 'mview.xml', 'db_schema.xml', 'schema.graphqls', 'crontab.xml'];
 
     private const COMMAND_LISTS = ['magento\\framework\\console\\commandlist', 'magento\\framework\\console\\commandlistinterface'];
@@ -34,7 +36,7 @@ final class ProjectIndexBuilder
         $modules = $this->moduleRoots($projectRoot);
         $files = $this->indexedFiles($projectRoot, $modules);
 
-        $cacheFile = $this->cacheFile($projectRoot, $this->fingerprintOf($files));
+        $cacheFile = $this->cacheFile($projectRoot, $this->fingerprintOf($modules, $files));
         if (is_file($cacheFile)) {
             $data = json_decode((string) file_get_contents($cacheFile), true);
             if (is_array($data)) {
@@ -56,9 +58,70 @@ final class ProjectIndexBuilder
      */
     private function moduleRoots(string $projectRoot): array
     {
+        $disabled = self::disabledModules($projectRoot);
+
+        return array_filter($this->allModuleRoots($projectRoot), static fn (string $name): bool => !isset($disabled[$name]));
+    }
+
+    /**
+     * Directories of the modules set to 0 in app/etc/config.php: Magento loads neither their code
+     * nor their configuration. A Composer package is listed both as installed (vendor/..., which
+     * may be a symlink) and resolved, since files are found under either.
+     *
+     * @return array<string, string> directory => module name
+     */
+    public function disabledModuleRoots(string $projectRoot): array
+    {
+        $disabled = self::disabledModules($projectRoot);
         $roots = [];
+        foreach ($this->allModuleRoots($projectRoot, $asInstalled) as $root => $name) {
+            if (isset($disabled[$name])) {
+                $roots[$root] = $name;
+                $roots[$asInstalled[$root]] = $name;
+            }
+        }
+        ksort($roots);
+
+        return $roots;
+    }
+
+    /**
+     * Module names set to 0 or false in the modules list of app/etc/config.php. The file is read
+     * as text, never run; a module missing from the list counts as enabled.
+     *
+     * @return array<string, true>
+     */
+    public static function disabledModules(string $projectRoot): array
+    {
+        $content = @file_get_contents($projectRoot . '/' . self::MODULE_CONFIG);
+        if (!is_string($content)) {
+            return [];
+        }
+        // Tokenizing does not run the file; comments go, so a bracket or a module name in one does not count.
+        $code = '';
+        foreach (token_get_all($content) as $token) {
+            $code .= is_array($token) ? (in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true) ? ' ' : $token[1]) : $token;
+        }
+        if (preg_match('/([\'"])modules\1\s*=>\s*(?:array\s*\(|\[)([^\])]*)/i', $code, $list) !== 1) {
+            return [];
+        }
+        preg_match_all('/([\'"])([A-Za-z0-9]+_[A-Za-z0-9]+)\1\s*=>\s*(?:0|false)\b/i', $list[2], $matches);
+
+        return array_fill_keys($matches[2], true);
+    }
+
+    /**
+     * @param ?array<string, string> $asInstalled
+     * @param-out array<string, string> $asInstalled module root => the same directory as Composer installed it, before symlinks
+     * @return array<string, string> module root => module name
+     */
+    private function allModuleRoots(string $projectRoot, ?array &$asInstalled = null): array
+    {
+        $roots = [];
+        $asInstalled = [];
         foreach (glob($projectRoot . '/app/code/*/*/etc/module.xml') ?: [] as $moduleXml) {
             $roots[dirname($moduleXml, 2)] = $moduleXml;
+            $asInstalled[dirname($moduleXml, 2)] = dirname($moduleXml, 2);
         }
 
         $installed = $projectRoot . '/vendor/composer/installed.json';
@@ -69,13 +132,15 @@ final class ProjectIndexBuilder
             if (!is_array($package) || !is_string($package['install-path'] ?? null)) {
                 continue;
             }
-            $root = realpath($projectRoot . '/vendor/composer/' . $package['install-path']);
+            $path = self::normalize($projectRoot . '/vendor/composer/' . $package['install-path']);
+            $root = realpath($path);
             if ($root === false) {
                 continue;
             }
-            foreach ([$root, $root . '/src'] as $candidate) {
-                if (is_file($candidate . '/etc/module.xml')) {
-                    $roots[$candidate] = $candidate . '/etc/module.xml';
+            foreach (['', '/src'] as $suffix) {
+                if (is_file($root . $suffix . '/etc/module.xml')) {
+                    $roots[$root . $suffix] = $root . $suffix . '/etc/module.xml';
+                    $asInstalled[$root . $suffix] = $path . $suffix;
                 }
             }
         }
@@ -88,6 +153,23 @@ final class ProjectIndexBuilder
         ksort($modules);
 
         return $modules;
+    }
+
+    /**
+     * Resolves "." and ".." in an absolute path without following symlinks.
+     */
+    private static function normalize(string $path): string
+    {
+        $parts = [];
+        foreach (explode('/', $path) as $part) {
+            if ($part === '..') {
+                array_pop($parts);
+            } elseif ($part !== '.' && $part !== '') {
+                $parts[] = $part;
+            }
+        }
+
+        return '/' . implode('/', $parts);
     }
 
     /**
@@ -119,15 +201,19 @@ final class ProjectIndexBuilder
      */
     public function fingerprint(string $projectRoot): string
     {
-        return $this->fingerprintOf($this->indexedFiles($projectRoot, $this->moduleRoots($projectRoot)));
+        $modules = $this->moduleRoots($projectRoot);
+
+        return $this->fingerprintOf($modules, $this->indexedFiles($projectRoot, $modules));
     }
 
     /**
+     * @param array<string, string> $modules module root => module name
      * @param list<array{path: string, module: string, area: string, name: string}> $files
      */
-    private function fingerprintOf(array $files): string
+    private function fingerprintOf(array $modules, array $files): string
     {
-        $fingerprint = self::INDEX_VERSION . "\n";
+        // The module list counts too: a module added, enabled or disabled changes the index without changing a file.
+        $fingerprint = self::INDEX_VERSION . "\n" . implode("\n", array_keys($modules)) . "\n";
         foreach ($files as $file) {
             $fingerprint .= $file['path'] . '|' . (int) @filesize($file['path']) . '|' . (int) @filemtime($file['path']) . "\n";
         }

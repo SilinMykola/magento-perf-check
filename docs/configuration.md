@@ -65,6 +65,8 @@ Exit codes:
 
 Some files cannot be analyzed, such as XML that does not parse, PHP with syntax errors, or a class PHPStan cannot reflect. They are skipped and counted as analysis notices in the summary; `--format=json` lists them. With `--format=sarif`, `checkstyle` or `github`, or with `--output`, that summary goes to stderr.
 
+A module set to `0` in the `modules` list of `app/etc/config.php` does not run, so it is not analyzed: one `disabled-module` notice names it when it lies in the analyzed paths, and its configuration does not count for other modules (a Proxy in its `di.xml`, for example). The file is read as text, not run. A module missing from that list counts as enabled.
+
 ## Security
 
 Analysis runs code from the project. PHPStan loads the project's `vendor/autoload.php`, which in a stock Magento project requires the `registration.php` of every module in `app/code`. Do not analyze code you do not trust outside a sandbox.
@@ -105,7 +107,7 @@ The tool rejects unknown keys, unknown rule IDs and invalid values with exit cod
 
 PHPStan's result cache does not see XML here: after changing `di.xml` or another configuration file, run `phpstan clear-result-cache`. The `magento-perf-check` command handles this itself.
 
-The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) they are picked up automatically; otherwise include `vendor/silin/magento-perf-check/extension.neon` in your `phpstan.neon`. They report at every level. To suppress one finding, use its identifier and give a reason:
+The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) they are picked up automatically; otherwise include `vendor/silin/magento-perf-check/extension.neon` in your `phpstan.neon`. They report at every level. The `magento-perf-check` command installed in the project works with the installer too. Other extensions that the installer loads, such as `phpstan/phpstan-strict-rules`, then run in its analysis as well, and their errors show as `phpstan` notices. To suppress one finding, use its identifier and give a reason:
 
 ```php
 // @phpstan-ignore magentoPerf.loopModelLoad (the caller passes at most 3 ids)

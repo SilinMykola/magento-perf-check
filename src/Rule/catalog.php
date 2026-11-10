@@ -71,7 +71,7 @@ return [
     new RuleDefinition('P-DI-03', 'Event dispatched in a constructor', Severity::Error, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 2.3.2: events must not be triggered in constructors.'),
     ], ['magentoPerf.dispatchInConstructor' => null]),
-    new RuleDefinition('P-DI-06', 'Direct ObjectManager::getInstance() in PHP classes', Severity::Info, RuleStatus::Default, [
+    new RuleDefinition('P-DI-06', 'Direct ObjectManager::getInstance() in PHP classes', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/components/object-manager/', 'Usage rules: do not call the object manager directly, except in factories, proxies, the constructor backward-compatibility fallback and __wakeup/__sleep.'),
     ], ['magentoPerf.objectManagerUsage' => null]),
     new RuleDefinition('P-FPC-01', '$_isScopePrivate in a block', Severity::Info, RuleStatus::Default, [
@@ -140,6 +140,14 @@ return [
     new RuleDefinition('T-01', 'getLayout()->createBlock() in a template', Severity::Info, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 6.2.6: "Templates MUST NOT instantiate objects. All objects MUST be passed from the Block objects."'),
     ], ['magentoPerf.createBlockInTemplate' => null]),
+    new RuleDefinition('T-03', 'JavaScript function declared once per item in a template', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-default-theme/blob/c74658fdeddfb03255516b1ff3cf77b940b8dede/Magento_Catalog/layout/catalog_list_item.xml#L42-L43', 'The Hyvä default theme renders the product list JavaScript (compare, wishlist) in separate blocks, once per list.'),
+        new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-default-theme/blob/c74658fdeddfb03255516b1ff3cf77b940b8dede/Magento_Catalog/templates/product/list/js/wishlist.phtml#L19-L20', 'initWishlist() is declared there, outside the template rendered for each product.'),
+    ], ['magentoPerf.repeatedScriptFunction' => null]),
+    new RuleDefinition('T-04', 'Result of $viewModels->require() never used in a template', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-theme-module/blob/6c922be3cd2e9ff9512447c681f388ca829a9c25/src/Model/ViewModelRegistry.php#L60-L78', 'require() gets the view model and passes it to ViewModelCacheTags::collectFrom().'),
+        new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-theme-module/blob/6c922be3cd2e9ff9512447c681f388ca829a9c25/src/Model/ViewModelCacheTags.php#L36-L38', 'collectFrom() keeps a view model that implements IdentityInterface; its identities become cache tags of the page.'),
+    ], ['magentoPerf.unusedViewModel' => null]),
     new RuleDefinition('X-SETUP-01', 'Heavy work in Setup/Recurring or RecurringData', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/prepare/extension-lifecycle', 'The Recurring schema class runs after every schema installation or upgrade stage; RecurringData after every data stage.'),
         $b('setup/src/Magento/Setup/Model/Installer.php#L1159-L1174', 'The installer runs the Recurring script of every module.'),
@@ -192,6 +200,11 @@ return [
         $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),
         $b('lib/internal/Magento/Framework/Model/ResourceModel/Db/AbstractDb.php#L323-L333', 'AbstractDb::load() runs fetchRow() on every call.'),
     ], ['magentoPerf.loopResourceLoad' => null]),
+    new RuleDefinition('P-LOOP-11', 'ObjectManager get() or create() inside a loop', Severity::Error, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/components/object-manager/', 'Usage rules: do not call the object manager directly, except in factories, proxies, the constructor backward-compatibility fallback and __wakeup/__sleep.'),
+        $b('lib/internal/Magento/Framework/ObjectManager/ObjectManager.php#L57-L60', 'create() builds a new instance through the factory on every call.'),
+        $b('lib/internal/Magento/Framework/ObjectManager/ObjectManager.php#L68-L76', 'get() builds the shared instance on the first call and returns it from _sharedInstances afterwards.'),
+    ], ['magentoPerf.loopObjectManager' => null]),
     new RuleDefinition('P-LOOP-05', 'Product getCategoryIds() inside a loop', Severity::Warning, RuleStatus::Default, [
         $b('app/code/Magento/Catalog/Model/Product.php#L753-L769', 'getCategoryIds() asks the resource model when category_ids is not set.'),
         $b('app/code/Magento/Catalog/Model/ResourceModel/Product/CategoryLink.php#L54-L69', 'Each call runs one fetchAll for one product id.'),

@@ -570,3 +570,231 @@ namespace Acme\Promo\Controller\Feed {
         }
     }
 }
+
+namespace Acme\Promo\Controller\Payment {
+    use Magento\Catalog\Api\ProductRepositoryInterface;
+    use Magento\Catalog\Model\Product;
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+
+    final class Apply implements HttpGetActionInterface
+    {
+        public function __construct(private readonly ProductRepositoryInterface $productRepository, private readonly Product $product)
+        {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+        }
+    }
+
+    final class ApplyBare implements HttpGetActionInterface
+    {
+        public function __construct(private readonly ProductRepositoryInterface $productRepository, private readonly Product $product)
+        {
+        }
+
+        public function execute(): void
+        {
+            if ($this->getRequest() === null) {
+                return;
+            }
+            $this->productRepository->save($this->product);
+        }
+
+        private function getRequest(): ?object
+        {
+            return null;
+        }
+    }
+
+    final class RenderedLayout implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $view,
+        ) {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+            $this->view->loadLayout();
+        }
+    }
+
+    final class RenderedByHelper implements HttpGetActionInterface
+    {
+        public function __construct(private readonly ProductRepositoryInterface $productRepository, private readonly Product $product)
+        {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+            $this->show();
+        }
+
+        private function show(): void
+        {
+        }
+    }
+
+    final class RenderedPage implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $resultPageFactory,
+        ) {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+            $this->resultPageFactory->create();
+        }
+    }
+
+    final class RenderedThroughOutput implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $output,
+        ) {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+            $this->output->renderLayout();
+        }
+    }
+
+    final class VoidPublicHeaders implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $response,
+        ) {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+            $this->response->setPublicHeaders(3600);
+        }
+    }
+
+    final class JsonWithPublicHeaders implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $resultJsonFactory,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            $this->productRepository->save($this->product);
+            $result = $this->resultJsonFactory->create();
+            $result->setHeader('Cache-Control', 'public, max-age=3600');
+
+            return $result;
+        }
+    }
+
+    final class VoidRedirect implements HttpGetActionInterface
+    {
+        public function __construct(private readonly ProductRepositoryInterface $productRepository, private readonly Product $product)
+        {
+        }
+
+        public function execute(): void
+        {
+            $this->productRepository->save($this->product);
+            $this->_redirect('checkout/cart');
+        }
+
+        private function _redirect(string $path): mixed
+        {
+            return $path;
+        }
+    }
+
+    final class FallThroughToLayout implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $view,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            if ($this->product->getSku() === '') {
+                return $this->_redirect('*/*');
+            }
+            $this->productRepository->save($this->product);
+            $this->view->renderLayout();
+        }
+
+        private function _redirect(string $path): mixed
+        {
+            return $path;
+        }
+    }
+
+    final class JsonAfterOwnHelper implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly ProductRepositoryInterface $productRepository,
+            private readonly Product $product,
+            private readonly object $resultJsonFactory,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            $this->productRepository->save($this->product);
+            $this->prepare();
+
+            return $this->resultJsonFactory->create();
+        }
+
+        private function prepare(): void
+        {
+        }
+    }
+
+    final class ThrowsAtTheEnd implements HttpGetActionInterface
+    {
+        public function __construct(private readonly ProductRepositoryInterface $productRepository, private readonly Product $product)
+        {
+        }
+
+        public function execute(): mixed
+        {
+            if ($this->product->getSku() === '') {
+                return $this->_redirect('*/*');
+            }
+            $this->productRepository->save($this->product);
+            $this->prepare();
+            throw new \RuntimeException('Not available.');
+        }
+
+        private function _redirect(string $path): mixed
+        {
+            return $path;
+        }
+
+        private function prepare(): void
+        {
+        }
+    }
+}

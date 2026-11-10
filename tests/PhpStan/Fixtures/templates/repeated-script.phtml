@@ -1,0 +1,19 @@
+<?php
+/** @var list<string> $items */
+$items = [];
+?>
+<script>
+    function initOncePerPage() {
+        return {};
+    }
+</script>
+<?php foreach ($items as $item): ?>
+    <div>
+        <script>
+            const x = 1; function initPerItem() {
+                return {};
+            }
+            window.addEventListener('load', function () {});
+        </script>
+    </div>
+<?php endforeach; ?>

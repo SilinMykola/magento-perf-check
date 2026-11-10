@@ -178,6 +178,38 @@ final class Application
         return $message;
     }
 
+    /**
+     * One notice for each module disabled in app/etc/config.php that lies in, or holds, an analyzed path:
+     * Magento does not run it, so it is not analyzed.
+     *
+     * @param list<string> $paths
+     * @param array<string, string> $disabledRoots directory => module name
+     * @return list<Notice>
+     */
+    private static function disabledModuleNotices(array $paths, array $disabledRoots, string $projectRoot): array
+    {
+        $notices = [];
+        foreach ($disabledRoots as $root => $name) {
+            if (!str_starts_with($root, $projectRoot . '/')) {
+                continue;
+            }
+            $relative = substr($root, strlen($projectRoot) + 1);
+            foreach ($paths as $path) {
+                $path = trim($path, '/');
+                if ($path === '.' || str_starts_with($relative . '/', $path . '/') || str_starts_with($path . '/', $relative . '/')) {
+                    $notices[$name] = new Notice(
+                        Notice::SOURCE_DISABLED_MODULE,
+                        sprintf('%s is disabled in app/etc/config.php and was not analyzed.', $name),
+                        $relative,
+                    );
+                    break;
+                }
+            }
+        }
+
+        return array_values($notices);
+    }
+
     private function analyze(Options $options): AnalysisResult
     {
         $started = microtime(true);
@@ -191,7 +223,8 @@ final class Application
         $includeTests = $options->includeTests || ($config->includeTests ?? false);
 
         // Built once here; PHPStan workers then read the cached index.
-        $index = (new ProjectIndexBuilder())->build($options->projectRoot);
+        $indexBuilder = new ProjectIndexBuilder();
+        $index = $indexBuilder->build($options->projectRoot);
 
         $xmlRules = [
             new NonCacheableBlockRule($config->allowlistHandles, $config->replaceAllowlist),
@@ -208,11 +241,14 @@ final class Application
             new GlobalAreaRule(),
             new CacheIdFactorRule(),
         ];
-        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests), $xmlRules))->analyze($paths);
+        // A module disabled in app/etc/config.php does not run: neither its PHP nor its XML is analyzed.
+        $disabledRoots = $indexBuilder->disabledModuleRoots($options->projectRoot);
+        $disabledNotices = self::disabledModuleNotices($paths, $disabledRoots, $options->projectRoot);
+        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests, array_keys($disabledRoots)), $xmlRules))->analyze($paths);
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
-            ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests);
+            ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests, array_keys($disabledRoots));
 
-        if ($xml->filesFound === 0 && !$php->filesAnalyzed) {
+        if ($xml->filesFound === 0 && !$php->filesAnalyzed && $disabledNotices === []) {
             throw new UsageException(self::nothingToAnalyze($paths, $php->notices, $includeTests));
         }
 
@@ -232,7 +268,7 @@ final class Application
 
         return new AnalysisResult(
             $findings,
-            [...$xml->notices, ...$phpNotices],
+            [...$xml->notices, ...$phpNotices, ...$disabledNotices],
             $options->projectRoot,
             $paths,
             microtime(true) - $started,

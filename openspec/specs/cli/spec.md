@@ -56,7 +56,7 @@ By default the command SHALL skip test code below the analyzed paths: any direct
 - **THEN** the code in `Test/Unit` is analyzed
 
 ### Requirement: Merged report
-The command SHALL run both the XML and the PHP analysis and report their findings together. Each finding SHALL carry rule ID, severity, file path relative to the project, line, message and documentation link.
+The command SHALL run both the XML and the PHP analysis and report their findings together. Each finding SHALL carry rule ID, severity, file path relative to the project, line, message and documentation link. Code in a trait SHALL give each finding once, however many classes use the trait. A finding whose message names the using class SHALL be reported for each such class, and a finding that only some of those classes give SHALL still be reported.
 
 #### Scenario: Findings from both analyzers in one report
 - **WHEN** the analyzed paths contain both an X-LAY-01 violation and a P-LOOP-01 violation
@@ -66,6 +66,10 @@ The command SHALL run both the XML and the PHP analysis and report their finding
 - **WHEN** PHPStan reports an error that does not come from one of this tool's rules (for example an unknown class)
 - **THEN** that error is not listed as a finding
 - **AND** the summary shows how many such analysis notices were dropped
+
+#### Scenario: Trait used by several classes
+- **WHEN** a trait with a `load()` in a loop is used by two classes
+- **THEN** one P-LOOP-01 finding is reported at that line of the trait
 
 ### Requirement: Output formats
 The command SHALL support these formats on stdout:
@@ -145,7 +149,7 @@ Paths from `--paths` or the configuration file SHALL be normalized and deduplica
 - **THEN** it prints an error naming that path and exits with code 2
 
 ### Requirement: Notices reach the reader
-The analysis notice summary SHALL go to stderr when the format is `sarif`, `checkstyle` or `github`, or when `--output` is used. A missing or empty `generated/code`, without bitexpert/phpstan-magento installed, SHALL be a notice with source `generated-code`.
+The analysis notice summary SHALL go to stderr when the format is `sarif`, `checkstyle` or `github`, or when `--output` is used. A missing or empty `generated/code` SHALL be a notice with source `generated-code`, unless bitexpert/phpstan-magento is installed next to the tool or loaded by the extension installer.
 
 #### Scenario: SARIF with an unparsable file
 - **WHEN** the command runs with `--format=sarif` and a file does not parse
@@ -154,6 +158,10 @@ The analysis notice summary SHALL go to stderr when the format is `sarif`, `chec
 #### Scenario: No generated code
 - **WHEN** the project has no `generated/code`
 - **THEN** the report has one `generated-code` notice
+
+#### Scenario: bitexpert/phpstan-magento through the installer
+- **WHEN** the project has no `generated/code` and the extension installer loads bitexpert/phpstan-magento
+- **THEN** no `generated-code` notice is given
 
 #### Scenario: Notice of a disabled rule
 - **WHEN** P-COL-02 is not enabled and the code calls `getFirstItem()` on a receiver of unknown type
@@ -165,3 +173,15 @@ Two runs on one project at the same time SHALL each analyze their own paths. Wit
 #### Scenario: Concurrent runs with different paths
 - **WHEN** two runs on one project start at the same time with different `--paths`
 - **THEN** each report lists findings from its own paths only
+
+### Requirement: Projects with the PHPStan extension installer
+When `phpstan/extension-installer` already includes the `extension.neon` of this package or of `bitexpert/phpstan-magento`, the command SHALL NOT include that file again in the configuration it generates. It SHALL read the installer's list from the Composer autoloader that PHPStan uses first: the analyzed project's, then the tool's own.
+
+#### Scenario: Installer includes both extensions
+- **WHEN** the project's installer list holds this package and `bitexpert/phpstan-magento`
+- **THEN** the analysis runs and reports the package's findings
+- **AND** the generated configuration still includes `extension-experimental.neon`
+
+#### Scenario: No installer
+- **WHEN** neither autoloader knows the installer's list
+- **THEN** the command includes both files itself, as before
