@@ -107,7 +107,7 @@ The tool rejects unknown keys, unknown rule IDs and invalid values with exit cod
 
 PHPStan's result cache does not see XML here: after changing `di.xml` or another configuration file, run `phpstan clear-result-cache`. The `magento-perf-check` command handles this itself.
 
-The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) they are picked up automatically; otherwise include `vendor/silin/magento-perf-check/extension.neon` in your `phpstan.neon`. They report at every level. To suppress one finding, use its identifier and give a reason:
+The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) they are picked up automatically; otherwise include `vendor/silin/magento-perf-check/extension.neon` in your `phpstan.neon`. They report at every level. The `magento-perf-check` command installed in the project works with the installer too. Other extensions that the installer loads, such as `phpstan/phpstan-strict-rules`, then run in its analysis as well, and their errors show as `phpstan` notices. To suppress one finding, use its identifier and give a reason:
 
 ```php
 // @phpstan-ignore magentoPerf.loopModelLoad (the caller passes at most 3 ids)

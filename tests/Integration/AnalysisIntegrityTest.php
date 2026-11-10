@@ -310,6 +310,39 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame([], (array) $report['summary']['notices']);
     }
 
+    public function testExtensionsThatTheInstallerIncludesAreNotIncludedTwice(): void
+    {
+        $package = (string) realpath(__DIR__ . '/../..');
+        $project = $this->project([
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Block/Foo.php' => self::SESSION_BLOCK,
+            'bitexpert/extension.neon' => "parameters: []\n",
+        ]);
+        // What phpstan/extension-installer generates in a project that has this package and bitexpert/phpstan-magento.
+        $extensions = [
+            'bitexpert/phpstan-magento' => ['install_path' => $project . '/bitexpert', 'extra' => ['includes' => ['extension.neon']]],
+            'silin/magento-perf-check' => ['install_path' => $package, 'extra' => ['includes' => ['extension.neon']]],
+        ];
+        $this->write($project . '/vendor/phpstan/extension-installer/src/GeneratedConfig.php', sprintf(
+            "<?php\nnamespace PHPStan\\ExtensionInstaller;\nfinal class GeneratedConfig\n{\n    public const EXTENSIONS = %s;\n    public const NOT_INSTALLED = [];\n    public const PHPSTAN_VERSION_CONSTRAINT = null;\n}\n",
+            var_export($extensions, true),
+        ));
+        file_put_contents($project . '/vendor/autoload.php', "require_once __DIR__ . '/phpstan/extension-installer/src/GeneratedConfig.php';\n", FILE_APPEND);
+
+        [$exitCode, $stdout, $stderr] = $this->runCommand($project, ['--format=json']);
+
+        self::assertNotSame(Application::EXIT_ERROR, $exitCode, $stderr);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        self::assertSame(['P-DI-01'], array_column($report['findings'], 'ruleId'));
+        self::assertSame([], (array) $report['summary']['notices'], 'bitexpert/phpstan-magento is loaded by the installer');
+        $configs = glob(WorkDirectory::forProject($project) . '/phpstan-*.neon') ?: [];
+        self::assertCount(1, $configs);
+        $config = (string) file_get_contents($configs[0]);
+        self::assertStringContainsString('/extension-experimental.neon"', $config, 'the installer does not include the experimental rules');
+        self::assertStringNotContainsString('/extension.neon"', $config);
+    }
+
     public function testXmlOfASymlinkedModuleIsAnalyzed(): void
     {
         $events = '<?xml version="1.0"?><config><event name="catalog_product_load_after">'
