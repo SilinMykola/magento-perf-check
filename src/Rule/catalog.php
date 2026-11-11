@@ -146,13 +146,23 @@ return [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 6.2.6: "Templates MUST NOT instantiate objects. All objects MUST be passed from the Block objects."'),
     ], ['magentoPerf.createBlockInTemplate' => null]),
     new RuleDefinition('T-03', 'JavaScript function declared once per item in a template', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://docs.hyva.io/hyva-themes/writing-code/rendering-javascript-once.html', 'When the HTML is rendered multiple times, for example, items in a product list, "this can lead to the duplication of JavaScript in the page source"; split the JavaScript into a separate template and render it only once.'),
         new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-default-theme/blob/c74658fdeddfb03255516b1ff3cf77b940b8dede/Magento_Catalog/layout/catalog_list_item.xml#L42-L43', 'The Hyvä default theme renders the product list JavaScript (compare, wishlist) in separate blocks, once per list.'),
         new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-default-theme/blob/c74658fdeddfb03255516b1ff3cf77b940b8dede/Magento_Catalog/templates/product/list/js/wishlist.phtml#L19-L20', 'initWishlist() is declared there, outside the template rendered for each product.'),
     ], ['magentoPerf.repeatedScriptFunction' => null]),
     new RuleDefinition('T-04', 'Result of $viewModels->require() never used in a template', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://docs.hyva.io/hyva-themes/performance/view-model-cache-tags.html', '"When a template calls $viewModels->require() to instantiate a view model, the ViewModelRegistry checks if the view model implements IdentityInterface. If so, the view model is registered for cache tag collection."'),
         new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-theme-module/blob/6c922be3cd2e9ff9512447c681f388ca829a9c25/src/Model/ViewModelRegistry.php#L60-L78', 'require() gets the view model and passes it to ViewModelCacheTags::collectFrom().'),
         new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-theme-module/blob/6c922be3cd2e9ff9512447c681f388ca829a9c25/src/Model/ViewModelCacheTags.php#L36-L38', 'collectFrom() keeps a view model that implements IdentityInterface; its identities become cache tags of the page.'),
     ], ['magentoPerf.unusedViewModel' => null]),
+    new RuleDefinition('T-05', 'Synchronous external script in a storefront template', Severity::Warning, RuleStatus::Default, [
+        $a('https://docs.hyva.io/hyva-themes/writing-code/patterns/loading-external-javascript.html', 'About <script type="text/javascript" src="https://www.example.com/render-blocking-script.js" />: "Do not use this, it will lower the page rank metrics".'),
+        $a('https://docs.hyva.io/hyva-themes/performance/core-web-vitals.html', '"Every render-blocking script delays LCP. Load scripts that are not needed for the initial render using the defer or async attribute."'),
+    ], ['magentoPerf.syncExternalScript' => null]),
+    new RuleDefinition('T-06', 'Image without width and height in a storefront template', Severity::Info, RuleStatus::Experimental, [
+        $a('https://docs.hyva.io/hyva-themes/performance/core-web-vitals.html', '"Always set width and height attributes on images and videos. Without them, the browser cannot reserve space before the media loads, causing a shift when each asset arrives."'),
+        $a('https://docs.hyva.io/hyva-themes/performance/hyva-performance-tips.html', 'Images: "Always set width and height".'),
+    ], ['magentoPerf.imageWithoutDimensions' => null]),
     // Run through the project's magento/magento-coding-standard (ADR 7); the sniffs are the source, pinned to v41.
     new RuleDefinition('S-PERF-01', 'array_merge() inside a loop (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Performance/ForeachArrayMergeSniff.php#L21', 'Magento2.Performance.ForeachArrayMerge: "array_merge(...) is used in a loop and is a resources greedy construction."'),

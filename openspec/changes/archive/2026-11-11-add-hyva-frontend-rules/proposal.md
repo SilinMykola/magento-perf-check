@@ -18,4 +18,5 @@ Rejected in the same audit for lack of a level A or B source on cost: GraphQL ca
 - T-05, experimental: a synchronous external script in a frontend template.
 - T-06, experimental: an image without `width` and `height` in a frontend template.
 - Both are calibrated on both corpus parts before any decision on the default set.
+- Result of calibration round 9: T-05 has 18 findings, all correct, impact share 72 %, and joins the default set; T-06 has 87 % precision and an impact share of 19 %, and stays experimental. The final counts differ slightly from the scan above (T-05: 1 in the core, 4 and 13; T-06: 11, 17 and 76): the rules leave out more tags than the scan did, as their requirements below list.
 - A synchronous script in layout XML `<head>` is left for later: core adds `defer` itself when `dev/js/defer_non_critical` is on, so that check needs the configuration value.

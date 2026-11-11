@@ -1,6 +1,6 @@
 # Rules
 
-34 rules in the default set and 22 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+35 rules in the default set and 23 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -44,6 +44,7 @@ Severity is the default; change it per rule in [`magento-perf-check.neon`](confi
 | [X-DB-02](rules/X-DB-02.md) | db_schema.xml index that duplicates a key or another index | info | A |
 | [X-AREA-01](rules/X-AREA-01.md) | Observer on an admin event declared in the global area | info | A |
 | [X-GQL-03](rules/X-GQL-03.md) | GraphQL cache id factor added to CacheIdCalculator | info | A, B |
+| [T-05](rules/T-05.md) | External script without async or defer in a storefront template | warning | A |
 
 ## Experimental (off by default)
 
@@ -65,6 +66,7 @@ These are not in the default set: calibration measured them below their precisio
 | [P-COL-04](rules/P-COL-04.md) | Collection walked without a page size in a cron job or console command | warning | B |
 | [T-03](rules/T-03.md) | JavaScript function declared once per item in a template | warning | A, C |
 | [T-04](rules/T-04.md) | Result of $viewModels->require() never used in a template | warning | A, C |
+| [T-06](rules/T-06.md) | Image without width and height in a storefront template | info | A |
 | [S-PERF-01](rules/S-PERF-01.md) | array_merge() inside a loop, through magento-coding-standard | warning | C |
 | [S-TPL-01](rules/S-TPL-01.md) | $this or a helper in a template, through magento-coding-standard | warning | C |
 | [S-TPL-02](rules/S-TPL-02.md) | Object manager in a template, through magento-coding-standard | warning | A, C |

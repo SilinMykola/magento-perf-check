@@ -1,0 +1,34 @@
+<?php
+/** @var \Magento\Framework\Escaper $escaper */
+$url = 'https://example.com/widget.js';
+?>
+<script src="https://example.com/widget.js"></script>
+<script type="text/javascript" src="<?= $escaper->escapeUrl($url) ?>"></script>
+<script defer src="https://example.com/deferred.js"></script>
+<script async src="https://example.com/async.js"></script>
+<script type="module" src="https://example.com/module.js"></script>
+<script type="text/x-magento-template" src="https://example.com/template.js"></script>
+<script <?= 'defer' ?> src="https://example.com/printed.js"></script>
+<script>
+    window.inline = true;
+</script>
+<template x-if="open">
+    <script src="https://example.com/inert.js"></script>
+</template>
+<script
+    src="https://example.com/multiline.js"
+></script>
+<!-- <script src="https://example.com/commented.js"></script> -->
+<script>
+    document.write('<script src="https://example.com/written.js"><\/script>');
+</script>
+<template x-for="item in items">
+    <template x-if="item.open"><span></span></template>
+    <script src="https://example.com/nested-inert.js"></script>
+</template>
+<script data-async="1" src="https://example.com/data-async.js"></script>
+<script TYPE="MODULE" src="https://example.com/upper-module.js"></script>
+<script type=" module " src="https://example.com/spaced-module.js"></script>
+<script :type="kind" src="https://example.com/bound-type.js"></script>
+<script type="application/x-javascript" src="https://example.com/legacy.js"></script>
+<script type="text/javascript; charset=utf-8" src="https://example.com/charset.js"></script>
