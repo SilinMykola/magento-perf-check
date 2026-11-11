@@ -3,4 +3,25 @@
     <body>
         <block class="Acme\Rules\Block\Promo" name="promo.shared" ttl="3600"/>
     </body>
+    <head>
+        <css src="Acme_Rules::css/slider.css"/>
+        <link src="Acme_Rules::css/linked.css"/>
+        <css src="https://fonts.example.com/css?family=Sans" src_type="url"/>
+        <link rel="stylesheet" src="https://cdn.example.com/library.css" src_type="url"/>
+        <link src="https://cdn.example.com/no-rel.css" src_type="url"/>
+        <link rel="preload" src="https://cdn.example.com/preloaded.css" src_type="url"/>
+        <css src="Acme_Rules::css/print.css" media="print"/>
+        <css src="Acme_Rules::css/old-ie.css" ie_condition="lt IE 9"/>
+        <link src="Acme_Rules::images/favicon.ico"/>
+        <css src="Acme_Rules::css/Legacy.CSS"/>
+        <link src="https://cdn.example.com/typed.css" src_type="url" content_type="css"/>
+        <css src="acme/styles/dynamic" src_type="controller"/>
+        <link rel="Stylesheet" src="https://cdn.example.com/upper-rel.css" src_type="url"/>
+        <link rel="stylesheet" src="https://cdn.example.com/other.css" src_type="url" content_type="text"/>
+        <link rel="stylesheet" src="Acme_Rules::fonts/icons.woff2"/>
+        <css src="Acme_Rules::css/print-upper.css" media=" Print"/>
+        <css src="Acme_Rules::css/empty-ie.css" ie_condition=""/>
+        <link rel="stylesheet" defer="defer" src="Acme_Rules::js/rel.js"/>
+        <css src="Acme_Rules::css/zero-ie.css" ie_condition="0"/>
+    </head>
 </page>

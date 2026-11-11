@@ -13,5 +13,6 @@
         <script src="requirejs/require.js"/>
         <script src="Magento_Csp::js/sri.js"/>
         <script src="Acme_Rules::js/polyfill.js" ie_condition="lt IE 11"/>
+        <script src="Acme_Rules::js/empty-ie.js" ie_condition=""/>
     </head>
 </page>

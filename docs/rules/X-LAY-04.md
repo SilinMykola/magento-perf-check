@@ -12,7 +12,7 @@ In `<head>` of a storefront layout file, a `<script src>`, or a `<link src>` tha
 
 The rule leaves out:
 - the scripts core never defers itself: the RequireJS loader (`require.js`), `requirejs-config.js`, `requirejs/mixins.js`, `requirejs/baseUrlResolver.js`, `requirejs-map.js`, `requirejs-min-resolver.js`, `static.js`, files in `js/bundle/`, `_cache/` or `merged/`, and `sri.js`;
-- an element with `ie_condition`: core wraps it in an Internet Explorer conditional comment, which other browsers read as an HTML comment.
+- an element with a non-empty `ie_condition`: core wraps it in an Internet Explorer conditional comment, which other browsers read as an HTML comment.
 
 [T-05](T-05.md) reports the same problem in templates.
 
@@ -61,7 +61,7 @@ On a Luma theme you can also load the file as a RequireJS dependency of the comp
 | [Adobe: Optimize resource files](https://experienceleague.adobe.com/en/docs/commerce-operations/implementation-playbook/best-practices/development/optimize-css-js-files) ([source L25](https://github.com/AdobeDocs/commerce-operations.en/blob/974c6238c0e0008eaa36851449de97218bfca949/help/implementation-playbook/best-practices/development/optimize-css-js-files.md?plain=1#L25)) | A | "Consider delivering critical JS and CSS features inline and deferring all non-critical JS/CSS styles." |
 | [Source.php#L199-L202](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/View/Asset/Source.php#L199-L202), [Generator/Head.php#L120-L128](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/View/Page/Config/Generator/Head.php#L120-L128) | B | A local asset's content type is the extension of its path; a remote asset without `content_type` becomes a `link`. |
 | [Renderer.php#L28-L39](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L28-L39) | B | The scripts core never defers, which the rule leaves out. |
-| [Renderer.php#L440-L441](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L440-L441) | B | An asset group with `ie_condition` is wrapped in `<!--[if ...]>` and `<![endif]-->`. |
+| [Renderer.php#L439-L442](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L439-L442) | B | An asset group with a non-empty `ie_condition` is wrapped in `<!--[if ...]>` and `<![endif]-->`. |
 | [Renderer.php#L459-L470](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L459-L470), [Backend config.xml#L23](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Backend/etc/config.xml#L23) | B | Core adds `defer` to the other head scripts only when `dev/js/defer_non_critical` is on; the default is `0`. `Renderer.php` reads the setting at tag 2.4.9 and not at tag 2.4.8. |
 
 Verified 2026-11-11.

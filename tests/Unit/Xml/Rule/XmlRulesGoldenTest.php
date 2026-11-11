@@ -10,6 +10,7 @@ use Silin\MagentoPerfCheck\Xml\FileDiscovery;
 use Silin\MagentoPerfCheck\Xml\Rule\CacheIdFactorRule;
 use Silin\MagentoPerfCheck\Xml\Rule\EntityHandleTtlRule;
 use Silin\MagentoPerfCheck\Xml\Rule\GlobalAreaRule;
+use Silin\MagentoPerfCheck\Xml\Rule\GlobalStylesheetRule;
 use Silin\MagentoPerfCheck\Xml\Rule\HeadScriptRule;
 use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
@@ -50,7 +51,8 @@ final class XmlRulesGoldenTest extends TestCase
             new GlobalAreaRule(),
             new CacheIdFactorRule(),
             new HeadScriptRule(),
-        ]))->analyze(['app/code']);
+            new GlobalStylesheetRule(),
+        ]))->analyze(['app/code', 'app/design']);
 
         self::assertSame([], $result->notices);
         $actual = array_map(
@@ -86,11 +88,25 @@ final class XmlRulesGoldenTest extends TestCase
         $result = (new XmlAnalyzer(new FileDiscovery($root), [new HeadScriptRule()]))->analyze(['app/code']);
 
         $messages = array_map(static fn (Finding $f): string => $f->message, $result->findings);
-        self::assertCount(4, $messages);
+        self::assertCount(5, $messages);
         $message = implode("\n", array_filter($messages, static fn (string $m): bool => str_contains($m, 'sdk.js')));
         self::assertStringContainsString('"https://example.com/sdk.js"', $message);
         self::assertStringContainsString('handle "catalog_product_view"', $message);
         self::assertStringContainsString('dev/js/defer_non_critical', $message);
+    }
+
+    public function testGlobalStylesheetMessageNamesTheStylesheetAndTheHandle(): void
+    {
+        $root = realpath(self::FIXTURE . '/project');
+        self::assertIsString($root);
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [new GlobalStylesheetRule()]))->analyze(['app/code', 'app/design']);
+
+        $messages = array_map(static fn (Finding $f): string => $f->message, $result->findings);
+        self::assertCount(15, $messages);
+        $message = implode("\n", array_filter($messages, static fn (string $m): bool => str_contains($m, 'slider.css')));
+        self::assertStringContainsString('"Acme_Rules::css/slider.css"', $message);
+        self::assertStringContainsString('handle "default"', $message);
+        self::assertStringContainsString('dev/css/use_css_critical_path', $message);
     }
 
     public function testConfiguredAllowlistPrefix(): void

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Silin\MagentoPerfCheck\Xml\Rule;
 
 use DOMDocument;
-use DOMElement;
 use Silin\MagentoPerfCheck\Report\Finding;
 use Silin\MagentoPerfCheck\Rule\Severity;
+use Silin\MagentoPerfCheck\Xml\HeadAsset;
 use Silin\MagentoPerfCheck\Xml\XmlFile;
 use Silin\MagentoPerfCheck\Xml\XmlRule;
 use Silin\MagentoPerfCheck\Xml\XPath;
@@ -53,10 +53,10 @@ final class HeadScriptRule implements XmlRule
         $findings = [];
         foreach (XPath::elements($document, '//head/script[@src] | //head/link[@src]') as $element) {
             $src = trim($element->getAttribute('src'));
-            if (!self::rendersScript($element, $src)) {
+            if (HeadAsset::contentType($element) !== 'js') {
                 continue;
             }
-            if ($element->hasAttribute('async') || $element->hasAttribute('defer') || $element->hasAttribute('ie_condition')) {
+            if ($element->hasAttribute('async') || $element->hasAttribute('defer') || HeadAsset::hasIeCondition($element)) {
                 continue;
             }
             $url = '/' . str_replace('::', '/', $src);
@@ -83,19 +83,5 @@ final class HeadScriptRule implements XmlRule
         }
 
         return $findings;
-    }
-
-    /**
-     * Whether core renders the element as a script, as Generator\Head and Asset\Source decide: a remote
-     * asset (src_type url or controller) by its content type, which the reader sets to "js" for <script>
-     * and which a <link> gets only when written; a local asset by the extension of its src as written.
-     */
-    private static function rendersScript(DOMElement $element, string $src): bool
-    {
-        if (in_array($element->getAttribute('src_type'), ['url', 'controller'], true)) {
-            return $element->tagName === 'script' || $element->getAttribute('content_type') === 'js';
-        }
-
-        return strtolower(pathinfo($src, PATHINFO_EXTENSION)) === 'js';
     }
 }

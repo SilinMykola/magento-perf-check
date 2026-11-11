@@ -1,6 +1,6 @@
 # Rules
 
-35 rules in the default set and 24 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+36 rules in the default set and 24 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -45,6 +45,7 @@ Severity is the default; change it per rule in [`magento-perf-check.neon`](confi
 | [X-AREA-01](rules/X-AREA-01.md) | Observer on an admin event declared in the global area | info | A |
 | [X-GQL-03](rules/X-GQL-03.md) | GraphQL cache id factor added to CacheIdCalculator | info | A, B |
 | [T-05](rules/T-05.md) | External script without async or defer in a storefront template | warning | A |
+| [X-LAY-05](rules/X-LAY-05.md) | Stylesheet added to every storefront page by a module layout | warning | A, B |
 
 ## Experimental (off by default)
 

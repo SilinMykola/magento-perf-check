@@ -170,6 +170,12 @@ return [
         $b('lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L28-L39', 'The scripts core never defers: the RequireJS loader and its configuration, static and bundle files, sri.js.'),
         $b('lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L459-L470', 'Core adds defer to other head scripts only when dev/js/defer_non_critical is on; it is off by default (app/code/Magento/Backend/etc/config.xml#L23).'),
     ]),
+    new RuleDefinition('X-LAY-05', 'Stylesheet added to every storefront page by a module layout', Severity::Warning, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/frontend-core/guide/css/critical-path', '"All CSS styles loaded from external files are considered as render-blocking. This means that a web page will not be displayed until these files are loaded."'),
+        $a('https://developer.adobe.com/commerce/frontend-core/guide/layouts/xml-instructions', '"For example, layout changes added to `app/code/Vendor/Module/view/frontend/layout/default.xml` are loaded on all pages."'),
+        $b('lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L397-L399', 'Core renders a css asset as <link rel="stylesheet">, with the attributes written in the layout.'),
+        $b('app/code/Magento/Theme/Controller/Result/AsyncCssPlugin.php#L58-L62', 'Core loads stylesheets without blocking only when dev/css/use_css_critical_path is on; it is off by default (app/code/Magento/Theme/etc/config.xml#L74).'),
+    ]),
     // Run through the project's magento/magento-coding-standard (ADR 7); the sniffs are the source, pinned to v41.
     new RuleDefinition('S-PERF-01', 'array_merge() inside a loop (magento-coding-standard)', Severity::Info, RuleStatus::Experimental, [
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Performance/ForeachArrayMergeSniff.php#L21', 'Magento2.Performance.ForeachArrayMerge: "array_merge(...) is used in a loop and is a resources greedy construction."'),

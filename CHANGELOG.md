@@ -8,6 +8,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Added
 
+- X-LAY-05 in the default set, at `warning`: a module stylesheet added in `<head>` of `default.xml` or `default_head_blocks.xml` (also their `hyva_` copies), which every storefront page waits for. Theme layouts, `media="print"` and a non-empty `ie_condition` are left out. On the calibration corpus it gives 18 findings, all correct ([round 11](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-11.md)). **This can change a CI result** that uses `--fail-on=warning`.
 - X-LAY-04, experimental, off by default, at `info`: a script added to the page head by layout XML (`<script src>`, or a `<link src>` that core renders as a script) without `async` or `defer`, which blocks rendering, as [T-05](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-05.md) does in templates. The scripts core never defers and scripts behind `ie_condition` are left out. On the calibration corpus it gives 14 findings, all correct, 1 of them on pages that matter ([round 10](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-10.md)).
 
 ### Changed

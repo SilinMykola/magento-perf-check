@@ -19,6 +19,9 @@ final class FileDiscovery
 
     private const MODULE_NAME = '[A-Z][A-Za-z0-9]*_[A-Z][A-Za-z0-9]*';
 
+    /** A module's layout file, <module>/view/<area>/layout/...; a theme's layout files do not match. */
+    public const MODULE_LAYOUT = '#/view/([a-z_]+)/layout/#';
+
     /** @var array<string, ?string> */
     private array $moduleByDir = [];
 
@@ -143,7 +146,7 @@ final class FileDiscovery
         $handle = basename($absolute, '.xml');
 
         // Module layout: <module>/view/<area>/layout/[...]/<handle>.xml
-        if (preg_match('#/view/([a-z_]+)/layout/#', $absolute, $m) === 1) {
+        if (preg_match(self::MODULE_LAYOUT, $absolute, $m) === 1) {
             return new XmlFile(
                 $absolute,
                 $relative,
