@@ -7,6 +7,7 @@ namespace Silin\MagentoPerfCheck\PhpStan\Runner;
 use Composer\InstalledVersions;
 use JsonException;
 use Silin\MagentoPerfCheck\Cli\UsageException;
+use Silin\MagentoPerfCheck\Process\Subprocess;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Project\TestCode;
 use Silin\MagentoPerfCheck\Project\WorkDirectory;
@@ -27,11 +28,32 @@ final class PhpStanRunner
     private const MAX_PASSES = 5;
 
     /**
+     * PHPStan loads its --autoload-file before it asks phpstan/extension-installer which extensions to
+     * include, and passes the option on to its workers. With this empty list, the installer adds none:
+     * no file is included twice and no other extension of the project runs.
+     */
+    private const EMPTY_EXTENSION_INSTALLER = <<<'PHP'
+        <?php
+
+        namespace PHPStan\ExtensionInstaller;
+
+        final class GeneratedConfig
+        {
+            public const EXTENSIONS = [];
+            public const NOT_INSTALLED = [];
+            public const PHPSTAN_VERSION_CONSTRAINT = null;
+        }
+
+        PHP;
+
+    /**
      * @param ?string $phpstanBinary path to the phpstan launcher; found through Composer when null
+     * @param ?string $bitExpertRoot where bitexpert/phpstan-magento is installed; found through Composer when null
      */
     public function __construct(
         private readonly RuleRegistry $registry,
         private readonly ?string $phpstanBinary = null,
+        private readonly ?string $bitExpertRoot = null,
     ) {
     }
 
@@ -54,8 +76,7 @@ final class PhpStanRunner
             throw new UsageException('Cannot create temp directory ' . $workDir);
         }
         $indexFingerprint = (new ProjectIndexBuilder())->fingerprint($projectRoot);
-        $installed = $this->extensionInstallerIncludes($projectRoot);
-        $notices = $this->generatedCodeNotices($projectRoot, isset($installed['bitexpert/phpstan-magento']));
+        $notices = $this->generatedCodeNotices($projectRoot);
 
         // A file PHPStan cannot parse or reflect makes it stop reporting rule errors for every other
         // file ("Result is incomplete because of severe errors"). Such files are excluded
@@ -76,12 +97,13 @@ final class PhpStanRunner
         $excludedPatterns = array_map(static fn (string $dir): string => $dir . '/*', $excludedDirs);
         $excluded = [];
         $parseNotices = [];
+        $autoloadFile = $this->writeConfig($workDir, self::EMPTY_EXTENSION_INSTALLER, '.php');
         for ($pass = 1; $pass <= self::MAX_PASSES; ++$pass) {
             $config = $this->writeConfig(
                 $workDir,
-                $this->config($projectRoot, $absolutePaths, $testPatterns, [...$excludedPatterns, ...$excluded], $workDir . '/cache', $indexFingerprint, $installed),
+                $this->config($projectRoot, $absolutePaths, $testPatterns, [...$excludedPatterns, ...$excluded], $workDir . '/cache', $indexFingerprint),
             );
-            $result = $this->analyse($config, $projectRoot, $memoryLimit);
+            $result = $this->analyse($config, $autoloadFile, $projectRoot, $memoryLimit);
             $unparsable = array_diff(array_keys($result['unparsable']), $excluded);
             if ($unparsable === []) {
                 return new PhpStanResult($result['findings'], [...$notices, ...$parseNotices, ...$result['notices']], $result['filesFound']);
@@ -103,9 +125,9 @@ final class PhpStanRunner
      * Named after its content, so a run with other paths at the same time cannot overwrite
      * it, while a repeated run reuses the same file and keeps PHPStan's result cache valid.
      */
-    private function writeConfig(string $workDir, string $config): string
+    private function writeConfig(string $workDir, string $config, string $extension = '.neon'): string
     {
-        $file = $workDir . '/phpstan-' . md5($config) . '.neon';
+        $file = $workDir . '/phpstan-' . md5($config) . $extension;
         if (!is_file($file)) {
             $temporary = $file . '.' . getmypid();
             if (file_put_contents($temporary, $config) === false || !rename($temporary, $file)) {
@@ -119,9 +141,9 @@ final class PhpStanRunner
     /**
      * @return list<Notice>
      */
-    private function generatedCodeNotices(string $projectRoot, bool $bitExpertInstalled): array
+    private function generatedCodeNotices(string $projectRoot): array
     {
-        if ($bitExpertInstalled || $this->installPath('bitexpert/phpstan-magento') !== null) {
+        if ($this->bitExpertRoot() !== null) {
             return [];
         }
         $generated = $projectRoot . '/generated/code';
@@ -139,7 +161,7 @@ final class PhpStanRunner
     /**
      * @return array{findings: list<Finding>, notices: list<Notice>, unparsable: array<string, list<Notice>>, filesFound: bool}
      */
-    private function analyse(string $config, string $projectRoot, string $memoryLimit): array
+    private function analyse(string $config, string $autoloadFile, string $projectRoot, string $memoryLimit): array
     {
         $command = [
             PHP_BINARY,
@@ -150,8 +172,9 @@ final class PhpStanRunner
             '--error-format=json',
             '--memory-limit=' . $memoryLimit,
             '--configuration=' . $config,
+            '--autoload-file=' . $autoloadFile,
         ];
-        [$exitCode, $stdout, $stderr] = $this->execute($command, $projectRoot);
+        [$exitCode, $stdout, $stderr] = Subprocess::run($command, $projectRoot, 'PHPStan');
 
         // 0: no errors, 1: errors found. Anything else is a crash (out of memory, fatal error).
         if ($exitCode !== 0 && $exitCode !== 1) {
@@ -174,19 +197,16 @@ final class PhpStanRunner
      * @param list<string> $paths
      * @param list<string> $testPatterns test code, left out of symbol discovery too: a stub of a core class in a module's Test directory must not replace the real class for all other code
      * @param list<string> $unparsable files PHPStan cannot parse, and directories left out of the analysis
-     * @param array<string, list<string>> $installed files that phpstan/extension-installer includes on its own, by package
      */
-    private function config(string $projectRoot, array $paths, array $testPatterns, array $unparsable, string $cacheDir, string $indexFingerprint, array $installed): string
+    private function config(string $projectRoot, array $paths, array $testPatterns, array $unparsable, string $cacheDir, string $indexFingerprint): string
     {
-        // PHPStan stops when a file is included twice, so a file the installer includes is left to it.
         $includes = [];
         foreach (['extension.neon', 'extension-experimental.neon'] as $file) {
-            if (!in_array($file, $installed['silin/magento-perf-check'] ?? [], true)) {
-                $includes[] = realpath(self::PACKAGE_ROOT . '/' . $file) ?: self::PACKAGE_ROOT . '/' . $file;
-            }
+            $includes[] = realpath(self::PACKAGE_ROOT . '/' . $file) ?: self::PACKAGE_ROOT . '/' . $file;
         }
-        $bitExpert = $this->installPath('bitexpert/phpstan-magento');
-        if ($bitExpert !== null && is_file($bitExpert . '/extension.neon') && !isset($installed['bitexpert/phpstan-magento'])) {
+        $bitExpert = $this->bitExpertRoot();
+        $bitExpertIncluded = $bitExpert !== null && is_file($bitExpert . '/extension.neon');
+        if ($bitExpertIncluded) {
             $includes[] = $bitExpert . '/extension.neon';
         }
 
@@ -196,7 +216,7 @@ final class PhpStanRunner
         }
 
         $parameters = [
-            // PHPStan's built-in level rules stay off; extensions that phpstan/extension-installer loads still run.
+            // Only this package's rules run; PHPStan's built-in level rules stay off.
             'customRulesetUsed' => true,
             // Older Magento code often has "private $x;" with no type: the constructor tells what it is.
             'inferPrivatePropertyTypeFromConstructor' => true,
@@ -214,6 +234,12 @@ final class PhpStanRunner
             // a changed di.xml must invalidate results for PHP files that did not change.
             'magentoPerf' => ['reportUntypedReceivers' => true, 'projectRoot' => $projectRoot, 'indexFingerprint' => $indexFingerprint],
         ];
+        if ($bitExpertIncluded) {
+            // Its types are what the analysis needs; its own rules are not about performance. Every version that
+            // installs next to PHPStan 1.12 or 2.x (0.32.0 and 0.40.0 on) has these switches.
+            $parameters['magento'] = ['checkCollectionViaFactory' => false, 'checkServiceContracts' => false, 'checkResourceModelsUsedDirectly' => false];
+            $parameters['extdn'] = ['setTemplateDisallowedForBlockClasses' => false];
+        }
 
         // NEON is a superset of JSON for these values.
         return 'includes: ' . $this->json($includes) . "\n"
@@ -238,63 +264,9 @@ final class PhpStanRunner
         return $root . '/phpstan';
     }
 
-    /**
-     * The files phpstan/extension-installer adds to PHPStan's configuration, by package, relative to the package.
-     * PHPStan reads the installer's list from the first autoloader that knows it: the one of its working
-     * directory, which is the project, then its own.
-     *
-     * @return array<string, list<string>>
-     */
-    private function extensionInstallerIncludes(string $projectRoot): array
+    private function bitExpertRoot(): ?string
     {
-        $candidates = [];
-        $vendor = $this->vendorDirectory($projectRoot);
-        if (is_file($vendor . '/autoload.php')) {
-            $candidates[] = $vendor . '/phpstan/extension-installer/src/GeneratedConfig.php';
-        }
-        $own = $this->installPath('phpstan/extension-installer');
-        if ($own !== null) {
-            $candidates[] = $own . '/src/GeneratedConfig.php';
-        }
-        foreach ($candidates as $file) {
-            if (!is_file($file)) {
-                continue;
-            }
-            // In a process of its own: the tool may have loaded another copy of the class.
-            [$exitCode, $stdout, $stderr] = $this->execute([
-                PHP_BINARY,
-                '-d',
-                'display_errors=stderr',
-                '-r',
-                'require $argv[1]; echo json_encode(array_map(static fn ($e) => $e["extra"]["includes"] ?? [], \\PHPStan\\ExtensionInstaller\\GeneratedConfig::EXTENSIONS));',
-                '--',
-                $file,
-            ], $projectRoot);
-            $extensions = $exitCode === 0 ? json_decode($stdout, true) : null;
-            if (!is_array($extensions)) {
-                throw new UsageException(trim('Cannot read the PHPStan extension installer configuration in ' . $file . ".\n" . $stderr));
-            }
-
-            return array_map(
-                static fn (mixed $includes): array => is_array($includes) ? array_values(array_filter($includes, is_string(...))) : [],
-                array_filter($extensions, static fn (mixed $_, mixed $name): bool => is_string($name), ARRAY_FILTER_USE_BOTH),
-            );
-        }
-
-        return [];
-    }
-
-    /** The vendor directory where PHPStan looks for the autoloader of its working directory, found as PHPStan finds it. */
-    private function vendorDirectory(string $projectRoot): string
-    {
-        $composerFile = getenv('COMPOSER');
-        $composerFile = $projectRoot . '/' . basename(trim(is_string($composerFile) ? $composerFile : 'composer.json'));
-        $composer = is_file($composerFile) ? json_decode((string) file_get_contents($composerFile), true) : null;
-        $directory = is_array($composer) && is_array($composer['config'] ?? null) && is_string($composer['config']['vendor-dir'] ?? null)
-            ? $composer['config']['vendor-dir']
-            : 'vendor';
-
-        return $projectRoot . '/' . trim($directory, '/');
+        return $this->bitExpertRoot ?? $this->installPath('bitexpert/phpstan-magento');
     }
 
     private function installPath(string $package): ?string
@@ -305,43 +277,6 @@ final class PhpStanRunner
         $path = InstalledVersions::getInstallPath($package);
 
         return $path !== null ? (realpath($path) ?: $path) : null;
-    }
-
-    /**
-     * @param list<string> $command
-     * @return array{int, string, string}
-     */
-    private function execute(array $command, string $cwd): array
-    {
-        $process = proc_open($command, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $cwd);
-        if (!is_resource($process)) {
-            throw new UsageException('Cannot start PHPStan.');
-        }
-        // Read both pipes without blocking each other: PHPStan can write a lot to either.
-        stream_set_blocking($pipes[1], false);
-        stream_set_blocking($pipes[2], false);
-        $stdout = '';
-        $stderr = '';
-        while (!feof($pipes[1]) || !feof($pipes[2])) {
-            $read = array_values(array_filter([$pipes[1], $pipes[2]], static fn ($pipe): bool => !feof($pipe)));
-            $write = null;
-            $except = null;
-            if (stream_select($read, $write, $except, 1) === false) {
-                break;
-            }
-            foreach ($read as $pipe) {
-                $chunk = (string) fread($pipe, 65536);
-                if ($pipe === $pipes[1]) {
-                    $stdout .= $chunk;
-                } else {
-                    $stderr .= $chunk;
-                }
-            }
-        }
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-
-        return [proc_close($process), $stdout, $stderr];
     }
 
     /**

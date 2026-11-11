@@ -97,3 +97,12 @@ final class Dispatching
         $this->eventManager->dispatch('acme_promo_run');
     }
 }
+
+final class ReturnsParentCall extends Base
+{
+    public function __construct()
+    {
+        // The parent call written with a return, as some controllers do.
+        return parent::__construct();
+    }
+}

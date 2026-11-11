@@ -27,7 +27,7 @@ php bin/magento-perf-check --project=/path/to/magento
 
 ## Magento versions
 
-The code has no check of the Magento version. Precision is calibrated on Magento 2.4.9 only.
+Only the [upgrade rules](#upgrade-rules) look at the Magento version. Precision is calibrated on Magento 2.4.9 only.
 
 | Magento | `phpstan/phpstan` in the stock project | `composer require` | Own clone with `--project` |
 |---|---|---|---|
@@ -53,6 +53,7 @@ The tool needs PHPStan 1.12 or 2.x. On 2.4.5 to 2.4.8 the constraint allows 1.12
 | `--config=<file>` | Configuration file. Default: `magento-perf-check.neon` in the project root, when it exists. |
 | `--baseline=<file>`, `--generate-baseline=<file>` | Report only new findings; see [Baseline](baseline.md). |
 | `--output=<file>` | Write the report, in the chosen `--format`, to `<file>` (relative to the current directory) instead of the console, and print a one-line summary. The exit code is the same. The file's directory must exist. |
+| `--target-version=<version>` | Also run the [upgrade rules](#upgrade-rules) for changes up to this Magento version, such as `2.4.9` or `2.4.8-p3`. An invalid version exits with code 2. |
 | `--memory-limit=<value>` | Memory limit for PHPStan. Default: `2G`. |
 | `--version` | Print the version. |
 
@@ -66,6 +67,19 @@ Exit codes:
 Some files cannot be analyzed, such as XML that does not parse, PHP with syntax errors, or a class PHPStan cannot reflect. They are skipped and counted as analysis notices in the summary; `--format=json` lists them. With `--format=sarif`, `checkstyle` or `github`, or with `--output`, that summary goes to stderr.
 
 A module set to `0` in the `modules` list of `app/etc/config.php` does not run, so it is not analyzed: one `disabled-module` notice names it when it lies in the analyzed paths, and its configuration does not count for other modules (a Proxy in its `di.xml`, for example). The file is read as text, not run. A module missing from that list counts as enabled.
+
+The experimental S-* rules ([S-PERF-01](rules/S-PERF-01.md) and the others) are sniffs of magento/magento-coding-standard. When one of them is enabled, the command runs the project's phpcs (`vendor/squizlabs/php_codesniffer`) with the project's coding standard and only those sniffs, on the same paths; test code and disabled modules are left out as for the other rules. The coding standard's own ruleset leaves some sniffs out of more files, such as `Fixtures` directories. Without phpcs or the coding standard in the project, one `coding-standard` notice says so and the other rules run as usual.
+
+## Upgrade rules
+
+Rules with the `U-` prefix, such as [U-CLI-01](rules/U-CLI-01.md), find code that breaks with a change in a Magento release. Each one names the first version with that change, one per release line when the change also shipped in patch releases of older lines. A rule runs when the installed version or `--target-version` has the change:
+- before an upgrade, `--target-version=2.4.9` on a 2.4.8 project runs the rules for 2.4.9;
+- without the option, the rules for the installed version and older ones run, since the code they find is broken now;
+- a target below the installed version hides nothing.
+
+The installed version is read from `vendor/magento/magento2-base/composer.json`; a pre-release suffix such as `-rc2` is ignored. Mage-OS has its own version numbers, and a core checkout has no such file: there, upgrade rules run only with `--target-version`, and one `upgrade-version` notice says so while one of them is enabled. An enabled rule that does not run because neither version has its change is named in an `upgrade-version` notice as well. Upgrade rules are experimental until calibrated, so they also need `enabled: true`.
+
+The version gate is part of the `magento-perf-check` command. With PHPStan directly, through `extension-experimental.neon`, an upgrade rule runs whatever the installed version: on 2.4.8, U-CLI-01 reports code that still works there, so ignore its identifier until the upgrade.
 
 ## Security
 
@@ -95,6 +109,7 @@ magentoPerf:
             severity: warning
     layout:
         # Extra handle prefixes that X-LAY-01 and X-LAY-03 must not report.
+        # A prefix also covers the hyva_ copy of a handle: acme_account_ covers hyva_acme_account_index.
         allowlistHandles:
             - acme_account_
         # true: use only the prefixes above instead of adding them to the default list.
@@ -107,7 +122,7 @@ The tool rejects unknown keys, unknown rule IDs and invalid values with exit cod
 
 PHPStan's result cache does not see XML here: after changing `di.xml` or another configuration file, run `phpstan clear-result-cache`. The `magento-perf-check` command handles this itself.
 
-The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) they are picked up automatically; otherwise include `vendor/silin/magento-perf-check/extension.neon` in your `phpstan.neon`. They report at every level. The `magento-perf-check` command installed in the project works with the installer too. Other extensions that the installer loads, such as `phpstan/phpstan-strict-rules`, then run in its analysis as well, and their errors show as `phpstan` notices. To suppress one finding, use its identifier and give a reason:
+The PHP rules are a regular PHPStan extension. With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) they are picked up automatically; otherwise include `vendor/silin/magento-perf-check/extension.neon` in your `phpstan.neon`. They report at every level. The `magento-perf-check` command runs only its own rules, with the types of `bitexpert/phpstan-magento` when it is installed next to the tool but not its rules that have a switch (its test-only rule on `getCollectionMock()` runs only with `--include-tests`): other extensions that the installer would add, such as `phpstan/phpstan-strict-rules`, are left out of its analysis. To suppress one finding, use its identifier and give a reason:
 
 ```php
 // @phpstan-ignore magentoPerf.loopModelLoad (the caller passes at most 3 ids)
@@ -124,4 +139,4 @@ parameters:
 
 The XML rules and `magento-perf-check.neon` only apply when you run `magento-perf-check`. To analyze templates in your own setup, add `phtml` to PHPStan's `fileExtensions`.
 
-`create()` of a generated factory is typed from the factory's name, so `generated/code` is not needed for it. Generated proxies and extension attributes are typed only when `generated/code` exists or [bitexpert/phpstan-magento](https://github.com/bitExpert/phpstan-magento) is installed. Without either, calls on them are skipped rather than reported ([ADR 2](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0002-bitexpert-phpstan-magento-as-suggestion.md)).
+`create()` of a generated factory is typed from the factory's name, so `generated/code` is not needed for it. Generated proxies and extension attributes are typed only when `generated/code` exists or [bitexpert/phpstan-magento](https://github.com/bitExpert/phpstan-magento) is installed next to the tool. Without either, calls on them are skipped rather than reported ([ADR 2](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0002-bitexpert-phpstan-magento-as-suggestion.md)).

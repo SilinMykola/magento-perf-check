@@ -5,18 +5,23 @@ declare(strict_types=1);
 namespace Silin\MagentoPerfCheck\Cli;
 
 use Silin\MagentoPerfCheck\Baseline\Baseline;
+use Silin\MagentoPerfCheck\CodingStandard\CodingStandardRunner;
 use Silin\MagentoPerfCheck\Config\ConfigLoader;
 use Silin\MagentoPerfCheck\PhpStan\Rule\GetFirstItemWithoutLimitRule;
 use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Report\AnalysisResult;
 use Silin\MagentoPerfCheck\Report\CheckstyleReporter;
+use Silin\MagentoPerfCheck\Report\Finding;
 use Silin\MagentoPerfCheck\Report\GithubReporter;
 use Silin\MagentoPerfCheck\Report\JsonReporter;
 use Silin\MagentoPerfCheck\Report\Notice;
 use Silin\MagentoPerfCheck\Report\SarifReporter;
 use Silin\MagentoPerfCheck\Report\TableReporter;
+use Silin\MagentoPerfCheck\Rule\MagentoVersion;
+use Silin\MagentoPerfCheck\Rule\RuleDefinition;
 use Silin\MagentoPerfCheck\Rule\RuleRegistry;
+use Silin\MagentoPerfCheck\Rule\UpgradeGate;
 use Silin\MagentoPerfCheck\Version;
 use Silin\MagentoPerfCheck\Xml\FileDiscovery;
 use Silin\MagentoPerfCheck\Xml\Rule\CacheIdFactorRule;
@@ -179,6 +184,39 @@ final class Application
     }
 
     /**
+     * Why an enabled upgrade rule did not run: no Magento version is known, or neither the installed
+     * version nor the target has the change it checks.
+     *
+     * @param list<RuleDefinition> $enabled enabled upgrade rules
+     * @return list<Notice>
+     */
+    private static function upgradeNotices(UpgradeGate $gate, array $enabled): array
+    {
+        if ($enabled === []) {
+            return [];
+        }
+        if (!$gate->knowsAVersion()) {
+            return [new Notice(Notice::SOURCE_UPGRADE_VERSION, sprintf(
+                '%s did not run: the Magento version could not be read from vendor/magento/magento2-base/composer.json, as on Mage-OS or in a core checkout. Give it with --target-version.',
+                implode(', ', array_map(static fn (RuleDefinition $rule): string => $rule->id, $enabled)),
+            ))];
+        }
+        $notices = [];
+        foreach ($enabled as $rule) {
+            if (!$gate->runs($rule)) {
+                $notices[] = new Notice(Notice::SOURCE_UPGRADE_VERSION, sprintf(
+                    '%s did not run: it checks a change of Magento %s, which %s does not have. Give a later --target-version to check for it.',
+                    $rule->id,
+                    implode(' or ', $rule->changedIn),
+                    implode(' or ', array_map('strval', array_filter([$gate->installed, $gate->target]))),
+                ));
+            }
+        }
+
+        return $notices;
+    }
+
+    /**
      * One notice for each module disabled in app/etc/config.php that lies in, or holds, an analyzed path:
      * Magento does not run it, so it is not analyzed.
      *
@@ -247,13 +285,26 @@ final class Application
         $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests, array_keys($disabledRoots)), $xmlRules))->analyze($paths);
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
             ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests, array_keys($disabledRoots));
+        [$codingStandardFindings, $codingStandardNotices] = (new CodingStandardRunner($registry))->run(
+            $options->projectRoot,
+            array_values(array_filter(array_keys(CodingStandardRunner::SNIFFS), static fn (string $id): bool => $config->isEnabled($id, $registry))),
+            $paths,
+            $includeTests,
+            array_keys($disabledRoots),
+        );
 
         if ($xml->filesFound === 0 && !$php->filesAnalyzed && $disabledNotices === []) {
             throw new UsageException(self::nothingToAnalyze($paths, $php->notices, $includeTests));
         }
 
-        // Configuration first, then the baseline; --fail-on looks at what is left.
-        $findings = $config->apply([...$xml->findings, ...$php->findings], $registry);
+        // Configuration first, then the upgrade versions, then the baseline; --fail-on looks at what is left.
+        $findings = $config->apply([...$xml->findings, ...$php->findings, ...$codingStandardFindings], $registry);
+        $gate = new UpgradeGate(MagentoVersion::installedIn($options->projectRoot), $options->targetVersion);
+        $findings = array_values(array_filter($findings, static fn (Finding $finding): bool => $gate->runs($registry->find($finding->ruleId))));
+        $upgradeNotices = self::upgradeNotices($gate, array_values(array_filter(
+            $registry->all(),
+            static fn (RuleDefinition $rule): bool => $rule->isUpgradeRule() && $config->isEnabled($rule->id, $registry),
+        )));
         $hidden = null;
         $unmatched = null;
         if ($options->baselineFile !== null) {
@@ -268,7 +319,7 @@ final class Application
 
         return new AnalysisResult(
             $findings,
-            [...$xml->notices, ...$phpNotices, ...$disabledNotices],
+            [...$xml->notices, ...$phpNotices, ...$codingStandardNotices, ...$disabledNotices, ...$upgradeNotices],
             $options->projectRoot,
             $paths,
             microtime(true) - $started,

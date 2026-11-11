@@ -45,7 +45,7 @@ public function __construct(private readonly LoggerInterface $logger)
 
 ## Known false positives
 
-- Static helpers and entry points that run before the object manager can inject anything.
+None. Static helpers and entry points that run before the object manager can inject anything are reported on purpose: the call hides the dependency there too ([calibration round 3](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-3.md)). Where no injection is possible, suppress the finding with a reason, as above.
 
 ## Basis
 

@@ -15,6 +15,10 @@ final class Notice
     public const SOURCE_UNTYPED_RECEIVER = 'untyped-receiver';
     /** A finding in a module disabled in app/etc/config.php, which does not run. */
     public const SOURCE_DISABLED_MODULE = 'disabled-module';
+    /** magento/magento-coding-standard is missing, or its phpcs failed (S-* rules). */
+    public const SOURCE_CODING_STANDARD = 'coding-standard';
+    /** Upgrade rules did not run: neither the installed Magento version nor --target-version is known. */
+    public const SOURCE_UPGRADE_VERSION = 'upgrade-version';
 
     public function __construct(
         public readonly string $source,

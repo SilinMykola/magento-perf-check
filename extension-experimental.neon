@@ -8,6 +8,22 @@ services:
             reportUntypedReceivers: %magentoPerf.reportUntypedReceivers%
         tags:
             - phpstan.rules.rule
+    -
+        class: Silin\MagentoPerfCheck\PhpStan\WebapiConstructorCollector
+        tags:
+            - phpstan.collector
+    -
+        class: Silin\MagentoPerfCheck\PhpStan\QueryCallCollector
+        tags:
+            - phpstan.collector
+    -
+        class: Silin\MagentoPerfCheck\PhpStan\MemoizingMethodCollector
+        tags:
+            - phpstan.collector
+    -
+        class: Silin\MagentoPerfCheck\PhpStan\LoopCallCollector
+        tags:
+            - phpstan.collector
 
 rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\ConstructorWorkRule
@@ -23,3 +39,7 @@ rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\UnpagedBatchCollectionRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\RepeatedScriptFunctionRule
     - Silin\MagentoPerfCheck\PhpStan\Rule\UnusedViewModelRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\ImageWithoutDimensionsRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\WebapiConstructorParameterRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\LoopCallQueryRule
+    - Silin\MagentoPerfCheck\PhpStan\Rule\ConsoleCommandReturnTypeRule

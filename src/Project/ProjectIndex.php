@@ -21,6 +21,8 @@ final class ProjectIndex
      * @param array<string, list<string>> $pluginTargets plugin class => classes it is configured on, outside the admin area
      * @param array<string, true> $consoleCommands classes in the commands argument of CommandList
      * @param array<string, true> $cronJobs classes that crontab.xml runs
+     * @param array<string, list<string>> $webapiMethods service class => methods that webapi.xml routes call
+     * @param array<string, list<string>> $webapiPreferences type => classes di.xml prefers for it in the global and web API areas
      */
     public function __construct(
         public readonly int $moduleCount,
@@ -33,6 +35,8 @@ final class ProjectIndex
         private readonly array $pluginTargets = [],
         private readonly array $consoleCommands = [],
         private readonly array $cronJobs = [],
+        private readonly array $webapiMethods = [],
+        private readonly array $webapiPreferences = [],
     ) {
     }
 
@@ -95,6 +99,27 @@ final class ProjectIndex
         return isset($this->cronJobs[self::normalizeClass($class)]);
     }
 
+    /**
+     * Normalized service class => methods that webapi.xml routes call.
+     *
+     * @return array<string, list<string>>
+     */
+    public function webapiMethods(): array
+    {
+        return $this->webapiMethods;
+    }
+
+    /**
+     * Normalized type => normalized classes that di.xml prefers for it in the global, webapi_rest or
+     * webapi_soap area; several when modules disagree, since the index does not know their order.
+     *
+     * @return array<string, list<string>>
+     */
+    public function webapiPreferences(): array
+    {
+        return $this->webapiPreferences;
+    }
+
     /** "Type.field" when the class resolves a field of a type returned inside a list, else null. */
     public function listFieldResolvedBy(string $class): ?string
     {
@@ -117,6 +142,8 @@ final class ProjectIndex
             'pluginTargets' => $this->pluginTargets,
             'consoleCommands' => $this->consoleCommands,
             'cronJobs' => $this->cronJobs,
+            'webapiMethods' => $this->webapiMethods,
+            'webapiPreferences' => $this->webapiPreferences,
         ];
     }
 
@@ -125,7 +152,7 @@ final class ProjectIndex
      */
     public static function fromArray(array $data): self
     {
-        /** @var array{moduleCount: int, proxyArguments: array<string, array<string, true>>, pluginClasses: array<string, true>, observers: array<string, list<array{class: string, area: string, module: string}>>, mviewViews: array<string, true>, tablesWithPrimaryKey: array<string, true>, listFieldResolvers: array<string, string>, pluginTargets: array<string, list<string>>, consoleCommands: array<string, true>, cronJobs: array<string, true>} $data */
+        /** @var array{moduleCount: int, proxyArguments: array<string, array<string, true>>, pluginClasses: array<string, true>, observers: array<string, list<array{class: string, area: string, module: string}>>, mviewViews: array<string, true>, tablesWithPrimaryKey: array<string, true>, listFieldResolvers: array<string, string>, pluginTargets: array<string, list<string>>, consoleCommands: array<string, true>, cronJobs: array<string, true>, webapiMethods: array<string, list<string>>, webapiPreferences: array<string, list<string>>} $data */
         return new self(
             $data['moduleCount'],
             $data['proxyArguments'],
@@ -137,6 +164,8 @@ final class ProjectIndex
             $data['pluginTargets'],
             $data['consoleCommands'],
             $data['cronJobs'],
+            $data['webapiMethods'],
+            $data['webapiPreferences'],
         );
     }
 }

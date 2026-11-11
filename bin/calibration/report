@@ -187,6 +187,13 @@ $modules = count($corpus['packagist']['modules'] ?? []);
 $mageOs = ($corpus['mage-os']['included'] ?? true) === false
     ? '- Not included: Mage-OS. ' . $corpus['mage-os']['reason']
     : '- Mage-OS ' . $corpus['mage-os']['version'] . ' (`vendor/mage-os`)';
+$extended = isset($corpus['extended'])
+    ? sprintf(
+        "\n- Not used on this page: a second part, `extended`, with the next %d modules and Hyvä Theme %s, which [round 6](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-6.md) uses for the experimental rules",
+        count($corpus['extended']['modules']),
+        $corpus['extended']['hyva'][count($corpus['extended']['hyva']) - 1]['version'],
+    )
+    : '';
 $report = <<<MD
     # Calibration
 
@@ -198,7 +205,7 @@ $report = <<<MD
 
     - Magento {$corpus['magento']['version']} core (`vendor/magento`)
     - {$modules} most-downloaded `magento2-module` packages from Packagist that install on that version (`app/code` of the corpus copy)
-    {$mageOs}
+    {$mageOs}{$extended}
 
     Test code is excluded (the tool's default), and so are `*-sample-data` modules at sampling time.
 

@@ -19,11 +19,14 @@ final class ProjectIndexBuilder
 
     /** Indexed files, relative to a module's etc/ directory; * is one area directory. */
     /** Part of the cache key: raise it when the same files start to give a different index. */
-    private const INDEX_VERSION = 4;
+    private const INDEX_VERSION = 5;
 
     private const MODULE_CONFIG = 'app/etc/config.php';
 
-    private const FILES = ['di.xml', '*/di.xml', 'events.xml', '*/events.xml', 'mview.xml', 'db_schema.xml', 'schema.graphqls', 'crontab.xml'];
+    private const FILES = ['di.xml', '*/di.xml', 'events.xml', '*/events.xml', 'mview.xml', 'db_schema.xml', 'schema.graphqls', 'crontab.xml', 'webapi.xml'];
+
+    /** Areas whose di.xml preferences apply to web API requests. */
+    private const WEBAPI_AREAS = ['global', 'webapi_rest', 'webapi_soap'];
 
     private const COMMAND_LISTS = ['magento\\framework\\console\\commandlist', 'magento\\framework\\console\\commandlistinterface'];
 
@@ -260,6 +263,8 @@ final class ProjectIndexBuilder
         $disabledPlugins = [];
         $commands = [];
         $cronJobs = [];
+        $webapiMethods = [];
+        $preferences = [];
 
         foreach ($files as $file) {
             if ($file['name'] === 'schema.graphqls') {
@@ -272,6 +277,13 @@ final class ProjectIndexBuilder
             }
             switch ($file['name']) {
                 case 'di.xml':
+                    if (in_array($file['area'], self::WEBAPI_AREAS, true)) {
+                        foreach ($this->elements($xpath, '/config/preference') as $preference) {
+                            if ($preference->getAttribute('for') !== '' && $preference->getAttribute('type') !== '') {
+                                $preferences[ProjectIndex::normalizeClass($preference->getAttribute('for'))][ProjectIndex::normalizeClass($preference->getAttribute('type'))] = true;
+                            }
+                        }
+                    }
                     foreach ($this->elements($xpath, '/config/type | /config/virtualType') as $type) {
                         $name = ProjectIndex::normalizeClass($type->getAttribute('name'));
                         if ($type->localName === 'virtualType' && $type->getAttribute('type') !== '') {
@@ -303,6 +315,13 @@ final class ProjectIndexBuilder
                                     $commands[ProjectIndex::normalizeClass($item->textContent)] = true;
                                 }
                             }
+                        }
+                    }
+                    break;
+                case 'webapi.xml':
+                    foreach ($this->elements($xpath, '/routes/route/service') as $service) {
+                        if ($service->getAttribute('class') !== '' && $service->getAttribute('method') !== '') {
+                            $webapiMethods[ProjectIndex::normalizeClass($service->getAttribute('class'))][$service->getAttribute('method')] = true;
                         }
                     }
                     break;
@@ -370,7 +389,20 @@ final class ProjectIndexBuilder
         }
         unset($classes);
 
-        return new ProjectIndex($moduleCount, $proxies, $plugins, $observers, $views, $tables, $listFields, $pluginTargets, $commands, $cronJobs);
+        return new ProjectIndex(
+            $moduleCount,
+            $proxies,
+            $plugins,
+            $observers,
+            $views,
+            $tables,
+            $listFields,
+            $pluginTargets,
+            $commands,
+            $cronJobs,
+            array_map(static fn (array $methods): array => array_keys($methods), $webapiMethods),
+            array_map(static fn (array $classes): array => array_keys($classes), $preferences),
+        );
     }
 
     /**

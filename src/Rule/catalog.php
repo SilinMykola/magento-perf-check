@@ -137,17 +137,51 @@ return [
     new RuleDefinition('P-PLG-01', 'around plugin where before/after would do', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/components/plugins', 'Avoid using around method plugins when they are not required, because they increase stack traces and affect performance.'),
     ], ['magentoPerf.unnecessaryAroundPlugin' => null]),
+    new RuleDefinition('P-API-01', 'Web API input field that only an unsupported constructor parameter could set', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/development/components/web-api/services', 'REST API constructor parameter validation (APSB25-88): supported parameter types are simple types and *\\Api\\Data\\*Interface classes; "Unsupported parameters will not be instantiated from REST payloads."'),
+        $b('lib/internal/Magento/Framework/Webapi/ServiceInputProcessor.php#L290-L296', 'A constructor parameter gets a request value only when its type is simple or matches \\Vendor\\Module\\Api\\Data\\.'),
+        $b('lib/internal/Magento/Framework/Webapi/ServiceInputProcessor.php#L346-L398', 'Any other field is set through the setter of the requested type; a field without one fails with "%fieldName" is not supported.'),
+    ], ['magentoPerf.webapiConstructorParameter' => null]),
     new RuleDefinition('T-01', 'getLayout()->createBlock() in a template', Severity::Info, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines', 'Section 6.2.6: "Templates MUST NOT instantiate objects. All objects MUST be passed from the Block objects."'),
     ], ['magentoPerf.createBlockInTemplate' => null]),
     new RuleDefinition('T-03', 'JavaScript function declared once per item in a template', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://docs.hyva.io/hyva-themes/writing-code/rendering-javascript-once.html', 'When the HTML is rendered multiple times, for example, items in a product list, "this can lead to the duplication of JavaScript in the page source"; split the JavaScript into a separate template and render it only once.'),
         new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-default-theme/blob/c74658fdeddfb03255516b1ff3cf77b940b8dede/Magento_Catalog/layout/catalog_list_item.xml#L42-L43', 'The Hyvä default theme renders the product list JavaScript (compare, wishlist) in separate blocks, once per list.'),
         new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-default-theme/blob/c74658fdeddfb03255516b1ff3cf77b940b8dede/Magento_Catalog/templates/product/list/js/wishlist.phtml#L19-L20', 'initWishlist() is declared there, outside the template rendered for each product.'),
     ], ['magentoPerf.repeatedScriptFunction' => null]),
     new RuleDefinition('T-04', 'Result of $viewModels->require() never used in a template', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://docs.hyva.io/hyva-themes/performance/view-model-cache-tags.html', '"When a template calls $viewModels->require() to instantiate a view model, the ViewModelRegistry checks if the view model implements IdentityInterface. If so, the view model is registered for cache tag collection."'),
         new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-theme-module/blob/6c922be3cd2e9ff9512447c681f388ca829a9c25/src/Model/ViewModelRegistry.php#L60-L78', 'require() gets the view model and passes it to ViewModelCacheTags::collectFrom().'),
         new Source(SourceLevel::C, 'https://github.com/hyva-themes/magento2-theme-module/blob/6c922be3cd2e9ff9512447c681f388ca829a9c25/src/Model/ViewModelCacheTags.php#L36-L38', 'collectFrom() keeps a view model that implements IdentityInterface; its identities become cache tags of the page.'),
     ], ['magentoPerf.unusedViewModel' => null]),
+    new RuleDefinition('T-05', 'Synchronous external script in a storefront template', Severity::Warning, RuleStatus::Default, [
+        $a('https://docs.hyva.io/hyva-themes/writing-code/patterns/loading-external-javascript.html', 'About <script type="text/javascript" src="https://www.example.com/render-blocking-script.js" />: "Do not use this, it will lower the page rank metrics".'),
+        $a('https://docs.hyva.io/hyva-themes/performance/core-web-vitals.html', '"Every render-blocking script delays LCP. Load scripts that are not needed for the initial render using the defer or async attribute."'),
+    ], ['magentoPerf.syncExternalScript' => null]),
+    new RuleDefinition('T-06', 'Image without width and height in a storefront template', Severity::Info, RuleStatus::Experimental, [
+        $a('https://docs.hyva.io/hyva-themes/performance/core-web-vitals.html', '"Always set width and height attributes on images and videos. Without them, the browser cannot reserve space before the media loads, causing a shift when each asset arrives."'),
+        $a('https://docs.hyva.io/hyva-themes/performance/hyva-performance-tips.html', 'Images: "Always set width and height".'),
+    ], ['magentoPerf.imageWithoutDimensions' => null]),
+    // Run through the project's magento/magento-coding-standard (ADR 7); the sniffs are the source, pinned to v41.
+    new RuleDefinition('S-PERF-01', 'array_merge() inside a loop (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Performance/ForeachArrayMergeSniff.php#L21', 'Magento2.Performance.ForeachArrayMerge: "array_merge(...) is used in a loop and is a resources greedy construction."'),
+    ]),
+    new RuleDefinition('S-TPL-01', '$this or a helper in a template (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Templates/ThisInTemplateSniff.php#L16-L17', 'Magento2.Templates.ThisInTemplate: $this in templates is deprecated, helpers are discouraged; use $block and view models.'),
+    ]),
+    new RuleDefinition('S-TPL-02', 'Object manager in a template (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines#presentation-layer', 'Section 6.2.6: "Templates MUST NOT instantiate objects. All objects MUST be passed from the Block objects."'),
+        new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Templates/ObjectManagerSniff.php#L23-L29', 'Magento2.Templates.ObjectManager: templates must not instantiate objects; all objects come from the block.'),
+    ]),
+    new RuleDefinition('S-DI-01', 'Proxy or Interceptor requested in a constructor (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines#class-design', 'Section 2.5: "Proxies and interceptors MUST NEVER be explicitly requested in constructors."'),
+        $b('lib/internal/Magento/Framework/ObjectManager/Code/Generator/Proxy.php#L113-L120', 'A generated Proxy builds the real object on its first use.'),
+        new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Classes/DiscouragedDependenciesSniff.php#L25', 'Magento2.Classes.DiscouragedDependencies: "Proxies and interceptors MUST never be explicitly requested in constructors."'),
+    ]),
+    new RuleDefinition('S-FN-01', 'sleep(), time_nanosleep() or session_*() call (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+        new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Functions/DiscouragedFunctionSniff.php#L125-L150', 'Magento2.Functions.DiscouragedFunction lists session_*, sleep and time_nanosleep among discouraged functions.'),
+    ]),
     new RuleDefinition('X-SETUP-01', 'Heavy work in Setup/Recurring or RecurringData', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/prepare/extension-lifecycle', 'The Recurring schema class runs after every schema installation or upgrade stage; RecurringData after every data stage.'),
         $b('setup/src/Magento/Setup/Model/Installer.php#L1159-L1174', 'The installer runs the Recurring script of every module.'),
@@ -205,6 +239,18 @@ return [
         $b('lib/internal/Magento/Framework/ObjectManager/ObjectManager.php#L57-L60', 'create() builds a new instance through the factory on every call.'),
         $b('lib/internal/Magento/Framework/ObjectManager/ObjectManager.php#L68-L76', 'get() builds the shared instance on the first call and returns it from _sharedInstances afterwards.'),
     ], ['magentoPerf.loopObjectManager' => null]),
+    new RuleDefinition('U-CLI-01', 'Console command whose execute() has no int return type (Magento 2.4.9, Symfony Console 7.4)', Severity::Error, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/php/development/backward-incompatible-changes/', 'Symfony 7.4 LTS support (2.4.9): "Custom classes that extend Symfony core classes must have updated type declarations and method signatures aligned with Symfony 7.4".'),
+        $b('composer.json#L89', 'Magento requires symfony/console ^7.4.'),
+        new Source(SourceLevel::B, 'https://github.com/symfony/console/blob/92f58bc4bf97a92ed1b9f367f0cd44f20bde0e87/Command/Command.php#L240', 'Symfony Console 7.4: Command::execute() declares the return type int.'),
+        $b('lib/internal/Magento/Framework/Console/Cli.php#L196-L222', 'bin/magento creates every registered command through CommandListInterface when it builds its default command list.'),
+    ], ['magentoPerf.consoleCommandReturnType' => null], ['2.4.9']),
+    new RuleDefinition('P-LOOP-12', 'Method that runs a query, called inside a loop', Severity::Warning, RuleStatus::Experimental, [
+        $a($codeReview, '"Are queries executed in a loop? This loop can be outside of the edited files."'),
+        $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),
+        $b('lib/internal/Magento/Framework/Model/AbstractModel.php#L564-L568', 'AbstractModel::load() delegates to the resource model: one database round trip per call.'),
+        $b('lib/internal/Magento/Framework/Model/ResourceModel/Db/AbstractDb.php#L323-L333', 'AbstractDb::load() runs fetchRow() on every call.'),
+    ], ['magentoPerf.loopCallQuery' => null]),
     new RuleDefinition('P-LOOP-05', 'Product getCategoryIds() inside a loop', Severity::Warning, RuleStatus::Default, [
         $b('app/code/Magento/Catalog/Model/Product.php#L753-L769', 'getCategoryIds() asks the resource model when category_ids is not set.'),
         $b('app/code/Magento/Catalog/Model/ResourceModel/Product/CategoryLink.php#L54-L69', 'Each call runs one fetchAll for one product id.'),

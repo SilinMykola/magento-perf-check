@@ -3,26 +3,27 @@
 | | |
 |---|---|
 | Severity | `warning` |
-| Status | experimental, off by default: precision 20 % in [calibration](../calibration.md). Enable it with `enabled: true` in `magento-perf-check.neon` |
+| Status | experimental, off by default: precision 20 % in [calibration](../calibration.md); after the module allowlist of [round 8](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-8.md), 5 findings, all correct (fewer than 10: insufficient data). Enable it with `enabled: true` in `magento-perf-check.neon` |
 | Analyzer | XML (layout files of area `frontend` or `base`) |
 
 ## What it catches
 
-A `<block>` with `cacheable="false"` in a frontend layout file, on any handle except `default`, `catalog_*` and `cms_*`. Those belong to [X-LAY-03](X-LAY-03.md), which is on by default. This includes module layouts (`view/frontend/layout`, `view/base/layout`) and theme overrides (`app/design/frontend/<Vendor>/<theme>/<Module_Name>/layout`).
+A `<block>` with `cacheable="false"` in a frontend layout file, on any handle except `default`, `catalog_*` and `cms_*`. Those belong to [X-LAY-03](X-LAY-03.md), which is on by default. This includes module layouts (`view/frontend/layout`, `view/base/layout`) and theme overrides (`app/design/frontend/<Vendor>/<theme>/<Module_Name>/layout`). A handle with Hyvä's `hyva_` prefix is treated as the handle it extends, for this split and for the allowlist: `hyva_default` belongs to X-LAY-03, `hyva_customer_address_index` is on the allowlist.
 
 ## Why it hurts performance
 
 When a layout contains a non-cacheable block, Magento treats the whole page as non-cacheable. No cached copy is stored in Varnish or the built-in Full Page Cache, so every request for every page that uses the handle renders the full page in PHP. 
 The rule does not report handles that are personal by nature and not meant to be cached. Default allowlist (handle prefixes):
 - Customer: `customer_`, `loginascustomer_`, `newsletter_manage_`, `review_customer_`, `downloadable_customer_`.
-- Checkout and sales: `checkout_`, `hyva_checkout_`, `multishipping_`, `sales_`, `shipping_tracking_`.
+- Checkout and sales: `checkout_`, `hyva_checkout_`, `onestepcheckout_`, `multishipping_`, `sales_`, `shipping_tracking_`.
 - Payment: `paypal_`, `vault_`, `paymentservicespaypal_vault_`.
 - Lists: `wishlist_`, `catalog_product_compare_`.
 - Forms bound to one customer or email link: `productalert_unsubscribe_`, `sendfriend_`.
+- Personal pages of known modules: `connector_` (Dotdigital: endpoints its servers fetch with a passcode, mostly one customer's email content, also a few shared reports), `paynl_order_` and `paynl_checkout_` (Pay.nl), `payone_onepage_` and `payone_amazon_` (Payone), `buckaroo_mrcash_pay` (Buckaroo), `mpblog_post_history`, `mpblog_post_preview` and `mpblog_author_information` (Mageplaza Blog), `clerk_clerk_powerstep_` (Clerk), `sharecart_index_download` (Mageplaza Share Cart), `mailchimp_cart_loadquote` (Mailchimp) and `blog_non_cacheable` (Magefan Blog).
 
 A layout that includes `<update handle="customer_account"/>` is personal too and is not reported, whatever its handle is called. The allowlist applies to [X-LAY-03](X-LAY-03.md) as well.
 
-The SPEC started with six of these. The rest are the handles that Magento 2.4.9 core itself makes uncacheable, found in the M0 core run ([docs/runs/m0-core.md](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m0-core.md)). `catalog_product_compare_` is allowed even though X-LAY-03 otherwise reports `catalog_` handles: the compare page is per customer. Add your own prefixes, or replace the list, in `magento-perf-check.neon` (`layout.allowlistHandles`, `layout.replaceAllowlist`).
+The SPEC started with six of these. Most of the rest are the handles that Magento 2.4.9 core itself makes uncacheable, found in the M0 core run ([docs/runs/m0-core.md](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m0-core.md)). The module group comes from grading the calibration corpus ([round 8](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-8.md)): each prefix is as narrow as that module's personal pages allow, so another handle of the module, such as Mageplaza Blog's public author page, would still be reported. `connector_` is Dotdigital's route id; a different module that uses the same route id for public pages would be hidden too. `catalog_product_compare_` is allowed even though X-LAY-03 otherwise reports `catalog_` handles: the compare page is per customer. Add your own prefixes, or replace the list, in `magento-perf-check.neon` (`layout.allowlistHandles`, `layout.replaceAllowlist`).
 
 ## Example
 
@@ -58,6 +59,7 @@ If a page is meant to be uncacheable (for example a payment return page under a 
 
 - A non-cacheable block that a later layout update removes (`remove="true"` or `<referenceBlock name="..." remove="true"/>`) does not disable FPC. `Layout::isCacheable()` only counts blocks that are still in the layout structure. The rule looks at one file at a time and still reports it.
 - Handles that only some pages use (`warning` level) may be intentionally uncacheable. Review them rather than fixing them blindly.
+- A `hyva_` layout in a store whose themes are not Hyvä themes: Hyvä adds the `hyva_` handles only on a Hyvä theme, so the file is not applied there. The rule does not know which theme a store uses.
 
 ## Basis
 

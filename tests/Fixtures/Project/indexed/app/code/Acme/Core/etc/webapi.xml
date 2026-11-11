@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+    <route url="/V1/acme/pickup/search" method="POST">
+        <service class="Acme\Pickup\Api\PickupSearchInterface" method="execute"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+    <route url="/V1/acme/pickup/count" method="POST">
+        <service class="\Acme\Pickup\Api\PickupSearchInterface" method="count"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+    <!-- A method the interface no longer has. -->
+    <route url="/V1/acme/pickup/removed" method="GET">
+        <service class="Acme\Pickup\Api\PickupSearchInterface" method="removed"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+</routes>

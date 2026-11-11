@@ -6,7 +6,7 @@ Rules on layout XML that catch configurations which disable or fragment Full Pag
 ## Requirements
 
 ### Requirement: X-LAY-01 default allowlist
-X-LAY-01 and X-LAY-03 SHALL NOT report blocks in handles whose name starts with a prefix on the allowlist, or in a layout that contains `<update handle="customer_account"/>`. These are personal pages that are not meant to be served from FPC.
+X-LAY-01 and X-LAY-03 SHALL NOT report blocks in handles whose name, as written or without a `hyva_` prefix, starts with a prefix on the allowlist, or in a layout that contains `<update handle="customer_account"/>`. These are personal pages that are not meant to be served from FPC.
 
 #### Scenario: Checkout handle
 - **WHEN** `checkout_cart_index.xml` contains a block with `cacheable="false"`
@@ -68,13 +68,23 @@ X-LAY-02 SHALL report, as `error`, a `<block>` with a `ttl` attribute in a front
 ### Requirement: X-LAY-01 default allowlist contents
 The default allowlist SHALL be these handle prefixes:
 - Customer: `customer_`, `loginascustomer_`, `newsletter_manage_`, `review_customer_`, `downloadable_customer_`.
-- Checkout and sales: `checkout_`, `multishipping_`, `sales_`.
+- Checkout and sales: `checkout_`, `hyva_checkout_`, `onestepcheckout_`, `multishipping_`, `sales_`, `shipping_tracking_`.
 - Payment: `paypal_`, `vault_`, `paymentservicespaypal_vault_`.
 - Lists: `wishlist_`, `catalog_product_compare_`.
+- Forms bound to one customer or email link: `productalert_unsubscribe_`, `sendfriend_`.
+- Personal pages of known modules: `connector_` (Dotdigital), `paynl_order_`, `paynl_checkout_` (Pay.nl), `payone_onepage_`, `payone_amazon_` (Payone), `buckaroo_mrcash_pay` (Buckaroo), `mpblog_post_history`, `mpblog_post_preview`, `mpblog_author_information` (Mageplaza Blog), `clerk_clerk_powerstep_` (Clerk), `sharecart_index_download` (Mageplaza Share Cart), `mailchimp_cart_loadquote` (Mailchimp), `blog_non_cacheable` (Magefan Blog).
 
 #### Scenario: Vault handle
 - **WHEN** `vault_cards_listaction.xml` contains a block with `cacheable="false"`
 - **THEN** X-LAY-01 reports nothing
+
+#### Scenario: Module email endpoint
+- **WHEN** `connector_email_basket.xml` contains a block with `cacheable="false"`
+- **THEN** X-LAY-01 reports nothing
+
+#### Scenario: Same module, other handle
+- **WHEN** `payone_promo_index.xml` contains a block with `cacheable="false"`
+- **THEN** X-LAY-01 reports it, because no prefix of the module covers that handle
 
 ### Requirement: X-LAY-01 configurable allowlist
 The configuration file SHALL be able to add prefixes to the allowlist, or replace the default list with its own.
@@ -91,7 +101,7 @@ X-LAY-01 SHALL report, as `warning`, every `<block>` element with `cacheable="fa
 - **THEN** X-LAY-01 reports a `warning`
 
 ### Requirement: X-LAY-03 non-cacheable block on shop-wide handles
-X-LAY-03 SHALL report, as `error`, every `<block>` element with `cacheable="false"` in a layout file of area `frontend` or `base`, when the handle is `default` or starts with `catalog_` or `cms_`. The message SHALL name the handle and the block name.
+X-LAY-03 SHALL report, as `error`, every `<block>` element with `cacheable="false"` in a layout file of area `frontend` or `base`, when the handle, without a `hyva_` prefix, is `default` or starts with `catalog_` or `cms_`. The message SHALL name the handle and the block name.
 
 #### Scenario: Block in default handle
 - **WHEN** `view/frontend/layout/default.xml` contains `<block name="promo.banner" cacheable="false" .../>`
@@ -108,3 +118,18 @@ X-LAY-03 SHALL report, as `error`, every `<block>` element with `cacheable="fals
 #### Scenario: Product compare page
 - **WHEN** `catalog_product_compare_index.xml` contains a block with `cacheable="false"`
 - **THEN** X-LAY-03 reports nothing, because the prefix is on the allowlist
+
+### Requirement: Hyvä layout handles
+X-LAY-03 and X-LAY-01 SHALL treat a handle that starts with `hyva_` as the handle that follows the prefix when they choose between X-LAY-03 and X-LAY-01 and when they match the allowlist. The allowlist SHALL also match the handle as written. The message SHALL name the handle as written.
+
+#### Scenario: Hyvä default handle
+- **WHEN** `hyva_default.xml` contains `<block name="promo.hyva.banner" cacheable="false" .../>`
+- **THEN** X-LAY-03 reports an `error` naming handle `hyva_default`
+
+#### Scenario: Hyvä customer page
+- **WHEN** `hyva_customer_address_index.xml` contains a block with `cacheable="false"`
+- **THEN** X-LAY-01 reports nothing, because `customer_` is on the allowlist
+
+#### Scenario: Other Hyvä handle
+- **WHEN** `hyva_contact_index_index.xml` contains a block with `cacheable="false"`
+- **THEN** X-LAY-01 reports a `warning`

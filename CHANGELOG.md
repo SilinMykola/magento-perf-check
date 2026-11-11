@@ -6,6 +6,32 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-11
+
+### Added
+
+- Experimental rules, off by default, that run sniffs of the project's magento/magento-coding-standard through its phpcs ([ADR 7](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0007-run-magento-coding-standard-performance-sniffs.md)), all at `warning`: S-PERF-01 (`array_merge()` in a loop), S-TPL-01 (`$this` or a helper in a template), S-TPL-02 (object manager in a template), S-DI-01 (a Proxy or Interceptor named in a constructor) and S-FN-01 (`sleep()`, `time_nanosleep()` or `session_*()`). phpcs runs only when one of them is enabled; findings share the report, configuration and baseline with the other rules. On the calibration corpus, with coding standard version 40, they give 33, 28, 0, 8 and 2 findings.
+- P-API-01, experimental, off by default, at `warning`: a constructor parameter of a class that a REST or SOAP request builds, when since APSB25-88 the request cannot fill it and the requested type has a getter but no setter for the field. A request with that field then fails with `"%fieldName" is not supported`. Input types come from `webapi.xml` and the classes built from `di.xml` preferences, which the project index now reads. In the Magento 2.4.9 core it gives 1 finding, `sort` of the in-store pickup search request, confirmed on a running store; the 25 Packagist modules of the calibration corpus give none.
+
+- P-LOOP-12, experimental, off by default, at `warning`: a method called inside a loop that runs a query on every call, such as a helper that calls `getById()`. The query is one that P-LOOP-01, P-LOOP-09 or P-LOOP-10 would report in the loop itself. The called method may be in another class, a trait or another module. A query whose result the method keeps for later calls, as a lazy getter or a cache per key does, is left out unless the loop calls a new object each time, such as the foreach value. Measured on 2026-11-10, it gives 172 findings on Magento 2.4.9 core, 41 on the 25 modules of the calibration corpus and 52 on its extended part. P-LOOP-01, P-LOOP-09 and P-LOOP-10 report exactly what they did before.
+- A second part of the calibration corpus: the next 100 Packagist modules and Hyvä Theme 1.5.3, rebuilt with `bin/calibration/build-corpus extended` and listed in `docs/calibration/corpus.json`. The analysis loads the project's autoloader, so a module whose `registration.php` holds more than the standard register call is left out, and a module's `cli_commands.php` is removed from the copy. [Round 6](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-6.md) grades the experimental rules on it.
+
+- Upgrade rules and `--target-version=<version>`: rules with the `U-` prefix find code that breaks with a change in a Magento release, and run when the installed version (read from `vendor/magento/magento2-base`) or the target version has that change. A rule can name a first version per release line, for changes that also shipped in patch releases. Without a known version, as on Mage-OS, they do not run and an `upgrade-version` notice says so.
+- U-CLI-01, experimental, off by default, at `error`, the first upgrade rule (2.4.9): a console command whose `execute()` has no `int` return type. Magento 2.4.9 requires Symfony Console 7.4, so PHP cannot load such a class, and one registered as a command in `di.xml` makes every `bin/magento` call fail. On the calibration corpus it gives 9 findings, all correct: 1 in the 25 modules, 8 in the extended part, none in the core.
+- T-05 in the default set, at `warning`: a `<script src>` without `async`, `defer` or `type="module"` in a storefront template, which blocks rendering until the script is downloaded and run. Admin templates, scripts inside `<template>` and tags whose attributes PHP prints are left out. On the calibration corpus it gives 18 findings, all correct ([round 9](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-9.md)). **This can change a CI result** that uses `--fail-on=warning`.
+- T-06, experimental, off by default, at `info`: an `<img>` without both `width` and `height` in a storefront template, which shifts the page when the image arrives. On the calibration corpus it gives 103 findings; most correct ones are small icons, so it stays experimental.
+
+### Changed
+
+- X-LAY-03 now reports a `cacheable="false"` block in `hyva_default.xml`, `hyva_catalog_*` and `hyva_cms_*` layouts too: on a Hyvä theme every handle of a page gets a `hyva_` copy, so such a block takes the same pages out of Full Page Cache. Before, these layouts fell to X-LAY-01, which is off by default. X-LAY-01 and X-LAY-03 likewise match the allowlist against `<handle>`, so the `hyva_` copies of every allowlisted page are no longer reported: `hyva_customer_*`, `hyva_sales_*`, `hyva_wishlist_*`, `hyva_vault_*` and the rest of the default list, and of each prefix added in `layout.allowlistHandles`. The calibration corpus has no such layout, so its results do not change. **This can change a CI result.**
+- X-LAY-01 (experimental) no longer reports the personal pages of known modules: the endpoints that Dotdigital's servers fetch (`connector_`), Pay.nl, Payone and Buckaroo payment return and checkout pages, the post author's own pages of Mageplaza Blog, Clerk's add-to-cart popup, Mageplaza Share Cart's cart PDF, Mailchimp's restored cart and Magefan Blog's preview. It also leaves out the checkout page of one-step checkout modules (`onestepcheckout_`). On the extended part of the calibration corpus its findings go from 47 to 3. X-LAY-03 shares the allowlist and does not change.
+
+### Fixed
+
+- P-DI-02 (experimental) no longer reports a constructor that calls `return parent::__construct(...)`, which is the parent call its spec allows, written with a return. On the extended part of the calibration corpus this removes 15 of 367 findings.
+- With `bitexpert/phpstan-magento` installed next to the tool, its own rules, such as "Use service contracts to persist entities", no longer run in the analysis; only its types are used. On the calibration corpus they gave 198 `phpstan` notices, now none, and the 221 findings do not change.
+- In a project with `phpstan/extension-installer`, the `magento-perf-check` command now runs only its own rules. In 0.4.0 and before, the installer also added every other PHPStan extension the project has, and their errors showed as `phpstan` notices: on one module of the calibration corpus with `phpstan/phpstan-strict-rules` and `phpstan/phpstan-deprecation-rules` installed, 634 notices next to 27 findings, now none. On that module the findings do not change. A `bitexpert/phpstan-magento` that only the project's installer lists, with the tool installed elsewhere, is no longer loaded: without `generated/code`, calls on generated proxies and extension attributes are then skipped and a notice says so. **This can change a CI result.**
+
 ## [0.4.0] - 2026-11-10
 
 ### Added
@@ -128,7 +154,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.2.0...v0.3.0

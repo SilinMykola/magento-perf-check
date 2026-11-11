@@ -2,10 +2,6 @@
 
 Recurring false-positive patterns found while grading the M2 calibration samples. Fixing them changes what a rule's spec says it reports, so they are left for a later change. Row numbers refer to the grading table of the rule's file in [`graded/`](graded/). Patterns fixed since are removed; see [round 2](round-2.md).
 
-## X-LAY-01: allowlist gaps
-
-Handles still reported that are personal or private by design: `mailchimp_cart_loadquote` (a cart restored from an email link) and `blog_non_cacheable` (blog post preview). Both are specific to one module, so they stay out of the default allowlist.
-
 ## P-COL-02: collections that load at most one row
 
 - Filters on a column that is unique in practice: `setUserFilter()` on one user's role, `level = 0` for the tree root (2, 4, 7, 9, 11, 13, 16, 17).
@@ -37,6 +33,19 @@ Seen in November 2026 on archived projects. A query or a save sits in a `switch`
 - `switch ($item->getCode())` on a code that Magento keeps unique, such as `customer_group_code`. The check runs on save in `_initUniqueFields()` ([Group.php#L62-L67](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Customer/Model/ResourceModel/Group.php#L62-L67)). The database index on that column is not unique ([db_schema.xml#L433-L435](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Customer/etc/db_schema.xml#L433-L435)). The rules cannot see this check, and the same shape on a getter whose value repeats is a real N+1.
 
 The rules cannot tell these cases from real findings without guessing. They stay reported and need a suppression with a reason.
+
+## Round 6, on the extended corpus part
+
+Row numbers refer to [`graded/round-6/`](graded/round-6/).
+
+- **P-COL-02.** Filters that match one row through a unique index in `db_schema.xml`, `_uniqueFields`, a primary key under another name or a token; a page size set by the caller before it passes the collection in; a collection that an earlier call already loaded.
+- **P-FPC-02.** Blocks and view models that render only on pages without full page cache (cart, checkout, customer account, layouts with `cacheable="false"`), or whose session read is not reached while a cacheable page renders.
+- **P-DI-02.** Value and SDK objects that code creates with `new`, not the object manager; `return $this;` in a constructor that otherwise only assigns; a full ternary that falls back to an array literal, which the `?:` and `??` forms already allow. Getters on the context object (`$context->getRequest()` and the like) are correct but always negligible.
+- **P-LOOP-12.** Core repositories that cache by id (`QuoteRepository::get()`, `GroupRepository::getById()` through its registry); a product that the same iteration has just loaded into the repository's cache; a loop that returns on the first hit; a caller that keeps results behind an `isset()` on a map it filled before the loop.
+- **S-PERF-01.** As in round 4: no result that grows across iterations, or a merge into itself in a loop that runs once.
+- **S-FN-01.** `session_write_close()` and a `session_status()` guard that release the session lock; `sleep()` as a poll in a CLI daemon.
+- **S-DI-01.** The sniff takes `Proxy` as a namespace segment for a generated Proxy: the Factory of `Model\Import\Proxy\Category\ResourceModel` is reported.
+- **P-LOOP-04.** A second `getProductUrl()` on the same product in one iteration reads the request path that the first call stored.
 
 ## Low impact
 

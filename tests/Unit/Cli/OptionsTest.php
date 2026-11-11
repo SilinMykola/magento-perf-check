@@ -63,6 +63,20 @@ final class OptionsTest extends TestCase
         Options::fromArgv(['--project=' . $this->project(), '--fail-on=fatal'], __DIR__);
     }
 
+    public function testTargetVersion(): void
+    {
+        self::assertSame('2.4.9', (string) Options::fromArgv(['--project=' . $this->project(), '--target-version=2.4.9'], __DIR__)->targetVersion);
+        self::assertNull(Options::fromArgv(['--project=' . $this->project()], __DIR__)->targetVersion);
+    }
+
+    public function testInvalidTargetVersion(): void
+    {
+        $this->expectException(UsageException::class);
+        $this->expectExceptionMessage('--target-version must be a Magento version such as 2.4.9 or 2.4.8-p3, not "latest".');
+
+        Options::fromArgv(['--project=' . $this->project(), '--target-version=latest'], __DIR__);
+    }
+
     public function testUnknownArgument(): void
     {
         $this->expectException(UsageException::class);

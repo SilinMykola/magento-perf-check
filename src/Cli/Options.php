@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\Cli;
 
+use Silin\MagentoPerfCheck\Rule\MagentoVersion;
 use Silin\MagentoPerfCheck\Rule\Severity;
 
 final class Options
@@ -31,6 +32,7 @@ final class Options
         public readonly ?string $generateBaselineFile = null,
         public readonly bool $version = false,
         public readonly ?string $outputFile = null,
+        public readonly ?MagentoVersion $targetVersion = null,
     ) {
     }
 
@@ -51,7 +53,7 @@ final class Options
                 $values['include-tests'] = '1';
                 continue;
             }
-            if (preg_match('/^--(project|paths|format|fail-on|memory-limit|config|baseline|generate-baseline|output)=(.*)$/s', $argument, $m) !== 1) {
+            if (preg_match('/^--(project|paths|format|fail-on|memory-limit|config|baseline|generate-baseline|output|target-version)=(.*)$/s', $argument, $m) !== 1) {
                 throw new UsageException(sprintf('Unknown argument "%s". Run with --help for usage.', $argument));
             }
             $values[$m[1]] = $m[2];
@@ -87,6 +89,14 @@ final class Options
             throw new UsageException('--memory-limit must look like 512M, 2G or -1.');
         }
 
+        $targetVersion = null;
+        if (isset($values['target-version'])) {
+            $targetVersion = MagentoVersion::parse($values['target-version']);
+            if ($targetVersion === null) {
+                throw new UsageException(sprintf('--target-version must be a Magento version such as 2.4.9 or 2.4.8-p3, not "%s".', $values['target-version']));
+            }
+        }
+
         $inCwd = static fn (string $file): string => str_starts_with($file, '/') ? $file : $cwd . '/' . $file;
         foreach (['baseline', 'generate-baseline', 'output'] as $key) {
             if (isset($values[$key]) && $values[$key] === '') {
@@ -118,6 +128,7 @@ final class Options
             isset($values['generate-baseline']) ? $inCwd($values['generate-baseline']) : null,
             false,
             isset($values['output']) ? $inCwd($values['output']) : null,
+            $targetVersion,
         );
     }
 
@@ -219,6 +230,9 @@ final class Options
                                     directory) instead of stdout; print a one-line summary.
               --include-tests       Also analyze test code (Test/ and dev/tests/ directories),
                                     which is skipped by default.
+              --target-version=<v>  Also run the enabled upgrade rules for changes up to this
+                                    Magento version, such as 2.4.9; without it, those of the
+                                    installed version run.
               --memory-limit=<v>    Memory limit for PHPStan (default: 2G).
               --version             Show the version.
               -h, --help            Show this help.

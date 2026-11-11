@@ -1,6 +1,6 @@
 # Rules
 
-34 rules in the default set and 14 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+35 rules in the default set and 23 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -44,6 +44,7 @@ Severity is the default; change it per rule in [`magento-perf-check.neon`](confi
 | [X-DB-02](rules/X-DB-02.md) | db_schema.xml index that duplicates a key or another index | info | A |
 | [X-AREA-01](rules/X-AREA-01.md) | Observer on an admin event declared in the global area | info | A |
 | [X-GQL-03](rules/X-GQL-03.md) | GraphQL cache id factor added to CacheIdCalculator | info | A, B |
+| [T-05](rules/T-05.md) | External script without async or defer in a storefront template | warning | A |
 
 ## Experimental (off by default)
 
@@ -63,8 +64,17 @@ These are not in the default set: calibration measured them below their precisio
 | [X-PLG-02](rules/X-PLG-02.md) | Plugin on a method that runs for every rendered block or layout element | info | A, B |
 | [P-DI-04](rules/P-DI-04.md) | Console command in CommandList with dependencies that are not lazy | info | A, B |
 | [P-COL-04](rules/P-COL-04.md) | Collection walked without a page size in a cron job or console command | warning | B |
-| [T-03](rules/T-03.md) | JavaScript function declared once per item in a template | warning | C |
-| [T-04](rules/T-04.md) | Result of $viewModels->require() never used in a template | warning | C |
+| [T-03](rules/T-03.md) | JavaScript function declared once per item in a template | warning | A, C |
+| [T-04](rules/T-04.md) | Result of $viewModels->require() never used in a template | warning | A, C |
+| [T-06](rules/T-06.md) | Image without width and height in a storefront template | info | A |
+| [S-PERF-01](rules/S-PERF-01.md) | array_merge() inside a loop, through magento-coding-standard | warning | C |
+| [S-TPL-01](rules/S-TPL-01.md) | $this or a helper in a template, through magento-coding-standard | warning | C |
+| [S-TPL-02](rules/S-TPL-02.md) | Object manager in a template, through magento-coding-standard | warning | A, C |
+| [S-DI-01](rules/S-DI-01.md) | Proxy or Interceptor requested in a constructor, through magento-coding-standard | warning | A, B, C |
+| [S-FN-01](rules/S-FN-01.md) | sleep(), time_nanosleep() or session_*() call, through magento-coding-standard | warning | C |
+| [P-API-01](rules/P-API-01.md) | Web API input field that only an unsupported constructor parameter could set | warning | A, B |
+| [P-LOOP-12](rules/P-LOOP-12.md) | Method that runs a query, called inside a loop | warning | A, B |
+| [U-CLI-01](rules/U-CLI-01.md) | Console command whose execute() has no int return type (Magento 2.4.9, Symfony Console 7.4) | error | A, B |
 
 ## Planned
 

@@ -148,6 +148,21 @@ final class ProjectIndexBuilderTest extends TestCase
         self::assertTrue($this->index()->hasProxyArgument('Acme\Promo\Model\Exporter', 'checkoutSession'));
     }
 
+    public function testWebapiRoutesAndPreferences(): void
+    {
+        $index = $this->index();
+
+        self::assertSame(['acme\pickup\api\pickupsearchinterface' => ['execute', 'count', 'removed']], $index->webapiMethods());
+        $preferences = $index->webapiPreferences();
+        self::assertSame(['acme\pickup\model\searchrequest'], $preferences['acme\pickup\api\data\searchrequestinterface']);
+        self::assertSame(['acme\pickup\model\result'], $preferences['acme\pickup\api\data\resultinterface']);
+        self::assertSame(['acme\pickup\model\area'], $preferences['acme\pickup\api\data\areainterface']);
+        self::assertSame(['acme\pickup\model\customcontact'], $preferences['acme\pickup\model\contact']);
+        self::assertArrayNotHasKey('acme\pickup\api\data\noteinterface', $preferences);
+
+        self::assertSame($index->webapiPreferences(), $this->index()->webapiPreferences());
+    }
+
     public function testPluginClassKnown(): void
     {
         $index = $this->index();

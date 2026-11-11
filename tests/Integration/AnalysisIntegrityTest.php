@@ -310,24 +310,71 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame([], (array) $report['summary']['notices']);
     }
 
-    public function testExtensionsThatTheInstallerIncludesAreNotIncludedTwice(): void
+    /**
+     * @return array<string, array{bool}>
+     */
+    public static function installerLists(): array
+    {
+        return ['with this package' => [true], 'without this package' => [false]];
+    }
+
+    /**
+     * @dataProvider installerLists
+     */
+    public function testExtensionsOfTheInstallerAreLeftOut(bool $listsThisPackage): void
     {
         $package = (string) realpath(__DIR__ . '/../..');
+        $noisyRule = <<<'PHP'
+            <?php
+            namespace Acme\Noisy;
+            /** @implements \PHPStan\Rules\Rule<\PhpParser\Node\Stmt\Class_> */
+            final class EveryClassRule implements \PHPStan\Rules\Rule
+            {
+                public function getNodeType(): string
+                {
+                    return \PhpParser\Node\Stmt\Class_::class;
+                }
+                public function processNode(\PhpParser\Node $node, \PHPStan\Analyser\Scope $scope): array
+                {
+                    return [\PHPStan\Rules\RuleErrorBuilder::message('noisy')->identifier('acme.noisy')->build()];
+                }
+            }
+            PHP;
+        $extensionWithRule = "services:\n    -\n        class: Acme\\Noisy\\EveryClassRule\n        tags: [phpstan.rules.rule]\n";
         $project = $this->project([
             'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
             'app/code/Acme/Demo/Block/Foo.php' => self::SESSION_BLOCK,
-            'bitexpert/extension.neon' => "parameters: []\n",
+            'bitexpert/extension.neon' => $extensionWithRule,
+            'noisy/EveryClassRule.php' => $noisyRule,
+            'noisy/extension.neon' => $extensionWithRule,
         ]);
-        // What phpstan/extension-installer generates in a project that has this package and bitexpert/phpstan-magento.
+        // What phpstan/extension-installer generates in a project that has this package, bitexpert/phpstan-magento and another extension.
         $extensions = [
+            'acme/noisy' => ['install_path' => $project . '/noisy', 'extra' => ['includes' => ['extension.neon']]],
             'bitexpert/phpstan-magento' => ['install_path' => $project . '/bitexpert', 'extra' => ['includes' => ['extension.neon']]],
-            'silin/magento-perf-check' => ['install_path' => $package, 'extra' => ['includes' => ['extension.neon']]],
         ];
+        if ($listsThisPackage) {
+            $extensions['silin/magento-perf-check'] = ['install_path' => $package, 'extra' => ['includes' => ['extension.neon']]];
+        }
         $this->write($project . '/vendor/phpstan/extension-installer/src/GeneratedConfig.php', sprintf(
             "<?php\nnamespace PHPStan\\ExtensionInstaller;\nfinal class GeneratedConfig\n{\n    public const EXTENSIONS = %s;\n    public const NOT_INSTALLED = [];\n    public const PHPSTAN_VERSION_CONSTRAINT = null;\n}\n",
             var_export($extensions, true),
         ));
-        file_put_contents($project . '/vendor/autoload.php', "require_once __DIR__ . '/phpstan/extension-installer/src/GeneratedConfig.php';\n", FILE_APPEND);
+        // Loaded on demand, as Composer's autoloader does, and ahead of the tool's own autoloader, as when
+        // the tool is installed in the project: the project's installer list is the one PHPStan finds.
+        $classes = [
+            'PHPStan\\ExtensionInstaller\\GeneratedConfig' => $project . '/vendor/phpstan/extension-installer/src/GeneratedConfig.php',
+            'Acme\\Noisy\\EveryClassRule' => $project . '/noisy/EveryClassRule.php',
+        ];
+        file_put_contents(
+            $project . '/vendor/autoload.php',
+            sprintf(
+                "require_once %s;\nspl_autoload_register(static function (string \$class): void {\n    \$file = %s[\$class] ?? null;\n    if (\$file !== null) {\n        require \$file;\n    }\n}, true, true);\n",
+                var_export($package . '/vendor/autoload.php', true),
+                var_export($classes, true),
+            ),
+            FILE_APPEND,
+        );
 
         [$exitCode, $stdout, $stderr] = $this->runCommand($project, ['--format=json']);
 
@@ -335,12 +382,124 @@ final class AnalysisIntegrityTest extends TestCase
         $report = json_decode($stdout, true);
         self::assertIsArray($report);
         self::assertSame(['P-DI-01'], array_column($report['findings'], 'ruleId'));
-        self::assertSame([], (array) $report['summary']['notices'], 'bitexpert/phpstan-magento is loaded by the installer');
+        self::assertSame(['generated-code' => 1], (array) $report['summary']['notices'], 'neither the other extension nor the project\'s bitexpert/phpstan-magento runs');
         $configs = glob(WorkDirectory::forProject($project) . '/phpstan-*.neon') ?: [];
         self::assertCount(1, $configs);
         $config = (string) file_get_contents($configs[0]);
-        self::assertStringContainsString('/extension-experimental.neon"', $config, 'the installer does not include the experimental rules');
-        self::assertStringNotContainsString('/extension.neon"', $config);
+        self::assertStringContainsString('/extension.neon"', $config);
+        self::assertStringContainsString('/extension-experimental.neon"', $config);
+    }
+
+    public function testOwnRulesOfBitExpertAreSwitchedOff(): void
+    {
+        $rule = <<<'PHP'
+            <?php
+            namespace Acme\BitExpert;
+            /** @implements \PHPStan\Rules\Rule<\PhpParser\Node\Stmt\Class_> */
+            final class ServiceContractRule implements \PHPStan\Rules\Rule
+            {
+                public function getNodeType(): string
+                {
+                    return \PhpParser\Node\Stmt\Class_::class;
+                }
+                public function processNode(\PhpParser\Node $node, \PHPStan\Analyser\Scope $scope): array
+                {
+                    return [\PHPStan\Rules\RuleErrorBuilder::message('use service contracts')->identifier('acme.serviceContract')->build()];
+                }
+            }
+            PHP;
+        // The parameters and switches of bitexpert/phpstan-magento 0.44.0, with one rule standing in for its own rules.
+        $neon = <<<'NEON'
+            parameters:
+                magento:
+                    checkCollectionViaFactory: true
+                    checkServiceContracts: true
+                    checkResourceModelsUsedDirectly: true
+                    magentoRoot: %currentWorkingDirectory%
+                extdn:
+                    setTemplateDisallowedForBlockClasses: true
+            parametersSchema:
+                magento: structure([
+                    checkCollectionViaFactory: bool()
+                    checkServiceContracts: bool()
+                    checkResourceModelsUsedDirectly: bool()
+                    magentoRoot: string()
+                ])
+                extdn: structure([
+                    setTemplateDisallowedForBlockClasses: bool()
+                ])
+            conditionalTags:
+                Acme\BitExpert\ServiceContractRule:
+                    phpstan.rules.rule: %magento.checkServiceContracts%
+            services:
+                -
+                    class: Acme\BitExpert\ServiceContractRule
+
+            NEON;
+        $project = $this->project([
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Block/Foo.php' => self::SESSION_BLOCK,
+            'bitexpert/extension.neon' => $neon,
+            'bitexpert/ServiceContractRule.php' => $rule,
+        ]);
+        file_put_contents($project . '/vendor/autoload.php', "require_once __DIR__ . '/../bitexpert/ServiceContractRule.php';\n", FILE_APPEND);
+        $runner = new PhpStanRunner(new RuleRegistry(), null, $project . '/bitexpert');
+
+        [$exitCode, $stdout, $stderr] = $this->runCommand($project, ['--format=json'], $runner);
+
+        self::assertNotSame(Application::EXIT_ERROR, $exitCode, $stderr);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        self::assertSame(['P-DI-01'], array_column($report['findings'], 'ruleId'));
+        self::assertSame([], (array) $report['summary']['notices'], 'its own rule is off');
+        $configs = glob(WorkDirectory::forProject($project) . '/phpstan-*.neon') ?: [];
+        self::assertCount(1, $configs);
+        $lines = file($configs[0], FILE_IGNORE_NEW_LINES) ?: [];
+        self::assertStringContainsString('"' . $project . '/bitexpert/extension.neon"', $lines[0] ?? '');
+        $parameters = json_decode(substr($lines[1] ?? '', strlen('parameters: ')), true);
+        self::assertIsArray($parameters);
+        self::assertSame(['checkCollectionViaFactory' => false, 'checkServiceContracts' => false, 'checkResourceModelsUsedDirectly' => false], $parameters['magento'] ?? null);
+        self::assertSame(['setTemplateDisallowedForBlockClasses' => false], $parameters['extdn'] ?? null);
+    }
+
+    public function testEnabledCodingStandardRuleIsInTheReport(): void
+    {
+        $merge = "<?php\nnamespace Acme\\Demo;\nclass Export\n{\n    public function run(array \$groups): array\n    {\n        \$result = [];\n"
+            . "        foreach (\$groups as \$group) {\n            \$result = array_merge(\$result, \$group);\n        }\n        return \$result;\n    }\n}\n";
+        $project = $this->project([
+            'app/etc/config.php' => "<?php\nreturn ['modules' => ['Acme_Demo' => 1, 'Acme_Off' => 0]];\n",
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Model/Export.php' => $merge,
+            'app/code/Acme/Demo/Test/Unit/ExportTest.php' => $merge,
+            'app/code/Acme/Off/etc/module.xml' => '<?xml version="1.0"?><config><module name="Acme_Off"/></config>',
+            'app/code/Acme/Off/Model/Export.php' => $merge,
+        ]);
+        $vendor = (string) realpath(__DIR__ . '/../../vendor');
+        mkdir($project . '/vendor/magento', 0777, true);
+        symlink($vendor . '/squizlabs', $project . '/vendor/squizlabs');
+        symlink($vendor . '/magento/magento-coding-standard', $project . '/vendor/magento/magento-coding-standard');
+
+        self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
+
+        file_put_contents($project . '/magento-perf-check.neon', "magentoPerf:\n    rules:\n        S-PERF-01:\n            enabled: true\n            severity: info\n");
+        $found = function (array $argv) use ($project): array {
+            [, $stdout] = $this->runCommand($project, ['--format=json', ...$argv]);
+            $report = json_decode($stdout, true);
+            self::assertIsArray($report);
+
+            return [
+                array_map(static fn (array $f): string => sprintf('%s %s:%d %s', $f['ruleId'], $f['file'], $f['line'], $f['severity']), $report['findings']),
+                (array) $report['summary']['notices'],
+            ];
+        };
+        self::assertSame([['S-PERF-01 app/code/Acme/Demo/Model/Export.php:9 info'], ['disabled-module' => 1, 'generated-code' => 1]], $found([]));
+        self::assertSame(
+            ['S-PERF-01 app/code/Acme/Demo/Model/Export.php:9 info', 'S-PERF-01 app/code/Acme/Demo/Test/Unit/ExportTest.php:9 info'],
+            $found(['--include-tests'])[0],
+        );
+
+        unlink($project . '/vendor/squizlabs');
+        self::assertSame([[], ['coding-standard' => 1, 'disabled-module' => 1, 'generated-code' => 1]], $found([]));
     }
 
     public function testXmlOfASymlinkedModuleIsAnalyzed(): void
@@ -739,5 +898,95 @@ final class AnalysisIntegrityTest extends TestCase
         sort($found);
 
         self::assertSame(['P-DI-06 app/code/Acme/Demo/Block/Shared.php:9', 'P-LOOP-01 app/code/Acme/Demo/Block/Shared.php:9'], $found);
+    }
+
+    public function testWebapiInputTypeFollowsAChangedServiceInterface(): void
+    {
+        $service = static fn (string $parameter): string => "<?php\nnamespace Acme\\Demo\\Api;\ninterface SearchInterface\n{\n"
+            . "    /**\n     * @param {$parameter}\n     * @return int\n     */\n    public function search({$parameter}): int;\n}\n";
+        $project = $this->project([
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/etc/webapi.xml' => '<?xml version="1.0"?><routes><route url="/V1/acme/search" method="POST">'
+                . '<service class="Acme\Demo\Api\SearchInterface" method="search"/></route></routes>',
+            'app/code/Acme/Demo/etc/di.xml' => '<?xml version="1.0"?><config>'
+                . '<preference for="Acme\Demo\Api\Data\RequestInterface" type="Acme\Demo\Model\Request"/></config>',
+            'app/code/Acme/Demo/Api/SearchInterface.php' => $service('string $query'),
+            'app/code/Acme/Demo/Api/Data/RequestInterface.php' => "<?php\nnamespace Acme\\Demo\\Api\\Data;\ninterface RequestInterface\n{\n"
+                . "    public function getPoint(): \\stdClass;\n}\n",
+            'app/code/Acme/Demo/Model/Request.php' => "<?php\nnamespace Acme\\Demo\\Model;\nclass Request implements \\Acme\\Demo\\Api\\Data\\RequestInterface\n{\n"
+                . "    public function __construct(private \\stdClass \$point)\n    {\n    }\n\n"
+                . "    public function getPoint(): \\stdClass\n    {\n        return \$this->point;\n    }\n}\n",
+            'on.neon' => "magentoPerf:\n    rules:\n        P-API-01:\n            enabled: true\n",
+        ]);
+        $config = '--config=' . $project . '/on.neon';
+
+        self::assertSame([], $this->ruleIds($project, [$config]), 'RequestInterface is not an input type yet');
+
+        // Only the service interface changes; PHPStan's result cache keeps the result of Request.php.
+        file_put_contents($project . '/app/code/Acme/Demo/Api/SearchInterface.php', $service('\Acme\Demo\Api\Data\RequestInterface $request'));
+        self::assertSame(['P-API-01'], $this->ruleIds($project, [$config]));
+        self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
+    }
+
+    public function testLoopCallFollowsAChangedCalledMethod(): void
+    {
+        $reader = static fn (string $body): string => "<?php\nnamespace Acme\\Demo\\Model;\nclass Reader\n{\n"
+            . "    public function __construct(private \\Magento\\Catalog\\Api\\ProductRepositoryInterface \$repository)\n    {\n    }\n\n"
+            . "    public function name(int \$id): string\n    {\n        {$body}\n    }\n}\n";
+        $project = $this->project([
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Model/Reader.php' => $reader("return (string) \$id;"),
+            'app/code/Acme/Demo/Model/Listing.php' => "<?php\nnamespace Acme\\Demo\\Model;\nclass Listing\n{\n"
+                . "    public function __construct(private Reader \$reader)\n    {\n    }\n\n"
+                . "    /** @param list<int> \$ids */\n    public function names(array \$ids): array\n    {\n        \$names = [];\n"
+                . "        foreach (\$ids as \$id) {\n            \$names[] = \$this->reader->name(\$id);\n        }\n\n        return \$names;\n    }\n}\n",
+            'on.neon' => "magentoPerf:\n    rules:\n        P-LOOP-12:\n            enabled: true\n",
+        ]);
+        $config = '--config=' . $project . '/on.neon';
+
+        self::assertSame([], $this->ruleIds($project, [$config]), 'name() does not query yet');
+
+        // Only Reader.php changes, and the finding is in Listing.php: the report must follow the called method.
+        file_put_contents($project . '/app/code/Acme/Demo/Model/Reader.php', $reader("return (string) \$this->repository->getById(\$id)->getName();"));
+        self::assertSame(['P-LOOP-12'], $this->ruleIds($project, [$config]));
+        self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
+    }
+
+    public function testUpgradeRulesFollowTheInstalledAndTheTargetVersion(): void
+    {
+        $stubs = (string) realpath(__DIR__ . '/../PhpStan/Stubs');
+        $project = $this->project([
+            'vendor/autoload.php' => sprintf("<?php\nrequire_once %s;\nrequire_once %s;\n", var_export($stubs . '/framework.php', true), var_export($stubs . '/fpc.php', true)),
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Console/Sync.php' => "<?php\nnamespace Acme\\Demo\\Console;\nclass Sync extends \\Symfony\\Component\\Console\\Command\\Command\n{\n"
+                . "    public function execute(\\Symfony\\Component\\Console\\Input\\InputInterface \$input, \\Symfony\\Component\\Console\\Output\\OutputInterface \$output)\n    {\n        return 0;\n    }\n}\n",
+            'on.neon' => "magentoPerf:\n    rules:\n        U-CLI-01:\n            enabled: true\n",
+        ]);
+        $config = '--config=' . $project . '/on.neon';
+        $notices = function (array $argv) use ($project): array {
+            [, $stdout] = $this->runCommand($project, ['--format=json', ...$argv]);
+            $report = json_decode($stdout, true);
+            self::assertIsArray($report);
+
+            return array_column($report['notices'] ?? [], 'source');
+        };
+
+        // No magento2-base: the version is unknown, and a notice says why the rule did not run.
+        self::assertSame([], $this->ruleIds($project, [$config]));
+        self::assertContains('upgrade-version', $notices([$config]));
+        self::assertNotContains('upgrade-version', $notices([]), 'no notice while the rule is off');
+        self::assertSame(['U-CLI-01'], $this->ruleIds($project, [$config, '--target-version=2.4.9']));
+
+        $this->write($project . '/vendor/magento/magento2-base/composer.json', '{"name": "magento/magento2-base", "version": "2.4.8-p2"}');
+        self::assertSame([], $this->ruleIds($project, [$config]), 'the installed 2.4.8 does not have the change');
+        self::assertContains('upgrade-version', $notices([$config]), 'the skipped rule is named');
+        self::assertNotContains('upgrade-version', $notices([$config, '--target-version=2.4.9']));
+        self::assertSame(['U-CLI-01'], $this->ruleIds($project, [$config, '--target-version=2.4.9']));
+
+        $this->write($project . '/vendor/magento/magento2-base/composer.json', '{"name": "magento/magento2-base", "version": "2.4.9"}');
+        self::assertSame(['U-CLI-01'], $this->ruleIds($project, [$config]), 'already broken on the installed 2.4.9');
+        self::assertSame(['U-CLI-01'], $this->ruleIds($project, [$config, '--target-version=2.4.8']), 'a lower target hides nothing');
+        self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
+        self::assertNotContains('upgrade-version', $notices([]), 'no notice while the rule is off');
     }
 }

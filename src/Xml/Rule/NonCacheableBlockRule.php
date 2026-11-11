@@ -40,6 +40,7 @@ final class NonCacheableBlockRule implements XmlRule
         // checkout and sales
         'checkout_',
         'hyva_checkout_',
+        'onestepcheckout_', // the checkout page of one-step checkout modules
         'multishipping_',
         'sales_',
         'shipping_tracking_',
@@ -53,6 +54,20 @@ final class NonCacheableBlockRule implements XmlRule
         // forms bound to one customer or email link
         'productalert_unsubscribe_',
         'sendfriend_',
+        // personal pages of known modules (docs/calibration/round-8.md)
+        'connector_', // Dotdigital: passcode-gated endpoints its servers fetch, mostly one customer's email content
+        'paynl_order_', // Pay.nl: return pages after payment
+        'paynl_checkout_',
+        'payone_onepage_', // Payone: checkout steps of the current quote
+        'payone_amazon_',
+        'buckaroo_mrcash_pay', // Buckaroo: one transaction's payment page
+        'mpblog_post_history', // Mageplaza Blog: the author's own pages
+        'mpblog_post_preview',
+        'mpblog_author_information',
+        'clerk_clerk_powerstep_', // Clerk: recommendations for what was just added to the cart
+        'sharecart_index_download', // Mageplaza Share Cart: a PDF of the current cart
+        'mailchimp_cart_loadquote', // Mailchimp: a cart restored from an email link
+        'blog_non_cacheable', // Magefan Blog: post preview
     ];
 
     /** @var list<string> */
@@ -77,13 +92,15 @@ final class NonCacheableBlockRule implements XmlRule
         return $file->kind === XmlFile::KIND_LAYOUT
             && in_array($file->area, ['frontend', 'base'], true)
             && $file->handle !== null
-            && !$this->startsWithAny($file->handle, $this->allowlist);
+            && !$this->startsWithAny($file->handle, $this->allowlist)
+            && !$this->startsWithAny(self::withoutHyvaPrefix($file->handle), $this->allowlist);
     }
 
     public function check(XmlFile $file, DOMDocument $document): array
     {
         $handle = (string) $file->handle;
-        [$id, $severity] = $handle === 'default' || $this->startsWithAny($handle, self::ERROR_HANDLE_PREFIXES)
+        $page = self::withoutHyvaPrefix($handle);
+        [$id, $severity] = $page === 'default' || $this->startsWithAny($page, self::ERROR_HANDLE_PREFIXES)
             ? [self::SHOP_WIDE_ID, Severity::Error]
             : [self::ID, Severity::Warning];
 
@@ -117,6 +134,15 @@ final class NonCacheableBlockRule implements XmlRule
         }
 
         return $findings;
+    }
+
+    /**
+     * A Hyvä theme adds hyva_<handle> next to every handle of the page, so hyva_default.xml
+     * applies to the same pages as default.xml.
+     */
+    private static function withoutHyvaPrefix(string $handle): string
+    {
+        return str_starts_with($handle, 'hyva_') ? substr($handle, strlen('hyva_')) : $handle;
     }
 
     /**
