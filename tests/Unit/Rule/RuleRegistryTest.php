@@ -20,6 +20,20 @@ final class RuleRegistryTest extends TestCase
         }
     }
 
+    public function testCodingStandardRulesThatRarelyMatterAreRecommendations(): void
+    {
+        $registry = new RuleRegistry();
+        $severities = [];
+        foreach (['S-PERF-01', 'S-TPL-01', 'S-DI-01', 'S-TPL-02', 'S-FN-01'] as $id) {
+            $severities[$id] = $registry->find($id)?->severity->value;
+        }
+
+        self::assertSame(
+            ['S-PERF-01' => 'info', 'S-TPL-01' => 'info', 'S-DI-01' => 'info', 'S-TPL-02' => 'warning', 'S-FN-01' => 'warning'],
+            $severities,
+        );
+    }
+
     public function testRulesAreRegistered(): void
     {
         $ids = array_map(static fn ($rule): string => $rule->id, (new RuleRegistry())->all());

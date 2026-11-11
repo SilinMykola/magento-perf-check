@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Severity | `warning` |
+| Severity | `info` (a recommendation: calibration rounds 4 and 6 found its correct findings mostly negligible) |
 | Status | experimental, off by default: its only source is the sniff, and in [calibration round 4](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-4.md) only 2 of 33 findings mattered. Enable it with `enabled: true` in `magento-perf-check.neon` |
 | Analyzer | phpcs of the project, sniff `Magento2.Performance.ForeachArrayMerge` of [magento/magento-coding-standard](https://github.com/magento/magento-coding-standard) ([ADR 7](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0007-run-magento-coding-standard-performance-sniffs.md)) |
 

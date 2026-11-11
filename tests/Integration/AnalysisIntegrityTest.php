@@ -481,7 +481,7 @@ final class AnalysisIntegrityTest extends TestCase
 
         self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
 
-        file_put_contents($project . '/magento-perf-check.neon', "magentoPerf:\n    rules:\n        S-PERF-01:\n            enabled: true\n            severity: info\n");
+        file_put_contents($project . '/magento-perf-check.neon', "magentoPerf:\n    rules:\n        S-PERF-01:\n            enabled: true\n            severity: warning\n");
         $found = function (array $argv) use ($project): array {
             [, $stdout] = $this->runCommand($project, ['--format=json', ...$argv]);
             $report = json_decode($stdout, true);
@@ -492,9 +492,13 @@ final class AnalysisIntegrityTest extends TestCase
                 (array) $report['summary']['notices'],
             ];
         };
-        self::assertSame([['S-PERF-01 app/code/Acme/Demo/Model/Export.php:9 info'], ['disabled-module' => 1, 'generated-code' => 1]], $found([]));
+        self::assertSame([['S-PERF-01 app/code/Acme/Demo/Model/Export.php:9 warning'], ['disabled-module' => 1, 'generated-code' => 1]], $found([]));
+        // Without a severity in the configuration, the rule reports a recommendation.
+        file_put_contents($project . '/magento-perf-check.neon', "magentoPerf:\n    rules:\n        S-PERF-01:\n            enabled: true\n");
+        self::assertSame(['S-PERF-01 app/code/Acme/Demo/Model/Export.php:9 info'], $found([])[0]);
+        file_put_contents($project . '/magento-perf-check.neon', "magentoPerf:\n    rules:\n        S-PERF-01:\n            enabled: true\n            severity: warning\n");
         self::assertSame(
-            ['S-PERF-01 app/code/Acme/Demo/Model/Export.php:9 info', 'S-PERF-01 app/code/Acme/Demo/Test/Unit/ExportTest.php:9 info'],
+            ['S-PERF-01 app/code/Acme/Demo/Model/Export.php:9 warning', 'S-PERF-01 app/code/Acme/Demo/Test/Unit/ExportTest.php:9 warning'],
             $found(['--include-tests'])[0],
         );
 

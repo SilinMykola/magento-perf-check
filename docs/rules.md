@@ -67,10 +67,10 @@ These are not in the default set: calibration measured them below their precisio
 | [T-03](rules/T-03.md) | JavaScript function declared once per item in a template | warning | A, C |
 | [T-04](rules/T-04.md) | Result of $viewModels->require() never used in a template | warning | A, C |
 | [T-06](rules/T-06.md) | Image without width and height in a storefront template | info | A |
-| [S-PERF-01](rules/S-PERF-01.md) | array_merge() inside a loop, through magento-coding-standard | warning | C |
-| [S-TPL-01](rules/S-TPL-01.md) | $this or a helper in a template, through magento-coding-standard | warning | C |
+| [S-PERF-01](rules/S-PERF-01.md) | array_merge() inside a loop, through magento-coding-standard | info | C |
+| [S-TPL-01](rules/S-TPL-01.md) | $this or a helper in a template, through magento-coding-standard | info | C |
 | [S-TPL-02](rules/S-TPL-02.md) | Object manager in a template, through magento-coding-standard | warning | A, C |
-| [S-DI-01](rules/S-DI-01.md) | Proxy or Interceptor requested in a constructor, through magento-coding-standard | warning | A, B, C |
+| [S-DI-01](rules/S-DI-01.md) | Proxy or Interceptor requested in a constructor, through magento-coding-standard | info | A, B, C |
 | [S-FN-01](rules/S-FN-01.md) | sleep(), time_nanosleep() or session_*() call, through magento-coding-standard | warning | C |
 | [P-API-01](rules/P-API-01.md) | Web API input field that only an unsupported constructor parameter could set | warning | A, B |
 | [P-LOOP-12](rules/P-LOOP-12.md) | Method that runs a query, called inside a loop | warning | A, B |
