@@ -63,8 +63,8 @@ These are not in the default set: calibration measured them below their precisio
 | [X-PLG-02](rules/X-PLG-02.md) | Plugin on a method that runs for every rendered block or layout element | info | A, B |
 | [P-DI-04](rules/P-DI-04.md) | Console command in CommandList with dependencies that are not lazy | info | A, B |
 | [P-COL-04](rules/P-COL-04.md) | Collection walked without a page size in a cron job or console command | warning | B |
-| [T-03](rules/T-03.md) | JavaScript function declared once per item in a template | warning | C |
-| [T-04](rules/T-04.md) | Result of $viewModels->require() never used in a template | warning | C |
+| [T-03](rules/T-03.md) | JavaScript function declared once per item in a template | warning | A, C |
+| [T-04](rules/T-04.md) | Result of $viewModels->require() never used in a template | warning | A, C |
 | [S-PERF-01](rules/S-PERF-01.md) | array_merge() inside a loop, through magento-coding-standard | warning | C |
 | [S-TPL-01](rules/S-TPL-01.md) | $this or a helper in a template, through magento-coding-standard | warning | C |
 | [S-TPL-02](rules/S-TPL-02.md) | Object manager in a template, through magento-coding-standard | warning | A, C |
