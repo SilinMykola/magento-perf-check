@@ -109,6 +109,7 @@ magentoPerf:
             severity: warning
     layout:
         # Extra handle prefixes that X-LAY-01 and X-LAY-03 must not report.
+        # A prefix also covers the hyva_ copy of a handle: acme_account_ covers hyva_acme_account_index.
         allowlistHandles:
             - acme_account_
         # true: use only the prefixes above instead of adding them to the default list.

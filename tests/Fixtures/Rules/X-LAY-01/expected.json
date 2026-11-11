@@ -3,6 +3,8 @@
     {"file": "app/code/Acme/Promo/view/frontend/layout/catalog_product_view.xml", "line": 4, "severity": "error"},
     {"file": "app/code/Acme/Promo/view/frontend/layout/contact_index_index.xml", "line": 4, "severity": "warning"},
     {"file": "app/code/Acme/Promo/view/frontend/layout/default.xml", "line": 5, "severity": "error"},
+    {"file": "app/code/Acme/Promo/view/frontend/layout/hyva_contact_index_index.xml", "line": 4, "severity": "warning"},
+    {"file": "app/code/Acme/Promo/view/frontend/layout/hyva_default.xml", "line": 4, "severity": "error"},
     {"file": "app/code/Acme/Promo/view/frontend/layout/payone_promo_index.xml", "line": 4, "severity": "warning"},
     {"file": "app/design/frontend/Acme/shop/Magento_Cms/layout/cms_index_index.xml", "line": 4, "severity": "error"}
 ]

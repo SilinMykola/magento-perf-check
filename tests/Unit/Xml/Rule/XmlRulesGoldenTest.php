@@ -85,5 +85,9 @@ final class XmlRulesGoldenTest extends TestCase
         self::assertTrue((new NonCacheableBlockRule(['acme_account_']))->appliesTo($layout('contact_index_index')));
         // Replacing the list drops the defaults.
         self::assertTrue((new NonCacheableBlockRule(['acme_account_'], true))->appliesTo($layout('checkout_cart_index')));
+        // A prefix covers the hyva_ copy of its handles, and a hyva_ prefix matches as written.
+        self::assertFalse((new NonCacheableBlockRule(['acme_account_']))->appliesTo($layout('hyva_acme_account_index')));
+        self::assertFalse((new NonCacheableBlockRule(['hyva_acme_'], true))->appliesTo($layout('hyva_acme_index')));
+        self::assertTrue((new NonCacheableBlockRule(['customer_'], true))->appliesTo($layout('hyva_checkout_index_index')));
     }
 }

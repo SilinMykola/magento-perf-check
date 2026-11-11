@@ -8,7 +8,7 @@
 
 ## What it catches
 
-A `<block>` with `cacheable="false"` in a frontend layout file, on any handle except `default`, `catalog_*` and `cms_*`. Those belong to [X-LAY-03](X-LAY-03.md), which is on by default. This includes module layouts (`view/frontend/layout`, `view/base/layout`) and theme overrides (`app/design/frontend/<Vendor>/<theme>/<Module_Name>/layout`).
+A `<block>` with `cacheable="false"` in a frontend layout file, on any handle except `default`, `catalog_*` and `cms_*`. Those belong to [X-LAY-03](X-LAY-03.md), which is on by default. This includes module layouts (`view/frontend/layout`, `view/base/layout`) and theme overrides (`app/design/frontend/<Vendor>/<theme>/<Module_Name>/layout`). A handle with Hyvä's `hyva_` prefix is treated as the handle it extends, for this split and for the allowlist: `hyva_default` belongs to X-LAY-03, `hyva_customer_address_index` is on the allowlist.
 
 ## Why it hurts performance
 
@@ -59,6 +59,7 @@ If a page is meant to be uncacheable (for example a payment return page under a 
 
 - A non-cacheable block that a later layout update removes (`remove="true"` or `<referenceBlock name="..." remove="true"/>`) does not disable FPC. `Layout::isCacheable()` only counts blocks that are still in the layout structure. The rule looks at one file at a time and still reports it.
 - Handles that only some pages use (`warning` level) may be intentionally uncacheable. Review them rather than fixing them blindly.
+- A `hyva_` layout in a store whose themes are not Hyvä themes: Hyvä adds the `hyva_` handles only on a Hyvä theme, so the file is not applied there. The rule does not know which theme a store uses.
 
 ## Basis
 

@@ -92,13 +92,15 @@ final class NonCacheableBlockRule implements XmlRule
         return $file->kind === XmlFile::KIND_LAYOUT
             && in_array($file->area, ['frontend', 'base'], true)
             && $file->handle !== null
-            && !$this->startsWithAny($file->handle, $this->allowlist);
+            && !$this->startsWithAny($file->handle, $this->allowlist)
+            && !$this->startsWithAny(self::withoutHyvaPrefix($file->handle), $this->allowlist);
     }
 
     public function check(XmlFile $file, DOMDocument $document): array
     {
         $handle = (string) $file->handle;
-        [$id, $severity] = $handle === 'default' || $this->startsWithAny($handle, self::ERROR_HANDLE_PREFIXES)
+        $page = self::withoutHyvaPrefix($handle);
+        [$id, $severity] = $page === 'default' || $this->startsWithAny($page, self::ERROR_HANDLE_PREFIXES)
             ? [self::SHOP_WIDE_ID, Severity::Error]
             : [self::ID, Severity::Warning];
 
@@ -132,6 +134,15 @@ final class NonCacheableBlockRule implements XmlRule
         }
 
         return $findings;
+    }
+
+    /**
+     * A Hyvä theme adds hyva_<handle> next to every handle of the page, so hyva_default.xml
+     * applies to the same pages as default.xml.
+     */
+    private static function withoutHyvaPrefix(string $handle): string
+    {
+        return str_starts_with($handle, 'hyva_') ? substr($handle, strlen('hyva_')) : $handle;
     }
 
     /**

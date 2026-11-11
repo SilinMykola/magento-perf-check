@@ -19,6 +19,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Changed
 
+- X-LAY-03 now reports a `cacheable="false"` block in `hyva_default.xml`, `hyva_catalog_*` and `hyva_cms_*` layouts too: on a Hyvä theme every handle of a page gets a `hyva_` copy, so such a block takes the same pages out of Full Page Cache. Before, these layouts fell to X-LAY-01, which is off by default. X-LAY-01 and X-LAY-03 likewise match the allowlist against `<handle>`, so the `hyva_` copies of every allowlisted page are no longer reported: `hyva_customer_*`, `hyva_sales_*`, `hyva_wishlist_*`, `hyva_vault_*` and the rest of the default list, and of each prefix added in `layout.allowlistHandles`. The calibration corpus has no such layout, so its results do not change. **This can change a CI result.**
 - X-LAY-01 (experimental) no longer reports the personal pages of known modules: the endpoints that Dotdigital's servers fetch (`connector_`), Pay.nl, Payone and Buckaroo payment return and checkout pages, the post author's own pages of Mageplaza Blog, Clerk's add-to-cart popup, Mageplaza Share Cart's cart PDF, Mailchimp's restored cart and Magefan Blog's preview. It also leaves out the checkout page of one-step checkout modules (`onestepcheckout_`). On the extended part of the calibration corpus its findings go from 47 to 3. X-LAY-03 shares the allowlist and does not change.
 
 ### Fixed

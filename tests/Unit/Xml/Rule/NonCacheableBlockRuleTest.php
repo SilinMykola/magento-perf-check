@@ -55,11 +55,23 @@ final class NonCacheableBlockRuleTest extends TestCase
         self::assertStringContainsString('"default"', $default[0]->message);
     }
 
+    public function testHyvaHandleIsClassifiedAsTheHandleItExtends(): void
+    {
+        $hyvaDefault = array_values(array_filter(
+            $this->findings(),
+            static fn (Finding $f): bool => str_ends_with($f->file, 'frontend/layout/hyva_default.xml'),
+        ));
+
+        self::assertCount(1, $hyvaDefault);
+        self::assertSame(NonCacheableBlockRule::SHOP_WIDE_ID, $hyvaDefault[0]->ruleId);
+        self::assertStringContainsString('"hyva_default"', $hyvaDefault[0]->message);
+    }
+
     public function testOtherHandlesKeepTheirOwnRule(): void
     {
         $contact = array_values(array_filter(
             $this->findings(),
-            static fn (Finding $f): bool => str_ends_with($f->file, 'contact_index_index.xml'),
+            static fn (Finding $f): bool => str_ends_with($f->file, '/contact_index_index.xml'),
         ));
 
         self::assertCount(1, $contact);
