@@ -6,6 +6,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Added
+
+- X-LAY-04, experimental, off by default, at `info`: a script added to the page head by layout XML (`<script src>`, or a `<link src>` that core renders as a script) without `async` or `defer`, which blocks rendering, as [T-05](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-05.md) does in templates. The scripts core never defers and scripts behind `ie_condition` are left out. On the calibration corpus it gives 14 findings, all correct, 1 of them on pages that matter ([round 10](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-10.md)).
+
 ### Changed
 
 - S-PERF-01, S-TPL-01 and S-DI-01 (experimental, off by default) now report at `info`, a recommendation, instead of `warning`: in calibration rounds 4 and 6 almost none of their correct findings mattered. S-TPL-02 and S-FN-01 keep `warning`. **This can change a CI result** only for a project that enabled them and runs with `--fail-on=warning`: it no longer fails on their findings. With the default `--fail-on=error` nothing changes. Set `severity: warning` to keep the old behavior.

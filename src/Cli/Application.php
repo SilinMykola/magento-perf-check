@@ -28,6 +28,7 @@ use Silin\MagentoPerfCheck\Xml\Rule\CacheIdFactorRule;
 use Silin\MagentoPerfCheck\Xml\Rule\CacheIdentityRule;
 use Silin\MagentoPerfCheck\Xml\Rule\EntityHandleTtlRule;
 use Silin\MagentoPerfCheck\Xml\Rule\GlobalAreaRule;
+use Silin\MagentoPerfCheck\Xml\Rule\HeadScriptRule;
 use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
@@ -278,6 +279,7 @@ final class Application
             new RedundantIndexRule(),
             new GlobalAreaRule(),
             new CacheIdFactorRule(),
+            new HeadScriptRule(),
         ];
         // A module disabled in app/etc/config.php does not run: neither its PHP nor its XML is analyzed.
         $disabledRoots = $indexBuilder->disabledModuleRoots($options->projectRoot);

@@ -10,6 +10,7 @@ use Silin\MagentoPerfCheck\Xml\FileDiscovery;
 use Silin\MagentoPerfCheck\Xml\Rule\CacheIdFactorRule;
 use Silin\MagentoPerfCheck\Xml\Rule\EntityHandleTtlRule;
 use Silin\MagentoPerfCheck\Xml\Rule\GlobalAreaRule;
+use Silin\MagentoPerfCheck\Xml\Rule\HeadScriptRule;
 use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
@@ -48,6 +49,7 @@ final class XmlRulesGoldenTest extends TestCase
             new RedundantIndexRule(),
             new GlobalAreaRule(),
             new CacheIdFactorRule(),
+            new HeadScriptRule(),
         ]))->analyze(['app/code']);
 
         self::assertSame([], $result->notices);
@@ -75,6 +77,20 @@ final class XmlRulesGoldenTest extends TestCase
         self::assertStringContainsString('runs after loading any model, of any entity type', $messages[4] ?? '');
         self::assertStringContainsString('runs on every load of this entity type', $messages[8] ?? '');
         self::assertStringContainsString('runs after loading any non-EAV collection, of any entity type', $messages[26] ?? '');
+    }
+
+    public function testHeadScriptMessageNamesTheScriptAndTheHandle(): void
+    {
+        $root = realpath(self::FIXTURE . '/project');
+        self::assertIsString($root);
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [new HeadScriptRule()]))->analyze(['app/code']);
+
+        $messages = array_map(static fn (Finding $f): string => $f->message, $result->findings);
+        self::assertCount(4, $messages);
+        $message = implode("\n", array_filter($messages, static fn (string $m): bool => str_contains($m, 'sdk.js')));
+        self::assertStringContainsString('"https://example.com/sdk.js"', $message);
+        self::assertStringContainsString('handle "catalog_product_view"', $message);
+        self::assertStringContainsString('dev/js/defer_non_critical', $message);
     }
 
     public function testConfiguredAllowlistPrefix(): void

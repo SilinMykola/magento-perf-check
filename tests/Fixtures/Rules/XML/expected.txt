@@ -13,6 +13,10 @@ X-GQL-03 info app/code/Acme/Rules/etc/di.xml:12
 X-IDX-01 warning app/code/Acme/Rules/etc/indexer.xml:3
 X-LAY-02 error app/code/Acme/Rules/view/frontend/layout/catalog_product_view_id_42.xml:4
 X-LAY-02 error app/code/Acme/Rules/view/frontend/layout/catalog_product_view_sku_ABC.xml:4
+X-LAY-04 info app/code/Acme/Rules/view/base/layout/default.xml:4
+X-LAY-04 info app/code/Acme/Rules/view/frontend/layout/catalog_product_view.xml:4
+X-LAY-04 info app/code/Acme/Rules/view/frontend/layout/catalog_product_view.xml:5
+X-LAY-04 info app/code/Acme/Rules/view/frontend/layout/catalog_product_view.xml:8
 X-MQ-01 warning app/code/Acme/Rules/etc/communication.xml:3
 X-MQ-01 warning app/code/Acme/Rules/etc/communication.xml:5
 X-SEC-01 error app/code/Acme/Rules/etc/frontend/sections.xml:3
