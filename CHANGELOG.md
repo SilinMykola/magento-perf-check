@@ -6,6 +6,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-11
+
 ### Added
 
 - Experimental rules, off by default, that run sniffs of the project's magento/magento-coding-standard through its phpcs ([ADR 7](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0007-run-magento-coding-standard-performance-sniffs.md)), all at `warning`: S-PERF-01 (`array_merge()` in a loop), S-TPL-01 (`$this` or a helper in a template), S-TPL-02 (object manager in a template), S-DI-01 (a Proxy or Interceptor named in a constructor) and S-FN-01 (`sleep()`, `time_nanosleep()` or `session_*()`). phpcs runs only when one of them is enabled; findings share the report, configuration and baseline with the other rules. On the calibration corpus, with coding standard version 40, they give 33, 28, 0, 8 and 2 findings.
@@ -152,7 +154,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.2.0...v0.3.0
