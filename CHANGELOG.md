@@ -6,6 +6,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-12
+
 ### Added
 
 - C-02, experimental, off by default, at `warning`: Merge JavaScript Files (`dev/js/merge_files`) switched on in the `system` section of `app/etc/config.php`, for the default scope, a website or a store view; Adobe does not recommend it. It is the first rule on store settings: the file is read from its tokens, never run, whatever `--paths` says, and only while the rule is enabled ([ADR 11](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0011-settings-read-from-config-php.md)). The calibration corpus has no such settings; [round 14](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-14.md) measured it on five private stores: 2 findings, both correct, too few for a decision.
@@ -167,7 +169,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.0...v0.3.1
