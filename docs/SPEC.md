@@ -60,7 +60,7 @@ One Composer package, two subsystems, one entry point.
 
 ```
 vendor/bin/magento-perf-check            ← one command for the user
-   ├── XML analyzer (our own, DOM)        → X-* rules
+   ├── XML analyzer (our own, DOM)        → X-* rules, and J-* rules on storefront JavaScript
    ├── PHPStan with our extension         → P-* rules
    └── Reporter: merged report, shared rule IDs, baseline, formats
 ```
@@ -75,12 +75,13 @@ vendor/bin/magento-perf-check            ← one command for the user
 ### 3.2 XML analyzer
 - Scans `app/code`, `app/design` and, when enabled by a flag, third-party packages in `vendor` (not `magento/*`, not `mage-os/*`).
 - Parsing through DOM/XPath. Each rule receives the file, the area and the module.
+- Storefront JavaScript (`.js` files and the `<script>` elements of `.phtml` templates under `view/frontend`, `view/base` and `design/frontend`) is read by a scanner of string literals and comments, not a parser ([ADR 9](adr/0009-storefront-javascript-scanned-by-the-xml-analyzer.md)).
 - Area detection: `etc/di.xml` = global, `etc/frontend/di.xml` = frontend, and so on.
 - For rules that need an XML ↔ PHP link (observer → class, plugin → methods), the XML analyzer builds an index, and the PHP side is checked by PHPStan against that index (passed through extension parameters or a temporary file).
 
 ### 3.3 Common
 - **Config** `magento-perf-check.neon` (or a section in `phpstan.neon`): paths, disabling rules, severity override, handle allowlist for `cacheable="false"`, custom hot events and methods.
-- **Suppression:** PHP through `@phpstan-ignore magentoPerf.xxx (reason)`. XML through a comment `<!-- perf-ignore X-LAY-01: reason -->` before the element. The reason is mandatory.
+- **Suppression:** PHP through `@phpstan-ignore magentoPerf.xxx (reason)`. XML through a comment `<!-- perf-ignore X-LAY-01: reason -->` before the element. JavaScript through a comment `// perf-ignore J-DEP-01: reason` that ends on the line of the finding or the line before. The reason is mandatory.
 - **Baseline:** `magento-perf-check --generate-baseline` for legacy projects. New violations are caught, old ones do not get in the way.
 - **Formats:** table (default), JSON, Checkstyle, SARIF 2.1.0, GitHub annotations, GitLab Code Quality.
 - **Exit codes:** `0` clean, `1` there are findings at the `--fail-on` level (default `error`), `2` tool error.
@@ -195,6 +196,12 @@ Upgrade rules (SPEC M7, [configuration](configuration.md#upgrade-rules)) find co
 | T-05 | A `<script src>` without `async`, `defer` or `type="module"` in a storefront template: it blocks rendering | phtml HTML with PHP blanked out; `view/frontend`, `view/base`, `design/frontend` | warning | med | ✅ | A: [Hyvä: Loading external JavaScript](https://docs.hyva.io/hyva-themes/writing-code/patterns/loading-external-javascript.html), [Hyvä: Core Web Vitals](https://docs.hyva.io/hyva-themes/performance/core-web-vitals.html) |
 | T-06 | An `<img>` without both `width` and `height` in a storefront template: the page shifts when it loads (CLS) | phtml HTML with PHP blanked out; bound `:width`/`:height` count | info | med | 🧪 | A: [Hyvä: Core Web Vitals](https://docs.hyva.io/hyva-themes/performance/core-web-vitals.html), [Hyvä: Performance tips](https://docs.hyva.io/hyva-themes/performance/hyva-performance-tips.html) |
 
+### 4.6a Storefront JavaScript
+
+| ID | Rule | Detection | Sev | FP | MVP | Source |
+|---|---|---|---|---|---|---|
+| J-DEP-01 | The module ID `jquery/ui` as a dependency in storefront JavaScript: on the storefront it maps to `jquery/compat`, which imports every jQuery UI widget. Object keys, comments and admin code are left out | string literals of `.js` files and template `<script>` elements, ADR 9 | warning | low | 🧪 | A: [Adobe: Custom JavaScript](https://developer.adobe.com/commerce/frontend-core/javascript/custom), [Release notes 2.4.3](https://experienceleague.adobe.com/en/docs/commerce-operations/release/notes/magento-open-source/2-4-3); B: [compat.js](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/web/jquery/compat.js#L1-L4), [Theme requirejs-config.js](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Theme/view/frontend/requirejs-config.js#L30), [magento/magento2#22995](https://github.com/magento/magento2/issues/22995) |
+
 ### 4.7 XML: GraphQL, queues, cron, indexers, database schema
 
 | ID | Rule | Detection | Sev | FP | MVP | Source |
@@ -247,7 +254,7 @@ The first four rows are run through magento-coding-standard instead (section 4.8
 | FK without an index in db_schema | InnoDB creates an index for a foreign key itself; the benefit is doubtful |
 | Registry, `shared="false"`, scopeConfig in a loop, `getMediaGalleryImages` in a loop, a product collection without visibility/status filters, many `<update handle>`, `cache_lifetime=null` | no primary source links this to performance, or it is not an anti-pattern by itself |
 
-**Total:** 73 rules. Default set (✅): **36**. After calibration (⏳): 4 (including C-01). Experimental (🧪): 33. Statuses, severities and sources were checked by the audit in M0 (2026-10-21); details and the reasoning for each change are in [`docs/source-audit.md`](source-audit.md). In M1, X-GQL-01 was split into X-GQL-01 (✅) and X-GQL-04 (🧪). In M2, after [calibration](calibration.md), X-LAY-01, P-COL-02, P-DI-02, P-FPC-02 and P-PLG-01 moved to 🧪, P-DI-01 was lowered to warning, and P-LOOP-03, P-DI-06, P-FPC-01 and T-01 to info. After [round 2](calibration/round-2.md), P-PLG-01 returned to the default set; X-LAY-03 was split from X-LAY-01 and joined it with P-LOOP-05, P-LOOP-09, P-LOOP-10, P-IDX-01, X-DB-02, X-AREA-01 and X-GQL-03. In [round 3](calibration/round-3.md), by the maintainer's decision, P-DI-06 was raised to warning and P-LOOP-11 joined the default set at error. [Round 4](calibration/round-4.md) measured the S-* rules of section 4.8a; all stay 🧪. [Round 5](calibration/round-5.md) measured P-API-01 of section 4.5a; it stays 🧪. [Round 6](calibration/round-6.md) graded the experimental rules on the extended corpus part (M8), with P-LOOP-12 new; all stay 🧪. [Round 7](calibration/round-7.md) measured U-CLI-01 of section 4.5b, the first upgrade rule; it stays 🧪. [Round 8](calibration/round-8.md) measured X-LAY-01 after its allowlist took the personal pages of known modules; it stays 🧪. [Round 9](calibration/round-9.md) measured T-05 and T-06 of milestone M6: T-05 joined the default set at warning, T-06 stays 🧪. [Round 10](calibration/round-10.md) measured X-LAY-04; it stays 🧪. [Round 11](calibration/round-11.md) measured X-LAY-05, which joined the default set at warning.
+**Total:** 74 rules. Default set (✅): **36**. After calibration (⏳): 4 (including C-01). Experimental (🧪): 34. Statuses, severities and sources were checked by the audit in M0 (2026-10-21); details and the reasoning for each change are in [`docs/source-audit.md`](source-audit.md). In M1, X-GQL-01 was split into X-GQL-01 (✅) and X-GQL-04 (🧪). In M2, after [calibration](calibration.md), X-LAY-01, P-COL-02, P-DI-02, P-FPC-02 and P-PLG-01 moved to 🧪, P-DI-01 was lowered to warning, and P-LOOP-03, P-DI-06, P-FPC-01 and T-01 to info. After [round 2](calibration/round-2.md), P-PLG-01 returned to the default set; X-LAY-03 was split from X-LAY-01 and joined it with P-LOOP-05, P-LOOP-09, P-LOOP-10, P-IDX-01, X-DB-02, X-AREA-01 and X-GQL-03. In [round 3](calibration/round-3.md), by the maintainer's decision, P-DI-06 was raised to warning and P-LOOP-11 joined the default set at error. [Round 4](calibration/round-4.md) measured the S-* rules of section 4.8a; all stay 🧪. [Round 5](calibration/round-5.md) measured P-API-01 of section 4.5a; it stays 🧪. [Round 6](calibration/round-6.md) graded the experimental rules on the extended corpus part (M8), with P-LOOP-12 new; all stay 🧪. [Round 7](calibration/round-7.md) measured U-CLI-01 of section 4.5b, the first upgrade rule; it stays 🧪. [Round 8](calibration/round-8.md) measured X-LAY-01 after its allowlist took the personal pages of known modules; it stays 🧪. [Round 9](calibration/round-9.md) measured T-05 and T-06 of milestone M6: T-05 joined the default set at warning, T-06 stays 🧪. [Round 10](calibration/round-10.md) measured X-LAY-04; it stays 🧪. [Round 11](calibration/round-11.md) measured X-LAY-05, which joined the default set at warning. [Round 12](calibration/round-12.md) measured J-DEP-01, the first rule on storefront JavaScript; it stays 🧪.
 
 ---
 

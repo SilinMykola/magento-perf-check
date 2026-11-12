@@ -1,0 +1,29 @@
+<?php
+$name = 'jquery/ui';
+?>
+<script type="text/x-magento-init">
+    {"*": {"jquery/ui": {}}}
+</script>
+<script data-type="module">
+    require(['jquery', 'jquery/ui'], function () {});
+</script>
+<script type="text/javascript">
+    var label = '<?= $block->escapeJs('jquery/ui') ?>';
+    require(['jquery/ui'], function () {});
+</script>
+<!-- <script>require(['jquery/ui'])</script> -->
+<script>
+    var w = <?= (int) $block->getWidth() ?> / 2, d = 'x'; require(['jquery/ui']);
+</script>
+<script type="text/x-magento-template">
+    require(['jquery/ui']);
+</script>
+<script type="<?= $block->getScriptType() ?>">
+    require(['jquery/ui']);
+</script>
+<script>
+    var o = {<?php if ($block->hasMap()): ?>'jquery/ui': 1<?php endif ?>};
+</script>
+<script>
+    var h = <?php echo (int) $block->getHeight() ?> / 2, e = 'x'; require(['jquery/ui']);
+</script>

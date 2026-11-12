@@ -13,6 +13,7 @@ use Silin\MagentoPerfCheck\Xml\Rule\GlobalAreaRule;
 use Silin\MagentoPerfCheck\Xml\Rule\GlobalStylesheetRule;
 use Silin\MagentoPerfCheck\Xml\Rule\HeadScriptRule;
 use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
+use Silin\MagentoPerfCheck\Xml\Rule\JqueryUiBundleRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
 use Silin\MagentoPerfCheck\Xml\Rule\RedundantIndexRule;
@@ -52,6 +53,7 @@ final class XmlRulesGoldenTest extends TestCase
             new CacheIdFactorRule(),
             new HeadScriptRule(),
             new GlobalStylesheetRule(),
+            new JqueryUiBundleRule(),
         ]))->analyze(['app/code', 'app/design']);
 
         self::assertSame([], $result->notices);
@@ -107,6 +109,18 @@ final class XmlRulesGoldenTest extends TestCase
         self::assertStringContainsString('"Acme_Rules::css/slider.css"', $message);
         self::assertStringContainsString('handle "default"', $message);
         self::assertStringContainsString('dev/css/use_css_critical_path', $message);
+    }
+
+    public function testJqueryUiMessageNamesTheModularWidgets(): void
+    {
+        $root = realpath(self::FIXTURE . '/project');
+        self::assertIsString($root);
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [new JqueryUiBundleRule()]))->analyze(['app/code/Acme/Rules/view/base']);
+
+        self::assertCount(1, $result->findings);
+        self::assertStringContainsString('jquery/compat', $result->findings[0]->message);
+        self::assertStringContainsString('"jquery-ui-modules/widget"', $result->findings[0]->message);
+        self::assertStringContainsString('Magento 2.3.3', $result->findings[0]->message);
     }
 
     public function testConfiguredAllowlistPrefix(): void

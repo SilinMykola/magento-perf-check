@@ -19,6 +19,8 @@ final class FileDiscovery
 
     private const MODULE_NAME = '[A-Z][A-Za-z0-9]*_[A-Z][A-Za-z0-9]*';
 
+    private const EXTENSIONS = ['xml', 'graphqls', 'js', 'phtml'];
+
     /** A module's layout file, <module>/view/<area>/layout/...; a theme's layout files do not match. */
     public const MODULE_LAYOUT = '#/view/([a-z_]+)/layout/#';
 
@@ -50,7 +52,7 @@ final class FileDiscovery
             $skipCore = !$this->isInsideCoreVendor($path);
             $skipTests = !$this->includeTests && !TestCode::contains($path);
             $absolute = $path === '.' ? $this->projectRoot : $this->projectRoot . '/' . $path;
-            foreach ($this->xmlFilesUnder($absolute) as $file) {
+            foreach ($this->filesUnder($absolute) as $file) {
                 $relative = substr($file, strlen($this->projectRoot) + 1);
                 if ($skipCore && $this->isInsideCoreVendor($relative)) {
                     continue;
@@ -88,10 +90,10 @@ final class FileDiscovery
     /**
      * @return iterable<string>
      */
-    private function xmlFilesUnder(string $absolute): iterable
+    private function filesUnder(string $absolute): iterable
     {
         if (is_file($absolute)) {
-            if (str_ends_with($absolute, '.xml') || str_ends_with($absolute, '.graphqls')) {
+            if (in_array(pathinfo($absolute, PATHINFO_EXTENSION), self::EXTENSIONS, true)) {
                 yield $absolute;
             }
 
@@ -100,7 +102,7 @@ final class FileDiscovery
         if (!is_dir($absolute)) {
             return;
         }
-        yield from $this->xmlFilesIn($absolute, [(string) realpath($absolute)]);
+        yield from $this->filesIn($absolute, [(string) realpath($absolute)]);
     }
 
     /**
@@ -110,18 +112,19 @@ final class FileDiscovery
      * @param list<string> $ancestors real paths of the directories on the way here
      * @return iterable<string>
      */
-    private function xmlFilesIn(string $directory, array $ancestors): iterable
+    private function filesIn(string $directory, array $ancestors): iterable
     {
         /** @var SplFileInfo $info */
         foreach (new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS) as $info) {
             if ($info->isFile()) {
-                if (in_array($info->getExtension(), ['xml', 'graphqls'], true)) {
+                if (in_array($info->getExtension(), self::EXTENSIONS, true)) {
                     yield $info->getPathname();
                 }
-            } elseif ($info->isDir()) {
+            } elseif ($info->isDir() && $info->getFilename() !== 'node_modules') {
+                // node_modules holds a theme's build tools (Tailwind for Hyvä), not code Magento serves.
                 $real = (string) $info->getRealPath();
                 if (!$info->isLink() || !self::leadsBack($real, $ancestors)) {
-                    yield from $this->xmlFilesIn($info->getPathname(), [...$ancestors, $real]);
+                    yield from $this->filesIn($info->getPathname(), [...$ancestors, $real]);
                 }
             }
         }
@@ -143,6 +146,9 @@ final class FileDiscovery
 
     private function describe(string $absolute, string $relative): ?XmlFile
     {
+        if (str_ends_with($absolute, '.js') || str_ends_with($absolute, '.phtml')) {
+            return $this->describeScript($absolute, $relative);
+        }
         $handle = basename($absolute, '.xml');
 
         // Module layout: <module>/view/<area>/layout/[...]/<handle>.xml
@@ -196,6 +202,33 @@ final class FileDiscovery
                 $module,
                 null,
             );
+        }
+
+        return null;
+    }
+
+    /**
+     * A storefront script: in a module's view/frontend or view/base, or in a frontend theme under app/design,
+     * the paths T-05 and T-06 read templates from.
+     */
+    private function describeScript(string $absolute, string $relative): ?XmlFile
+    {
+        // A minified copy next to its source would report everything twice.
+        if (str_ends_with($absolute, '.min.js') && is_file(substr($absolute, 0, -strlen('.min.js')) . '.js')) {
+            return null;
+        }
+        // A theme's own folders can be named view/..., so a theme is told apart first, by its app/design/<area>/ path.
+        if (preg_match('#^app/design/([a-z_]+)/#', $relative, $m) === 1) {
+            if ($m[1] !== 'frontend') {
+                return null;
+            }
+            $module = preg_match('#/(' . self::MODULE_NAME . ')/#', $relative, $m) === 1 ? $m[1] : null;
+
+            return new XmlFile($absolute, $relative, XmlFile::KIND_SCRIPT, 'frontend', $module, null);
+        }
+        // In a module, the first view/<area>/ decides, so an admin file under a folder named view/base stays out.
+        if (preg_match('#/view/(frontend|base|adminhtml)/#', '/' . $relative, $m) === 1 && $m[1] !== 'adminhtml') {
+            return new XmlFile($absolute, $relative, XmlFile::KIND_SCRIPT, $m[1], $this->moduleFromModuleXml(dirname($absolute)), null);
         }
 
         return null;

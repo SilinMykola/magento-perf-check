@@ -1,3 +1,16 @@
+J-DEP-01 warning app/code/Acme/Rules/view/base/web/js/everywhere.js:1
+J-DEP-01 warning app/code/Acme/Rules/view/frontend/requirejs-config.js:9
+J-DEP-01 warning app/code/Acme/Rules/view/frontend/templates/inline.phtml:12
+J-DEP-01 warning app/code/Acme/Rules/view/frontend/templates/inline.phtml:16
+J-DEP-01 warning app/code/Acme/Rules/view/frontend/templates/inline.phtml:22
+J-DEP-01 warning app/code/Acme/Rules/view/frontend/templates/inline.phtml:28
+J-DEP-01 warning app/code/Acme/Rules/view/frontend/templates/inline.phtml:8
+J-DEP-01 warning app/code/Acme/Rules/view/frontend/web/js/widget.js:10
+J-DEP-01 warning app/code/Acme/Rules/view/frontend/web/js/widget.js:14
+J-DEP-01 warning app/code/Acme/Rules/view/frontend/web/js/widget.js:5
+J-DEP-01 warning app/design/frontend/Acme/shop/Magento_Catalog/web/js/gallery.js:1
+J-DEP-01 warning app/design/frontend/Acme/shop/Magento_Checkout/web/js/view/summary/item.js:1
+J-DEP-01 warning app/design/frontend/Acme/shop/web/js/theme.js:1
 X-AREA-01 info app/code/Acme/Rules/etc/events.xml:29
 X-AREA-01 info app/code/Acme/Rules/etc/events.xml:32
 X-DB-01 error app/code/Acme/Rules/etc/db_schema.xml:6

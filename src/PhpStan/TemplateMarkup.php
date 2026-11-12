@@ -6,12 +6,15 @@ namespace Silin\MagentoPerfCheck\PhpStan;
 
 /**
  * The HTML of a storefront template, for rules that look at its tags. PHP parts become a run of
- * "\x01", HTML comments and the bodies of <script> elements become spaces; newlines are kept, so
- * offsets and line numbers stay those of the file.
+ * "\x01", the first character of one that prints a value "\x02"; HTML comments and the bodies of
+ * <script> elements become spaces; newlines are kept, so offsets and line numbers stay those of the file.
  */
 final class TemplateMarkup
 {
     private const PHP = "\x01";
+
+    /** Marks where a PHP part that prints a value starts (<?=, <?php echo, <?php print); the rest of it is self::PHP. */
+    private const ECHO = "\x02";
 
     /** The JavaScript MIME types of the HTML standard: a script of one of them runs as a classic script. */
     private const JAVASCRIPT_TYPES = [
@@ -38,17 +41,9 @@ final class TemplateMarkup
 
     public static function fromFile(string $file): ?self
     {
-        $source = @file_get_contents($file);
-        if ($source === false) {
+        $html = self::withoutPhp($file);
+        if ($html === null) {
             return null;
-        }
-        $html = '';
-        foreach (token_get_all($source) as $token) {
-            if (is_array($token) && $token[0] === T_INLINE_HTML) {
-                $html .= $token[1];
-                continue;
-            }
-            $html .= self::blank(is_array($token) ? $token[1] : $token, self::PHP);
         }
         $html = (string) preg_replace_callback(
             '/(<script\b(?:"[^"]*"|\'[^\']*\'|[^>"\'])*>)(.*?)(?=<\/script\s*>|$)/is',
@@ -59,6 +54,94 @@ final class TemplateMarkup
         $html = (string) preg_replace_callback('/<!--.*?(?:-->|$)/s', static fn (array $m): string => self::blank($m[0], ' '), $html);
 
         return new self($html);
+    }
+
+    /**
+     * The JavaScript <script> elements of a template, outside HTML comments, with their bodies: a <?= tag in a
+     * body reads as the value "0" followed by spaces, other PHP as spaces, so the lines stay those of the file.
+     * A type attribute that PHP prints counts as JavaScript.
+     *
+     * @return list<array{attributes: array<string, string>, body: string, line: int}>|null null when unreadable
+     */
+    public static function scripts(string $file): ?array
+    {
+        $html = self::withoutPhp($file);
+        if ($html === null) {
+            return null;
+        }
+        $scripts = [];
+        // A comment that opens first hides a script in it; a script that opens first keeps "<!--" in its body.
+        preg_match_all(
+            '/<!--.*?(?:-->|$)|<script\b((?:"[^"]*"|\'[^\']*\'|[^>"\'])*)>(.*?)(?:<\/script\s*>|$)/is',
+            $html,
+            $matches,
+            PREG_SET_ORDER | PREG_OFFSET_CAPTURE | PREG_UNMATCHED_AS_NULL,
+        );
+        foreach ($matches as $match) {
+            if ($match[1][0] === null || $match[2][0] === null) {
+                continue;
+            }
+            $attributes = self::attributes($match[1][0]);
+            $type = $attributes['type'] ?? null;
+            if ($type !== null && !self::isPrinted($type) && !self::isJavaScriptType($type)) {
+                continue;
+            }
+            $scripts[] = [
+                'attributes' => $attributes,
+                'body' => strtr($match[2][0], [self::ECHO => '0', self::PHP => ' ']),
+                'line' => 1 + substr_count($html, "\n", 0, $match[2][1]),
+            ];
+        }
+
+        return $scripts;
+    }
+
+    /**
+     * The template with every character of its PHP replaced by self::PHP, line breaks kept.
+     */
+    private static function withoutPhp(string $file): ?string
+    {
+        $source = @file_get_contents($file);
+        if ($source === false) {
+            return null;
+        }
+        $html = '';
+        $tokens = token_get_all($source);
+        foreach ($tokens as $index => $token) {
+            if (is_array($token) && $token[0] === T_INLINE_HTML) {
+                $html .= $token[1];
+                continue;
+            }
+            $text = is_array($token) ? $token[1] : $token;
+            $html .= is_array($token) && self::printsValue($tokens, $index)
+                ? self::ECHO . self::blank(substr($text, 1), self::PHP)
+                : self::blank($text, self::PHP);
+        }
+
+        return $html;
+    }
+
+    /**
+     * Whether the token at $index opens PHP that prints a value: <?=, or <?php followed by echo or print.
+     *
+     * @param list<string|array{int, string, int}> $tokens
+     */
+    private static function printsValue(array $tokens, int $index): bool
+    {
+        $token = $tokens[$index];
+        if (!is_array($token) || ($token[0] !== T_OPEN_TAG_WITH_ECHO && $token[0] !== T_OPEN_TAG)) {
+            return false;
+        }
+        if ($token[0] === T_OPEN_TAG_WITH_ECHO) {
+            return true;
+        }
+        for ($next = $index + 1; isset($tokens[$next]); ++$next) {
+            if (!is_array($tokens[$next]) || $tokens[$next][0] !== T_WHITESPACE) {
+                return is_array($tokens[$next]) && in_array($tokens[$next][0], [T_ECHO, T_PRINT], true);
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -134,7 +217,7 @@ final class TemplateMarkup
      */
     public static function isPrinted(string $value): bool
     {
-        return str_contains($value, self::PHP);
+        return str_contains($value, self::PHP) || str_contains($value, self::ECHO);
     }
 
     /**

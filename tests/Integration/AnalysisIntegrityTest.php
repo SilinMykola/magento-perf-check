@@ -582,6 +582,33 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame(['app/code/Acme/Demo/Block/Foo.php'], array_column($report['findings'], 'file'));
     }
 
+    public function testScriptRuleRunsOnlyWhenEnabled(): void
+    {
+        $script = "define(['jquery', 'jquery/ui'], function () {});\n";
+        $project = $this->project([
+            'app/etc/config.php' => "<?php\nreturn ['modules' => ['Acme_Demo' => 1, 'Acme_Off' => 0]];\n",
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/view/frontend/web/js/slider.js' => $script,
+            'app/code/Acme/Demo/view/frontend/web/js/slider.min.js' => $script,
+            'app/code/Acme/Demo/view/frontend/web/node_modules/lib/index.js' => $script,
+            'app/code/Acme/Demo/Test/Js/view/frontend/web/js/spec.js' => $script,
+            'app/code/Acme/Off/etc/module.xml' => '<?xml version="1.0"?><config><module name="Acme_Off"/></config>',
+            'app/code/Acme/Off/view/frontend/web/js/slider.js' => $script,
+        ]);
+
+        self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
+
+        file_put_contents($project . '/magento-perf-check.neon', "magentoPerf:\n    rules:\n        J-DEP-01:\n            enabled: true\n");
+        [, $stdout] = $this->runCommand($project, ['--format=json']);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        // The minified copy, node_modules, test code and the disabled module are left out.
+        self::assertSame(
+            ['J-DEP-01 app/code/Acme/Demo/view/frontend/web/js/slider.js:1 warning'],
+            array_map(static fn (array $f): string => sprintf('%s %s:%d %s', $f['ruleId'], $f['file'], $f['line'], $f['severity']), $report['findings']),
+        );
+    }
+
     public function testFileThatCannotBeReflectedDoesNotLoseOtherFindings(): void
     {
         $project = $this->project([

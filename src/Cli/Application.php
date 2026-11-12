@@ -31,12 +31,14 @@ use Silin\MagentoPerfCheck\Xml\Rule\GlobalAreaRule;
 use Silin\MagentoPerfCheck\Xml\Rule\GlobalStylesheetRule;
 use Silin\MagentoPerfCheck\Xml\Rule\HeadScriptRule;
 use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
+use Silin\MagentoPerfCheck\Xml\Rule\JqueryUiBundleRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
 use Silin\MagentoPerfCheck\Xml\Rule\RedundantIndexRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SectionInvalidationRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SynchronousTopicRule;
 use Silin\MagentoPerfCheck\Xml\Rule\TableWithoutPrimaryKeyRule;
+use Silin\MagentoPerfCheck\Xml\ScriptRule;
 use Silin\MagentoPerfCheck\Xml\XmlAnalyzer;
 use Throwable;
 
@@ -282,11 +284,19 @@ final class Application
             new CacheIdFactorRule(),
             new HeadScriptRule(),
             new GlobalStylesheetRule(),
+            new JqueryUiBundleRule(),
         ];
+        // Reading every storefront script costs time, so the script rules run only when enabled.
+        $enabledXmlRules = [];
+        foreach ($xmlRules as $rule) {
+            if (!$rule instanceof ScriptRule || $config->isEnabled($rule->ruleId(), $registry)) {
+                $enabledXmlRules[] = $rule;
+            }
+        }
         // A module disabled in app/etc/config.php does not run: neither its PHP nor its XML is analyzed.
         $disabledRoots = $indexBuilder->disabledModuleRoots($options->projectRoot);
         $disabledNotices = self::disabledModuleNotices($paths, $disabledRoots, $options->projectRoot);
-        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests, array_keys($disabledRoots)), $xmlRules))->analyze($paths);
+        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests, array_keys($disabledRoots)), $enabledXmlRules))->analyze($paths);
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
             ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests, array_keys($disabledRoots));
         [$codingStandardFindings, $codingStandardNotices] = (new CodingStandardRunner($registry))->run(

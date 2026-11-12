@@ -176,6 +176,13 @@ return [
         $b('lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L397-L399', 'Core renders a css asset as <link rel="stylesheet">, with the attributes written in the layout.'),
         $b('app/code/Magento/Theme/Controller/Result/AsyncCssPlugin.php#L58-L62', 'Core loads stylesheets without blocking only when dev/css/use_css_critical_path is on; it is off by default (app/code/Magento/Theme/etc/config.xml#L74).'),
     ]),
+    new RuleDefinition('J-DEP-01', 'Storefront JavaScript that depends on the whole jQuery UI library (jquery/ui)', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/frontend-core/javascript/custom', '"Using individual jQuery UI components instead of the monolithic jQuery UI library improves storefront performance."'),
+        $a('https://experienceleague.adobe.com/en/docs/commerce-operations/release/notes/magento-open-source/2-4-3', 'The dropdownDialog widget now loads only the jquery-ui chunks it needs: "Previously, it loaded large amounts of unnecessary code, which inflated load time and reduced performance."'),
+        $b('lib/web/jquery/compat.js#L1-L4', 'jquery/compat imports every jQuery UI widget: "Import every plugin under the sun. Bad for performance".'),
+        $b('app/code/Magento/Theme/view/frontend/requirejs-config.js#L30', 'On the storefront core maps jquery/ui to jquery/compat.'),
+        new Source(SourceLevel::B, 'https://github.com/magento/magento2/issues/22995', 'Measured in the issue: "jQueryUI is `227kb` of the shared bundle (unminified), even though only 11% of that is used on the homepage."'),
+    ]),
     // Run through the project's magento/magento-coding-standard (ADR 7); the sniffs are the source, pinned to v41.
     new RuleDefinition('S-PERF-01', 'array_merge() inside a loop (magento-coding-standard)', Severity::Info, RuleStatus::Experimental, [
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Performance/ForeachArrayMergeSniff.php#L21', 'Magento2.Performance.ForeachArrayMerge: "array_merge(...) is used in a loop and is a resources greedy construction."'),
