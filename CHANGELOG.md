@@ -8,7 +8,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Changed
 
-- J-DEP-01 (storefront JavaScript that depends on `jquery/ui`, the whole jQuery UI library) joins the default set at `warning`, so storefront scripts are now read by default; switch J-DEP-01 off to skip them. [Round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md) graded it on five private stores, three of which have such scripts, with the corpus findings of round 12: 35 graded findings, 86 % correct, 80 % of those with a real cost. **This can change a CI result:** a project with such scripts gets `warning` findings, which fail a run with `--fail-on=warning`. Reading the scripts added about 0.5 s to a run on the Magento 2.4.9 core with a warm PHPStan cache.
+- J-DEP-01 (storefront JavaScript that depends on `jquery/ui`, the whole jQuery UI library) joins the default set at `warning`, so storefront scripts are now read by default; switch J-DEP-01 off to skip them. [Round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md) graded it on five private stores, three of which have such scripts, with the corpus findings of round 12: 35 graded findings, 97 % correct, 71 % of those with a real cost now. **This can change a CI result:** a project with such scripts gets `warning` findings, which fail a run with `--fail-on=warning`. Reading the scripts added about 0.5 s to a run on the Magento 2.4.9 core with a warm PHPStan cache.
 
 ## [0.6.0] - 2026-11-12
 

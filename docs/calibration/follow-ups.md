@@ -59,5 +59,4 @@ These rules are correct but report mostly negligible cases; calibration lowers t
 
 Graded on stores whose code is not public, so the findings are described, not listed; see [round 15](round-15.md).
 
-- **J-DEP-01.** Theme overrides, `app/design/frontend/<Vendor>/<theme>/<Vendor_Module>/web/...`, for a module that the project does not have installed are never loaded, and neither is the `shim` dependency of a library that nothing requires. Leaving out theme folders of modules that are absent or switched off in `app/etc/config.php` would serve every rule on theme files, not only this one.
 - **X-LAY-01.** A custom handle that only personal pages include through `<update handle="..."/>`, such as the customer's order view, print and e-mail, is reported as if it were a page. Following the includes to the pages, and adding the account pages of two Adobe Commerce modules to the allowlist, would remove 5 of its 8 false positives in this round.

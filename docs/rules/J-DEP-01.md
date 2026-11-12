@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Severity | `warning` |
-| Status | default set, after [calibration round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md): 35 graded findings on the corpus and on three of five private stores, 86 % correct, 80 % of those with a real cost |
+| Status | default set, after [calibration round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md): 35 graded findings on the corpus and on three of five private stores, 97 % correct, 71 % of those with a real cost now |
 | Analyzer | XML analyzer, storefront scripts ([ADR 9](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0009-storefront-javascript-scanned-by-the-xml-analyzer.md)) |
 
 ## What it catches
@@ -11,6 +11,8 @@
 The module ID `jquery/ui` as a string in storefront JavaScript: a dependency in `define([...])` or `require([...])`, a `deps` list in `requirejs-config.js`, or a `require('jquery/ui')` call. It reads `.js` files and the JavaScript `<script>` elements of `.phtml` templates under a module's `view/frontend` or `view/base`, and under `app/design/frontend`. Admin code is left out.
 
 An object key is left out: core's own map entry `'jquery/ui': 'jquery/compat'` names the module but does not load it. So are comments and code in HTML comments of a template.
+
+A script is reported whether Magento loads it now or not: a theme override for a module that the project does not have installed, or a `shim` entry of a library that nothing requires yet, still depends on the whole library once the module is installed or the library is required.
 
 Not read: `<script type="text/x-magento-init">` blocks and `data-mage-init` attributes, which name components as object keys; scripts that PHP builds as a string, for example for `$secureRenderer->renderTag()`; minified `x.min.js` files next to their `x.js`; `node_modules`; themes outside `app/design`. The storefront scripts are read only while J-DEP-01 or J-DEP-02 is enabled; on the Magento 2.4.9 core that took about 0.5 s with a warm PHPStan cache ([round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md#timing)).
 
@@ -45,7 +47,6 @@ define(['jquery', 'jquery-ui-modules/slider'], function ($) {
 
 - A script in `view/base` that only the admin loads: the admin keeps the whole library on purpose, as the Adobe page says.
 - A project on Magento older than 2.3.3, which has no `jquery-ui-modules`, and a fallback file that a module loads only on such versions.
-- A script that nothing loads: a theme override for a module that the project does not have installed, or a `shim` entry of a library that nothing asks for. The rule does not follow where a script is used.
 
 ## Basis
 

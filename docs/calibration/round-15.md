@@ -18,7 +18,7 @@ This round grades the experimental rules on five private Magento stores, which h
 
 | Rule | Severity | Findings | Sampled | TP | TP-low | FP | Unclear | Precision | Impact share | Decision |
 |---|---|---|---|---|---|---|---|---|---|---|
-| [J-DEP-01](../rules/J-DEP-01.md) | warning | 50 | 35 | 24 | 6 | 5 | 0 | 86 % | 80 % | default set |
+| [J-DEP-01](../rules/J-DEP-01.md) | warning | 50 | 35 | 24 | 10 | 1 | 0 | 97 % | 71 % | default set |
 | [X-LAY-01](../rules/X-LAY-01.md) | warning | 15 | 15 | 3 | 4 | 8 | 0 | 47 % | 43 % | experimental |
 | [X-GQL-02](../rules/X-GQL-02.md) | warning | 7 | 7 | 7 | 0 | 0 | 0 | 100 % | 100 % | experimental |
 
@@ -26,8 +26,10 @@ The J-DEP-01 and X-LAY-01 rows add the grades of [round 12](round-12.md) and [ro
 
 **J-DEP-01.** 45 findings in three of the five stores: 38 in store D, 6 in E and 1 in A; B and C give none. The sample of 30 has 23 findings of D, 6 of E and 1 of A:
 - TP, 22: scripts that need only the widget factory (`$.widget`), or no jQuery UI at all, and that run on product pages, category pages, or every page (the header, the menus, the store switcher, a mixin of the menu widget). Also a core wishlist script overridden by a theme, and a product slider's swatch script.
-- TP-low, 4: scripts of a single CMS page (two), of the customer account forms and of blog pages.
-- FP, 4, all in store E and all scripts that are never loaded: three theme overrides of layered navigation scripts of modules that the store does not have installed, and a `shim` entry of a library that nothing in the store asks for.
+- TP-low, 8: scripts of a single CMS page (two), of the customer account forms and of blog pages; and four in store E that are not loaded now: three theme overrides of layered navigation scripts of modules that the store does not have installed, and a `shim` entry of a library that nothing in the store asks for.
+- FP: none.
+
+The four scripts that are not loaded were first graded FP. The owner ruled on 2026-11-12 that a file that depends on the whole library is a correct finding whether Magento loads it or not: the file is in the project, and it starts to cost as soon as the module is installed or the library is required. They count as TP-low, correct with no cost now. Owner re-checked: 4 verdicts, 4 changed; before the ruling the rule stood at 86 % precision and an 80 % impact share, and entered the default set on those numbers too. The fallback of round 12 stays FP: it runs only on Magento older than 2.3.3, which has no `jquery-ui-modules` to depend on instead.
 
 **X-LAY-01.** 10 findings in four stores:
 - TP, 1: a custom module adds a block with `cacheable="false"` to the `requisition_list` handle. The store's installed Adobe Commerce requisition list module includes that handle on category, product and search pages (seen on 2026-11-12), so with requisition lists switched on none of those pages is cached.
@@ -49,9 +51,8 @@ Both runs of the second pair report the same 964 findings: the core has no J-DEP
 
 ## Decision
 
-- **J-DEP-01** joins the default set at `warning`: its precision of 86 % is above the 75 % a `warning` rule needs, and its impact share of 80 % above the 50 % an experimental rule needs to enter the default set ([round 6](round-6.md)).
-  - 23 of its 35 graded findings come from store D, whose own scripts use the pattern throughout. Without them, the grades are 5 TP, 2 TP-low and 5 FP: a precision of 58 % on 12 findings.
-  - Those 5 false positives are all scripts that are never loaded: four in store E and, in round 12, a fallback for Magento older than 2.3.3. Every script that is loaded and depends on `jquery/ui` was graded correct.
-  - The rule page lists scripts that nothing loads as a known false positive.
+- **J-DEP-01** joins the default set at `warning`: its precision of 97 % is above the 75 % a `warning` rule needs, and its impact share of 71 % above the 50 % an experimental rule needs to enter the default set ([round 6](round-6.md)).
+  - 23 of its 35 graded findings come from store D, whose own scripts use the pattern throughout. Without them, the grades are 5 TP, 6 TP-low and 1 FP: a precision of 92 %, but an impact share of 45 % on 12 findings, below the 50 %. The entry into the default set rests on store D.
+  - Its one false positive is the fallback of round 12.
 - **X-LAY-01** stays experimental: a precision of 47 %. Its false positives are listed in the [follow-ups](follow-ups.md).
 - **X-GQL-02** stays experimental: 7 graded findings, all correct, are fewer than the 10 a decision needs, and all come from one store.

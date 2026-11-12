@@ -1,6 +1,6 @@
 # J-DEP-01: calibration grades, round 15
 
-30 of 45 findings (seed 20261112). Verdicts: TP, TP-low, FP, unclear. Graded on 2026-11-12 by one grader; see [round 15](../../round-15.md). The stores are private, so each is named by a letter and each finding is described by what the code does, without its path.
+30 of 45 findings (seed 20261112). Verdicts: TP, TP-low, FP, unclear. Graded on 2026-11-12 by one grader; rows 25 and 28 to 30, first graded FP, were changed to TP-low by the owner's ruling of the same day; see [round 15](../../round-15.md). The stores are private, so each is named by a letter and each finding is described by what the code does, without its path.
 
 | # | store | what | verdict | reason |
 |---|---|---|---|---|
@@ -28,9 +28,9 @@
 | 22 | D | a theme script of the store switcher dropdown | TP | Needs only `$.widget`, on every page. |
 | 23 | D | a theme script of the sticky header | TP | Needs only `$.widget`, on every page. |
 | 24 | D | a theme script of the secondary menu | TP | Needs only `$.widget`, on every page. |
-| 25 | E | a `shim` entry in a third-party module's `requirejs-config.js` | FP | The shimmed library is required by nothing in the store, so its dependency is never loaded. |
+| 25 | E | a `shim` entry in a third-party module's `requirejs-config.js` | TP-low | The shimmed library is required by nothing in the store, so its dependency is not loaded now; the entry still names the whole library (owner's ruling, 2026-11-12). |
 | 26 | E | the swatch script of a third-party product slider template | TP | Needs only the swatch renderer, on every page that shows the slider. |
 | 27 | E | a theme override of core's add-to-wishlist script | TP | Needs only `$.widget`, on product and category pages. |
-| 28 | E | a theme override of a layered navigation script | FP | The module it overrides is not installed in the store, so the file is never loaded. |
-| 29 | E | a theme override of another layered navigation script | FP | The same: the module is not installed. |
-| 30 | E | a theme override of a third layered navigation slider | FP | The same: the module is not installed. |
+| 28 | E | a theme override of a layered navigation script | TP-low | The module it overrides is not installed in the store, so the file is not loaded now; the file still depends on the whole library (owner's ruling, 2026-11-12). |
+| 29 | E | a theme override of another layered navigation script | TP-low | The same: the module is not installed (owner's ruling). |
+| 30 | E | a theme override of a third layered navigation slider | TP-low | The same: the module is not installed (owner's ruling). |
