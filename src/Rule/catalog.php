@@ -191,6 +191,15 @@ return [
         $b('lib/internal/Magento/Framework/RequireJs/Config.php#L154-L166', 'The requirejs-config.js files of the theme and its modules are merged into one file.'),
         $b('app/code/Magento/Theme/view/frontend/layout/default.xml#L14', 'The merged configuration is a block of the default handle, so every storefront page loads it.'),
     ]),
+    new RuleDefinition('C-02', 'Merge JavaScript Files switched on in app/etc/config.php', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://experienceleague.adobe.com/en/docs/commerce-operations/implementation-playbook/best-practices/development/optimize-css-js-files', '"We do not recommend enabling Merge JavaScript Files." It "can cause bundling and RequireJS logic to work incorrectly" and "provides no performance benefit when HTTP/2 is enabled."'),
+        $b('lib/internal/Magento/Framework/View/Asset/Config.php#L81-L87', 'isMergeJsFiles() reads dev/js/merge_files per store with isSetFlag().'),
+        $b('lib/internal/Magento/Framework/App/Config.php#L80-L83', 'isSetFlag() casts the value to bool.'),
+        $b('lib/internal/Magento/Framework/View/Asset/MergeService.php#L86-L112', 'When the flag is on, getMergedAssets() replaces a group of scripts with one merged asset.'),
+        $b('lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L350-L359', 'The page renderer merges each mergeable group of head assets.'),
+        $b('app/code/Magento/Config/etc/di.xml#L183-L200', 'The system section of the deployment configuration (sortOrder 1000) is merged over the database (100), so a value in config.php wins over the database.'),
+        $b('lib/internal/Magento/Framework/App/DeploymentConfig/Reader.php#L109-L123', 'The deployment configuration is config.php with env.php merged over it.'),
+    ]),
     // Run through the project's magento/magento-coding-standard (ADR 7); the sniffs are the source, pinned to v41.
     new RuleDefinition('S-PERF-01', 'array_merge() inside a loop (magento-coding-standard)', Severity::Info, RuleStatus::Experimental, [
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Performance/ForeachArrayMergeSniff.php#L21', 'Magento2.Performance.ForeachArrayMerge: "array_merge(...) is used in a loop and is a resources greedy construction."'),

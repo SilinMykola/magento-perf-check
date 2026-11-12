@@ -9,6 +9,7 @@ use Silin\MagentoPerfCheck\CodingStandard\CodingStandardRunner;
 use Silin\MagentoPerfCheck\Config\ConfigLoader;
 use Silin\MagentoPerfCheck\PhpStan\Rule\GetFirstItemWithoutLimitRule;
 use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
+use Silin\MagentoPerfCheck\Project\MergeJsFilesRule;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Report\AnalysisResult;
 use Silin\MagentoPerfCheck\Report\CheckstyleReporter;
@@ -314,7 +315,9 @@ final class Application
         }
 
         // Configuration first, then the upgrade versions, then the baseline; --fail-on looks at what is left.
-        $findings = $config->apply([...$xml->findings, ...$php->findings, ...$codingStandardFindings], $registry);
+        // Settings in app/etc/config.php apply to the whole store, so they are read whatever the paths are.
+        $settingsFindings = $config->isEnabled(MergeJsFilesRule::ID, $registry) ? (new MergeJsFilesRule())->check($options->projectRoot) : [];
+        $findings = $config->apply([...$xml->findings, ...$php->findings, ...$codingStandardFindings, ...$settingsFindings], $registry);
         $gate = new UpgradeGate(MagentoVersion::installedIn($options->projectRoot), $options->targetVersion);
         $findings = array_values(array_filter($findings, static fn (Finding $finding): bool => $gate->runs($registry->find($finding->ruleId))));
         $upgradeNotices = self::upgradeNotices($gate, array_values(array_filter(
