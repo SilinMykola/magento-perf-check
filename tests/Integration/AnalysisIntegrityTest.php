@@ -596,17 +596,35 @@ final class AnalysisIntegrityTest extends TestCase
             'app/code/Acme/Off/view/frontend/web/js/slider.js' => $script,
         ]);
 
-        self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
+        if (function_exists('posix_getuid') && posix_getuid() === 0) {
+            self::markTestSkipped('root reads a file whatever its mode, so an unreadable file cannot be made');
+        }
+        // A script that cannot be read gives a "script" notice, which shows whether the scripts were read at all.
+        $unreadable = $project . '/app/code/Acme/Demo/view/frontend/web/js/locked.js';
+        file_put_contents($unreadable, $script);
+        chmod($unreadable, 0);
+        $scriptNotices = static fn (array $report): array => array_values(array_filter(
+            $report['notices'],
+            static fn (array $notice): bool => $notice['source'] === 'script',
+        ));
 
-        file_put_contents($project . '/magento-perf-check.neon', "magentoPerf:\n    rules:\n        J-DEP-01:\n            enabled: true\n");
+        // J-DEP-01 is in the default set. The minified copy, node_modules, test code and the disabled module are left out.
         [, $stdout] = $this->runCommand($project, ['--format=json']);
         $report = json_decode($stdout, true);
         self::assertIsArray($report);
-        // The minified copy, node_modules, test code and the disabled module are left out.
         self::assertSame(
             ['J-DEP-01 app/code/Acme/Demo/view/frontend/web/js/slider.js:1 warning'],
             array_map(static fn (array $f): string => sprintf('%s %s:%d %s', $f['ruleId'], $f['file'], $f['line'], $f['severity']), $report['findings']),
         );
+        self::assertCount(1, $scriptNotices($report), 'the scripts are read by default');
+
+        file_put_contents($project . '/magento-perf-check.neon', "magentoPerf:\n    rules:\n        J-DEP-01:\n            enabled: false\n");
+        [, $stdout] = $this->runCommand($project, ['--format=json']);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        self::assertSame([], $report['findings']);
+        self::assertSame([], $scriptNotices($report), 'no script rule enabled: the scripts are not read');
+        chmod($unreadable, 0644);
     }
 
     public function testFileThatCannotBeReflectedDoesNotLoseOtherFindings(): void

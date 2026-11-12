@@ -176,7 +176,7 @@ return [
         $b('lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L397-L399', 'Core renders a css asset as <link rel="stylesheet">, with the attributes written in the layout.'),
         $b('app/code/Magento/Theme/Controller/Result/AsyncCssPlugin.php#L58-L62', 'Core loads stylesheets without blocking only when dev/css/use_css_critical_path is on; it is off by default (app/code/Magento/Theme/etc/config.xml#L74).'),
     ]),
-    new RuleDefinition('J-DEP-01', 'Storefront JavaScript that depends on the whole jQuery UI library (jquery/ui)', Severity::Warning, RuleStatus::Experimental, [
+    new RuleDefinition('J-DEP-01', 'Storefront JavaScript that depends on the whole jQuery UI library (jquery/ui)', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/frontend-core/javascript/custom', '"Using individual jQuery UI components instead of the monolithic jQuery UI library improves storefront performance."'),
         $a('https://experienceleague.adobe.com/en/docs/commerce-operations/release/notes/magento-open-source/2-4-3', 'The dropdownDialog widget now loads only the jquery-ui chunks it needs: "Previously, it loaded large amounts of unnecessary code, which inflated load time and reduced performance."'),
         $b('lib/web/jquery/compat.js#L1-L4', 'jquery/compat imports every jQuery UI widget: "Import every plugin under the sun. Bad for performance".'),

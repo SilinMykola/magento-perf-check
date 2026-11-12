@@ -39,11 +39,11 @@ php bin/magento-perf-check --project=/path/to/magento
 
 Calibrated on Magento 2.4.9, where both ways were checked. Stock Magento 2.4.4 and older pin a PHPStan version below 1.12, so `composer require` cannot work there: use the clone. It ran that way on `vendor/magento/module-cms` of 2.4.0, 2.4.3 and 2.4.4, without grading the findings ([check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/older-magento.md)). The install was not tried on 2.4.5 to 2.4.8, and Magento 2.3 is not checked.
 
-It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpstan.org/) rules and XML checks, and never writes into the project. No database or container is needed. It does load the project's autoloader, which runs the `registration.php` of every module, so do not analyze code you do not trust outside a sandbox. On a stock Magento 2.4.9 project, install plus the first run took under 20 seconds ([measured](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m3-install.md)).
+It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpstan.org/) rules, XML checks and storefront JavaScript checks, and never writes into the project. No database or container is needed. It does load the project's autoloader, which runs the `registration.php` of every module, so do not analyze code you do not trust outside a sandbox. On a stock Magento 2.4.9 project, install plus the first run took under 20 seconds ([measured](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m3-install.md)).
 
 ## What it finds
 
-63 rules: 36 on by default, 27 experimental. A few of them:
+63 rules: 37 on by default, 26 experimental. A few of them:
 
 - **Queries in loops:** `load()`, `getById()`, `getList()` or a new collection inside a loop (P-LOOP-01, P-LOOP-02, P-LOOP-09, P-LOOP-10).
 - **Full Page Cache breakers:** `cacheable="false"` on the default, catalog and CMS handles (X-LAY-03), state changes in GET-only controllers (P-FPC-06), no-cache headers on cacheable pages (P-FPC-05), cache flushes and `reindexAll()` from request code (P-FPC-09, P-FPC-10), ESI blocks on entity pages (X-LAY-02).

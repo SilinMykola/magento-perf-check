@@ -1,6 +1,6 @@
 # Rules
 
-36 rules in the default set and 27 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+37 rules in the default set and 26 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -46,6 +46,7 @@ Severity is the default; change it per rule in [`magento-perf-check.neon`](confi
 | [X-GQL-03](rules/X-GQL-03.md) | GraphQL cache id factor added to CacheIdCalculator | info | A, B |
 | [T-05](rules/T-05.md) | External script without async or defer in a storefront template | warning | A |
 | [X-LAY-05](rules/X-LAY-05.md) | Stylesheet added to every storefront page by a module layout | warning | A, B |
+| [J-DEP-01](rules/J-DEP-01.md) | Storefront JavaScript that depends on the whole jQuery UI library (jquery/ui) | warning | A, B |
 
 ## Experimental (off by default)
 
@@ -69,7 +70,6 @@ These are not in the default set: calibration measured them below their precisio
 | [T-04](rules/T-04.md) | Result of $viewModels->require() never used in a template | warning | A, C |
 | [T-06](rules/T-06.md) | Image without width and height in a storefront template | info | A |
 | [X-LAY-04](rules/X-LAY-04.md) | Script added to the page head by layout XML without async or defer | info | A, B |
-| [J-DEP-01](rules/J-DEP-01.md) | Storefront JavaScript that depends on the whole jQuery UI library (jquery/ui) | warning | A, B |
 | [J-DEP-02](rules/J-DEP-02.md) | A module in the top-level deps of a storefront requirejs-config.js, loaded on every page | info | A, B |
 | [C-02](rules/C-02.md) | Merge JavaScript Files switched on in app/etc/config.php | warning | A, B |
 | [S-PERF-01](rules/S-PERF-01.md) | array_merge() inside a loop, through magento-coding-standard | info | C |
