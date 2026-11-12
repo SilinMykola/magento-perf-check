@@ -10,10 +10,14 @@ use Silin\MagentoPerfCheck\Xml\FileDiscovery;
 use Silin\MagentoPerfCheck\Xml\Rule\CacheIdFactorRule;
 use Silin\MagentoPerfCheck\Xml\Rule\EntityHandleTtlRule;
 use Silin\MagentoPerfCheck\Xml\Rule\GlobalAreaRule;
+use Silin\MagentoPerfCheck\Xml\Rule\GlobalStylesheetRule;
+use Silin\MagentoPerfCheck\Xml\Rule\HeadScriptRule;
 use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
+use Silin\MagentoPerfCheck\Xml\Rule\JqueryUiBundleRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
 use Silin\MagentoPerfCheck\Xml\Rule\RedundantIndexRule;
+use Silin\MagentoPerfCheck\Xml\Rule\RequireJsDepsRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SectionInvalidationRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SynchronousTopicRule;
 use Silin\MagentoPerfCheck\Xml\Rule\TableWithoutPrimaryKeyRule;
@@ -48,7 +52,11 @@ final class XmlRulesGoldenTest extends TestCase
             new RedundantIndexRule(),
             new GlobalAreaRule(),
             new CacheIdFactorRule(),
-        ]))->analyze(['app/code']);
+            new HeadScriptRule(),
+            new GlobalStylesheetRule(),
+            new JqueryUiBundleRule(),
+            new RequireJsDepsRule(),
+        ]))->analyze(['app/code', 'app/design']);
 
         self::assertSame([], $result->notices);
         $actual = array_map(
@@ -75,6 +83,58 @@ final class XmlRulesGoldenTest extends TestCase
         self::assertStringContainsString('runs after loading any model, of any entity type', $messages[4] ?? '');
         self::assertStringContainsString('runs on every load of this entity type', $messages[8] ?? '');
         self::assertStringContainsString('runs after loading any non-EAV collection, of any entity type', $messages[26] ?? '');
+    }
+
+    public function testHeadScriptMessageNamesTheScriptAndTheHandle(): void
+    {
+        $root = realpath(self::FIXTURE . '/project');
+        self::assertIsString($root);
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [new HeadScriptRule()]))->analyze(['app/code']);
+
+        $messages = array_map(static fn (Finding $f): string => $f->message, $result->findings);
+        self::assertCount(5, $messages);
+        $message = implode("\n", array_filter($messages, static fn (string $m): bool => str_contains($m, 'sdk.js')));
+        self::assertStringContainsString('"https://example.com/sdk.js"', $message);
+        self::assertStringContainsString('handle "catalog_product_view"', $message);
+        self::assertStringContainsString('dev/js/defer_non_critical', $message);
+    }
+
+    public function testGlobalStylesheetMessageNamesTheStylesheetAndTheHandle(): void
+    {
+        $root = realpath(self::FIXTURE . '/project');
+        self::assertIsString($root);
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [new GlobalStylesheetRule()]))->analyze(['app/code', 'app/design']);
+
+        $messages = array_map(static fn (Finding $f): string => $f->message, $result->findings);
+        self::assertCount(15, $messages);
+        $message = implode("\n", array_filter($messages, static fn (string $m): bool => str_contains($m, 'slider.css')));
+        self::assertStringContainsString('"Acme_Rules::css/slider.css"', $message);
+        self::assertStringContainsString('handle "default"', $message);
+        self::assertStringContainsString('dev/css/use_css_critical_path', $message);
+    }
+
+    public function testJqueryUiMessageNamesTheModularWidgets(): void
+    {
+        $root = realpath(self::FIXTURE . '/project');
+        self::assertIsString($root);
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [new JqueryUiBundleRule()]))->analyze(['app/code/Acme/Rules/view/base']);
+
+        self::assertCount(1, $result->findings);
+        self::assertStringContainsString('jquery/compat', $result->findings[0]->message);
+        self::assertStringContainsString('"jquery-ui-modules/widget"', $result->findings[0]->message);
+        self::assertStringContainsString('Magento 2.3.3', $result->findings[0]->message);
+    }
+
+    public function testRequireJsDepsMessageNamesTheModule(): void
+    {
+        $root = realpath(self::FIXTURE . '/project');
+        self::assertIsString($root);
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [new RequireJsDepsRule()]))->analyze(['app/code/Acme/Rules/view/frontend']);
+
+        self::assertCount(2, $result->findings);
+        self::assertStringContainsString('"Acme_Rules/js/everywhere"', $result->findings[0]->message);
+        self::assertStringContainsString('every storefront page', $result->findings[0]->message);
+        self::assertStringContainsString('x-magento-init', $result->findings[0]->message);
     }
 
     public function testConfiguredAllowlistPrefix(): void

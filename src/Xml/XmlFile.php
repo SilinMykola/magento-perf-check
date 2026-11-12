@@ -9,6 +9,8 @@ final class XmlFile
     public const KIND_LAYOUT = 'layout';
     public const KIND_CONFIG = 'config';
     public const KIND_GRAPHQL = 'graphql';
+    /** A storefront .js file or .phtml template, read for its JavaScript. */
+    public const KIND_SCRIPT = 'script';
 
     /**
      * @param self::KIND_* $kind

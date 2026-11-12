@@ -128,7 +128,7 @@ final class CodingStandardRunnerTest extends TestCase
         [$findings] = (new CodingStandardRunner(new RuleRegistry()))->run($this->project, ['S-PERF-01'], ['app/code/Acme'], false, []);
 
         self::assertCount(1, $findings);
-        self::assertSame('warning', $findings[0]->severity->value);
+        self::assertSame('info', $findings[0]->severity->value);
         self::assertStringStartsWith('[S-PERF-01] ', $findings[0]->message);
         self::assertStringEndsWith('(Magento2.Performance.ForeachArrayMerge)', $findings[0]->message);
     }

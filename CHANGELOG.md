@@ -6,6 +6,21 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-12
+
+### Added
+
+- C-02, experimental, off by default, at `warning`: Merge JavaScript Files (`dev/js/merge_files`) switched on in the `system` section of `app/etc/config.php`, for the default scope, a website or a store view; Adobe does not recommend it. It is the first rule on store settings: the file is read from its tokens, never run, whatever `--paths` says, and only while the rule is enabled ([ADR 11](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0011-settings-read-from-config-php.md)). The calibration corpus has no such settings; [round 14](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-14.md) measured it on five private stores: 2 findings, both correct, too few for a decision.
+- J-DEP-02, experimental, off by default, at `info`: a module in the top-level `deps` of a storefront `requirejs-config.js`, which RequireJS loads on every page; `deps` under `shim` is left out. The script scanner now gives each string its property path ([ADR 10](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0010-property-paths-in-the-script-scanner.md)). On the calibration corpus it gives 8 findings, all correct, 1 of them for a module that most pages do not use ([round 13](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-13.md)).
+- J-DEP-01, experimental, off by default, at `warning`: storefront JavaScript that depends on `jquery/ui`, which on the storefront loads every jQuery UI widget, instead of the `jquery-ui-modules/*` widgets it uses. It is the first rule on storefront JavaScript: the XML analyzer now reads `.js` files and the `<script>` elements of storefront templates ([ADR 9](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0009-storefront-javascript-scanned-by-the-xml-analyzer.md)), and a `// perf-ignore J-DEP-01: reason` comment suppresses a finding. The storefront scripts are read only when such a rule is enabled. On the calibration corpus it gives 5 findings, 4 of them correct ([round 12](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-12.md)).
+- X-LAY-05 in the default set, at `warning`: a module stylesheet added in `<head>` of `default.xml` or `default_head_blocks.xml` (also their `hyva_` copies), which every storefront page waits for. Theme layouts, `media="print"` and a non-empty `ie_condition` are left out. On the calibration corpus it gives 18 findings, all correct ([round 11](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-11.md)). **This can change a CI result** that uses `--fail-on=warning`.
+- X-LAY-04, experimental, off by default, at `info`: a script added to the page head by layout XML (`<script src>`, or a `<link src>` that core renders as a script) without `async` or `defer`, which blocks rendering, as [T-05](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-05.md) does in templates. The scripts core never defers and scripts behind `ie_condition` are left out. On the calibration corpus it gives 14 findings, all correct, 1 of them on pages that matter ([round 10](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-10.md)).
+
+### Changed
+
+- `composer.json` now requires `ext-tokenizer`, which reading templates, the project index and `app/etc/config.php` already used. PHP enables it by default.
+- S-PERF-01, S-TPL-01 and S-DI-01 (experimental, off by default) now report at `info`, a recommendation, instead of `warning`: in calibration rounds 4 and 6 almost none of their correct findings mattered. S-TPL-02 and S-FN-01 keep `warning`. **This can change a CI result** only for a project that enabled them and runs with `--fail-on=warning`: it no longer fails on their findings. With the default `--fail-on=error` nothing changes. Set `severity: warning` to keep the old behavior.
+
 ## [0.5.0] - 2026-11-11
 
 ### Added
@@ -154,7 +169,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.0...v0.3.1

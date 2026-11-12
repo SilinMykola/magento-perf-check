@@ -32,7 +32,8 @@ The rule page explains what the rule catches, why it is slow, a bad and a good e
 3. If it holds, apply the fix the rule page shows (for example, fetch items with one collection before the loop instead of `getById()` inside it). Keep the change minimal and keep behavior the same.
 4. If it does not hold, or the cost is bounded (for example, a loop capped at a few items), suppress it the way the rule page shows and state the reason in the comment:
    - PHP: `// @phpstan-ignore <identifier> (reason)` on the line before;
-   - XML: `<!-- perf-ignore <ruleId>: reason -->` directly before the element.
+   - XML: `<!-- perf-ignore <ruleId>: reason -->` directly before the element;
+   - JavaScript: `// perf-ignore <ruleId>: reason` on the line before.
    Never suppress without a reason.
 5. Run the tool again on the same paths and confirm the finding is gone or suppressed.
 

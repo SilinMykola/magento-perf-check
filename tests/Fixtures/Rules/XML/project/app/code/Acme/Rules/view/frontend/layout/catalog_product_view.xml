@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <script src="https://example.com/sdk.js" src_type="url"/>
+        <link src="Acme_Rules::js/widget.js"/>
+        <link src="Acme_Rules::js/versioned.js?v=2"/>
+        <link src="https://cdn.example.com/remote.js" src_type="url"/>
+        <link src="https://cdn.example.com/typed.js" src_type="url" content_type="js"/>
+        <script defer="defer" src="Acme_Rules::js/deferred.js"/>
+        <script async="async" src="https://example.com/async.js" src_type="url"/>
+        <link src="Acme_Rules::css/widget.css"/>
+        <css src="Acme_Rules::css/styles.css"/>
+        <script src="requirejs/require.js"/>
+        <script src="Magento_Csp::js/sri.js"/>
+        <script src="Acme_Rules::js/polyfill.js" ie_condition="lt IE 11"/>
+        <script src="Acme_Rules::js/empty-ie.js" ie_condition=""/>
+    </head>
+</page>

@@ -9,6 +9,7 @@ use Silin\MagentoPerfCheck\CodingStandard\CodingStandardRunner;
 use Silin\MagentoPerfCheck\Config\ConfigLoader;
 use Silin\MagentoPerfCheck\PhpStan\Rule\GetFirstItemWithoutLimitRule;
 use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
+use Silin\MagentoPerfCheck\Project\MergeJsFilesRule;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Report\AnalysisResult;
 use Silin\MagentoPerfCheck\Report\CheckstyleReporter;
@@ -28,13 +29,18 @@ use Silin\MagentoPerfCheck\Xml\Rule\CacheIdFactorRule;
 use Silin\MagentoPerfCheck\Xml\Rule\CacheIdentityRule;
 use Silin\MagentoPerfCheck\Xml\Rule\EntityHandleTtlRule;
 use Silin\MagentoPerfCheck\Xml\Rule\GlobalAreaRule;
+use Silin\MagentoPerfCheck\Xml\Rule\GlobalStylesheetRule;
+use Silin\MagentoPerfCheck\Xml\Rule\HeadScriptRule;
 use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
+use Silin\MagentoPerfCheck\Xml\Rule\JqueryUiBundleRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
 use Silin\MagentoPerfCheck\Xml\Rule\RedundantIndexRule;
+use Silin\MagentoPerfCheck\Xml\Rule\RequireJsDepsRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SectionInvalidationRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SynchronousTopicRule;
 use Silin\MagentoPerfCheck\Xml\Rule\TableWithoutPrimaryKeyRule;
+use Silin\MagentoPerfCheck\Xml\ScriptRule;
 use Silin\MagentoPerfCheck\Xml\XmlAnalyzer;
 use Throwable;
 
@@ -278,11 +284,22 @@ final class Application
             new RedundantIndexRule(),
             new GlobalAreaRule(),
             new CacheIdFactorRule(),
+            new HeadScriptRule(),
+            new GlobalStylesheetRule(),
+            new JqueryUiBundleRule(),
+            new RequireJsDepsRule(),
         ];
+        // Reading every storefront script costs time, so the script rules run only when enabled.
+        $enabledXmlRules = [];
+        foreach ($xmlRules as $rule) {
+            if (!$rule instanceof ScriptRule || $config->isEnabled($rule->ruleId(), $registry)) {
+                $enabledXmlRules[] = $rule;
+            }
+        }
         // A module disabled in app/etc/config.php does not run: neither its PHP nor its XML is analyzed.
         $disabledRoots = $indexBuilder->disabledModuleRoots($options->projectRoot);
         $disabledNotices = self::disabledModuleNotices($paths, $disabledRoots, $options->projectRoot);
-        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests, array_keys($disabledRoots)), $xmlRules))->analyze($paths);
+        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests, array_keys($disabledRoots)), $enabledXmlRules))->analyze($paths);
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
             ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests, array_keys($disabledRoots));
         [$codingStandardFindings, $codingStandardNotices] = (new CodingStandardRunner($registry))->run(
@@ -298,7 +315,9 @@ final class Application
         }
 
         // Configuration first, then the upgrade versions, then the baseline; --fail-on looks at what is left.
-        $findings = $config->apply([...$xml->findings, ...$php->findings, ...$codingStandardFindings], $registry);
+        // Settings in app/etc/config.php apply to the whole store, so they are read whatever the paths are.
+        $settingsFindings = $config->isEnabled(MergeJsFilesRule::ID, $registry) ? (new MergeJsFilesRule())->check($options->projectRoot) : [];
+        $findings = $config->apply([...$xml->findings, ...$php->findings, ...$codingStandardFindings, ...$settingsFindings], $registry);
         $gate = new UpgradeGate(MagentoVersion::installedIn($options->projectRoot), $options->targetVersion);
         $findings = array_values(array_filter($findings, static fn (Finding $finding): bool => $gate->runs($registry->find($finding->ruleId))));
         $upgradeNotices = self::upgradeNotices($gate, array_values(array_filter(

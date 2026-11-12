@@ -1,0 +1,4 @@
+magentoPerf:
+    rules:
+        C-02:
+            enabled: true

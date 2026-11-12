@@ -274,7 +274,15 @@ final class ApplicationTest extends TestCase
         $findings = $this->findings(['--config=' . __DIR__ . '/../Fixtures/Config/paths.neon']);
 
         self::assertSame([], array_values(array_filter($findings, static fn (string $f): bool => str_starts_with($f, 'X-LAY-01'))));
+        self::assertSame([], array_values(array_filter($findings, static fn (string $f): bool => str_starts_with($f, 'C-02'))));
         self::assertNotSame([], $findings);
+    }
+
+    public function testSettingsAreReadWhateverThePaths(): void
+    {
+        $findings = $this->findings(['--config=' . __DIR__ . '/../Fixtures/Config/merge-js-files.neon', '--paths=app/code/Acme/Warn']);
+
+        self::assertContains('C-02 app/etc/config.php:7', $findings);
     }
 
     public function testCommandLinePathsWinOverConfiguration(): void

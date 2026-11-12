@@ -163,18 +163,55 @@ return [
         $a('https://docs.hyva.io/hyva-themes/performance/core-web-vitals.html', '"Always set width and height attributes on images and videos. Without them, the browser cannot reserve space before the media loads, causing a shift when each asset arrives."'),
         $a('https://docs.hyva.io/hyva-themes/performance/hyva-performance-tips.html', 'Images: "Always set width and height".'),
     ], ['magentoPerf.imageWithoutDimensions' => null]),
+    new RuleDefinition('X-LAY-04', 'Script added to the page head by layout XML without async or defer', Severity::Info, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/frontend-core/javascript/resources', '"To address the problem of slow page loads, we exclude JavaScript from the page headers and we added the ability to use the RequireJS library."'),
+        $a('https://developer.adobe.com/commerce/frontend-core/guide/layouts/xml-manage', '"The application supports async or defer attribute in script tag".'),
+        $a('https://experienceleague.adobe.com/en/docs/commerce-operations/implementation-playbook/best-practices/development/optimize-css-js-files', '"Consider delivering critical JS and CSS features inline and deferring all non-critical JS/CSS styles."'),
+        $b('lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L28-L39', 'The scripts core never defers: the RequireJS loader and its configuration, static and bundle files, sri.js.'),
+        $b('lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L459-L470', 'Core adds defer to other head scripts only when dev/js/defer_non_critical is on; it is off by default (app/code/Magento/Backend/etc/config.xml#L23).'),
+    ]),
+    new RuleDefinition('X-LAY-05', 'Stylesheet added to every storefront page by a module layout', Severity::Warning, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/frontend-core/guide/css/critical-path', '"All CSS styles loaded from external files are considered as render-blocking. This means that a web page will not be displayed until these files are loaded."'),
+        $a('https://developer.adobe.com/commerce/frontend-core/guide/layouts/xml-instructions', '"For example, layout changes added to `app/code/Vendor/Module/view/frontend/layout/default.xml` are loaded on all pages."'),
+        $b('lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L397-L399', 'Core renders a css asset as <link rel="stylesheet">, with the attributes written in the layout.'),
+        $b('app/code/Magento/Theme/Controller/Result/AsyncCssPlugin.php#L58-L62', 'Core loads stylesheets without blocking only when dev/css/use_css_critical_path is on; it is off by default (app/code/Magento/Theme/etc/config.xml#L74).'),
+    ]),
+    new RuleDefinition('J-DEP-01', 'Storefront JavaScript that depends on the whole jQuery UI library (jquery/ui)', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/frontend-core/javascript/custom', '"Using individual jQuery UI components instead of the monolithic jQuery UI library improves storefront performance."'),
+        $a('https://experienceleague.adobe.com/en/docs/commerce-operations/release/notes/magento-open-source/2-4-3', 'The dropdownDialog widget now loads only the jquery-ui chunks it needs: "Previously, it loaded large amounts of unnecessary code, which inflated load time and reduced performance."'),
+        $b('lib/web/jquery/compat.js#L1-L4', 'jquery/compat imports every jQuery UI widget: "Import every plugin under the sun. Bad for performance".'),
+        $b('app/code/Magento/Theme/view/frontend/requirejs-config.js#L30', 'On the storefront core maps jquery/ui to jquery/compat.'),
+        new Source(SourceLevel::B, 'https://github.com/magento/magento2/issues/22995', 'Measured in the issue: "jQueryUI is `227kb` of the shared bundle (unminified), even though only 11% of that is used on the homepage."'),
+    ]),
+    new RuleDefinition('J-DEP-02', 'A module in the top-level deps of a storefront requirejs-config.js, loaded on every page', Severity::Info, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/frontend-core/javascript/requirejs', '"Adding modules under an independent `deps` configuration will load the specified modules in all pages."'),
+        $a('https://developer.adobe.com/commerce/frontend-core/javascript/custom', '"Additional dependencies demand more web requests, which can slow rendering."'),
+        $b('app/code/Magento/RequireJs/etc/di.xml#L9-L35', 'The merged files: a module\'s view/<area>/requirejs-config.js (Collector\\Base) and a theme\'s, at its root (Collector\\Theme) or in a <Vendor_Module> folder (Collector\\ThemeModular).'),
+        $b('lib/internal/Magento/Framework/RequireJs/Config.php#L79-L85', 'Each requirejs-config.js is wrapped in require.config(config).'),
+        $b('lib/internal/Magento/Framework/RequireJs/Config.php#L154-L166', 'The requirejs-config.js files of the theme and its modules are merged into one file.'),
+        $b('app/code/Magento/Theme/view/frontend/layout/default.xml#L14', 'The merged configuration is a block of the default handle, so every storefront page loads it.'),
+    ]),
+    new RuleDefinition('C-02', 'Merge JavaScript Files switched on in app/etc/config.php', Severity::Warning, RuleStatus::Experimental, [
+        $a('https://experienceleague.adobe.com/en/docs/commerce-operations/implementation-playbook/best-practices/development/optimize-css-js-files', '"We do not recommend enabling Merge JavaScript Files." It "can cause bundling and RequireJS logic to work incorrectly" and "provides no performance benefit when HTTP/2 is enabled."'),
+        $b('lib/internal/Magento/Framework/View/Asset/Config.php#L81-L87', 'isMergeJsFiles() reads dev/js/merge_files per store with isSetFlag().'),
+        $b('lib/internal/Magento/Framework/App/Config.php#L80-L83', 'isSetFlag() casts the value to bool.'),
+        $b('lib/internal/Magento/Framework/View/Asset/MergeService.php#L86-L112', 'When the flag is on, getMergedAssets() replaces a group of scripts with one merged asset.'),
+        $b('lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L350-L359', 'The page renderer merges each mergeable group of head assets.'),
+        $b('app/code/Magento/Config/etc/di.xml#L183-L200', 'The system section of the deployment configuration (sortOrder 1000) is merged over the database (100), so a value in config.php wins over the database.'),
+        $b('lib/internal/Magento/Framework/App/DeploymentConfig/Reader.php#L109-L123', 'The deployment configuration is config.php with env.php merged over it.'),
+    ]),
     // Run through the project's magento/magento-coding-standard (ADR 7); the sniffs are the source, pinned to v41.
-    new RuleDefinition('S-PERF-01', 'array_merge() inside a loop (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+    new RuleDefinition('S-PERF-01', 'array_merge() inside a loop (magento-coding-standard)', Severity::Info, RuleStatus::Experimental, [
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Performance/ForeachArrayMergeSniff.php#L21', 'Magento2.Performance.ForeachArrayMerge: "array_merge(...) is used in a loop and is a resources greedy construction."'),
     ]),
-    new RuleDefinition('S-TPL-01', '$this or a helper in a template (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+    new RuleDefinition('S-TPL-01', '$this or a helper in a template (magento-coding-standard)', Severity::Info, RuleStatus::Experimental, [
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Templates/ThisInTemplateSniff.php#L16-L17', 'Magento2.Templates.ThisInTemplate: $this in templates is deprecated, helpers are discouraged; use $block and view models.'),
     ]),
     new RuleDefinition('S-TPL-02', 'Object manager in a template (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines#presentation-layer', 'Section 6.2.6: "Templates MUST NOT instantiate objects. All objects MUST be passed from the Block objects."'),
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Templates/ObjectManagerSniff.php#L23-L29', 'Magento2.Templates.ObjectManager: templates must not instantiate objects; all objects come from the block.'),
     ]),
-    new RuleDefinition('S-DI-01', 'Proxy or Interceptor requested in a constructor (magento-coding-standard)', Severity::Warning, RuleStatus::Experimental, [
+    new RuleDefinition('S-DI-01', 'Proxy or Interceptor requested in a constructor (magento-coding-standard)', Severity::Info, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/php/coding-standards/technical-guidelines#class-design', 'Section 2.5: "Proxies and interceptors MUST NEVER be explicitly requested in constructors."'),
         $b('lib/internal/Magento/Framework/ObjectManager/Code/Generator/Proxy.php#L113-L120', 'A generated Proxy builds the real object on its first use.'),
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Classes/DiscouragedDependenciesSniff.php#L25', 'Magento2.Classes.DiscouragedDependencies: "Proxies and interceptors MUST never be explicitly requested in constructors."'),

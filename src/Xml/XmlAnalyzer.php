@@ -12,11 +12,14 @@ use DOMDocument;
 use DOMText;
 use Silin\MagentoPerfCheck\Report\Finding;
 use Silin\MagentoPerfCheck\Report\Notice;
+use Silin\MagentoPerfCheck\Xml\Script\ScriptSource;
 
 final class XmlAnalyzer
 {
+    private const PERF_IGNORE = '/^\s*perf-ignore\s+([A-Z]-[A-Z]+-\d+)\s*(?::\s*(.*?))?\s*$/s';
+
     /**
-     * @param list<XmlRule|GraphQlRule> $rules
+     * @param list<XmlRule|GraphQlRule|ScriptRule> $rules
      */
     public function __construct(
         private readonly FileDiscovery $discovery,
@@ -33,6 +36,7 @@ final class XmlAnalyzer
         $notices = [];
         $analyzed = 0;
         $files = $this->discovery->discover($paths);
+        $scriptRules = array_values(array_filter($this->rules, static fn ($rule): bool => $rule instanceof ScriptRule));
         foreach ($files as $file) {
             if ($file->kind === XmlFile::KIND_GRAPHQL) {
                 $graphQlRules = array_values(array_filter($this->rules, static fn ($rule): bool => $rule instanceof GraphQlRule));
@@ -41,6 +45,25 @@ final class XmlAnalyzer
                     ++$analyzed;
                     foreach ($graphQlRules as $rule) {
                         array_push($findings, ...$rule->check($file, $schema));
+                    }
+                }
+                continue;
+            }
+            if ($file->kind === XmlFile::KIND_SCRIPT) {
+                if ($scriptRules === []) {
+                    continue;
+                }
+                $script = ScriptSource::fromFile($file->absolutePath);
+                if ($script === null) {
+                    $notices[] = new Notice('script', 'File is not readable', $file->relativePath);
+                    continue;
+                }
+                ++$analyzed;
+                foreach ($scriptRules as $rule) {
+                    foreach ($rule->check($file, $script) as $finding) {
+                        if (!$this->isScriptSuppressed($finding, $script, $notices)) {
+                            $findings[] = $finding;
+                        }
                     }
                 }
                 continue;
@@ -139,7 +162,7 @@ final class XmlAnalyzer
                 continue;
             }
             if (!$node instanceof DOMComment
-                || preg_match('/^\s*perf-ignore\s+([A-Z]-[A-Z]+-\d+)\s*(?::\s*(.*?))?\s*$/s', $node->data, $m) !== 1
+                || preg_match(self::PERF_IGNORE, $node->data, $m) !== 1
             ) {
                 return false;
             }
@@ -157,6 +180,36 @@ final class XmlAnalyzer
                 return false;
             }
             $node = $node->previousSibling;
+        }
+
+        return false;
+    }
+
+    /**
+     * A script finding is suppressed by a JavaScript comment "perf-ignore RULE-ID: reason" that ends on
+     * the line of the finding or on the line before it. Without a reason it is reported, with a notice.
+     *
+     * @param list<Notice> $notices
+     */
+    private function isScriptSuppressed(Finding $finding, ScriptSource $script, array &$notices): bool
+    {
+        foreach ($script->comments as $comment) {
+            if ($comment->endLine !== $finding->line && $comment->endLine !== $finding->line - 1) {
+                continue;
+            }
+            // A doc comment's leading "*" does not count.
+            if (preg_match(self::PERF_IGNORE, ltrim($comment->text, '*'), $m) !== 1 || $m[1] !== $finding->ruleId) {
+                continue;
+            }
+            if (($m[2] ?? '') !== '') {
+                return true;
+            }
+            $notices[] = new Notice(
+                'suppression',
+                sprintf('perf-ignore %s without a reason; the finding is still reported', $m[1]),
+                $finding->file,
+                $comment->endLine,
+            );
         }
 
         return false;
