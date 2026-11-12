@@ -17,7 +17,7 @@ final class CalibrationConsistencyTest extends TestCase
     public function testRegistryMatchesTheCalibrationReport(): void
     {
         $rows = [];
-        foreach ([__DIR__ . '/../../../docs/calibration.md', __DIR__ . '/../../../docs/calibration/round-2.md', __DIR__ . '/../../../docs/calibration/round-3.md', __DIR__ . '/../../../docs/calibration/round-4.md', __DIR__ . '/../../../docs/calibration/round-5.md', __DIR__ . '/../../../docs/calibration/round-6.md', __DIR__ . '/../../../docs/calibration/round-7.md', __DIR__ . '/../../../docs/calibration/round-8.md', __DIR__ . '/../../../docs/calibration/round-9.md', __DIR__ . '/../../../docs/calibration/round-10.md', __DIR__ . '/../../../docs/calibration/round-11.md', __DIR__ . '/../../../docs/calibration/round-12.md'] as $file) {
+        foreach ([__DIR__ . '/../../../docs/calibration.md', __DIR__ . '/../../../docs/calibration/round-2.md', __DIR__ . '/../../../docs/calibration/round-3.md', __DIR__ . '/../../../docs/calibration/round-4.md', __DIR__ . '/../../../docs/calibration/round-5.md', __DIR__ . '/../../../docs/calibration/round-6.md', __DIR__ . '/../../../docs/calibration/round-7.md', __DIR__ . '/../../../docs/calibration/round-8.md', __DIR__ . '/../../../docs/calibration/round-9.md', __DIR__ . '/../../../docs/calibration/round-10.md', __DIR__ . '/../../../docs/calibration/round-11.md', __DIR__ . '/../../../docs/calibration/round-12.md', __DIR__ . '/../../../docs/calibration/round-13.md'] as $file) {
             preg_match_all('/^\| \[([A-Z0-9-]+)\]\((?:\.\.\/)?rules\/[^)]+\) \| (error|warning|info) \|.*\| ([^|]+) \|$/m', (string) file_get_contents($file), $matches, PREG_SET_ORDER);
             self::assertNotEmpty($matches, $file);
             foreach ($matches as $match) {

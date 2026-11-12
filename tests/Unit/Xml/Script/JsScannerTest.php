@@ -29,6 +29,46 @@ final class JsScannerTest extends TestCase
         );
     }
 
+    /**
+     * @return list<string> "value: path" for each string literal, the path joined by "."
+     */
+    private static function paths(string $source): array
+    {
+        return array_map(
+            static fn (JsString $s): string => $s->value . ': ' . implode('.', $s->path),
+            JsScanner::scan($source)->strings,
+        );
+    }
+
+    public function testPropertyPaths(): void
+    {
+        self::assertSame(
+            ['a: deps', 'b: shim', 'c: shim.b.deps', '*: map', 'e: map.*.d'],
+            self::paths("var config = {deps: ['a'], shim: {'b': {deps: ['c']}}, map: {'*': {d: 'e'}}}"),
+        );
+        // A comma ends the property; arrays, calls and blocks add nothing to the path.
+        self::assertSame(
+            ['a: x', 'b: ', 'c: y', 'd: deps'],
+            self::paths("o = {x: f('a'), 'b': 1}; g({y: ['c']}); (function () { var c = {deps: ['d']}; })();"),
+        );
+        // A key is not a property of itself, and a value after a ternary is no key.
+        self::assertSame(
+            ['k: o', 'v: o.k', 't: o.q', 'f: o.q'],
+            self::paths("x = {o: {'k': 'v', q: c ? 't' : 'f'}}"),
+        );
+        // Braces in a template substitution and a closer that matches no opener leave the paths as they were.
+        self::assertSame(
+            ['a: t', 'b: u'],
+            self::paths("x = {t: `\${ {n: 1}.n }` + 'a'}; y = {u: ) 'b'}"),
+        );
+        // A comma inside a substitution, and a key-like token inside an array, do not change the property around them.
+        self::assertSame(['z: t'], self::paths("x = {t: `\${a, b}` + 'z'}"));
+        self::assertSame(['v: p'], self::paths("x = {p: [1, q: 'v']}"));
+        // A template literal has a path too, and a comment between a key and its colon keeps it a key.
+        self::assertSame(['t: deps'], self::paths('c = {deps: [`t`]}'));
+        self::assertSame(['a: deps', 'b: deps', 'deps: ', 'c: deps'], self::paths("c = {deps /* x */ : ['a']}; d = {deps // x\n: ['b']}; e = {'deps' /* x */ : ['c']}"));
+    }
+
     public function testCommentsAreNotCode(): void
     {
         $scan = JsScanner::scan("// 'a'\n/* 'b'\n'c' */ 'd'");

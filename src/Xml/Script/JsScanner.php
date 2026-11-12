@@ -27,6 +27,14 @@ final class JsScanner
 
     private int $line;
 
+    /**
+     * The open brackets, innermost last: the opener ("{", "[", "(" or "${" of a template substitution) and,
+     * for "{", the key of the property whose value is being read, or null.
+     *
+     * @var list<array{string, ?string}>
+     */
+    private array $frames = [];
+
     private function __construct()
     {
     }
@@ -76,10 +84,12 @@ final class JsScanner
             } elseif ($char === '`' || ($char === '}' && $templates !== [] && end($templates) === 0)) {
                 if ($char === '}') {
                     array_pop($templates);
+                    $this->close('${');
                 }
                 [$i, $opensSubstitution] = $this->templatePart($i + 1, $char === '`');
                 if ($opensSubstitution) {
                     $templates[] = 0;
+                    $this->frames[] = ['${', null];
                     [$last, $punctuator] = ['operator', '{'];
                 } else {
                     [$last, $punctuator] = ['value', ''];
@@ -98,12 +108,24 @@ final class JsScanner
                 while ($i < $this->length && self::isIdentifierByte($source[$i])) {
                     ++$i;
                 }
-                $keyword = $punctuator !== '.' && in_array(substr($source, $start, $i - $start), self::BEFORE_REGEX, true);
+                $identifier = substr($source, $start, $i - $start);
+                if (($punctuator === '{' || $punctuator === ',') && $this->nextChar($i) === ':') {
+                    $this->setKey($identifier);
+                }
+                $keyword = $punctuator !== '.' && in_array($identifier, self::BEFORE_REGEX, true);
                 [$last, $punctuator] = [$keyword ? 'operator' : 'value', ''];
             } else {
                 if (!ctype_space($char)) {
                     if ($templates !== [] && ($char === '{' || $char === '}')) {
                         $templates[count($templates) - 1] += $char === '{' ? 1 : -1;
+                    }
+                    if ($char === '{' || $char === '[' || $char === '(') {
+                        $this->frames[] = [$char, null];
+                    } elseif ($char === '}' || $char === ']' || $char === ')') {
+                        $this->close(['}' => '{', ']' => '[', ')' => '('][$char]);
+                    } elseif ($char === ',') {
+                        // A comma ends the property of the object it belongs to.
+                        $this->setKey(null);
                     }
                     $last = $char === ')' || $char === ']' ? 'value' : 'operator';
                     $punctuator = $char;
@@ -151,13 +173,74 @@ final class JsScanner
         }
         // An unterminated string ends before the line break.
         $end = $i < $this->length && $source[$i] === $quote ? $i + 1 : $i;
-        $after = $end;
-        while ($after < $this->length && ctype_space($source[$after])) {
-            ++$after;
+        $isKey = $mayBeKey && $this->nextChar($end) === ':';
+        $this->strings[] = new JsString($value, $line, $isKey, $this->path());
+        if ($isKey) {
+            $this->setKey($value);
         }
-        $this->strings[] = new JsString($value, $line, $mayBeKey && ($source[$after] ?? '') === ':');
 
         return $end;
+    }
+
+    /**
+     * The first character at or after $from that is neither white space nor in a comment, or "".
+     */
+    private function nextChar(int $from): string
+    {
+        $source = $this->source;
+        while ($from < $this->length) {
+            if (ctype_space($source[$from])) {
+                ++$from;
+            } elseif ($source[$from] === '/' && ($source[$from + 1] ?? '') === '/') {
+                $end = strpos($source, "\n", $from);
+                $from = $end === false ? $this->length : $end;
+            } elseif ($source[$from] === '/' && ($source[$from + 1] ?? '') === '*') {
+                $end = strpos($source, '*/', $from + 2);
+                $from = $end === false ? $this->length : $end + 2;
+            } else {
+                return $source[$from];
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * The keys of the properties whose values are being read, outermost first.
+     *
+     * @return list<string>
+     */
+    private function path(): array
+    {
+        $path = [];
+        foreach ($this->frames as [, $key]) {
+            if ($key !== null) {
+                $path[] = $key;
+            }
+        }
+
+        return $path;
+    }
+
+    /**
+     * Starts (or with null ends) a property of the innermost bracket, when that bracket is an object.
+     */
+    private function setKey(?string $key): void
+    {
+        $top = count($this->frames) - 1;
+        if ($top >= 0 && $this->frames[$top][0] === '{') {
+            $this->frames[$top][1] = $key;
+        }
+    }
+
+    /**
+     * Closes the innermost bracket when it was opened by $opener; a closer that matches no opener is ignored.
+     */
+    private function close(string $opener): void
+    {
+        if ($this->frames !== [] && $this->frames[count($this->frames) - 1][0] === $opener) {
+            array_pop($this->frames);
+        }
     }
 
     /**
@@ -187,7 +270,7 @@ final class JsScanner
         }
         $closes = $i >= $this->length || $source[$i] === '`';
         if ($closes && $opensTemplate) {
-            $this->strings[] = new JsString($value, $line, false);
+            $this->strings[] = new JsString($value, $line, false, $this->path());
         }
         if ($i >= $this->length) {
             return [$i, false];

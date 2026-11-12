@@ -8,5 +8,9 @@ var config = {
         'Acme_Rules/js/library': {
             deps: ['jquery', "jquery/ui"]
         }
-    }
+    },
+    deps: [
+        'Acme_Rules/js/everywhere',
+        'Magento_Ui/js/core/app'
+    ]
 };

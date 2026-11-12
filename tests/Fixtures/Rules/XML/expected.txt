@@ -11,6 +11,10 @@ J-DEP-01 warning app/code/Acme/Rules/view/frontend/web/js/widget.js:5
 J-DEP-01 warning app/design/frontend/Acme/shop/Magento_Catalog/web/js/gallery.js:1
 J-DEP-01 warning app/design/frontend/Acme/shop/Magento_Checkout/web/js/view/summary/item.js:1
 J-DEP-01 warning app/design/frontend/Acme/shop/web/js/theme.js:1
+J-DEP-02 info app/code/Acme/Rules/view/frontend/requirejs-config.js:13
+J-DEP-02 info app/code/Acme/Rules/view/frontend/requirejs-config.js:14
+J-DEP-02 info app/design/frontend/Acme/shop/Magento_Theme/requirejs-config.js:2
+J-DEP-02 info app/design/frontend/Acme/shop/requirejs-config.js:10
 X-AREA-01 info app/code/Acme/Rules/etc/events.xml:29
 X-AREA-01 info app/code/Acme/Rules/etc/events.xml:32
 X-DB-01 error app/code/Acme/Rules/etc/db_schema.xml:6

@@ -17,7 +17,7 @@ final class FileDiscovery
     /** Core packages are analyzed only when a path points inside them explicitly. */
     private const CORE_VENDOR_DIRS = ['vendor/magento', 'vendor/mage-os'];
 
-    private const MODULE_NAME = '[A-Z][A-Za-z0-9]*_[A-Z][A-Za-z0-9]*';
+    public const MODULE_NAME = '[A-Z][A-Za-z0-9]*_[A-Z][A-Za-z0-9]*';
 
     private const EXTENSIONS = ['xml', 'graphqls', 'js', 'phtml'];
 

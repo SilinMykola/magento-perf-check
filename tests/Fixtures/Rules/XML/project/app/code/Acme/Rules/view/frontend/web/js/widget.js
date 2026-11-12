@@ -18,3 +18,5 @@ lines`,
 
     return {map: {'jquery/ui': 'jquery/compat'}, quoted: quoted, message: message, ratio: ratio, escaped: escaped};
 });
+
+require({deps: ['Acme_Rules/js/not-a-config-file']});

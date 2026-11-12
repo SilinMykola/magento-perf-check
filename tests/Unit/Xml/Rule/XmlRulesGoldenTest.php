@@ -17,6 +17,7 @@ use Silin\MagentoPerfCheck\Xml\Rule\JqueryUiBundleRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
 use Silin\MagentoPerfCheck\Xml\Rule\RedundantIndexRule;
+use Silin\MagentoPerfCheck\Xml\Rule\RequireJsDepsRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SectionInvalidationRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SynchronousTopicRule;
 use Silin\MagentoPerfCheck\Xml\Rule\TableWithoutPrimaryKeyRule;
@@ -54,6 +55,7 @@ final class XmlRulesGoldenTest extends TestCase
             new HeadScriptRule(),
             new GlobalStylesheetRule(),
             new JqueryUiBundleRule(),
+            new RequireJsDepsRule(),
         ]))->analyze(['app/code', 'app/design']);
 
         self::assertSame([], $result->notices);
@@ -121,6 +123,18 @@ final class XmlRulesGoldenTest extends TestCase
         self::assertStringContainsString('jquery/compat', $result->findings[0]->message);
         self::assertStringContainsString('"jquery-ui-modules/widget"', $result->findings[0]->message);
         self::assertStringContainsString('Magento 2.3.3', $result->findings[0]->message);
+    }
+
+    public function testRequireJsDepsMessageNamesTheModule(): void
+    {
+        $root = realpath(self::FIXTURE . '/project');
+        self::assertIsString($root);
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [new RequireJsDepsRule()]))->analyze(['app/code/Acme/Rules/view/frontend']);
+
+        self::assertCount(2, $result->findings);
+        self::assertStringContainsString('"Acme_Rules/js/everywhere"', $result->findings[0]->message);
+        self::assertStringContainsString('every storefront page', $result->findings[0]->message);
+        self::assertStringContainsString('x-magento-init', $result->findings[0]->message);
     }
 
     public function testConfiguredAllowlistPrefix(): void

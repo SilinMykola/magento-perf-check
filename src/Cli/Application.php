@@ -35,6 +35,7 @@ use Silin\MagentoPerfCheck\Xml\Rule\JqueryUiBundleRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
 use Silin\MagentoPerfCheck\Xml\Rule\RedundantIndexRule;
+use Silin\MagentoPerfCheck\Xml\Rule\RequireJsDepsRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SectionInvalidationRule;
 use Silin\MagentoPerfCheck\Xml\Rule\SynchronousTopicRule;
 use Silin\MagentoPerfCheck\Xml\Rule\TableWithoutPrimaryKeyRule;
@@ -285,6 +286,7 @@ final class Application
             new HeadScriptRule(),
             new GlobalStylesheetRule(),
             new JqueryUiBundleRule(),
+            new RequireJsDepsRule(),
         ];
         // Reading every storefront script costs time, so the script rules run only when enabled.
         $enabledXmlRules = [];

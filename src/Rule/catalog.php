@@ -183,6 +183,14 @@ return [
         $b('app/code/Magento/Theme/view/frontend/requirejs-config.js#L30', 'On the storefront core maps jquery/ui to jquery/compat.'),
         new Source(SourceLevel::B, 'https://github.com/magento/magento2/issues/22995', 'Measured in the issue: "jQueryUI is `227kb` of the shared bundle (unminified), even though only 11% of that is used on the homepage."'),
     ]),
+    new RuleDefinition('J-DEP-02', 'A module in the top-level deps of a storefront requirejs-config.js, loaded on every page', Severity::Info, RuleStatus::Experimental, [
+        $a('https://developer.adobe.com/commerce/frontend-core/javascript/requirejs', '"Adding modules under an independent `deps` configuration will load the specified modules in all pages."'),
+        $a('https://developer.adobe.com/commerce/frontend-core/javascript/custom', '"Additional dependencies demand more web requests, which can slow rendering."'),
+        $b('app/code/Magento/RequireJs/etc/di.xml#L9-L35', 'The merged files: a module\'s view/<area>/requirejs-config.js (Collector\\Base) and a theme\'s, at its root (Collector\\Theme) or in a <Vendor_Module> folder (Collector\\ThemeModular).'),
+        $b('lib/internal/Magento/Framework/RequireJs/Config.php#L79-L85', 'Each requirejs-config.js is wrapped in require.config(config).'),
+        $b('lib/internal/Magento/Framework/RequireJs/Config.php#L154-L166', 'The requirejs-config.js files of the theme and its modules are merged into one file.'),
+        $b('app/code/Magento/Theme/view/frontend/layout/default.xml#L14', 'The merged configuration is a block of the default handle, so every storefront page loads it.'),
+    ]),
     // Run through the project's magento/magento-coding-standard (ADR 7); the sniffs are the source, pinned to v41.
     new RuleDefinition('S-PERF-01', 'array_merge() inside a loop (magento-coding-standard)', Severity::Info, RuleStatus::Experimental, [
         new Source(SourceLevel::C, 'https://github.com/magento/magento-coding-standard/blob/e4af7c6c79d0bfa89deb06cba1a3d49405635afc/Magento2/Sniffs/Performance/ForeachArrayMergeSniff.php#L21', 'Magento2.Performance.ForeachArrayMerge: "array_merge(...) is used in a loop and is a resources greedy construction."'),
