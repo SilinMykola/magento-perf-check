@@ -27,6 +27,7 @@
         "ext-dom": "*",
         "ext-json": "*",
         "ext-libxml": "*",
+        "ext-tokenizer": "*",
         "nette/neon": "^3.4",
         "phpstan/phpstan": "^1.12 || ^2.0",
         "webonyx/graphql-php": "^14.11 || ^15.0"

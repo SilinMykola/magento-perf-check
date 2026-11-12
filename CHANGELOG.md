@@ -16,6 +16,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Changed
 
+- `composer.json` now requires `ext-tokenizer`, which reading templates, the project index and `app/etc/config.php` already used. PHP enables it by default.
 - S-PERF-01, S-TPL-01 and S-DI-01 (experimental, off by default) now report at `info`, a recommendation, instead of `warning`: in calibration rounds 4 and 6 almost none of their correct findings mattered. S-TPL-02 and S-FN-01 keep `warning`. **This can change a CI result** only for a project that enabled them and runs with `--fail-on=warning`: it no longer fails on their findings. With the default `--fail-on=error` nothing changes. Set `severity: warning` to keep the old behavior.
 
 ## [0.5.0] - 2026-11-11
