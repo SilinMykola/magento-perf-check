@@ -422,3 +422,66 @@ final class DataLazyGetters extends \Magento\Framework\DataObject
     {
     }
 }
+
+final class TernaryFallbacks
+{
+    private object $config;
+    private object $other;
+    private object $third;
+    private object $fourth;
+    private object $wrong;
+    private object $fifth;
+
+    public function __construct(?object $config = null, ?object $other = null, ?object $third = null, ?object $fourth = null, ?object $wrong = null, ?object $fifth = null)
+    {
+        $this->config = $config !== null ? $config : ObjectManager::getInstance()->get(\stdClass::class);
+        $this->other = $other === null ? ObjectManager::getInstance()->get(\stdClass::class) : $other;
+        $this->third = isset($third) ? $third : ObjectManager::getInstance()->get(\stdClass::class);
+        $this->fourth = $fourth ? $fourth : ObjectManager::getInstance()->get(\stdClass::class);
+        $this->fifth = !empty($fifth) ? $fifth : ObjectManager::getInstance()->get(\stdClass::class);
+        $this->wrong = $wrong !== null ? $config : ObjectManager::getInstance()->get(\stdClass::class); // reported: tests another value
+        $this->wrong = $wrong !== null ? ObjectManager::getInstance()->get(\stdClass::class) : $wrong; // reported: runs when the value is there
+    }
+
+    public function getter(?object $given): object
+    {
+        return $given !== null ? $given : ObjectManager::getInstance()->get(\stdClass::class); // reported: outside the constructor
+    }
+}
+
+final class LazyGetterThroughLocal
+{
+    private ?object $config = null;
+    private ?object $other = null;
+
+    public function allowed(): object
+    {
+        if ($this->config === null) {
+            /** @var \stdClass $config */
+            $config = ObjectManager::getInstance()->get(\stdClass::class);
+
+            $this->config = $config;
+        }
+
+        return $this->config;
+    }
+
+    public function reported(): ?object
+    {
+        if ($this->other === null) {
+            $other = ObjectManager::getInstance()->get(\stdClass::class); // reported: stored in another property
+            $this->config = $other;
+        }
+        if ($this->other === null) {
+            $other = ObjectManager::getInstance()->get(\stdClass::class); // reported: the block does more
+            $other->ready = true;
+            $this->other = $other;
+        }
+        if ($this->other === null) {
+            $other = ObjectManager::getInstance()->get(\stdClass::class); // reported: another variable is stored
+            $this->other = $this->config;
+        }
+
+        return $this->other;
+    }
+}

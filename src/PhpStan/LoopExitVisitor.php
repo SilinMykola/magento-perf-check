@@ -15,9 +15,12 @@ use PhpParser\NodeVisitorAbstract;
  * the call is in a statement of its own, or in a return, and every way on from it in the
  * same iteration reaches return, throw, or a break out of the only loop around it.
  *
- * It stays on the safe side: a continue, break or goto on the way, a call inside a try in the loop,
- * in a closure or in the condition of an if, and loops in closures are not marked. A try outside
- * every loop is walked: its catch runs once the loop is left.
+ * It stays on the safe side: a continue, break or goto on the way, a call in a closure or in the
+ * condition of an if, and loops in closures are not marked. A try outside every loop is walked: its
+ * catch runs once the loop is left. In a try inside the loop, a call in a catch or in the finally is
+ * marked when the way on leaves the loop. The try itself is walked only when every catch leaves the
+ * loop too: an exception, which Magento also throws for "not found", must not go on with the next
+ * iteration and run the call again.
  *
  * Calls are marked when their function is entered, before any visitor reaches them,
  * so the order in which visitors are registered does not matter.
@@ -42,13 +45,7 @@ final class LoopExitVisitor extends NodeVisitorAbstract
      */
     private function walk(array $stmts, int $loops, bool $leavesAtEnd, ?bool $breakLeaves): void
     {
-        // Whether what follows each statement leaves the loop, worked out once from the end of the list.
-        $after = [];
-        $next = $leavesAtEnd;
-        foreach (array_reverse($stmts, true) as $i => $stmt) {
-            $after[$i] = $next;
-            $next = $this->leaves($stmt, $next, $loops, $breakLeaves);
-        }
+        $after = $this->afterEach($stmts, $leavesAtEnd, $loops, $breakLeaves);
 
         foreach ($stmts as $i => $stmt) {
             $leaves = $after[$i];
@@ -77,7 +74,7 @@ final class LoopExitVisitor extends NodeVisitorAbstract
                 $this->walk($stmt->stmts, $loops + 1, false, null);
             } elseif ($stmt instanceof Stmt\TryCatch && $loops === 0) {
                 // Outside any loop, an exception reaches its catch only after leaving the loops inside the try,
-                // so they are walked as usual. Inside a loop, the catch can go on with the next iteration.
+                // so they are walked as usual.
                 $this->walk($stmt->stmts, 0, false, null);
                 foreach ($stmt->catches as $catch) {
                     $this->walk($catch->stmts, 0, false, null);
@@ -85,8 +82,56 @@ final class LoopExitVisitor extends NodeVisitorAbstract
                 if ($stmt->finally !== null) {
                     $this->walk($stmt->finally->stmts, 0, false, null);
                 }
+            } elseif ($stmt instanceof Stmt\TryCatch) {
+                // Inside a loop, a catch goes on with what follows the try. The try is walked only when no
+                // catch can go on with the next iteration; then a throw in it, caught there, leaves too.
+                $catchesLeave = true;
+                foreach ($stmt->catches as $catch) {
+                    $this->walk($catch->stmts, $loops, $leaves, $breakLeaves);
+                    $catchesLeave = $catchesLeave && $this->listLeaves($catch->stmts, $leaves, $loops, $breakLeaves);
+                }
+                if ($catchesLeave) {
+                    $this->walk($stmt->stmts, $loops, $leaves, $breakLeaves);
+                }
+                // The finally also runs after a continue or break in the try or a catch.
+                if ($stmt->finally !== null) {
+                    $this->walk($stmt->finally->stmts, $loops, $this->leaves($stmt, $leaves, $loops, $breakLeaves), $breakLeaves);
+                }
             }
         }
+    }
+
+    /**
+     * Whether what follows each statement leaves the loop, worked out from the end of the list.
+     *
+     * @param Node\Stmt[] $stmts
+     * @return array<bool> keyed like $stmts
+     */
+    private function afterEach(array $stmts, bool $leavesAtEnd, int $loops, ?bool $breakLeaves): array
+    {
+        $after = [];
+        $next = $leavesAtEnd;
+        foreach (array_reverse($stmts, true) as $i => $stmt) {
+            $after[$i] = $next;
+            $next = $this->leaves($stmt, $next, $loops, $breakLeaves);
+        }
+
+        return $after;
+    }
+
+    /**
+     * Whether running the whole list, then what follows it, leaves the loop.
+     *
+     * @param Node\Stmt[] $stmts
+     */
+    private function listLeaves(array $stmts, bool $leavesAtEnd, int $loops, ?bool $breakLeaves): bool
+    {
+        $first = array_key_first($stmts);
+        if ($first === null) {
+            return $leavesAtEnd;
+        }
+
+        return $this->leaves($stmts[$first], $this->afterEach($stmts, $leavesAtEnd, $loops, $breakLeaves)[$first], $loops, $breakLeaves);
     }
 
     /**

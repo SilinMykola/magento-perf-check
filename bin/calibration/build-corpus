@@ -532,25 +532,21 @@ function buildExtended(): void
 }
 
 /**
- * GitHub repositories with the topic magento2-module, most stars first (design D2).
+ * GitHub repositories with the topic magento2-module, most stars first (design D2). Pages are read only
+ * as they are needed: the search API allows 10 requests a minute without a token.
  *
- * @return list<array<string, mixed>>
+ * @return Generator<int, array<string, mixed>>
  */
-function githubCandidates(): array
+function githubCandidates(): Generator
 {
-    $candidates = [];
     for ($page = 1; $page <= 10; ++$page) {
         $result = fetchJson('https://api.github.com/search/repositories?q=' . rawurlencode('topic:magento2-module archived:false fork:false')
             . '&sort=stars&order=desc&per_page=100&page=' . $page);
-        foreach ($result['items'] ?? [] as $repository) {
-            $candidates[] = $repository;
-        }
+        yield from $result['items'] ?? [];
         if (count($result['items'] ?? []) < 100) {
-            break;
+            return;
         }
     }
-
-    return $candidates;
 }
 
 function buildGithub(): void
@@ -588,11 +584,15 @@ function buildGithub(): void
             if (!is_dir(dirname($clone))) {
                 mkdir(dirname($clone), 0777, true);
             }
+            // A clone goes to its place only when complete, so an interrupted one is not reused later.
+            // A transfer slower than 1 KB/s for a minute is given up rather than left to hang.
+            $partial = $clone . '.partial';
+            exec('rm -rf ' . escapeshellarg($partial));
             $output = [];
-            exec('git clone --quiet --depth 1 ' . escapeshellarg('https://github.com/' . $repository . '.git')
-                . ' ' . escapeshellarg($clone) . ' 2>&1', $output, $code);
-            if ($code !== 0) {
-                exec('rm -rf ' . escapeshellarg($clone));
+            exec('git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=60 clone --quiet --depth 1 '
+                . escapeshellarg('https://github.com/' . $repository . '.git') . ' ' . escapeshellarg($partial) . ' 2>&1', $output, $code);
+            if ($code !== 0 || !rename($partial, $clone)) {
+                exec('rm -rf ' . escapeshellarg($partial));
                 $skipped[] = skip($repository, 'git clone failed');
                 continue;
             }

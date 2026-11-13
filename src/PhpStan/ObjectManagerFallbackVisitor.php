@@ -12,13 +12,15 @@ use PhpParser\NodeVisitorAbstract;
 
 /**
  * Marks ObjectManager::getInstance() calls that are the backward-compatible
- * constructor fallback: "$dependency ?: ObjectManager::getInstance()->get(...)" or
- * the same with "??". Adobe documents this pattern as allowed. In a constructor the
- * same fallback written as "if (!isset($dependency)) { ... }" counts too, and so does
+ * constructor fallback: "$dependency ?: ObjectManager::getInstance()->get(...)", the same
+ * with "??", or, in the constructor, a full ternary such as "$dependency !== null ? $dependency : ...".
+ * Adobe documents this pattern as allowed. In a constructor the same fallback written as
+ * "if (!isset($dependency)) { ... }" counts too, and so does
  * "$objectManager = ObjectManager::getInstance()" when only fallbacks use the variable.
  *
  * Outside the constructor it also marks the lazy getter that fills a missing property once:
- * "if ($this->dependency === null) { $this->dependency = ObjectManager::getInstance()->get(...); }".
+ * "if ($this->dependency === null) { $this->dependency = ObjectManager::getInstance()->get(...); }",
+ * also through a local variable that the block assigns and then stores in the property.
  * It runs once per object, so it costs next to nothing.
  */
 final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
@@ -35,11 +37,7 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
         if ($node instanceof Stmt\ClassMethod && $node->stmts !== null) {
             $this->markLazyGetters($node->stmts);
         }
-        $fallback = match (true) {
-            $node instanceof Expr\BinaryOp\Coalesce => $node->right,
-            $node instanceof Expr\Ternary && $node->if === null => $node->else,
-            default => null,
-        };
+        $fallback = $node instanceof Expr ? $this->fallbackOf($node, false) : null;
         if ($fallback === null) {
             return null;
         }
@@ -78,10 +76,9 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
         }
         // Variables at the root of a fallback, the only uses allowed for a local object manager.
         $inFallback = [];
-        foreach ($this->find($stmts, static fn (Node $node): bool => $node instanceof Expr\BinaryOp\Coalesce
-            || ($node instanceof Expr\Ternary && $node->if === null)) as $node) {
-            /** @var Expr\BinaryOp\Coalesce|Expr\Ternary $node */
-            $expr = $node instanceof Expr\BinaryOp\Coalesce ? $node->right : $node->else;
+        foreach ($this->find($stmts, fn (Node $node): bool => $node instanceof Expr && $this->fallbackOf($node, true) !== null) as $node) {
+            /** @var Expr $node */
+            $expr = $this->fallbackOf($node, true);
             if (!$expr instanceof Expr\MethodCall) {
                 // "$a ?: $objectManager" hands the object manager itself on.
                 continue;
@@ -90,6 +87,10 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
                 $expr = $expr->var;
             }
             $inFallback[spl_object_id($expr)] = true;
+            // The full ternary counts in the constructor only; "?:" and "??" are marked wherever they are.
+            if ($this->looksLikeGetInstance($expr)) {
+                $expr->setAttribute(self::FALLBACK, true);
+            }
         }
         foreach ($this->find($stmts, static fn (Node $node): bool => $node instanceof Stmt\If_) as $if) {
             /** @var Stmt\If_ $if */
@@ -148,16 +149,118 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
                 continue;
             }
             $property = self::propertyOfThis($tested);
-            $assignments = self::assignments($if->stmts);
-            if ($property === null || !$this->onlyAssigns($if->stmts, []) || count($assignments) !== 1
-                || self::propertyOfThis($assignments[0]->var) !== $property
-            ) {
-                continue;
-            }
-            foreach (self::dependencyRoots($assignments[0]->expr) as $root) {
+            $dependency = $property !== null ? $this->storedInProperty($property, $if->stmts) : null;
+            foreach ($dependency !== null ? self::dependencyRoots($dependency) : [] as $root) {
                 $root->setAttribute(self::FALLBACK, true);
             }
         }
+    }
+
+    /**
+     * The dependency of a lazy getter block that only does "$this->property = <dependency>",
+     * or "$variable = <dependency>; $this->property = $variable".
+     *
+     * @param Node\Stmt[] $block
+     */
+    private function storedInProperty(string $property, array $block): ?Expr
+    {
+        return $this->storedDependency(
+            $block,
+            static fn (Expr $expr): ?Expr => $expr instanceof Expr\Assign && self::propertyOfThis($expr->var) === $property
+                ? $expr->expr : null,
+            null,
+        );
+    }
+
+    /**
+     * The dependency that a lazy getter block stores. Comments aside, the block is one statement whose
+     * stored value $storedValue picks out, or "$variable = <dependency>;" and then such a statement that
+     * stores $variable. With $variable null, any local variable will do.
+     *
+     * @param Node\Stmt[] $block
+     * @param callable(Expr): ?Expr $storedValue the value that an expression statement stores, or null
+     */
+    private function storedDependency(array $block, callable $storedValue, ?string $variable): ?Expr
+    {
+        $work = array_values(array_filter($block, static fn (Node\Stmt $stmt): bool => !$stmt instanceof Stmt\Nop));
+        $store = $work !== [] ? end($work) : null;
+        $value = $store instanceof Stmt\Expression ? $storedValue($store->expr) : null;
+        if ($value === null || count($work) > 2) {
+            return null;
+        }
+        if (count($work) === 1) {
+            return $this->isDependency($value, []) ? $value : null;
+        }
+        $first = $work[0];
+        if (!$value instanceof Expr\Variable || !is_string($value->name) || ($variable !== null && $value->name !== $variable)
+            || !$first instanceof Stmt\Expression || !$first->expr instanceof Expr\Assign
+            || !$first->expr->var instanceof Expr\Variable || $first->expr->var->name !== $value->name
+            || !$this->isDependency($first->expr->expr, [])
+        ) {
+            return null;
+        }
+
+        return $first->expr->expr;
+    }
+
+    /**
+     * What a fallback expression falls back to: the right side of "??", the else of "?:", or the branch
+     * of a full ternary taken when the value it tests is missing, such as "$x !== null ? $x : <fallback>"
+     * or "$x === null ? <fallback> : $x", when $fullTernary allows it.
+     */
+    private function fallbackOf(Expr $node, bool $fullTernary): ?Expr
+    {
+        if ($node instanceof Expr\BinaryOp\Coalesce) {
+            return $node->right;
+        }
+        if (!$node instanceof Expr\Ternary) {
+            return null;
+        }
+        if ($node->if === null) {
+            return $node->else;
+        }
+        if (!$fullTernary) {
+            return null;
+        }
+        $missing = $this->testedAsMissing($node->cond);
+        if ($missing !== null && self::sameValue($missing, $node->else)) {
+            return $node->if;
+        }
+        $present = $this->testedAsPresent($node->cond);
+        if ($present !== null && self::sameValue($present, $node->if)) {
+            return $node->else;
+        }
+
+        return null;
+    }
+
+    /**
+     * What "$x !== null", "$x != null", "isset($x)", "!empty($x)", "$x", "is_object($x)" or
+     * "$x instanceof Type" tests to be there.
+     */
+    private function testedAsPresent(Expr $cond): ?Expr
+    {
+        if ($cond instanceof Expr\BinaryOp\NotIdentical || $cond instanceof Expr\BinaryOp\NotEqual) {
+            return $this->isNull($cond->right) ? $cond->left : ($this->isNull($cond->left) ? $cond->right : null);
+        }
+        if ($cond instanceof Expr\BooleanNot && $cond->expr instanceof Expr\Empty_) {
+            return $cond->expr->expr;
+        }
+
+        return $this->testedAsMissing(new Expr\BooleanNot($cond));
+    }
+
+    /**
+     * "$name" and "$name", or "$this->name" and "$this->name".
+     */
+    private static function sameValue(Expr $a, Expr $b): bool
+    {
+        if ($a instanceof Expr\Variable && $b instanceof Expr\Variable) {
+            return is_string($a->name) && $a->name === $b->name;
+        }
+        $property = self::propertyOfThis($a);
+
+        return $property !== null && $property === self::propertyOfThis($b);
     }
 
     /**
@@ -185,27 +288,17 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
             }
             $key = count($keys) === 1 ? (string) array_key_first($keys) : null;
         }
-        $work = array_values(array_filter($block, static fn (Node\Stmt $stmt): bool => !$stmt instanceof Stmt\Nop));
-        $store = $work !== [] ? end($work) : null;
-        if ($key === null || !$store instanceof Stmt\Expression || self::dataKey($store->expr, 'setdata') !== $key) {
-            return null;
-        }
-        /** @var Expr\MethodCall $setData */
-        $setData = $store->expr;
-        $value = $setData->getArgs()[1]->value ?? null;
-        if (count($work) === 1) {
-            return $value !== null && $this->isDependency($value, []) ? $value : null;
-        }
-        $first = $work[0];
-        if (count($work) !== 2 || $variable === null || !$value instanceof Expr\Variable || $value->name !== $variable
-            || !$first instanceof Stmt\Expression || !$first->expr instanceof Expr\Assign
-            || !$first->expr->var instanceof Expr\Variable || $first->expr->var->name !== $variable
-            || !$this->isDependency($first->expr->expr, [])
-        ) {
+        if ($key === null) {
             return null;
         }
 
-        return $first->expr->expr;
+        // A test of getData() itself leaves no variable to go through: '' matches none.
+        return $this->storedDependency(
+            $block,
+            static fn (Expr $expr): ?Expr => $expr instanceof Expr\MethodCall && self::dataKey($expr, 'setdata') === $key
+                ? $expr->getArgs()[1]->value : null,
+            $variable ?? '',
+        );
     }
 
     /**

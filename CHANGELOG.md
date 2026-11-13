@@ -6,6 +6,12 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Fixed
+
+- The loop rules (P-LOOP-01, P-LOOP-03, P-LOOP-11 and the others) follow a `try` inside a loop. A call in a `catch` after which the loop is left, such as a delete before `throw $e`, runs at most once and is no longer reported. A call in the `try` itself is left out only when every `catch` leaves the loop too: a repository throws `NoSuchEntityException` after its query, so an empty `catch` still lets each missing id cost one. A call in a `finally` is left out only when what follows the `try` leaves the loop and neither the `try` nor a `catch` holds `continue`, `break` or `goto`.
+- P-DI-06 no longer reports the constructor fallback written as a full ternary in the constructor, `$config !== null ? $config : ObjectManager::getInstance()->get(...)` and the reversed and `isset()` or `!empty()` forms, nor a lazy getter that assigns the object to a local variable before it stores it in the tested property.
+- Both came from the [third held-out check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out-3.md), on 50 modules from GitHub, a new part of the calibration corpus: 62 graded findings of the default set, 58 correct. On the whole corpus the fixes remove 6 P-DI-06 and 1 P-LOOP-11 findings in Magento 2.4.9 core and 3 in the new modules, and add none.
+
 ## [0.9.1] - 2026-11-13
 
 ### Changed

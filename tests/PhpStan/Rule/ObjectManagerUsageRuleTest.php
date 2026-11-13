@@ -67,6 +67,12 @@ final class ObjectManagerUsageRuleTest extends RuleTestCase
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 398],
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 404],
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 409],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\TernaryFallbacks. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 442],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\TernaryFallbacks. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 443],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\TernaryFallbacks. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 448],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\LazyGetterThroughLocal. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 472],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\LazyGetterThroughLocal. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 476],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\LazyGetterThroughLocal. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 481],
         ]);
     }
 }

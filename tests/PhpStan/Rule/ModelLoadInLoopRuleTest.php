@@ -32,9 +32,15 @@ final class ModelLoadInLoopRuleTest extends RuleTestCase
             ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 41],
             ['[P-LOOP-01] Magento\Customer\Api\CustomerRepositoryInterface::get()' . $suffix, 44],
             ['[P-LOOP-01] Magento\Catalog\Model\ProductRepository::getById()' . $suffix, 47],
-            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 168],
-            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 176],
-            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 187],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 233],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 241],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 249],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 262],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 270],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 279],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 289],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 297],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 307],
         ]);
     }
 }
