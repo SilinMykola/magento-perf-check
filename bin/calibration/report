@@ -194,6 +194,12 @@ $extended = isset($corpus['extended'])
         $corpus['extended']['hyva'][count($corpus['extended']['hyva']) - 1]['version'],
     )
     : '';
+$github = isset($corpus['github'])
+    ? sprintf(
+        "\n- Not used on this page: a third part, `github`, with %d modules from the most-starred GitHub repositories with the topic `magento2-module`, which the [third held-out check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out-3.md) uses",
+        count($corpus['github']['modules']),
+    )
+    : '';
 $report = <<<MD
     # Calibration
 
@@ -205,7 +211,7 @@ $report = <<<MD
 
     - Magento {$corpus['magento']['version']} core (`vendor/magento`)
     - {$modules} most-downloaded `magento2-module` packages from Packagist that install on that version (`app/code` of the corpus copy)
-    {$mageOs}{$extended}
+    {$mageOs}{$extended}{$github}
 
     Test code is excluded (the tool's default), and so are `*-sample-data` modules at sampling time.
 

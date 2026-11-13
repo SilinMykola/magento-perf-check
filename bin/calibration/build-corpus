@@ -9,6 +9,8 @@ declare(strict_types=1);
  *   build-corpus magento     copy of the Magento project at CORPUS_SOURCE_PROJECT, an absolute path (read-only source)
  *   build-corpus packagist   the 25 most-downloaded installable magento2-module packages
  *   build-corpus extended    a second copy with the next 100 modules and Hyvä Theme (change extend-calibration-corpus)
+ *   build-corpus github      a hard-linked copy of extended with 50 GitHub modules, cloned into
+ *                            var/corpus/github-clones (change add-github-corpus)
  *   build-corpus mage-os     composer install of mage-os/project-community-edition
  *   build-corpus --clean     remove var/corpus
  *   build-corpus pick <name> show which version of a package would be taken, and why
@@ -27,6 +29,7 @@ const CORPUS = ROOT . '/var/corpus';
 const MANIFEST = ROOT . '/docs/calibration/corpus.json';
 const MODULE_COUNT = 25;
 const EXTENDED_COUNT = 100;
+const GITHUB_COUNT = 50;
 const TARGET_PHP = '8.4.0';
 
 function fail(string $message): never
@@ -146,7 +149,6 @@ function pickVersion(string $name, array $installed): array
 {
     $data = fetchJson('https://repo.packagist.org/p2/' . $name . '.json');
     $versions = $data['packages'][$name] ?? [];
-    $parser = new VersionParser();
     $last = 'no stable version';
     foreach ($versions as $version) {
         if (VersionParser::parseStability($version['version']) !== 'stable') {
@@ -156,23 +158,7 @@ function pickVersion(string $name, array $installed): array
             $last = 'type ' . ($version['type'] ?? 'none');
             continue;
         }
-        $unmet = [];
-        foreach ($version['require'] ?? [] as $dependency => $constraint) {
-            if ($dependency === 'php') {
-                if (!Semver::satisfies(TARGET_PHP, $constraint)) {
-                    $unmet[] = "php $constraint";
-                }
-                continue;
-            }
-            if (str_starts_with($dependency, 'ext-') || str_starts_with($dependency, 'lib-')) {
-                continue;
-            }
-            if (str_starts_with($dependency, 'magento/') || str_starts_with($dependency, 'laminas/') || str_starts_with($dependency, 'symfony/')) {
-                if (!isset($installed[$dependency]) || !Semver::satisfies($parser->normalize($installed[$dependency]), $constraint)) {
-                    $unmet[] = "$dependency $constraint";
-                }
-            }
-        }
+        $unmet = unmetRequirements($version['require'] ?? [], $installed, null);
         if ($unmet === []) {
             return [$version, ''];
         }
@@ -180,6 +166,53 @@ function pickVersion(string $name, array $installed): array
     }
 
     return [null, $last];
+}
+
+/**
+ * Requirements the copy does not meet. With $present null, only magento/*, laminas/*, symfony/* and php
+ * are checked (Packagist parts); otherwise every package must be installed at a fitting version or be
+ * one of the $present module packages (GitHub part).
+ *
+ * @param array<string, string> $require
+ * @param array<string, string> $installed
+ * @param ?list<string> $present
+ * @return list<string>
+ */
+function unmetRequirements(array $require, array $installed, ?array $present): array
+{
+    $parser = new VersionParser();
+    $unmet = [];
+    foreach ($require as $dependency => $constraint) {
+        if (!is_string($dependency) || !is_string($constraint)) {
+            $unmet[] = 'a requirement that is not a string';
+            continue;
+        }
+        try {
+            $parser->parseConstraints($constraint);
+        } catch (UnexpectedValueException) {
+            $unmet[] = "$dependency with an invalid constraint";
+            continue;
+        }
+        if ($dependency === 'php') {
+            if (!Semver::satisfies(TARGET_PHP, $constraint)) {
+                $unmet[] = "php $constraint";
+            }
+            continue;
+        }
+        if (str_starts_with($dependency, 'ext-') || str_starts_with($dependency, 'lib-')) {
+            continue;
+        }
+        $checked = $present !== null
+            || str_starts_with($dependency, 'magento/') || str_starts_with($dependency, 'laminas/') || str_starts_with($dependency, 'symfony/');
+        if (!$checked || in_array($dependency, $present ?? [], true)) {
+            continue;
+        }
+        if (!isset($installed[$dependency]) || !Semver::satisfies($parser->normalize($installed[$dependency]), $constraint)) {
+            $unmet[] = "$dependency $constraint";
+        }
+    }
+
+    return $unmet;
 }
 
 /**
@@ -498,6 +531,145 @@ function buildExtended(): void
     saveManifest($manifest);
 }
 
+/**
+ * GitHub repositories with the topic magento2-module, most stars first (design D2).
+ *
+ * @return list<array<string, mixed>>
+ */
+function githubCandidates(): array
+{
+    $candidates = [];
+    for ($page = 1; $page <= 10; ++$page) {
+        $result = fetchJson('https://api.github.com/search/repositories?q=' . rawurlencode('topic:magento2-module archived:false fork:false')
+            . '&sort=stars&order=desc&per_page=100&page=' . $page);
+        foreach ($result['items'] ?? [] as $repository) {
+            $candidates[] = $repository;
+        }
+        if (count($result['items'] ?? []) < 100) {
+            break;
+        }
+    }
+
+    return $candidates;
+}
+
+function buildGithub(): void
+{
+    // Kept between builds (design D3): an existing clone is reused without a fetch.
+    $clones = CORPUS . '/github-clones';
+    $manifest = manifest();
+    if (!is_dir(CORPUS . '/extended') || !isset($manifest['extended']['modules'])) {
+        fail('build the extended part first');
+    }
+    $present = [
+        ...array_column($manifest['packagist']['modules'] ?? [], 'name'),
+        ...array_column($manifest['extended']['modules'], 'name'),
+        ...array_column($manifest['extended']['hyva'] ?? [], 'name'),
+    ];
+    $target = CORPUS . '/github';
+    if (is_dir($target)) {
+        run(['rm', '-rf', $target]);
+    }
+    // Hard links to extended and to the modules of the packagist part (design D1): the part costs only its
+    // new modules, and both earlier parts can provide what a new module requires.
+    run(['rsync', '-a', '--link-dest=' . realpath(CORPUS . '/extended'), CORPUS . '/extended/', $target . '/']);
+    run(['rsync', '-a', '--ignore-existing', '--link-dest=' . realpath(CORPUS . '/magento/app/code'), CORPUS . '/magento/app/code/', $target . '/app/code/']);
+    $installed = installedVersions();
+    putenv('GIT_TERMINAL_PROMPT=0');
+    $modules = [];
+    $skipped = [];
+    foreach (githubCandidates() as $candidate) {
+        if (count($modules) >= GITHUB_COUNT) {
+            break;
+        }
+        $repository = (string) $candidate['full_name'];
+        $clone = $clones . '/' . $repository;
+        if (!is_dir($clone . '/.git')) {
+            if (!is_dir(dirname($clone))) {
+                mkdir(dirname($clone), 0777, true);
+            }
+            $output = [];
+            exec('git clone --quiet --depth 1 ' . escapeshellarg('https://github.com/' . $repository . '.git')
+                . ' ' . escapeshellarg($clone) . ' 2>&1', $output, $code);
+            if ($code !== 0) {
+                exec('rm -rf ' . escapeshellarg($clone));
+                $skipped[] = skip($repository, 'git clone failed');
+                continue;
+            }
+        }
+        // A link could pull a file from outside the clone into the analyzed tree, and into a public report.
+        if (trim(run(['find', $clone, '-path', $clone . '/.git', '-prune', '-o', '-type', 'l', '-print'])) !== '') {
+            $skipped[] = skip($repository, 'contains a symbolic link');
+            continue;
+        }
+        $moduleRoot = $clone;
+        if (moduleName($moduleRoot) === null && moduleName($moduleRoot . '/src') !== null) {
+            $moduleRoot .= '/src';
+        }
+        $module = moduleName($moduleRoot);
+        if ($module === null) {
+            $skipped[] = skip($repository, 'no etc/module.xml at the repository root or in src/');
+            continue;
+        }
+        $composer = json_decode((string) @file_get_contents($clone . '/composer.json'), true);
+        if (!is_array($composer) || ($composer['type'] ?? '') !== 'magento2-module') {
+            $skipped[] = skip($repository, 'no composer.json of type magento2-module');
+            continue;
+        }
+        $name = (string) ($composer['name'] ?? '');
+        if (in_array($name, $present, true)) {
+            $skipped[] = skip($repository, "package $name already in the corpus");
+            continue;
+        }
+        [$vendor, $short] = explode('_', $module, 2);
+        $destination = $target . '/app/code/' . $vendor . '/' . $short;
+        if (is_dir($destination)) {
+            $skipped[] = skip($repository, "module $module already present");
+            continue;
+        }
+        $require = $composer['require'] ?? [];
+        $unmet = is_array($require) ? unmetRequirements($require, $installed, $present) : ['a require that is not a list'];
+        if ($unmet !== []) {
+            $skipped[] = skip($repository, 'requires ' . implode(', ', array_slice($unmet, 0, 3)));
+            continue;
+        }
+        if (!hasStandardRegistration($moduleRoot)) {
+            $skipped[] = skip($repository, 'registration.php is missing or holds more than the standard register() call');
+            continue;
+        }
+        if (!is_dir(dirname($destination))) {
+            mkdir(dirname($destination), 0777, true);
+        }
+        run(['rsync', '-a', '--exclude', '/.git/', $moduleRoot . '/', $destination . '/']);
+        $entry = [
+            'repository' => $repository,
+            'name' => $name,
+            'module' => $module,
+            'stars' => $candidate['stargazers_count'],
+            'commit' => trim(run(['git', '-C', $clone, 'rev-parse', 'HEAD'])),
+            'path' => 'app/code/' . $vendor . '/' . $short,
+        ];
+        $removed = removeAutoloadedFiles($destination);
+        if ($removed !== []) {
+            $entry['removed'] = $removed;
+        }
+        $modules[] = $entry;
+        $present[] = $name;
+        echo sprintf("%-55s %s\n", $repository, $module);
+    }
+    if (count($modules) < GITHUB_COUNT) {
+        fail(sprintf('only %d modules found', count($modules)));
+    }
+    $manifest['github'] = [
+        'selection' => sprintf('the %d most-starred GitHub repositories with the topic magento2-module, not archived and not forks, that hold one module of type magento2-module not yet in the corpus, whose requirements the copy meets (PHP %s) and whose registration.php is standard; default branch, cloned with --depth 1', GITHUB_COUNT, TARGET_PHP),
+        'date' => date('Y-m-d'),
+        'base' => 'hard-linked copy of the extended part',
+        'modules' => $modules,
+        'skipped' => $skipped,
+    ];
+    saveManifest($manifest);
+}
+
 function buildMageOs(): void
 {
     $target = CORPUS . '/mage-os';
@@ -537,11 +709,12 @@ match ($command) {
     'magento' => buildMagento(),
     'packagist' => buildPackagist(),
     'extended' => buildExtended(),
+    'github' => buildGithub(),
     'mage-os' => buildMageOs(),
     '--clean' => run(['rm', '-rf', CORPUS]),
     'pick' => (static function () use ($argv): void {
         [$version, $reason] = pickVersion($argv[2] ?? fail('pick needs a package name'), installedVersions());
         echo $version !== null ? $version['version'] . "\n" : "none: $reason\n";
     })(),
-    default => fail('usage: build-corpus magento|packagist|extended|mage-os|--clean'),
+    default => fail('usage: build-corpus magento|packagist|extended|github|mage-os|--clean'),
 };

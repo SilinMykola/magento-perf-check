@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Runs magento-perf-check on the three parts of the calibration corpus and stores the
+# Runs magento-perf-check on the parts of the calibration corpus and stores the
 # JSON reports, with the tool commit, wall time and peak RSS, in docs/calibration/runs/.
-# Usage: run [core] [packagist] [extended] [mage-os]   (no argument: all of them)
+# Usage: run [core] [packagist] [extended] [github] [mage-os]   (no argument: all of them)
 # The extended run enables the experimental rules too and writes to runs/extended/, apart from the
 # round 1 runs that bin/calibration/sample and report read (change extend-calibration-corpus).
+# The github run does the same in runs/github/, on the paths of its modules in corpus.json only
+# (change add-github-corpus).
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/../.." && pwd -P)"
@@ -16,6 +18,7 @@ runs=(
     "core|var/corpus/magento|vendor/magento"
     "packagist|var/corpus/magento|app/code"
     "extended|var/corpus/extended|app/code,app/design"
+    "github|var/corpus/github|"
     "mage-os|var/corpus/mage-os|vendor/mage-os"
 )
 # Mage-OS is not part of the M2 corpus (docs/calibration/corpus.json); run it only when installed.
@@ -31,14 +34,24 @@ for run in "${runs[@]}"; do
         echo "skipping $name: $project is not installed" >&2
         continue
     fi
+    if [ "$name" = github ]; then
+        paths="$(php -r '$m = json_decode(file_get_contents($argv[1]), true, 512, JSON_THROW_ON_ERROR);
+            echo implode(",", array_column($m["github"]["modules"] ?? [], "path"));' "$root/docs/calibration/corpus.json")"
+        # Empty paths would analyze the whole copy, the extended part included.
+        if [ -z "$paths" ]; then
+            echo "run github: no modules in corpus.json" >&2
+            exit 2
+        fi
+    fi
     config=()
     out="$root/docs/calibration/runs"
-    if [ "$name" = extended ]; then
-        out="$out/extended"
+    if [ "$name" = extended ] || [ "$name" = github ]; then
+        out="$out/$name"
         mkdir -p "$out"
         config_dir="$(mktemp -d)"
-        # The directory goes also when the generator below fails under set -e.
-        trap 'rm -rf "$config_dir"' EXIT
+        # The directory goes also when the generator below fails under set -e; one trap covers all runs.
+        config_dirs="${config_dirs:-} $config_dir"
+        trap 'rm -rf $config_dirs' EXIT
         config_file="$config_dir/all-rules.neon"
         php -r 'require $argv[1] . "/vendor/autoload.php";
             $rules = "";
