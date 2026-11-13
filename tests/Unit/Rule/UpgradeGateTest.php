@@ -71,6 +71,19 @@ final class UpgradeGateTest extends TestCase
         self::assertTrue((new UpgradeGate(null, null))->runs(null));
     }
 
+    public function testConsoleExecuteResultRuleRunsFromTheSymfony54Patches(): void
+    {
+        $rule = (new RuleRegistry())->find('U-CLI-02');
+        self::assertNotNull($rule);
+        $runs = static fn (string $version): bool => (MagentoVersion::parse($version)?->has($rule->changedIn)) === true;
+
+        // Symfony Console 5.4 came with 2.4.4-p12, 2.4.5-p11 and 2.4.6.
+        self::assertSame(
+            [false, true, false, true, true, true, false],
+            array_map($runs, ['2.4.4-p11', '2.4.4-p12', '2.4.5-p10', '2.4.5-p11', '2.4.6', '2.4.9', '2.4.3-p3']),
+        );
+    }
+
     public function testInstalledVersionFromTheProject(): void
     {
         $project = sys_get_temp_dir() . '/mpr-version-' . bin2hex(random_bytes(4));

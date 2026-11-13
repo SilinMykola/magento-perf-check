@@ -130,8 +130,26 @@ Every experimental rule SHALL be run on the extended part, and up to 30 of its f
 - **THEN** round 6 may move it to the default set at `warning`, and the move is listed in `CHANGELOG.md`
 
 ### Requirement: Private projects as anonymous data
-A calibration round MAY grade findings from private Magento projects that the owner allows. The round SHALL publish only counts and anonymous descriptions: each project is named by a letter, and no project name, client name, vendor namespace of custom code, path outside `app/etc/` or file content is published. The run and the verdicts with real paths SHALL stay local. Its decisions SHALL use the same thresholds as the public corpus.
+A calibration round MAY grade findings from private Magento projects that the owner allows. The round SHALL publish only counts and anonymous descriptions: each project is named by a letter, and no project name, client name, vendor namespace of custom code, path outside `app/etc/` or file content is published. The run and the verdicts with real paths SHALL stay local. A code excerpt received for a finding SHALL stay local, SHALL NOT be committed or published, and SHALL be deleted once the fixture it leads to is written or no change is needed; a committed fixture SHALL be written from scratch, without copying the excerpt. Its decisions SHALL use the same thresholds as the public corpus.
 
 #### Scenario: Finding in custom code
 - **WHEN** a graded finding is in a private store's own module
 - **THEN** the round names the store by its letter and describes the code by what it does, such as "a product page widget", without its path
+
+#### Scenario: Excerpt for a false positive
+- **WHEN** a contributor sends a renamed excerpt of the code behind a false positive
+- **THEN** the excerpt is not in the repository, and the fixture committed for the fix is written from scratch
+
+### Requirement: Calibration summary without project data
+`resources/calibration-summary.php` SHALL turn one or more JSON reports into a file to share and a local file. The file to share SHALL hold only the tool version, the number of reports, the run time, the findings per rule, the notices per source and a verdict table of row numbers and rule IDs, with up to 30 findings per rule drawn with a fixed seed. The local file SHALL map each row to its report, file, line, message and rule page.
+
+#### Scenario: Several projects
+- **WHEN** the script gets the reports of two projects
+- **THEN** the file to share has their summed counts and does not name either report
+
+### Requirement: Nothing of the project in the shared file
+The file to share SHALL NOT hold a path, a module, class, vendor or project name, a finding or notice message, or the name of a report file.
+
+#### Scenario: Report with paths and names
+- **WHEN** a report has findings in `app/code/ClientName/Secret/` and a notice that names a module
+- **THEN** the file to share contains none of these, and the local file contains the paths

@@ -283,6 +283,11 @@ return [
         new Source(SourceLevel::B, 'https://github.com/symfony/console/blob/92f58bc4bf97a92ed1b9f367f0cd44f20bde0e87/Command/Command.php#L240', 'Symfony Console 7.4: Command::execute() declares the return type int.'),
         $b('lib/internal/Magento/Framework/Console/Cli.php#L196-L222', 'bin/magento creates every registered command through CommandListInterface when it builds its default command list.'),
     ], ['magentoPerf.consoleCommandReturnType' => null], ['2.4.9']),
+    new RuleDefinition('U-CLI-02', 'Console command whose execute() can return something other than an int (Magento 2.4.6, Symfony Console 5.4)', Severity::Error, RuleStatus::Default, [
+        $a('https://developer.adobe.com/commerce/php/development/backward-incompatible-changes/', 'Symfony dependencies upgraded to latest LTS version (2.4.6): a command extending Symfony Command "must return the int type"; "check the return type for the execute method to avoid errors when executing command-line commands".'),
+        new Source(SourceLevel::B, 'https://github.com/magento/magento2/blob/d846142a3ab8b49597dfb8bd7508d875efdab19a/composer.json#L85', 'Magento 2.4.6 requires symfony/console ^5.4; 2.4.5-p11 (composer.json#L76 at ef1ad91d) and 2.4.4-p12 (#L81 at 52b27a02) require ~5.4.0, earlier patches ~4.4.0.'),
+        new Source(SourceLevel::B, 'https://github.com/symfony/console/blob/c4ba980ca61a9eb18ee6bcc73f28e475852bb1ed/Command/Command.php#L298-L302', 'Symfony Console 5.4 throws a TypeError when execute() returns a non-int; 4.4 only triggered a deprecation.'),
+    ], ['magentoPerf.consoleCommandExecuteResult' => null], ['2.4.4-p12', '2.4.5-p11', '2.4.6']),
     new RuleDefinition('P-LOOP-12', 'Method that runs a query, called inside a loop', Severity::Warning, RuleStatus::Experimental, [
         $a($codeReview, '"Are queries executed in a loop? This loop can be outside of the edited files."'),
         $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),

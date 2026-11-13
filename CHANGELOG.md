@@ -6,6 +6,13 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-13
+
+### Added
+
+- `resources/calibration-summary.php` turns a JSON report into the file to send for calibration: counts per rule, notices per source and a verdict table of up to 30 findings per rule, without paths, module names or messages; a second file with the paths stays with the contributor. The [calibration guide](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration-reports.md) now uses it, and asks for code only for `FP` and `unclear` findings, privately. Several reports, one per project, give one combined file that does not say which project a finding came from.
+- U-CLI-02 in the default set, at `error`: a console command whose `execute()` can return something other than an int, an upgrade rule for Magento 2.4.4-p12, 2.4.5-p11 and 2.4.6, where Symfony Console 5.4 throws a `TypeError` whenever the command takes such a path. It runs when the installed version or `--target-version` has that change. [Round 17](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-17.md): 21 findings on the corpus and five private stores, all correct. **This can change a CI result:** on such a project an affected command gives an `error` finding. With PHPStan directly it is only in `extension-experimental.neon`, as the version gate is part of the command ([upgrade rules](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/configuration.md#upgrade-rules)). Upgrade rules that the default set enables are skipped without an `upgrade-version` notice when they do not run; one enabled in the configuration is still named.
+
 ## [0.7.1] - 2026-11-13
 
 ### Added
@@ -182,7 +189,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.5.0...v0.6.0

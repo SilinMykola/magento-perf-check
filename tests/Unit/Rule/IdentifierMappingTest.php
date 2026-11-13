@@ -42,7 +42,8 @@ final class IdentifierMappingTest extends TestCase
         }
 
         foreach ((new RuleRegistry())->all() as $rule) {
-            $file = $rule->status === RuleStatus::Experimental ? 'extension-experimental.neon' : 'extension.neon';
+            // Upgrade rules need the command's version gate, which PHPStan alone lacks, so they stay out of extension.neon.
+            $file = $rule->status === RuleStatus::Experimental || $rule->isUpgradeRule() ? 'extension-experimental.neon' : 'extension.neon';
             foreach (array_keys($rule->identifiers) as $identifier) {
                 self::assertContains($identifier, $loaded[$file], $rule->id);
             }

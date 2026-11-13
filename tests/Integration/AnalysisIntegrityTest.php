@@ -1060,4 +1060,31 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame([], $this->ruleIds($project), 'experimental: off by default');
         self::assertNotContains('upgrade-version', $notices([]), 'no notice while the rule is off');
     }
+
+    public function testDefaultUpgradeRuleRunsByVersionWithoutNotices(): void
+    {
+        $stubs = (string) realpath(__DIR__ . '/../PhpStan/Stubs');
+        $project = $this->project([
+            'vendor/autoload.php' => sprintf("<?php\nrequire_once %s;\nrequire_once %s;\n", var_export($stubs . '/framework.php', true), var_export($stubs . '/fpc.php', true)),
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Console/Sync.php' => "<?php\nnamespace Acme\\Demo\\Console;\nclass Sync extends \\Symfony\\Component\\Console\\Command\\Command\n{\n"
+                . "    protected function execute(\\Symfony\\Component\\Console\\Input\\InputInterface \$input, \\Symfony\\Component\\Console\\Output\\OutputInterface \$output)\n    {\n    }\n}\n",
+            'vendor/magento/magento2-base/composer.json' => '{"name": "magento/magento2-base", "version": "2.4.5-p10"}',
+        ]);
+        $notices = function (array $argv) use ($project): array {
+            [, $stdout] = $this->runCommand($project, ['--format=json', ...$argv]);
+            $report = json_decode($stdout, true);
+            self::assertIsArray($report);
+
+            return array_column($report['notices'] ?? [], 'source');
+        };
+
+        // U-CLI-02 is in the default set: no configuration is needed, and it follows the version.
+        self::assertSame([], $this->ruleIds($project), 'the installed 2.4.5-p10 still has Symfony Console 4.4');
+        self::assertNotContains('upgrade-version', $notices([]), 'a default rule that does not run is not named');
+        self::assertSame(['U-CLI-02'], $this->ruleIds($project, ['--target-version=2.4.6']));
+
+        $this->write($project . '/vendor/magento/magento2-base/composer.json', '{"name": "magento/magento2-base", "version": "2.4.5-p11"}');
+        self::assertSame(['U-CLI-02'], $this->ruleIds($project), 'the installed 2.4.5-p11 has Symfony Console 5.4');
+    }
 }

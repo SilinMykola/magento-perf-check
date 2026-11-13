@@ -186,6 +186,8 @@ namespace Symfony\Component\Console\Command {
     // Symfony Console 7.4, as Magento 2.4.9 requires.
     class Command
     {
+        public const SUCCESS = 0;
+
         protected function execute(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output): int
         {
             return 0;
