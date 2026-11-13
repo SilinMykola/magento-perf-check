@@ -19,7 +19,7 @@ body:
   - type: input
     id: magento
     attributes:
-      label: Magento version and edition
+      label: Magento versions and editions
       placeholder: "2.4.7-p3, Open Source"
     validations:
       required: true
@@ -34,18 +34,11 @@ body:
         - Other or not sure
     validations:
       required: true
-  - type: input
-    id: tool
-    attributes:
-      label: Tool version and run time
-      placeholder: "0.7.1, 45 s"
-    validations:
-      required: true
   - type: textarea
     id: counts
     attributes:
-      label: Findings per rule
-      description: "From summary in the report: byRule, notices (the counts per source) and durationSeconds. Not the notices list: it holds paths and module names."
+      label: Calibration summary
+      description: "Paste calibration-summary.md, made by resources/calibration-summary.php from your report (see the guide). Never paste the report itself: it holds your paths."
       render: text
     validations:
       required: true
@@ -53,12 +46,12 @@ body:
     id: verdicts
     attributes:
       label: Verdicts
-      description: "One row per graded finding: rule ID, TP, TP-low, FP or unclear, and a short reason."
+      description: "Only if they are not in the summary above: rule ID, TP, TP-low, FP or unclear, and a short reason, without names or paths."
       placeholder: |
         P-LOOP-01 | TP | product load per cart item on the cart page
         X-LAY-01 | FP | the block is only on the customer's order page
     validations:
-      required: true
+      required: false
   - type: textarea
     id: notes
     attributes:
