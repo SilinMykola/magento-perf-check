@@ -34,6 +34,7 @@ use Silin\MagentoPerfCheck\Xml\Rule\GlobalStylesheetRule;
 use Silin\MagentoPerfCheck\Xml\Rule\HeadScriptRule;
 use Silin\MagentoPerfCheck\Xml\Rule\IndexerWithoutMviewRule;
 use Silin\MagentoPerfCheck\Xml\Rule\JqueryUiBundleRule;
+use Silin\MagentoPerfCheck\Xml\Rule\JqXhrMigrateMethodRule;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\Rule\ObserverEventRule;
 use Silin\MagentoPerfCheck\Xml\Rule\RedundantIndexRule;
@@ -293,6 +294,7 @@ final class Application
             new GlobalStylesheetRule(),
             new JqueryUiBundleRule(),
             new RequireJsDepsRule(),
+            new JqXhrMigrateMethodRule(),
         ];
         // Reading every storefront script costs time, so the script rules run only when enabled.
         $enabledXmlRules = [];

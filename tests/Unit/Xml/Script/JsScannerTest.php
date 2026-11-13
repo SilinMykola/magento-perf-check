@@ -6,6 +6,7 @@ namespace Silin\MagentoPerfCheck\Tests\Unit\Xml\Script;
 
 use Silin\MagentoPerfCheck\Xml\Script\JsScanner;
 use Silin\MagentoPerfCheck\Xml\Script\JsString;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class JsScannerTest extends TestCase
@@ -125,5 +126,34 @@ final class JsScannerTest extends TestCase
         // A backslash before a line break continues the string.
         self::assertSame(['1 ab dep', '3 c dep'], self::strings("'a\\\nb'\n'c'"));
         self::assertSame(['1 ab dep', '3 c dep'], self::strings("'a\\\r\nb'\n'c'"));
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function codeCases(): iterable
+    {
+        yield 'line comment' => ["a(); // $.ajax().success()\nb();", 'a();' . str_repeat(' ', 22) . "\nb();"];
+        yield 'block comment over lines' => ["a(/* x\ny */);", "a(    \n    );"];
+        yield 'unterminated block comment' => ['a(); /* open', 'a();' . str_repeat(' ', 8)];
+        yield 'strings, marked with a double quote' => ["f('a(b', \"c)\");", 'f("    , "   );'];
+        yield 'template with a substitution' => ['`a${x}b`', '`   x`  '];
+        yield 'regular expression' => ['x = /\\(/g.test(y);', 'x = /   g.test(y);'];
+        yield 'division stays code' => ['a = b / c / d;', 'a = b / c / d;'];
+    }
+
+    #[DataProvider('codeCases')]
+    public function testCodeBlanksCommentsStringsAndRegexesInPlace(string $source, string $code): void
+    {
+        $scanned = JsScanner::scan($source, 1, true)->code;
+
+        self::assertSame($code, $scanned);
+        self::assertSame(strlen($source), strlen($scanned));
+        self::assertSame(substr_count($source, "\n"), substr_count($scanned, "\n"));
+    }
+
+    public function testCodeIsOnlyBuiltOnRequest(): void
+    {
+        self::assertSame('', JsScanner::scan('a("b");')->code);
     }
 }

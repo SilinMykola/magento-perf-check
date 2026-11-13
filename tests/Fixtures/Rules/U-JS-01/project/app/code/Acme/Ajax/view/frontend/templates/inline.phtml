@@ -1,0 +1,8 @@
+<div id="box"></div>
+<script>
+    require(['jquery'], function ($) {
+        $.get('<?= $block->getUrl("x") ?>')
+            .done(function () {})
+            .error(function () {});
+    });
+</script>
