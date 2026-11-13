@@ -6,6 +6,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-13
+
 ### Added
 
 - U-LOG-01 in the default set, at `error`: `addError()`, `addInfo()` and the other `add*` methods, or `warn()`, `err()`, `crit()` and `emerg()`, on a Monolog logger, an upgrade rule for Magento 2.4.4, which moved to Monolog 2; from 2.4.4 such a call throws "Call to undefined method". It runs when the installed version or `--target-version` is 2.4.4 or newer. [Round 19](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-19.md): 38 findings on private stores, all correct. **This can change a CI result:** on such a project each call gives an `error` finding. With PHPStan directly it is only in `extension-experimental.neon`, as for U-CLI-02.
@@ -194,7 +196,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.6.0...v0.7.0
