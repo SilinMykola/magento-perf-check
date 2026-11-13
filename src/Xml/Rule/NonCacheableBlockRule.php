@@ -9,6 +9,7 @@ use DOMElement;
 use DOMXPath;
 use Silin\MagentoPerfCheck\Report\Finding;
 use Silin\MagentoPerfCheck\Rule\Severity;
+use Silin\MagentoPerfCheck\Xml\LayoutHandles;
 use Silin\MagentoPerfCheck\Xml\XmlFile;
 use Silin\MagentoPerfCheck\Xml\XmlRule;
 
@@ -73,11 +74,15 @@ final class NonCacheableBlockRule implements XmlRule
     /** @var list<string> */
     private readonly array $allowlist;
 
+    /** @var array<string, bool> handle => personal, as LayoutHandles answered for this rule's allowlist */
+    private array $personal = [];
+
     /**
      * @param list<string> $extraAllowlist handle prefixes from the configuration file
      * @param bool $replaceAllowlist use only $extraAllowlist instead of adding it to the default
+     * @param ?LayoutHandles $handles how the project's handles include each other; without it each file stands alone
      */
-    public function __construct(array $extraAllowlist = [], bool $replaceAllowlist = false)
+    public function __construct(array $extraAllowlist = [], bool $replaceAllowlist = false, private readonly ?LayoutHandles $handles = null)
     {
         $this->allowlist = $replaceAllowlist ? $extraAllowlist : [...self::DEFAULT_ALLOWLIST, ...$extraAllowlist];
     }
@@ -106,14 +111,25 @@ final class NonCacheableBlockRule implements XmlRule
 
         $xpath = new DOMXPath($document);
         // A page built on the customer account layout is personal, whatever its handle is called.
-        $accountPage = $xpath->query("//update[@handle='customer_account']");
+        // Core merges only the updates that are direct children of the root (Layout\Merge::_fetchRecursiveUpdates()).
+        // Core compares the element name without case.
+        $accountPage = $xpath->query("/*/*[translate(local-name(), 'UPDATE', 'update') = 'update'][@handle='customer_account']");
         if ($accountPage !== false && $accountPage->length > 0) {
+            return [];
+        }
+        $blocks = $xpath->query("//block[@cacheable='false']");
+        if ($blocks === false || $blocks->length === 0) {
+            return [];
+        }
+        // Another file of the handle may make it an account page. A handle that only personal pages include
+        // never reaches a cacheable page, but a shop-wide handle may also be added by a controller itself,
+        // as catalog_product_view_type_<type> is, so includes are followed only for X-LAY-01.
+        if ($this->handles !== null && ($this->personal[$handle] ??= $this->handles->isPersonal($handle, $this->isAllowlisted(...), $id === self::ID))) {
             return [];
         }
 
         $findings = [];
-        $blocks = $xpath->query("//block[@cacheable='false']");
-        foreach ($blocks === false ? [] : $blocks as $block) {
+        foreach ($blocks as $block) {
             if (!$block instanceof DOMElement) {
                 continue;
             }
@@ -134,6 +150,12 @@ final class NonCacheableBlockRule implements XmlRule
         }
 
         return $findings;
+    }
+
+    private function isAllowlisted(string $handle): bool
+    {
+        // LayoutHandles strips a hyva_ prefix itself.
+        return $this->startsWithAny($handle, $this->allowlist);
     }
 
     /**

@@ -28,6 +28,7 @@ return [
         $a('https://developer.adobe.com/commerce/php/development/cache/page/', '"If any block in a layout is designated as uncacheable, the entire page is uncacheable."'),
         $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Using cacheable="false" inside the default.xml file disables caching for all pages on the site."'),
         $b('lib/internal/Magento/Framework/View/Layout.php#L1192-L1210', 'Layout::isCacheable() returns false when any <block cacheable="false"> is present in the layout.'),
+        $b('lib/internal/Magento/Framework/View/Model/Layout/Merge.php#L722-L727', 'A page merges every layout file of its handles and, recursively, the handles named in <update handle> elements that are direct children of a file\'s root.'),
         $b('app/code/Magento/PageCache/Model/Layout/LayoutPlugin.php#L70-L75', 'Public cache headers are set only when the layout is cacheable.'),
     ]),
     new RuleDefinition('P-LOOP-01', 'Model load() or repository get()/getById() inside a loop', Severity::Error, RuleStatus::Default, [
@@ -176,7 +177,7 @@ return [
         $b('lib/internal/Magento/Framework/View/Page/Config/Renderer.php#L397-L399', 'Core renders a css asset as <link rel="stylesheet">, with the attributes written in the layout.'),
         $b('app/code/Magento/Theme/Controller/Result/AsyncCssPlugin.php#L58-L62', 'Core loads stylesheets without blocking only when dev/css/use_css_critical_path is on; it is off by default (app/code/Magento/Theme/etc/config.xml#L74).'),
     ]),
-    new RuleDefinition('J-DEP-01', 'Storefront JavaScript that depends on the whole jQuery UI library (jquery/ui)', Severity::Warning, RuleStatus::Experimental, [
+    new RuleDefinition('J-DEP-01', 'Storefront JavaScript that depends on the whole jQuery UI library (jquery/ui)', Severity::Warning, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/frontend-core/javascript/custom', '"Using individual jQuery UI components instead of the monolithic jQuery UI library improves storefront performance."'),
         $a('https://experienceleague.adobe.com/en/docs/commerce-operations/release/notes/magento-open-source/2-4-3', 'The dropdownDialog widget now loads only the jquery-ui chunks it needs: "Previously, it loaded large amounts of unnecessary code, which inflated load time and reduced performance."'),
         $b('lib/web/jquery/compat.js#L1-L4', 'jquery/compat imports every jQuery UI widget: "Import every plugin under the sun. Bad for performance".'),
@@ -302,6 +303,7 @@ return [
         $a('https://developer.adobe.com/commerce/php/development/cache/page/', '"If any block in a layout is designated as uncacheable, the entire page is uncacheable."'),
         $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Using cacheable="false" inside the default.xml file disables caching for all pages on the site."'),
         $b('lib/internal/Magento/Framework/View/Layout.php#L1192-L1210', 'Layout::isCacheable() returns false when any <block cacheable="false"> is present in the layout.'),
+        $b('lib/internal/Magento/Framework/View/Model/Layout/Merge.php#L722-L727', 'A page merges every layout file of its handles and, recursively, the handles named in <update handle> elements that are direct children of a file\'s root.'),
     ]),
     new RuleDefinition('X-DB-02', 'db_schema.xml index that duplicates a key or another index', Severity::Info, RuleStatus::Default, [
         $a($extensionPerformance, 'Indexes "are regenerated during every table INSERT or UPDATE. That can hit performance; only add indexes when necessary."'),

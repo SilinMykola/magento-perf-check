@@ -59,7 +59,7 @@ final class ProjectIndexBuilder
      *
      * @return array<string, string> module root => module name
      */
-    private function moduleRoots(string $projectRoot): array
+    public function moduleRoots(string $projectRoot): array
     {
         $disabled = self::disabledModules($projectRoot);
 

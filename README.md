@@ -12,11 +12,11 @@ Finds performance and Full Page Cache anti-patterns in Magento 2 and Mage-OS cod
 $ vendor/bin/magento-perf-check --paths=app/code/Mollie/Payment/Controller/Express/Process.php,app/code/Magefan/Community/Model/GetCategoryByProduct.php
 app/code/Magefan/Community/Model/GetCategoryByProduct.php
      73  error    [P-LOOP-01] Magento\Catalog\Api\CategoryRepositoryInterface::get() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().
-         https://github.com/SilinMykola/magento-perf-check/blob/v0.6.0/docs/rules/P-LOOP-01.md
+         https://github.com/SilinMykola/magento-perf-check/blob/v0.7.0/docs/rules/P-LOOP-01.md
 
 app/code/Mollie/Payment/Controller/Express/Process.php
      58  error    [P-FPC-06] Mollie\Payment\Controller\Express\Process handles GET only but calls Magento\Quote\Api\CartRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.
-         https://github.com/SilinMykola/magento-perf-check/blob/v0.6.0/docs/rules/P-FPC-06.md
+         https://github.com/SilinMykola/magento-perf-check/blob/v0.7.0/docs/rules/P-FPC-06.md
 
 2 finding(s): 2 error, 0 warning, 0 info. Analyzed app/code/Mollie/Payment/Controller/Express/Process.php, app/code/Magefan/Community/Model/GetCategoryByProduct.php in 0.8 s.
 ```
@@ -39,11 +39,11 @@ php bin/magento-perf-check --project=/path/to/magento
 
 Calibrated on Magento 2.4.9, where both ways were checked. Stock Magento 2.4.4 and older pin a PHPStan version below 1.12, so `composer require` cannot work there: use the clone. It ran that way on `vendor/magento/module-cms` of 2.4.0, 2.4.3 and 2.4.4, without grading the findings ([check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/older-magento.md)). The install was not tried on 2.4.5 to 2.4.8, and Magento 2.3 is not checked.
 
-It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpstan.org/) rules and XML checks, and never writes into the project. No database or container is needed. It does load the project's autoloader, which runs the `registration.php` of every module, so do not analyze code you do not trust outside a sandbox. On a stock Magento 2.4.9 project, install plus the first run took under 20 seconds ([measured](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m3-install.md)).
+It analyzes `app/code` and `app/design` with type-aware [PHPStan](https://phpstan.org/) rules, XML checks and storefront JavaScript checks, and never writes into the project. No database or container is needed. It does load the project's autoloader, which runs the `registration.php` of every module, so do not analyze code you do not trust outside a sandbox. On a stock Magento 2.4.9 project, install plus the first run took under 20 seconds ([measured](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/runs/m3-install.md)).
 
 ## What it finds
 
-63 rules: 36 on by default, 27 experimental. A few of them:
+63 rules: 37 on by default, 26 experimental. A few of them:
 
 - **Queries in loops:** `load()`, `getById()`, `getList()` or a new collection inside a loop (P-LOOP-01, P-LOOP-02, P-LOOP-09, P-LOOP-10).
 - **Full Page Cache breakers:** `cacheable="false"` on the default, catalog and CMS handles (X-LAY-03), state changes in GET-only controllers (P-FPC-06), no-cache headers on cacheable pages (P-FPC-05), cache flushes and `reindexAll()` from request code (P-FPC-09, P-FPC-10), ESI blocks on entity pages (X-LAY-02).
@@ -80,6 +80,8 @@ Precision is measured, not assumed. Every rule ran on Magento 2.4.9 core and the
 - four rules measured below their threshold and are experimental, off by default;
 - rules that were right but mostly found low-impact cases were lowered to `warning` or `info`;
 - the remaining rules have fewer than 10 findings in the corpus, too few to measure, so they keep their severity. That includes P-LOOP-02 (`error`, 3 of 3 correct, all low impact) and X-EVT-02 (0 of 1). X-LAY-03, P-LOOP-05, P-COL-01 and X-GQL-03 have none.
+
+Rules that joined the default set later were graded in their own rounds, also on a larger corpus and on private stores: T-05 ([round 9](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-9.md), 18 of 18 correct), X-LAY-05 ([round 11](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-11.md), 18 of 18) and J-DEP-01 ([round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md), 34 of 35).
 
 [Round 2](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-2.md) fixed the known false positives and measured again on the same corpus, so its figures are optimistic for code the rules have not seen. [A separate check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out.md) on 15 other modules found 49 of 52 graded findings correct, of which 3 matter in practice, and [a second one](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out-2.md) on 22 more found all 72 correct, of which 3 matter, once the one false positive it showed was fixed. Expect most findings to be correct and cheap to live with, not urgent. Each finding was graded once, by one grader, without a second review. Those runs [undercounted](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out.md#what-the-first-runs-missed): of 29 sampled findings that the later fixes added, 28 were correct and 9 matter.
 

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Severity | `warning` |
-| Status | experimental, off by default |
+| Status | experimental, off by default: the calibration corpus gives no finding; [calibration round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md) graded 7 on a private store, all correct, fewer than the 10 a decision needs |
 | Analyzer | PHPStan and the project's `schema.graphqls` files, identifier `magentoPerf.resolverQuery` |
 
 ## What it catches

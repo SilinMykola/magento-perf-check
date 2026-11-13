@@ -1,0 +1,9 @@
+{
+    "packages": [
+        {
+            "name": "acme/module-core",
+            "type": "magento2-module",
+            "install-path": "../acme/module-core"
+        }
+    ]
+}

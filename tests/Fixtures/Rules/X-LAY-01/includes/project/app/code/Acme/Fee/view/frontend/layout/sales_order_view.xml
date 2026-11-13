@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="acme_fee_total"/>
+    <update handle="acme_widget"/>
+    <update handle="acme_totals"/>
+    <update handle="acme_widget_catalog"/>
+    <update handle="acme_off_only"/>
+    <update handle="acme_mutual_x"/>
+    <update handle="acme_theme_only"/>
+    <update handle="acme_vendor_theme_only"/>
+    <update handle="acme_base_only"/>
+    <update handle="acmeroute_index_index"/>
+    <update handle="acme_hyva_pub"/>
+    <update handle="acme_cyc_x"/>
+    <body>
+        <update handle="acme_nested"/>
+    </body>
+</page>

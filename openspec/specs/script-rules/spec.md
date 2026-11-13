@@ -51,7 +51,7 @@ A script finding SHALL be suppressed by a JavaScript comment `perf-ignore RULE-I
 - **THEN** J-DEP-01 reports it and a `suppression` notice names the comment line
 
 ### Requirement: J-DEP-01 whole jQuery UI library
-J-DEP-01 SHALL report, as `warning`, every string literal `jquery/ui` in a storefront script that is not an object key. The message SHALL say that core maps it to `jquery/compat` and name `jquery-ui-modules/*` IDs to use instead. It SHALL start as experimental.
+J-DEP-01 SHALL report, as `warning`, every string literal `jquery/ui` in a storefront script that is not an object key. The message SHALL say that core maps it to `jquery/compat` and name `jquery-ui-modules/*` IDs to use instead. It SHALL be in the default set.
 
 #### Scenario: Dependency in define
 - **WHEN** a module's `view/frontend/web/js/widget.js` has `define(['jquery', 'jquery/ui'], ...)`
@@ -64,6 +64,10 @@ J-DEP-01 SHALL report, as `warning`, every string literal `jquery/ui` in a store
 #### Scenario: Commented out
 - **WHEN** a script has `// define(['jquery/ui'], ...)`
 - **THEN** J-DEP-01 reports nothing
+
+#### Scenario: Default run
+- **WHEN** a project without a configuration file has a storefront script with `define(['jquery/ui'], ...)`
+- **THEN** J-DEP-01 reports it
 
 ### Requirement: J-DEP-02 module loaded on every page by requirejs-config.js
 J-DEP-02 SHALL report, as `info`, every string literal whose property path is exactly `deps`, other than an object key, in a storefront `requirejs-config.js` that core merges into every page: directly in a module's `view/frontend` or `view/base`, or in a frontend theme at its root or in a `<Vendor_Module>` folder. The message SHALL say that RequireJS loads the module on every storefront page and name `x-magento-init` or `data-mage-init` in the templates that need it as the alternative. It SHALL start as experimental.
