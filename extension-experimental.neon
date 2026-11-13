@@ -45,5 +45,4 @@ rules:
     - Silin\MagentoPerfCheck\PhpStan\Rule\ConsoleCommandReturnTypeRule
     # An upgrade rule of the default set: the magento-perf-check command runs it by Magento version; PHPStan alone has no such gate.
     - Silin\MagentoPerfCheck\PhpStan\Rule\ConsoleCommandExecuteResultRule
-    # An upgrade rule of the default set, as above.
     - Silin\MagentoPerfCheck\PhpStan\Rule\MonologAddMethodRule

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Severity | `error` (`magentoPerf.monologAddMethod`) |
-| Status | default set, after [calibration round 19](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-19.md): 38 findings on private stores, all correct |
+| Status | experimental, off by default: [calibration round 19](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-19.md) found 38 findings on private stores, all correct, but most of the sampled ones are on admin actions, setup or rare failure paths (impact share 40 %). Enable it with `enabled: true` in `magento-perf-check.neon` |
 | Analyzer | PHPStan |
 | Upgrade rule | for Magento 2.4.4: runs when the installed version or `--target-version` is 2.4.4 or newer ([configuration](../configuration.md#upgrade-rules)) |
 | Protects | compatibility ([ADR 8](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0008-scope-beyond-performance.md)) |
@@ -21,7 +21,7 @@ Not reported:
 - `Logger::addError()` on a class name: a static call of an instance method, which PHPStan reports itself;
 - `$class::addError()` with a class in a variable.
 
-On Mage-OS and in a checkout of the Magento core, the installed version cannot be read, so the rule runs only with `--target-version`, and without it the rule is skipped without a notice ([configuration](../configuration.md#upgrade-rules)).
+On Mage-OS and in a checkout of the Magento core, the installed version cannot be read, so the rule runs only with `--target-version`, and without it an `upgrade-version` notice says so ([configuration](../configuration.md#upgrade-rules)).
 
 ## Why it breaks
 

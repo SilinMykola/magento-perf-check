@@ -6,6 +6,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Changed
+
+- U-LOG-01 leaves the default set and is experimental, still at `error`. A re-check of [round 19](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-19.md) after 0.9.0 found five findings graded as storefront breaks that run on an admin action, or in `catch` blocks that a remote failure does not reach; the sample now gives an impact share of 40 %, below the 50 % a rule needs to enter the default set. Precision stays 100 %. **This can change a CI result:** U-LOG-01 findings no longer appear unless you enable the rule with `enabled: true` in `magento-perf-check.neon`.
+
 ## [0.9.0] - 2026-11-13
 
 ### Added

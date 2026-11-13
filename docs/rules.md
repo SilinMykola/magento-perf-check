@@ -1,6 +1,6 @@
 # Rules
 
-39 rules in the default set and 27 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+38 rules in the default set and 28 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -48,7 +48,6 @@ Severity is the default; change it per rule in [`magento-perf-check.neon`](confi
 | [X-LAY-05](rules/X-LAY-05.md) | Stylesheet added to every storefront page by a module layout | warning | A, B |
 | [J-DEP-01](rules/J-DEP-01.md) | Storefront JavaScript that depends on the whole jQuery UI library (jquery/ui) | warning | A, B |
 | [U-CLI-02](rules/U-CLI-02.md) | Console command whose execute() can return something other than an int (Magento 2.4.6, Symfony Console 5.4) | error | A, B |
-| [U-LOG-01](rules/U-LOG-01.md) | addError(), addInfo() and the other Monolog 1 methods that Monolog 2 removed (Magento 2.4.4) | error | B, C |
 
 ## Experimental (off by default)
 
@@ -83,6 +82,7 @@ These are not in the default set: calibration measured them below their precisio
 | [P-LOOP-12](rules/P-LOOP-12.md) | Method that runs a query, called inside a loop | warning | A, B |
 | [U-CLI-01](rules/U-CLI-01.md) | Console command whose execute() has no int return type (Magento 2.4.9, Symfony Console 7.4) | error | A, B |
 | [U-JS-01](rules/U-JS-01.md) | success(), error() or complete() on a jqXHR, which jquery-migrate added back until Magento 2.4.6 | error | A, B |
+| [U-LOG-01](rules/U-LOG-01.md) | addError(), addInfo() and the other Monolog 1 methods that Monolog 2 removed (Magento 2.4.4) | error | B, C |
 
 ## Planned
 
