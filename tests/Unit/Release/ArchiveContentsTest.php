@@ -23,6 +23,7 @@ final class ArchiveContentsTest extends TestCase
         'docs/agents.md',
         'docs/baseline.md',
         'docs/calibration.md',
+        'docs/calibration-reports.md',
         'docs/ci',
         'docs/ci.md',
         'docs/configuration.md',
