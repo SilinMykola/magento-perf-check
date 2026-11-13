@@ -6,6 +6,12 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-13
+
+### Changed
+
+- U-LOG-01 leaves the default set and is experimental, still at `error`. A re-check of [round 19](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-19.md) after 0.9.0 found five findings graded as storefront breaks that run on an admin action, or in `catch` blocks that a remote failure does not reach; the sample now gives an impact share of 40 %, below the 50 % a rule needs to enter the default set. Precision stays 100 %. **This can change a CI result:** U-LOG-01 findings no longer appear unless you enable the rule with `enabled: true` in `magento-perf-check.neon`.
+
 ## [0.9.0] - 2026-11-13
 
 ### Added
@@ -196,7 +202,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.0...v0.7.1

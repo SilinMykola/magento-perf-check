@@ -54,5 +54,7 @@ magentoPerf:
             enabled: true
         U-JS-01:
             enabled: true
+        U-LOG-01:
+            enabled: true
         P-LOOP-12:
             enabled: true
