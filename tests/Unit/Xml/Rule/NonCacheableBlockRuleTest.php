@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\Tests\Unit\Xml\Rule;
 
+use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Report\Finding;
 use Silin\MagentoPerfCheck\Xml\FileDiscovery;
+use Silin\MagentoPerfCheck\Xml\LayoutHandles;
 use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 use Silin\MagentoPerfCheck\Xml\XmlAnalyzer;
 use PHPUnit\Framework\TestCase;
@@ -77,5 +79,54 @@ final class NonCacheableBlockRuleTest extends TestCase
         self::assertCount(1, $contact);
         self::assertSame(NonCacheableBlockRule::ID, $contact[0]->ruleId);
         self::assertStringStartsWith('[X-LAY-01]', $contact[0]->message);
+    }
+
+    public function testHandlesAreTracedThroughTheirIncludes(): void
+    {
+        $root = realpath(self::FIXTURE . '/includes/project');
+        self::assertIsString($root);
+        $handles = LayoutHandles::fromProject($root, (new ProjectIndexBuilder())->moduleRoots($root));
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [new NonCacheableBlockRule([], false, $handles)]))
+            ->analyze(['app/code', 'app/design']);
+        $reported = array_map(static fn (Finding $f): string => $f->ruleId . ' ' . $f->file . ':' . $f->line, $result->findings);
+        sort($reported);
+
+        // Not reported: handles that only personal pages include, directly, through a chain, through a cycle,
+        // through a hyva_ copy of an order page or besides a disabled module; their hyva_ copy; theme files of
+        // account pages, also of a route's page and a shop-wide handle. Reported: handles that a public page includes, also from view/base or a theme, a
+        // hyva_ copy that a public page includes or of a public handle, a route's own handle, a shop-wide handle (X-LAY-03 does not
+        // follow includes), a nested include or account mark, cycles alone,
+        // and an account mark in a theme folder of a disabled or missing module.
+        $layout = 'app/code/Acme/Fee/view/frontend/layout/';
+        self::assertSame([
+            'X-LAY-01 ' . $layout . 'acme_base_only.xml:4',
+            'X-LAY-01 ' . $layout . 'acme_cycle_a.xml:5',
+            'X-LAY-01 ' . $layout . 'acme_cycle_b.xml:5',
+            'X-LAY-01 ' . $layout . 'acme_loop.xml:5',
+            'X-LAY-01 ' . $layout . 'acme_missing_account.xml:4',
+            'X-LAY-01 ' . $layout . 'acme_nested.xml:4',
+            'X-LAY-01 ' . $layout . 'acme_nested_account.xml:5',
+            'X-LAY-01 ' . $layout . 'acme_page_index.xml:4',
+            'X-LAY-01 ' . $layout . 'acme_theme_account.xml:4',
+            'X-LAY-01 ' . $layout . 'acme_theme_only.xml:4',
+            'X-LAY-01 ' . $layout . 'acme_vendor_theme_only.xml:4',
+            'X-LAY-01 ' . $layout . 'acme_widget.xml:4',
+            'X-LAY-01 ' . $layout . 'acme_widget_catalog.xml:4',
+            'X-LAY-01 ' . $layout . 'acmeroute_index_index.xml:4',
+            'X-LAY-01 ' . $layout . 'hyva_acme_hyva_pub.xml:4',
+            'X-LAY-01 ' . $layout . 'hyva_acme_widget.xml:4',
+            'X-LAY-01 ' . $layout . 'hyva_acmeroute_index_index.xml:4',
+            'X-LAY-01 ' . $layout . 'hyva_acmeroute_shared_index.xml:4',
+            'X-LAY-03 ' . $layout . 'catalog_product_view_type_simple.xml:4',
+        ], $reported);
+    }
+
+    public function testWithoutTheIndexEachFileStandsAlone(): void
+    {
+        $root = realpath(self::FIXTURE . '/includes/project');
+        self::assertIsString($root);
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [new NonCacheableBlockRule()]))->analyze(['app/code', 'app/design']);
+
+        self::assertCount(32, $result->findings);
     }
 }

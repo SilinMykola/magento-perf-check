@@ -25,6 +25,7 @@ use Silin\MagentoPerfCheck\Rule\RuleRegistry;
 use Silin\MagentoPerfCheck\Rule\UpgradeGate;
 use Silin\MagentoPerfCheck\Version;
 use Silin\MagentoPerfCheck\Xml\FileDiscovery;
+use Silin\MagentoPerfCheck\Xml\LayoutHandles;
 use Silin\MagentoPerfCheck\Xml\Rule\CacheIdFactorRule;
 use Silin\MagentoPerfCheck\Xml\Rule\CacheIdentityRule;
 use Silin\MagentoPerfCheck\Xml\Rule\EntityHandleTtlRule;
@@ -270,8 +271,12 @@ final class Application
         $indexBuilder = new ProjectIndexBuilder();
         $index = $indexBuilder->build($options->projectRoot);
 
+        // The index of layout handles is built only for the rules that use it.
+        $layoutHandles = $config->isEnabled(NonCacheableBlockRule::ID, $registry) || $config->isEnabled(NonCacheableBlockRule::SHOP_WIDE_ID, $registry)
+            ? LayoutHandles::fromProject($options->projectRoot, $indexBuilder->moduleRoots($options->projectRoot))
+            : null;
         $xmlRules = [
-            new NonCacheableBlockRule($config->allowlistHandles, $config->replaceAllowlist),
+            new NonCacheableBlockRule($config->allowlistHandles, $config->replaceAllowlist, $layoutHandles),
             new EntityHandleTtlRule(),
             ObserverEventRule::loadAfter(),
             ObserverEventRule::genericModelEvents(),

@@ -28,6 +28,7 @@ return [
         $a('https://developer.adobe.com/commerce/php/development/cache/page/', '"If any block in a layout is designated as uncacheable, the entire page is uncacheable."'),
         $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Using cacheable="false" inside the default.xml file disables caching for all pages on the site."'),
         $b('lib/internal/Magento/Framework/View/Layout.php#L1192-L1210', 'Layout::isCacheable() returns false when any <block cacheable="false"> is present in the layout.'),
+        $b('lib/internal/Magento/Framework/View/Model/Layout/Merge.php#L722-L727', 'A page merges every layout file of its handles and, recursively, the handles named in <update handle> elements that are direct children of a file\'s root.'),
         $b('app/code/Magento/PageCache/Model/Layout/LayoutPlugin.php#L70-L75', 'Public cache headers are set only when the layout is cacheable.'),
     ]),
     new RuleDefinition('P-LOOP-01', 'Model load() or repository get()/getById() inside a loop', Severity::Error, RuleStatus::Default, [
@@ -302,6 +303,7 @@ return [
         $a('https://developer.adobe.com/commerce/php/development/cache/page/', '"If any block in a layout is designated as uncacheable, the entire page is uncacheable."'),
         $a('https://developer.adobe.com/commerce/php/development/cache/page/public-content', '"Using cacheable="false" inside the default.xml file disables caching for all pages on the site."'),
         $b('lib/internal/Magento/Framework/View/Layout.php#L1192-L1210', 'Layout::isCacheable() returns false when any <block cacheable="false"> is present in the layout.'),
+        $b('lib/internal/Magento/Framework/View/Model/Layout/Merge.php#L722-L727', 'A page merges every layout file of its handles and, recursively, the handles named in <update handle> elements that are direct children of a file\'s root.'),
     ]),
     new RuleDefinition('X-DB-02', 'db_schema.xml index that duplicates a key or another index', Severity::Info, RuleStatus::Default, [
         $a($extensionPerformance, 'Indexes "are regenerated during every table INSERT or UPDATE. That can hit performance; only add indexes when necessary."'),

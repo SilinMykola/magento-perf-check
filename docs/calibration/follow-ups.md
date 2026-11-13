@@ -59,4 +59,4 @@ These rules are correct but report mostly negligible cases; calibration lowers t
 
 Graded on stores whose code is not public, so the findings are described, not listed; see [round 15](round-15.md).
 
-- **X-LAY-01.** A custom handle that only personal pages include through `<update handle="..."/>`, such as the customer's order view, print and e-mail, is reported as if it were a page. Following the includes to the pages, and adding the account pages of two Adobe Commerce modules to the allowlist, would remove 5 of its 8 false positives in this round.
+- **X-LAY-01.** A custom handle that only personal pages include through `<update handle="..."/>`, such as the customer's order view, print and e-mail, was reported as if it were a page, and so were theme files of two Adobe Commerce account pages. Done in change trace-layout-handle-includes: the rule follows the includes and the `customer_account` updates of every file of a handle (includes only for X-LAY-01, and not for a route's own handle), which removes those 5 of its 8 false positives in this round.

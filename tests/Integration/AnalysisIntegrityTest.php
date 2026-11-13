@@ -582,6 +582,28 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame(['app/code/Acme/Demo/Block/Foo.php'], array_column($report['findings'], 'file'));
     }
 
+    public function testLayoutRulesFollowHandleIncludes(): void
+    {
+        $page = static fn (string $inside): string => '<?xml version="1.0"?><page>' . $inside . '</page>';
+        $block = '<body><block class="Magento\\Framework\\View\\Element\\Template" name="fee" cacheable="false"/></body>';
+        $project = $this->project([
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/view/frontend/layout/sales_order_view.xml' => $page('<update handle="acme_fee_total"/>'),
+            'app/code/Acme/Demo/view/frontend/layout/acme_fee_total.xml' => $page($block),
+            'app/code/Acme/Demo/view/frontend/layout/acme_page_index.xml' => $page($block),
+            'magento-perf-check.neon' => "magentoPerf:\n    rules:\n        X-LAY-01:\n            enabled: true\n",
+        ]);
+
+        // Only the order page includes acme_fee_total, so no cacheable page uses it.
+        [, $stdout] = $this->runCommand($project, ['--format=json']);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        self::assertSame(
+            ['X-LAY-01 app/code/Acme/Demo/view/frontend/layout/acme_page_index.xml'],
+            array_map(static fn (array $f): string => $f['ruleId'] . ' ' . $f['file'], $report['findings']),
+        );
+    }
+
     public function testScriptRuleRunsOnlyWhenEnabled(): void
     {
         $script = "define(['jquery', 'jquery/ui'], function () {});\n";
