@@ -6,6 +6,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Added
+
+- U-CLI-02 in the default set, at `error`: a console command whose `execute()` can return something other than an int, an upgrade rule for Magento 2.4.4-p12, 2.4.5-p11 and 2.4.6, where Symfony Console 5.4 throws a `TypeError` whenever the command takes such a path. It runs when the installed version or `--target-version` has that change. [Round 17](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-17.md): 21 findings on the corpus and five private stores, all correct. **This can change a CI result:** on such a project an affected command gives an `error` finding. With PHPStan directly it is only in `extension-experimental.neon`, as the version gate is part of the command ([upgrade rules](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/configuration.md#upgrade-rules)). Upgrade rules that the default set enables are skipped without an `upgrade-version` notice when they do not run; one enabled in the configuration is still named.
+
 ## [0.7.1] - 2026-11-13
 
 ### Added

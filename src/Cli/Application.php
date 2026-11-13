@@ -191,10 +191,10 @@ final class Application
     }
 
     /**
-     * Why an enabled upgrade rule did not run: no Magento version is known, or neither the installed
-     * version nor the target has the change it checks.
+     * Why an upgrade rule that the configuration enables did not run: no Magento version is known, or
+     * neither the installed version nor the target has the change it checks.
      *
-     * @param list<RuleDefinition> $enabled enabled upgrade rules
+     * @param list<RuleDefinition> $enabled upgrade rules that the configuration enables
      * @return list<Notice>
      */
     private static function upgradeNotices(UpgradeGate $gate, array $enabled): array
@@ -327,7 +327,8 @@ final class Application
         $findings = array_values(array_filter($findings, static fn (Finding $finding): bool => $gate->runs($registry->find($finding->ruleId))));
         $upgradeNotices = self::upgradeNotices($gate, array_values(array_filter(
             $registry->all(),
-            static fn (RuleDefinition $rule): bool => $rule->isUpgradeRule() && $config->isEnabled($rule->id, $registry),
+            // A default-set upgrade rule that does not run is skipped quietly: only one the configuration enables is named.
+            static fn (RuleDefinition $rule): bool => $rule->isUpgradeRule() && ($config->rules[$rule->id]->enabled ?? false) === true,
         )));
         $hidden = null;
         $unmatched = null;
