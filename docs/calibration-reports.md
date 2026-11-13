@@ -2,7 +2,7 @@
 
 A rule stays in the default set only if it is right on real code. The public calibration corpus (the Magento core, the 25 most-downloaded Packagist modules and an extended part of 100 more, [`corpus.json`](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/corpus.json)) has little of the custom code that stores run, so many rules have too few findings to measure. Counted on 2026-11-13 from the latest round of each rule in [`docs/calibration/`](https://github.com/SilinMykola/magento-perf-check/tree/main/docs/calibration), 25 of the 37 rules in the default set have fewer than the 10 graded findings a decision needs. Running the tool on your project and telling us which findings are right is the most useful help there is.
 
-You do not need to send code. Share only what you may share: if the project belongs to a client or an employer, ask first.
+You do not need to send code, except for false positives (see [Code for a false positive](#code-for-a-false-positive)). Share only what you may share: if the project belongs to a client or an employer, ask first.
 
 ## 1. Run the tool with every rule on
 
@@ -41,6 +41,12 @@ Add one line on why, without names or paths, for example "the loop runs over the
 
 A finding in a module you do not maintain counts as well, and so does one in a theme file of a module that is not installed: the file is in the project.
 
+### Code for a false positive
+
+A `FP` verdict says that the rule is wrong, and `unclear` that you could not tell; neither says why, and fixing the rule depends on the shape of the code it reported. For those findings, if your agreement with the code's owner allows it, send the smallest piece of code that shows the case: the method, layout block or script around the reported line. Rename classes, variables and strings as you like, and drop the business logic, but keep what the rule looks at: the loop, the call and its receiver, the types, the handle, and the form of a module ID (`Vendor_Module`), not its name. If you cannot send code, describe that shape in words.
+
+Send code only privately (step 3), never in a public issue. It is not committed or published: we write our own small fixture with the same shape, without copying your code, and only that fixture goes into the tests. Your piece is deleted once that fixture is written, or once we decide no change is needed. A `TP` or `TP-low` finding needs no code.
+
 ## 3. Send the report
 
 Include:
@@ -48,12 +54,13 @@ Include:
 - the tool version (`php bin/magento-perf-check --version`, or `vendor/bin/magento-perf-check --version`);
 - from `summary` in the report: `byRule` (findings per rule), `notices` (notices per source) and `durationSeconds`. Do not paste the whole summary or the `notices` list: they hold the project's path and module names;
 - your verdicts: rule ID, verdict and the line on why, one row per finding;
+- for `FP` and `unclear` findings, the code pieces of [Code for a false positive](#code-for-a-false-positive), privately;
 - for exit code 2, the reason the console showed.
 
 Leave out anything you cannot share. A count per rule with verdicts helps even without the reasons; a count alone helps little.
 
 Where to send it:
-- **Privately:** to the person who sent you this page. If you found it yourself, open an issue that says only that you have a report, and the maintainer will answer with a private channel.
+- **Privately:** to the person who sent you this page. If you found it yourself, open an issue that says only that you have a report, and the maintainer will answer with a private channel; keep any code until then, out of the issue.
 - **Publicly:** an issue with the [calibration report template](https://github.com/SilinMykola/magento-perf-check/issues/new?template=calibration-report.yml). An issue is public as soon as it is posted and shows your GitHub account, so use it only for what may be public.
 
 ## 4. What happens next

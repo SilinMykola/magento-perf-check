@@ -63,4 +63,4 @@ body:
     id: notes
     attributes:
       label: Anything else
-      description: Rules that missed something you know is there, false positives that repeat, problems running the tool.
+      description: Rules that missed something you know is there, false positives that repeat, problems running the tool. Do not paste code of a project here; send code for a false positive privately, as the guide says.
