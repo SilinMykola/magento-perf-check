@@ -6,6 +6,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Added
+
+- U-JS-01, experimental, off by default, at `error`: `success()`, `error()` or `complete()` on the jqXHR of `$.ajax`, `$.get`, `$.post`, `$.getJSON`, `$.getScript` or mage/storage, an upgrade rule for Magento 2.4.6, which removed jquery-migrate; from 2.4.6 such a call throws. It reads storefront and admin scripts; the script scanner now gives the code of a script without its comments and strings, and each script rule names the areas it reads ([ADR 12](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0012-script-code-and-admin-scripts.md)). [Round 18](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-18.md): 5 findings on the corpus and private stores, all correct.
+
 ## [0.8.0] - 2026-11-13
 
 ### Added

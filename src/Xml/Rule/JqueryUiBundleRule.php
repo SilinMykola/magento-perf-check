@@ -22,6 +22,11 @@ final class JqueryUiBundleRule implements ScriptRule
         return self::ID;
     }
 
+    public function areas(): array
+    {
+        return ['frontend', 'base'];
+    }
+
     public function check(XmlFile $file, ScriptSource $script): array
     {
         $findings = [];

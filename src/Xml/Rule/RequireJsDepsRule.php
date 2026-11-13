@@ -30,6 +30,11 @@ final class RequireJsDepsRule implements ScriptRule
         return self::ID;
     }
 
+    public function areas(): array
+    {
+        return ['frontend', 'base'];
+    }
+
     public function check(XmlFile $file, ScriptSource $script): array
     {
         // Only the merged files reach every page; a file of that name anywhere else is not merged.

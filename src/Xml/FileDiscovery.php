@@ -208,8 +208,8 @@ final class FileDiscovery
     }
 
     /**
-     * A storefront script: in a module's view/frontend or view/base, or in a frontend theme under app/design,
-     * the paths T-05 and T-06 read templates from.
+     * A script of a module's view/frontend, view/base or view/adminhtml, or of a theme under app/design/frontend
+     * or app/design/adminhtml. Each script rule names the areas it reads.
      */
     private function describeScript(string $absolute, string $relative): ?XmlFile
     {
@@ -219,15 +219,16 @@ final class FileDiscovery
         }
         // A theme's own folders can be named view/..., so a theme is told apart first, by its app/design/<area>/ path.
         if (preg_match('#^app/design/([a-z_]+)/#', $relative, $m) === 1) {
-            if ($m[1] !== 'frontend') {
+            $area = $m[1];
+            if ($area !== 'frontend' && $area !== 'adminhtml') {
                 return null;
             }
             $module = preg_match('#/(' . self::MODULE_NAME . ')/#', $relative, $m) === 1 ? $m[1] : null;
 
-            return new XmlFile($absolute, $relative, XmlFile::KIND_SCRIPT, 'frontend', $module, null);
+            return new XmlFile($absolute, $relative, XmlFile::KIND_SCRIPT, $area, $module, null);
         }
-        // In a module, the first view/<area>/ decides, so an admin file under a folder named view/base stays out.
-        if (preg_match('#/view/(frontend|base|adminhtml)/#', '/' . $relative, $m) === 1 && $m[1] !== 'adminhtml') {
+        // In a module, the first view/<area>/ decides, so an admin file under a folder named view/base is admin.
+        if (preg_match('#/view/(frontend|base|adminhtml)/#', '/' . $relative, $m) === 1) {
             return new XmlFile($absolute, $relative, XmlFile::KIND_SCRIPT, $m[1], $this->moduleFromModuleXml(dirname($absolute)), null);
         }
 

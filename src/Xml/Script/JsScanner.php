@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Silin\MagentoPerfCheck\Xml\Script;
 
 /**
- * Splits JavaScript source into string literals and comments, which is all the script rules need. It is
- * a scanner, not a parser: it tells a regular expression literal from a division by the token before it.
+ * Splits JavaScript source into string literals and comments and, on request, gives the code without them.
+ * It is a scanner, not a parser: it tells a regular expression literal from a division by the token before it.
  */
 final class JsScanner
 {
@@ -20,6 +20,22 @@ final class JsScanner
 
     /** @var list<JsComment> */
     public array $comments = [];
+
+    /**
+     * With code on: the source with every comment, string, template literal and regular expression literal
+     * blanked to spaces, its line breaks kept, so an offset in it is an offset in the source. A blanked string
+     * starts with a double quote, a template with a backtick and a regular expression with "/", so code still
+     * sees a value there.
+     */
+    public string $code = '';
+
+    private bool $withCode = false;
+
+    /** @var list<string> the pieces of $code so far */
+    private array $codeParts = [];
+
+    /** Where the source has not been copied into $codeParts yet. */
+    private int $copiedTo = 0;
 
     private string $source;
 
@@ -39,13 +55,19 @@ final class JsScanner
     {
     }
 
-    public static function scan(string $source, int $firstLine = 1): self
+    public static function scan(string $source, int $firstLine = 1, bool $withCode = false): self
     {
         $scan = new self();
         $scan->source = $source;
         $scan->length = strlen($source);
         $scan->line = $firstLine;
+        $scan->withCode = $withCode;
         $scan->run();
+        if ($withCode) {
+            $scan->codeParts[] = substr($source, $scan->copiedTo);
+            $scan->code = implode('', $scan->codeParts);
+            $scan->codeParts = [];
+        }
 
         return $scan;
     }
@@ -70,6 +92,7 @@ final class JsScanner
                 $end = strpos($source, "\n", $i);
                 $end = $end === false ? $this->length : $end;
                 $this->comments[] = new JsComment(substr($source, $i + 2, $end - $i - 2), $this->line);
+                $this->blank($i, $end, ' ');
                 $i = $end;
             } elseif ($char === '/' && $next === '*') {
                 $end = strpos($source, '*/', $i + 2);
@@ -77,16 +100,21 @@ final class JsScanner
                 $text = substr($source, $i + 2, $end - $i - 2);
                 $this->line += substr_count($text, "\n");
                 $this->comments[] = new JsComment($text, $this->line);
+                $this->blank($i, min($end + 2, $this->length), ' ');
                 $i = $end + 2;
             } elseif ($char === '"' || $char === "'") {
+                $start = $i;
                 $i = $this->quoted($i, $punctuator === '{' || $punctuator === ',');
+                $this->blank($start, $i, '"');
                 [$last, $punctuator] = ['value', ''];
             } elseif ($char === '`' || ($char === '}' && $templates !== [] && end($templates) === 0)) {
                 if ($char === '}') {
                     array_pop($templates);
                     $this->close('${');
                 }
+                $start = $i;
                 [$i, $opensSubstitution] = $this->templatePart($i + 1, $char === '`');
+                $this->blank($start, $i, '`');
                 if ($opensSubstitution) {
                     $templates[] = 0;
                     $this->frames[] = ['${', null];
@@ -95,7 +123,9 @@ final class JsScanner
                     [$last, $punctuator] = ['value', ''];
                 }
             } elseif ($char === '/' && $last === 'operator') {
+                $start = $i;
                 $i = $this->regexEnd($i);
+                $this->blank($start, $i, '/');
                 [$last, $punctuator] = ['value', ''];
             } elseif (ord($char) >= 0xC2 && ($nonBreaking = self::nonBreakingSpace($source, $i)) > 0) {
                 // A byte order mark or a no-break space is white space, not part of an identifier.
@@ -133,6 +163,21 @@ final class JsScanner
                 ++$i;
             }
         }
+    }
+
+    /**
+     * Copies the source up to $start into the code, then the range up to $end as spaces with its line
+     * breaks kept, starting with $mark.
+     */
+    private function blank(int $start, int $end, string $mark): void
+    {
+        if (!$this->withCode || $end <= $start) {
+            return;
+        }
+        $this->codeParts[] = substr($this->source, $this->copiedTo, $start - $this->copiedTo);
+        $range = substr($this->source, $start, $end - $start);
+        $this->codeParts[] = $mark . (string) preg_replace('/[^\n]/', ' ', substr($range, 1));
+        $this->copiedTo = $end;
     }
 
     /**

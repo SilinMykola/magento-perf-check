@@ -12,6 +12,7 @@ use DOMDocument;
 use DOMText;
 use Silin\MagentoPerfCheck\Report\Finding;
 use Silin\MagentoPerfCheck\Report\Notice;
+use Silin\MagentoPerfCheck\Xml\Script\ScriptMatchError;
 use Silin\MagentoPerfCheck\Xml\Script\ScriptSource;
 
 final class XmlAnalyzer
@@ -50,7 +51,9 @@ final class XmlAnalyzer
                 continue;
             }
             if ($file->kind === XmlFile::KIND_SCRIPT) {
-                if ($scriptRules === []) {
+                $rulesOfArea = array_values(array_filter($scriptRules, static fn (ScriptRule $rule): bool => in_array($file->area, $rule->areas(), true)));
+                // A script that no enabled rule reads is not read at all.
+                if ($rulesOfArea === []) {
                     continue;
                 }
                 $script = ScriptSource::fromFile($file->absolutePath);
@@ -59,8 +62,14 @@ final class XmlAnalyzer
                     continue;
                 }
                 ++$analyzed;
-                foreach ($scriptRules as $rule) {
-                    foreach ($rule->check($file, $script) as $finding) {
+                foreach ($rulesOfArea as $rule) {
+                    try {
+                        $ruleFindings = $rule->check($file, $script);
+                    } catch (ScriptMatchError $e) {
+                        $notices[] = new Notice('script', $e->getMessage(), $file->relativePath);
+                        $ruleFindings = $e->findings;
+                    }
+                    foreach ($ruleFindings as $finding) {
                         if (!$this->isScriptSuppressed($finding, $script, $notices)) {
                             $findings[] = $finding;
                         }

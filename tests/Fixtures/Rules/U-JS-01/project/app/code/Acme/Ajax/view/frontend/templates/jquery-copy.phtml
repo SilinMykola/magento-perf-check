@@ -1,0 +1,7 @@
+<script>
+    /* A template that inlines its own copy of jQuery 1.x: its jqXHR has success(), so nothing is reported. */
+    jQuery.fn = jQuery.prototype = {};
+</script>
+<script>
+    jQuery.ajax('/a').success(function () {});
+</script>

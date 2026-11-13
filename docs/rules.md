@@ -1,6 +1,6 @@
 # Rules
 
-38 rules in the default set and 26 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
+38 rules in the default set and 27 experimental ones, after [calibration](calibration.md) on Magento 2.4.9 core and the 25 most-downloaded Packagist modules. Each ID links to its page with examples, how to suppress it, known false positives and the sources it rests on.
 
 **Sources:** A is official Adobe or Hyvä documentation; B is Magento core code pinned to a commit, or a magento/magento2 issue with a confirmed reproduction or measurements. Every rule in the default set has at least one A or B source. See [What our rules are based on](../README.md#what-our-rules-are-based-on).
 
@@ -81,6 +81,7 @@ These are not in the default set: calibration measured them below their precisio
 | [P-API-01](rules/P-API-01.md) | Web API input field that only an unsupported constructor parameter could set | warning | A, B |
 | [P-LOOP-12](rules/P-LOOP-12.md) | Method that runs a query, called inside a loop | warning | A, B |
 | [U-CLI-01](rules/U-CLI-01.md) | Console command whose execute() has no int return type (Magento 2.4.9, Symfony Console 7.4) | error | A, B |
+| [U-JS-01](rules/U-JS-01.md) | success(), error() or complete() on a jqXHR, which jquery-migrate added back until Magento 2.4.6 | error | A, B |
 
 ## Planned
 

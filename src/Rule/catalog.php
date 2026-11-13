@@ -288,6 +288,11 @@ return [
         new Source(SourceLevel::B, 'https://github.com/magento/magento2/blob/d846142a3ab8b49597dfb8bd7508d875efdab19a/composer.json#L85', 'Magento 2.4.6 requires symfony/console ^5.4; 2.4.5-p11 (composer.json#L76 at ef1ad91d) and 2.4.4-p12 (#L81 at 52b27a02) require ~5.4.0, earlier patches ~4.4.0.'),
         new Source(SourceLevel::B, 'https://github.com/symfony/console/blob/c4ba980ca61a9eb18ee6bcc73f28e475852bb1ed/Command/Command.php#L298-L302', 'Symfony Console 5.4 throws a TypeError when execute() returns a non-int; 4.4 only triggered a deprecation.'),
     ], ['magentoPerf.consoleCommandExecuteResult' => null], ['2.4.4-p12', '2.4.5-p11', '2.4.6']),
+    new RuleDefinition('U-JS-01', 'success(), error() or complete() on a jqXHR, which jquery-migrate added back until Magento 2.4.6', Severity::Error, RuleStatus::Experimental, [
+        $a('https://experienceleague.adobe.com/en/docs/commerce-operations/release/notes/magento-open-source/2-4-6', '"jquery-migrate has been removed from the Commerce and Magento Open Source code bases." (GitHub-21406)'),
+        new Source(SourceLevel::B, 'https://github.com/magento/magento2/blob/1df4565907d40f14ee1c753cc2de2ce567bfa8d7/app/code/Magento/Theme/view/base/requirejs-config.js#L79-L81', 'Up to 2.4.5, every page loads jquery/jquery-migrate through the top-level deps; the 2.4.6 file (d846142a) has no such entry.'),
+        new Source(SourceLevel::B, 'https://github.com/magento/magento2/blob/1df4565907d40f14ee1c753cc2de2ce567bfa8d7/lib/web/jquery/jquery-migrate.js#L309-L314', 'jquery-migrate adds success, error and complete to every jqXHR, as deprecated aliases of done, fail and always, which jQuery 3 removed.'),
+    ], [], ['2.4.6']),
     new RuleDefinition('P-LOOP-12', 'Method that runs a query, called inside a loop', Severity::Warning, RuleStatus::Experimental, [
         $a($codeReview, '"Are queries executed in a loop? This loop can be outside of the edited files."'),
         $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),
