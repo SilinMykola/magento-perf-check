@@ -8,6 +8,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Added
 
+- U-LOG-01 in the default set, at `error`: `addError()`, `addInfo()` and the other `add*` methods, or `warn()`, `err()`, `crit()` and `emerg()`, on a Monolog logger, an upgrade rule for Magento 2.4.4, which moved to Monolog 2; from 2.4.4 such a call throws "Call to undefined method". It runs when the installed version or `--target-version` is 2.4.4 or newer. [Round 19](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-19.md): 38 findings on private stores, all correct. **This can change a CI result:** on such a project each call gives an `error` finding. With PHPStan directly it is only in `extension-experimental.neon`, as for U-CLI-02.
 - U-JS-01, experimental, off by default, at `error`: `success()`, `error()` or `complete()` on the jqXHR of `$.ajax`, `$.get`, `$.post`, `$.getJSON`, `$.getScript` or mage/storage, an upgrade rule for Magento 2.4.6, which removed jquery-migrate; from 2.4.6 such a call throws. It reads storefront and admin scripts; the script scanner now gives the code of a script without its comments and strings, and each script rule names the areas it reads ([ADR 12](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0012-script-code-and-admin-scripts.md)). [Round 18](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-18.md): 5 findings on the corpus and private stores, all correct.
 
 ## [0.8.0] - 2026-11-13

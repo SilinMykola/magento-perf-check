@@ -293,6 +293,11 @@ return [
         new Source(SourceLevel::B, 'https://github.com/magento/magento2/blob/1df4565907d40f14ee1c753cc2de2ce567bfa8d7/app/code/Magento/Theme/view/base/requirejs-config.js#L79-L81', 'Up to 2.4.5, every page loads jquery/jquery-migrate through the top-level deps; the 2.4.6 file (d846142a) has no such entry.'),
         new Source(SourceLevel::B, 'https://github.com/magento/magento2/blob/1df4565907d40f14ee1c753cc2de2ce567bfa8d7/lib/web/jquery/jquery-migrate.js#L309-L314', 'jquery-migrate adds success, error and complete to every jqXHR, as deprecated aliases of done, fail and always, which jQuery 3 removed.'),
     ], [], ['2.4.6']),
+    new RuleDefinition('U-LOG-01', 'addError(), addInfo() and the other Monolog 1 methods that Monolog 2 removed (Magento 2.4.4)', Severity::Error, RuleStatus::Default, [
+        new Source(SourceLevel::B, 'https://github.com/magento/magento2/blob/0f9a056c8d83c4f319626b3e56ec52a533999f25/composer.json#L74', 'Magento 2.4.4 requires monolog/monolog ^2.3; 2.4.3 to 2.4.3-p3 require ^1.17 (composer.json#L70 at 4c36116d).'),
+        new Source(SourceLevel::C, 'https://github.com/Seldaek/monolog/blob/68545165e19249013afd1d6f7485aecff07a2d22/UPGRADE.md#L6-L7', 'Monolog 2.0 "Removed non-PSR-3 methods to add records, all the add* (e.g. addWarning) methods as well as emerg, crit, err and warn."'),
+        new Source(SourceLevel::C, 'https://github.com/Seldaek/monolog/blob/904713c5929655dc9b97288b69cfeedad610c9a1/src/Monolog/Logger.php#L401-L495', 'Monolog 1.27.1 Logger declares addDebug() to addEmergency(); 2.3.0 (df991fd8) has none of them.'),
+    ], ['magentoPerf.monologAddMethod' => null], ['2.4.4']),
     new RuleDefinition('P-LOOP-12', 'Method that runs a query, called inside a loop', Severity::Warning, RuleStatus::Experimental, [
         $a($codeReview, '"Are queries executed in a loop? This loop can be outside of the edited files."'),
         $a($extensionPerformance, '"Running SQL queries in a loop often results in a performance bottleneck."'),

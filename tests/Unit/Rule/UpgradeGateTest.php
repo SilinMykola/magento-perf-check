@@ -84,6 +84,19 @@ final class UpgradeGateTest extends TestCase
         );
     }
 
+    public function testMonologAddMethodRuleRunsFrom244(): void
+    {
+        $rule = (new RuleRegistry())->find('U-LOG-01');
+        self::assertNotNull($rule);
+        $runs = static fn (string $version): bool => (MagentoVersion::parse($version)?->has($rule->changedIn)) === true;
+
+        // Monolog 2 came with 2.4.4; every 2.4.3 patch release keeps Monolog 1.
+        self::assertSame(
+            [false, false, true, true, true],
+            array_map($runs, ['2.4.3', '2.4.3-p3', '2.4.4', '2.4.4-p2', '2.4.9']),
+        );
+    }
+
     public function testInstalledVersionFromTheProject(): void
     {
         $project = sys_get_temp_dir() . '/mpr-version-' . bin2hex(random_bytes(4));
