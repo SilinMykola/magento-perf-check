@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Severity | `warning` |
-| Status | experimental, off by default: precision 20 % in [calibration](../calibration.md); after the module allowlist of [round 8](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-8.md), 5 findings, all correct; with 10 more from private stores in [round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md), 15 findings and a precision of 47 %. Enable it with `enabled: true` in `magento-perf-check.neon` |
+| Status | experimental, off by default: precision 20 % in [calibration](../calibration.md); after the module allowlist of [round 8](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-8.md), 5 findings, all correct; with 10 more from private stores in [round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md), 15 findings and a precision of 47 %; after the rule began to follow handle includes, [round 16](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-16.md): 10 findings, 70 %. Enable it with `enabled: true` in `magento-perf-check.neon` |
 | Analyzer | XML (layout files of area `frontend` or `base`) |
 
 ## What it catches
