@@ -6,6 +6,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-13
+
 ### Added
 
 - `resources/calibration-summary.php` turns a JSON report into the file to send for calibration: counts per rule, notices per source and a verdict table of up to 30 findings per rule, without paths, module names or messages; a second file with the paths stays with the contributor. The [calibration guide](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration-reports.md) now uses it, and asks for code only for `FP` and `unclear` findings, privately. Several reports, one per project, give one combined file that does not say which project a finding came from.
@@ -187,7 +189,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.5.0...v0.6.0
