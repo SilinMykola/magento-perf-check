@@ -6,6 +6,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Added
+
+- [Help calibrate the rules](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration-reports.md): how to run the tool on your project with every rule on, grade its findings and send a calibration report, privately or as a public issue; calibration rounds publish only counts and neutral descriptions from it. `resources/all-rules.neon` enables every experimental rule for such a run, and a GitHub issue template collects the report.
+
 ## [0.7.0] - 2026-11-13
 
 ### Changed
