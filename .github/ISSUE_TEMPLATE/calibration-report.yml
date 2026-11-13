@@ -1,0 +1,66 @@
+name: Calibration report
+description: Findings of magento-perf-check on your project, with your verdicts, to measure how precise the rules are.
+title: "Calibration report: "
+labels: ["calibration"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. The steps are in [Help calibrate the rules](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration-reports.md).
+
+        **This issue is public as soon as you post it, and it shows your GitHub account.** Do not paste code, paths, module names or anything else you cannot make public; counts and verdicts with a short reason are enough. To send a report privately, see the guide.
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Permission
+      options:
+        - label: I may share what I post here, and it may be used and published in a calibration round.
+          required: true
+  - type: input
+    id: magento
+    attributes:
+      label: Magento version and edition
+      placeholder: "2.4.7-p3, Open Source"
+    validations:
+      required: true
+  - type: dropdown
+    id: storefront
+    attributes:
+      label: Storefront
+      options:
+        - Luma or a Luma-based theme
+        - Hyvä
+        - Headless (PWA, other)
+        - Other or not sure
+    validations:
+      required: true
+  - type: input
+    id: tool
+    attributes:
+      label: Tool version and run time
+      placeholder: "0.7.1, 45 s"
+    validations:
+      required: true
+  - type: textarea
+    id: counts
+    attributes:
+      label: Findings per rule
+      description: "From summary in the report: byRule, notices (the counts per source) and durationSeconds. Not the notices list: it holds paths and module names."
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: verdicts
+    attributes:
+      label: Verdicts
+      description: "One row per graded finding: rule ID, TP, TP-low, FP or unclear, and a short reason."
+      placeholder: |
+        P-LOOP-01 | TP | product load per cart item on the cart page
+        X-LAY-01 | FP | the block is only on the customer's order page
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Rules that missed something you know is there, false positives that repeat, problems running the tool.

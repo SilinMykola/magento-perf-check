@@ -6,6 +6,12 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-11-13
+
+### Added
+
+- [Help calibrate the rules](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration-reports.md): how to run the tool on your project with every rule on, grade its findings and send a calibration report, privately or as a public issue; calibration rounds publish only counts and neutral descriptions from it. `resources/all-rules.neon` enables every experimental rule for such a run, and a GitHub issue template collects the report.
+
 ## [0.7.0] - 2026-11-13
 
 ### Changed
@@ -176,7 +182,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.4.0...v0.5.0

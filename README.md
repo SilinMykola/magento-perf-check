@@ -12,11 +12,11 @@ Finds performance and Full Page Cache anti-patterns in Magento 2 and Mage-OS cod
 $ vendor/bin/magento-perf-check --paths=app/code/Mollie/Payment/Controller/Express/Process.php,app/code/Magefan/Community/Model/GetCategoryByProduct.php
 app/code/Magefan/Community/Model/GetCategoryByProduct.php
      73  error    [P-LOOP-01] Magento\Catalog\Api\CategoryRepositoryInterface::get() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().
-         https://github.com/SilinMykola/magento-perf-check/blob/v0.7.0/docs/rules/P-LOOP-01.md
+         https://github.com/SilinMykola/magento-perf-check/blob/v0.7.1/docs/rules/P-LOOP-01.md
 
 app/code/Mollie/Payment/Controller/Express/Process.php
      58  error    [P-FPC-06] Mollie\Payment\Controller\Express\Process handles GET only but calls Magento\Quote\Api\CartRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.
-         https://github.com/SilinMykola/magento-perf-check/blob/v0.7.0/docs/rules/P-FPC-06.md
+         https://github.com/SilinMykola/magento-perf-check/blob/v0.7.1/docs/rules/P-FPC-06.md
 
 2 finding(s): 2 error, 0 warning, 0 info. Analyzed app/code/Mollie/Payment/Controller/Express/Process.php, app/code/Magefan/Community/Model/GetCategoryByProduct.php in 0.8 s.
 ```
@@ -85,6 +85,8 @@ Rules that joined the default set later were graded in their own rounds, also on
 
 [Round 2](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-2.md) fixed the known false positives and measured again on the same corpus, so its figures are optimistic for code the rules have not seen. [A separate check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out.md) on 15 other modules found 49 of 52 graded findings correct, of which 3 matter in practice, and [a second one](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out-2.md) on 22 more found all 72 correct, of which 3 matter, once the one false positive it showed was fixed. Expect most findings to be correct and cheap to live with, not urgent. Each finding was graded once, by one grader, without a second review. Those runs [undercounted](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out.md#what-the-first-runs-missed): of 29 sampled findings that the later fixes added, 28 were correct and 9 matter.
 
+Many rules still have few findings to measure. [Running the tool on your project and sending your verdicts](docs/calibration-reports.md) is the most useful way to improve them.
+
 Static analysis gives heuristics, not guarantees: treat each finding as a reason to check, not a verdict.
 
 ## Related
@@ -99,6 +101,7 @@ Static analysis gives heuristics, not guarantees: treat each finding as a reason
 - [Baseline](docs/baseline.md): adopt the tool on a project with existing findings.
 - [CI and Git hooks](docs/ci.md): GitHub Actions with code scanning, GrumPHP, other CI.
 - [Coding agents](docs/agents.md): an `AGENTS.md` snippet and a skill that run the tool and act on its findings.
+- [Help calibrate the rules](docs/calibration-reports.md): run the tool on your project with every rule on and send which findings are right.
 - [Changelog](CHANGELOG.md).
 
 ## Development

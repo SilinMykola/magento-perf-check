@@ -1,0 +1,56 @@
+# Every experimental rule enabled, for calibration runs (docs/calibration-reports.md).
+# Keep it in step with the rule catalog; tests/Unit/Rule/AllRulesConfigTest.php checks it.
+magentoPerf:
+    rules:
+        X-LAY-01:
+            enabled: true
+        P-COL-02:
+            enabled: true
+        P-DI-02:
+            enabled: true
+        P-FPC-02:
+            enabled: true
+        P-LOOP-04:
+            enabled: true
+        P-LOOP-06:
+            enabled: true
+        P-COL-03:
+            enabled: true
+        X-PLG-02:
+            enabled: true
+        P-DI-04:
+            enabled: true
+        P-COL-04:
+            enabled: true
+        P-FPC-03:
+            enabled: true
+        X-GQL-02:
+            enabled: true
+        P-API-01:
+            enabled: true
+        T-03:
+            enabled: true
+        T-04:
+            enabled: true
+        T-06:
+            enabled: true
+        X-LAY-04:
+            enabled: true
+        J-DEP-02:
+            enabled: true
+        C-02:
+            enabled: true
+        S-PERF-01:
+            enabled: true
+        S-TPL-01:
+            enabled: true
+        S-TPL-02:
+            enabled: true
+        S-DI-01:
+            enabled: true
+        S-FN-01:
+            enabled: true
+        U-CLI-01:
+            enabled: true
+        P-LOOP-12:
+            enabled: true
