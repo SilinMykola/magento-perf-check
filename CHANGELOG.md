@@ -6,9 +6,11 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-13
+
 ### Changed
 
-- X-LAY-01 (experimental) follows how the project's layout handles include each other with `<update handle="..."/>`, reading the storefront layouts and routes of every enabled module and theme, Composer packages included. It no longer reports a handle that only personal pages include, such as one that only the customer's order pages use; a route's own handle and the shop-wide handles of X-LAY-03 are still reported. X-LAY-03 (default set) and X-LAY-01 no longer report a handle that another of its layout files makes a customer account page. On the calibration corpus and the Magento 2.4.9 core nothing changes; on five private stores X-LAY-01 goes from 10 findings to 5. **This can change a CI result:** an X-LAY-03 `error` in a theme file of a customer account page is no longer reported. An `<update handle="customer_account"/>` now counts only as a direct child of the layout's root, where core merges it from, so a block in a layout that has it only inside `<body>` is now reported.
+- X-LAY-01 (experimental) follows how the project's layout handles include each other with `<update handle="..."/>`, reading the storefront layouts and routes of every enabled module and theme, Composer packages included. It no longer reports a handle that only personal pages include, such as one that only the customer's order pages use; a route's own handle and the shop-wide handles of X-LAY-03 are still reported. X-LAY-03 (default set) and X-LAY-01 no longer report a handle that another of its layout files makes a customer account page. On the calibration corpus and the Magento 2.4.9 core nothing changes; on five private stores X-LAY-01 goes from 10 findings to 5. Building the index of handles adds about 0.3 s to a default run on the Magento 2.4.9 core. **This can change a CI result:** an X-LAY-03 `error` in a theme file of a customer account page is no longer reported. An `<update handle="customer_account"/>` now counts only as a direct child of the layout's root, where core merges it from, so a block in a layout that has it only inside `<body>` is now reported.
 - J-DEP-01 (storefront JavaScript that depends on `jquery/ui`, the whole jQuery UI library) joins the default set at `warning`, so storefront scripts are now read by default; switch J-DEP-01 off to skip them. [Round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md) graded it on five private stores, three of which have such scripts, with the corpus findings of round 12: 35 graded findings, 97 % correct, 71 % of those with a real cost now. **This can change a CI result:** a project with such scripts gets `warning` findings, which fail a run with `--fail-on=warning`. Reading the scripts added about 0.5 s to a run on the Magento 2.4.9 core with a warm PHPStan cache.
 
 ## [0.6.0] - 2026-11-12
@@ -174,7 +176,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.3.1...v0.4.0
