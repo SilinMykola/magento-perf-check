@@ -30,17 +30,17 @@ final class PhpStanRunner
 
     private const MAX_PASSES = 5;
 
-    /**
-     * PHPStan loads its --autoload-file before it asks phpstan/extension-installer which extensions to
-     * include, and passes the option on to its workers. With this empty list, the installer adds none:
-     * no file is included twice and no other extension of the project runs.
-     */
     /** The switches of bitexpert/phpstan-magento that turn its own rules off. */
     private const BITEXPERT_SWITCHES = [
         'magento' => ['checkCollectionViaFactory', 'checkServiceContracts', 'checkResourceModelsUsedDirectly'],
         'extdn' => ['setTemplateDisallowedForBlockClasses'],
     ];
 
+    /**
+     * PHPStan loads its --autoload-file before it asks phpstan/extension-installer which extensions to
+     * include, and passes the option on to its workers. With this empty list, the installer adds none:
+     * no file is included twice and no other extension of the project runs.
+     */
     private const EMPTY_EXTENSION_INSTALLER = <<<'PHP'
         <?php
 
@@ -160,7 +160,7 @@ final class PhpStanRunner
         $notices = $gap === null ? [] : [new Notice(
             'generated-code',
             sprintf(
-                'bitexpert/phpstan-magento%s is not used: %s, and PHPStan would reject the configuration. Update it to 0.30.1 or later.',
+                'bitexpert/phpstan-magento%s is not used: %s. Update it: 0.32.0 or later with PHPStan 1.12, 0.40.0 or later with PHPStan 2.',
                 $this->bitExpertRoot === null && InstalledVersions::isInstalled('bitexpert/phpstan-magento')
                     ? ' ' . InstalledVersions::getPrettyVersion('bitexpert/phpstan-magento') : '',
                 $gap,
@@ -174,7 +174,7 @@ final class PhpStanRunner
         return [...$notices, new Notice(
             'generated-code',
             'generated/code is missing or empty, so the types of proxies and extension attributes are unknown and calls on them are not checked. '
-            . 'Run bin/magento setup:di:compile, or install bitexpert/phpstan-magento in the tool.',
+            . ($gap === null ? 'Run bin/magento setup:di:compile, or install bitexpert/phpstan-magento in the tool.' : 'Run bin/magento setup:di:compile.'),
         )];
     }
 
