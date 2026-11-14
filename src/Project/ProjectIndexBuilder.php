@@ -7,11 +7,13 @@ namespace Silin\MagentoPerfCheck\Project;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
+use Silin\MagentoPerfCheck\Xml\LayoutHandles;
+use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 
 /**
  * Builds the ProjectIndex from app/code and every Composer package that is a Magento
- * module, regardless of which paths are analyzed. Reads nothing but etc/ files and
- * writes nothing into the project; the result is cached in the system temp directory.
+ * module, regardless of which paths are analyzed. Reads etc/ files and the frontend layouts of modules and themes,
+ * and writes nothing into the project; the result is cached in the system temp directory.
  */
 final class ProjectIndexBuilder
 {
@@ -19,7 +21,7 @@ final class ProjectIndexBuilder
 
     /** Indexed files, relative to a module's etc/ directory; * is one area directory. */
     /** Part of the cache key: raise it when the same files start to give a different index. */
-    private const INDEX_VERSION = 5;
+    private const INDEX_VERSION = 7;
 
     private const MODULE_CONFIG = 'app/etc/config.php';
 
@@ -38,8 +40,9 @@ final class ProjectIndexBuilder
     {
         $modules = $this->moduleRoots($projectRoot);
         $files = $this->indexedFiles($projectRoot, $modules);
+        $layouts = LayoutHandles::layoutFiles($projectRoot, $modules);
 
-        $cacheFile = $this->cacheFile($projectRoot, $this->fingerprintOf($modules, $files));
+        $cacheFile = $this->cacheFile($projectRoot, $this->fingerprintOf($modules, $files, [...$layouts, ...self::routeFiles($modules)]));
         if (is_file($cacheFile)) {
             $data = json_decode((string) file_get_contents($cacheFile), true);
             if (is_array($data)) {
@@ -48,7 +51,7 @@ final class ProjectIndexBuilder
             }
         }
 
-        $index = $this->index(count($modules), $files);
+        $index = $this->index(count($modules), $files, $this->layoutPlacements($projectRoot, $modules, $layouts));
         $this->writeCache($cacheFile, $index);
 
         return $index;
@@ -206,22 +209,38 @@ final class ProjectIndexBuilder
     {
         $modules = $this->moduleRoots($projectRoot);
 
-        return $this->fingerprintOf($modules, $this->indexedFiles($projectRoot, $modules));
+        return $this->fingerprintOf($modules, $this->indexedFiles($projectRoot, $modules), [...LayoutHandles::layoutFiles($projectRoot, $modules), ...self::routeFiles($modules)]);
     }
 
     /**
      * @param array<string, string> $modules module root => module name
      * @param list<array{path: string, module: string, area: string, name: string}> $files
+     * @param list<string> $layouts frontend layout files and the storefront routes that tell which handles are pages
      */
-    private function fingerprintOf(array $modules, array $files): string
+    private function fingerprintOf(array $modules, array $files, array $layouts): string
     {
         // The module list counts too: a module added, enabled or disabled changes the index without changing a file.
         $fingerprint = self::INDEX_VERSION . "\n" . implode("\n", array_keys($modules)) . "\n";
-        foreach ($files as $file) {
-            $fingerprint .= $file['path'] . '|' . (int) @filesize($file['path']) . '|' . (int) @filemtime($file['path']) . "\n";
+        foreach ([...array_column($files, 'path'), ...$layouts] as $path) {
+            $fingerprint .= $path . '|' . (int) @filesize($path) . '|' . (int) @filemtime($path) . "\n";
         }
 
         return md5($fingerprint);
+    }
+
+    /**
+     * @param array<string, string> $modules
+     * @return list<string>
+     */
+    private static function routeFiles(array $modules): array
+    {
+        $files = array_values(array_filter(array_map(static fn (string $root): string => $root . '/etc/frontend/routes.xml', array_keys($modules)), 'is_file'));
+        // The storefront controllers decide which handles are pages (LayoutHandles).
+        foreach (array_keys($modules) as $root) {
+            array_push($files, ...LayoutHandles::controllerFiles($root));
+        }
+
+        return $files;
     }
 
     private function cacheFile(string $projectRoot, string $fingerprint): string
@@ -247,9 +266,96 @@ final class ProjectIndexBuilder
     }
 
     /**
-     * @param list<array{path: string, module: string, area: string, name: string}> $files
+     * Where frontend layouts place each block class and object argument (view models), and which of those handles
+     * no cacheable page uses: account pages that include customer_account, handles whose files hold a block with
+     * cacheable="false" that no ifconfig switches and no file of the handle removes, with the elements around it,
+     * and handles only such handles include. Handles X-LAY-03 reports do not count that way: their cacheable="false"
+     * block is an error to fix. A storefront controller action's handle is a page and decides for itself (LayoutHandles).
+     * X-LAY-01's allowlist does not count either: it names pages where being uncacheable is acceptable, not pages
+     * that are never cached.
+     *
+     * @param array<string, string> $modules
+     * @param list<string> $layouts
+     * @return array{array<string, list<string>>, array<string, true>}
      */
-    private function index(int $moduleCount, array $files): ProjectIndex
+    private function layoutPlacements(string $projectRoot, array $modules, array $layouts): array
+    {
+        $placements = [];
+        $names = [];
+        $nonCacheable = [];
+        $removed = [];
+        foreach ($layouts as $file) {
+            $xpath = $this->load($file);
+            if ($xpath === null) {
+                continue;
+            }
+            $handle = basename($file, '.xml');
+            $classes = array_map(static fn (DOMElement $block): string => $block->getAttribute('class'), $this->elements($xpath, '//block[@class] | //referenceBlock[@class]'));
+            foreach ($this->elements($xpath, '//argument | //item') as $argument) {
+                if ($this->xsiType($argument) === 'object' && trim($argument->textContent) !== '') {
+                    $classes[] = $argument->textContent;
+                }
+            }
+            foreach ($classes as $class) {
+                $key = ProjectIndex::normalizeClass($class);
+                $placements[$key][$handle] = true;
+                $names[$key] ??= ltrim(trim($class), '\\');
+            }
+            // Magento reads remove as a boolean (Layout\Reader\Block), so "1" removes too.
+            $removing = "[translate(@remove, 'TRUE', 'true') = 'true' or @remove = '1']";
+            foreach ($this->elements($xpath, '//referenceBlock' . $removing . ' | //referenceContainer' . $removing . ' | //remove[@name]') as $remove) {
+                $removed[$handle][$remove->getAttribute('name')] = true;
+            }
+            // On a handle X-LAY-03 reports, the block is an error to fix, not a sign of a personal page.
+            if (NonCacheableBlockRule::isShopWide($handle) && !NonCacheableBlockRule::isDefaultAllowlisted($handle)) {
+                continue;
+            }
+            foreach ($this->elements($xpath, "//block[@cacheable='false']") as $block) {
+                // The block, or an element around it, that has an ifconfig or that a file removes may not be on the page.
+                $chain = [];
+                for ($node = $block; $node instanceof DOMElement; $node = $node->parentNode) {
+                    $chain[] = $node;
+                }
+                $nonCacheable[$handle][] = $chain;
+            }
+        }
+        $private = [];
+        foreach ($nonCacheable as $handle => $blocks) {
+            foreach ($blocks as $chain) {
+                $present = true;
+                foreach ($chain as $element) {
+                    $present = $present && !$element->hasAttribute('ifconfig')
+                        && !isset($removed[$handle][$element->getAttribute('name')]);
+                }
+                if ($present) {
+                    $private[$handle] = true;
+                }
+            }
+        }
+        $handles = LayoutHandles::fromProject($projectRoot, $modules);
+        $personal = static fn (string $handle): bool => isset($private[$handle])
+            || isset($private[str_starts_with($handle, 'hyva_') ? substr($handle, 5) : $handle]);
+        $uncacheable = [];
+        foreach (array_unique(array_merge(...array_map('array_keys', array_values($placements)))) as $handle) {
+            // A cacheable="false" block makes every page with the handle uncacheable, page or included handle alike.
+            if ($handles->isPersonal((string) $handle, static fn (string $page): bool => false, true, $personal)) {
+                $uncacheable[(string) $handle] = true;
+            }
+        }
+
+        $byName = [];
+        foreach ($placements as $key => $in) {
+            $byName[$names[$key]] = array_map('strval', array_keys($in));
+        }
+
+        return [$byName, $uncacheable];
+    }
+
+    /**
+     * @param list<array{path: string, module: string, area: string, name: string}> $files
+     * @param array{array<string, list<string>>, array<string, true>} $layout
+     */
+    private function index(int $moduleCount, array $files, array $layout = [[], []]): ProjectIndex
     {
         $proxies = [];
         $plugins = [];
@@ -402,6 +508,8 @@ final class ProjectIndexBuilder
             $cronJobs,
             array_map(static fn (array $methods): array => array_keys($methods), $webapiMethods),
             array_map(static fn (array $classes): array => array_keys($classes), $preferences),
+            $layout[0],
+            $layout[1],
         );
     }
 

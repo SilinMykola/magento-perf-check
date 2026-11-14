@@ -121,6 +121,33 @@ final class NonCacheableBlockRuleTest extends TestCase
         ], $reported);
     }
 
+    public function testAllowlistNamesPagesAndIncludedHandlesFollowTheirPages(): void
+    {
+        $root = realpath(self::FIXTURE . '/pages/project');
+        self::assertIsString($root);
+        $handles = LayoutHandles::fromProject($root, (new ProjectIndexBuilder())->moduleRoots($root));
+        $result = (new XmlAnalyzer(new FileDiscovery($root), [new NonCacheableBlockRule(['acmeshop_'], false, $handles)]))
+            ->analyze(['app/code']);
+
+        // acmeshop_cart_index and acmeshop_order_print (PrintAction) are allowlisted pages, acmeshop_cart_index_type_bundle
+        // extends a page, and acmeshop_code_added is added by code, as no layout includes it. acmeshop_cart_sidebar is
+        // no page: default.xml includes it, so it is on every page, allowlisted prefix or not.
+        // acmeshop_cart_adminhtml_index has no page either (Router\ActionList drops "adminhtml" anywhere in the path),
+        // and acmeshop_cart_index_renderers, which default.xml includes, follows default.xml as well as the cart page.
+        // An abstract controller serves no page, and hyva_shopadmin_sidebar follows hyva_shopadmin_index_index, which
+        // the allowlist does not name.
+        self::assertSame(
+            [
+                'app/code/Acme/HyvaShop/view/frontend/layout/hyva_shopadmin_sidebar.xml',
+                'app/code/Acme/Shop/view/frontend/layout/acmeshop_abstractcontroller_view.xml',
+                'app/code/Acme/Shop/view/frontend/layout/acmeshop_cart_adminhtml_index.xml',
+                'app/code/Acme/Shop/view/frontend/layout/acmeshop_cart_index_renderers.xml',
+                'app/code/Acme/Shop/view/frontend/layout/acmeshop_cart_sidebar.xml',
+            ],
+            array_map(static fn (Finding $f): string => $f->file, $result->findings),
+        );
+    }
+
     public function testWithoutTheIndexEachFileStandsAlone(): void
     {
         $root = realpath(self::FIXTURE . '/includes/project');

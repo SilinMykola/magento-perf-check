@@ -1,0 +1,28 @@
+<style>
+    .ok { width: 10px; height: 10px; }
+    .hover-only:hover { width: 10px; height: 10px; }
+    .np:not(.x) { width: 10px; height: 10px; }
+    @media print { img.printed { width: 10px; height: 10px; } }
+    .imp { width: 10px; height: auto!important; }
+    .pct { width: 10px; height: 100%; }
+    .var { width: 10px; height: var(--h); }
+    .casc { width: 10px; height: 10px; }
+    .casc { height: auto; }
+</style>
+<style media="print">.printsheet { width: 10px; height: 10px; }</style>
+<img class="ok" src="a.png" alt="">
+<img class="hover-only" src="b.png" alt="">
+<img class="np x" src="c.png" alt="">
+<img class="printed" src="d.png" alt="">
+<img class="printsheet" src="e.png" alt="">
+<img class="imp" src="f.png" alt="">
+<img class="pct" src="g.png" alt="">
+<img class="var" src="h.png" alt="">
+<img class="casc" src="i.png" alt="">
+<img class="casc" style="height: 20px" src="j.png" alt="">
+<style>.impok { width: 10px !important; height: 10px !important; }</style>
+<img class="impok" src="k.png" alt="">
+<style>.calcvar { width: 10px; height: calc(var(--h)); }</style>
+<img width="200" style="aspect-ratio: 1" src="l.png" alt="">
+<img class="impok" src="m.png" alt="">
+<img class="calcvar" src="n.png" alt="">

@@ -49,6 +49,10 @@ final class NonCacheableBlockRule implements XmlRule
         'paypal_',
         'vault_',
         'paymentservicespaypal_vault_',
+        'paymentservicespaypal_smartbuttons_', // PayPal Payment Services: review and success pages of the current quote
+        'braintree_paypal_review', // PayPal Braintree, which Magento ships: review of the current quote
+        'braintree_googlepay_review',
+        'braintree_lpm_fallback', // PayPal Braintree: return page of a local payment method
         // lists
         'wishlist_',
         'catalog_product_compare_',
@@ -95,18 +99,21 @@ final class NonCacheableBlockRule implements XmlRule
 
     public function appliesTo(XmlFile $file): bool
     {
+        // With the project's handles, the allowlist names pages only: a handle such as checkout_cart_sidebar_*,
+        // which default.xml includes, is decided by the pages that include it (check()).
         return $file->kind === XmlFile::KIND_LAYOUT
             && in_array($file->area, ['frontend', 'base'], true)
             && $file->handle !== null
-            && !$this->startsWithAny($file->handle, $this->allowlist)
-            && !$this->startsWithAny(self::withoutHyvaPrefix($file->handle), $this->allowlist);
+            && ($this->handles !== null
+                || (!$this->startsWithAny($file->handle, $this->allowlist)
+                    && !$this->startsWithAny(self::withoutHyvaPrefix($file->handle), $this->allowlist)));
     }
 
     public function check(XmlFile $file, DOMDocument $document): array
     {
         $handle = (string) $file->handle;
         $page = self::withoutHyvaPrefix($handle);
-        [$id, $severity] = $page === 'default' || $this->startsWithAny($page, self::ERROR_HANDLE_PREFIXES)
+        [$id, $severity] = self::isShopWide($handle)
             ? [self::SHOP_WIDE_ID, Severity::Error]
             : [self::ID, Severity::Warning];
 
@@ -151,6 +158,38 @@ final class NonCacheableBlockRule implements XmlRule
         }
 
         return $findings;
+    }
+
+    /**
+     * Whether the handle is shared by many or high-traffic pages (X-LAY-03): default, catalog_* and cms_*,
+     * also with a hyva_ prefix.
+     */
+    public static function isShopWide(string $handle): bool
+    {
+        $page = self::withoutHyvaPrefix($handle);
+        foreach (self::ERROR_HANDLE_PREFIXES as $prefix) {
+            if (str_starts_with($page, $prefix)) {
+                return true;
+            }
+        }
+
+        return $page === 'default';
+    }
+
+    /**
+     * Whether the default allowlist names the handle, or the handle that a hyva_ handle extends.
+     */
+    public static function isDefaultAllowlisted(string $handle): bool
+    {
+        foreach ([$handle, self::withoutHyvaPrefix($handle)] as $candidate) {
+            foreach (self::DEFAULT_ALLOWLIST as $prefix) {
+                if (str_starts_with($candidate, $prefix)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function isAllowlisted(string $handle): bool
