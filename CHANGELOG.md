@@ -6,6 +6,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-14
+
 ### Added
 
 - `--verbose` (`-v`) lists every file and the message of each finding in the table report.
@@ -227,7 +229,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.8.0...v0.9.0

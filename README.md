@@ -11,11 +11,11 @@ Finds performance and Full Page Cache anti-patterns in Magento 2 and Mage-OS cod
 ```text
 $ vendor/bin/magento-perf-check --paths=app/code/Mollie/Payment/Controller/Express/Process.php,app/code/Magefan/Community/Model/GetCategoryByProduct.php
 ERROR   P-FPC-06    State change in a GET-only controller  1 finding
-        https://github.com/SilinMykola/magento-perf-check/blob/v0.10.0/docs/rules/P-FPC-06.md
+        https://github.com/SilinMykola/magento-perf-check/blob/v0.11.0/docs/rules/P-FPC-06.md
         app/code/Mollie/Payment/Controller/Express/Process.php:58
 
 ERROR   P-LOOP-01   Model load() or repository get()/getById() inside a loop  1 finding
-        https://github.com/SilinMykola/magento-perf-check/blob/v0.10.0/docs/rules/P-LOOP-01.md
+        https://github.com/SilinMykola/magento-perf-check/blob/v0.11.0/docs/rules/P-LOOP-01.md
         app/code/Magefan/Community/Model/GetCategoryByProduct.php:73
 
 2 finding(s): 2 error, 0 warning, 0 info. Analyzed app/code/Mollie/Payment/Controller/Express/Process.php, app/code/Magefan/Community/Model/GetCategoryByProduct.php in 0.8 s.
