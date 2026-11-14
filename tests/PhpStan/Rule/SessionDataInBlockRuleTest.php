@@ -42,7 +42,7 @@ final class SessionDataInBlockRuleTest extends RuleTestCase
             $method,
         );
 
-        // Left out: CartOnly, OnNonCacheablePage, AccountOnly, CompareOnly and CartModel, placed only on uncacheable pages.
+        // Left out: CartOnly, OnNonCacheablePage, AccountOnly, CompareOnly, SidebarOnly, IncludedPrivate and CartModel, placed only on uncacheable pages.
         $this->analyse([__DIR__ . '/../Fixtures/fpc-placement.php'], [
             [$message('Acme\\Placed\\Block\\SessionBlock', 'Magento\\Customer\\Model\\Session', 'getCustomerId'), 17],
             [$message('Acme\\Placed\\Block\\Mixed', 'Magento\\Customer\\Model\\Session', 'getCustomerId'), 53],
@@ -56,8 +56,8 @@ final class SessionDataInBlockRuleTest extends RuleTestCase
             [$message('Acme\\Placed\\Block\\RemovedByOne', 'Magento\\Customer\\Model\\Session', 'getCustomerId'), 127],
             [$message('Acme\\Placed\\Block\\ParentRemoved', 'Magento\\Customer\\Model\\Session', 'getCustomerId'), 136],
             [$message('Acme\\Placed\\Block\\ParentIfconfig', 'Magento\\Customer\\Model\\Session', 'getCustomerId'), 145],
-            [$message('Acme\\Placed\\Block\\Unplaced', 'Magento\\Customer\\Model\\Session', 'getCustomerId'), 163],
-            [$message('Acme\\Placed\\ViewModel\\ItemModel', 'Magento\\Checkout\\Model\\Session', 'getQuote'), 192],
+            [$message('Acme\\Placed\\Block\\Unplaced', 'Magento\\Customer\\Model\\Session', 'getCustomerId'), 181],
+            [$message('Acme\\Placed\\ViewModel\\ItemModel', 'Magento\\Checkout\\Model\\Session', 'getQuote'), 210],
         ]);
     }
 }

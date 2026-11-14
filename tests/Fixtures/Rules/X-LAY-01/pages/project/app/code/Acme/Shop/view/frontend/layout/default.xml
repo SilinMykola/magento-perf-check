@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="acmeshop_cart_sidebar"/>
+    <update handle="acmeshop_cart_adminhtml_index"/>
+    <update handle="acmeshop_cart_index_renderers"/>
+    <update handle="acmeshop_index_trans"/>
+    <update handle="acmeshop_abstractcontroller_view"/>
+    <update handle="acmeshop_commented_cart_index"/>
+    <update handle="acmeempty_index_index"/>
+    <update handle="acmeshop_index_attributed"/>
+    <body/>
+</page>

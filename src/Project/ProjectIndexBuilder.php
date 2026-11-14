@@ -21,7 +21,7 @@ final class ProjectIndexBuilder
 
     /** Indexed files, relative to a module's etc/ directory; * is one area directory. */
     /** Part of the cache key: raise it when the same files start to give a different index. */
-    private const INDEX_VERSION = 6;
+    private const INDEX_VERSION = 7;
 
     private const MODULE_CONFIG = 'app/etc/config.php';
 
@@ -234,7 +234,13 @@ final class ProjectIndexBuilder
      */
     private static function routeFiles(array $modules): array
     {
-        return array_values(array_filter(array_map(static fn (string $root): string => $root . '/etc/frontend/routes.xml', array_keys($modules)), 'is_file'));
+        $files = array_values(array_filter(array_map(static fn (string $root): string => $root . '/etc/frontend/routes.xml', array_keys($modules)), 'is_file'));
+        // The storefront controllers decide which handles are pages (LayoutHandles).
+        foreach (array_keys($modules) as $root) {
+            array_push($files, ...LayoutHandles::controllerFiles($root));
+        }
+
+        return $files;
     }
 
     private function cacheFile(string $projectRoot, string $fingerprint): string
@@ -264,7 +270,7 @@ final class ProjectIndexBuilder
      * no cacheable page uses: account pages that include customer_account, handles whose files hold a block with
      * cacheable="false" that no ifconfig switches and no file of the handle removes, with the elements around it,
      * and handles only such handles include. Handles X-LAY-03 reports do not count that way: their cacheable="false"
-     * block is an error to fix. A route's own handle counts as a page, whatever includes it (LayoutHandles).
+     * block is an error to fix. A storefront controller action's handle is a page and decides for itself (LayoutHandles).
      * X-LAY-01's allowlist does not count either: it names pages where being uncacheable is acceptable, not pages
      * that are never cached.
      *
@@ -331,7 +337,8 @@ final class ProjectIndexBuilder
             || isset($private[str_starts_with($handle, 'hyva_') ? substr($handle, 5) : $handle]);
         $uncacheable = [];
         foreach (array_unique(array_merge(...array_map('array_keys', array_values($placements)))) as $handle) {
-            if ($handles->isPersonal((string) $handle, $personal)) {
+            // A cacheable="false" block makes every page with the handle uncacheable, page or included handle alike.
+            if ($handles->isPersonal((string) $handle, static fn (string $page): bool => false, true, $personal)) {
                 $uncacheable[(string) $handle] = true;
             }
         }

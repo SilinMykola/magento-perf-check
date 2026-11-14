@@ -112,6 +112,8 @@ magentoPerf:
     layout:
         # Extra handle prefixes that X-LAY-01 and X-LAY-03 must not report.
         # A prefix also covers the hyva_ copy of a handle: acme_account_ covers hyva_acme_account_index.
+        # The prefixes name pages, the handles of storefront controller actions, and handles that no layout
+        # includes. A handle that layouts include is judged by the pages that include it, prefix or not.
         allowlistHandles:
             - acme_account_
         # true: use only the prefixes above instead of adding them to the default list.

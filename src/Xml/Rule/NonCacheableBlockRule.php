@@ -49,6 +49,10 @@ final class NonCacheableBlockRule implements XmlRule
         'paypal_',
         'vault_',
         'paymentservicespaypal_vault_',
+        'paymentservicespaypal_smartbuttons_', // PayPal Payment Services: review and success pages of the current quote
+        'braintree_paypal_review', // PayPal Braintree, which Magento ships: review of the current quote
+        'braintree_googlepay_review',
+        'braintree_lpm_fallback', // PayPal Braintree: return page of a local payment method
         // lists
         'wishlist_',
         'catalog_product_compare_',
@@ -95,11 +99,14 @@ final class NonCacheableBlockRule implements XmlRule
 
     public function appliesTo(XmlFile $file): bool
     {
+        // With the project's handles, the allowlist names pages only: a handle such as checkout_cart_sidebar_*,
+        // which default.xml includes, is decided by the pages that include it (check()).
         return $file->kind === XmlFile::KIND_LAYOUT
             && in_array($file->area, ['frontend', 'base'], true)
             && $file->handle !== null
-            && !$this->startsWithAny($file->handle, $this->allowlist)
-            && !$this->startsWithAny(self::withoutHyvaPrefix($file->handle), $this->allowlist);
+            && ($this->handles !== null
+                || (!$this->startsWithAny($file->handle, $this->allowlist)
+                    && !$this->startsWithAny(self::withoutHyvaPrefix($file->handle), $this->allowlist)));
     }
 
     public function check(XmlFile $file, DOMDocument $document): array

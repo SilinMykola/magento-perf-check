@@ -42,8 +42,6 @@ Good: render a placeholder and fill it from the `customer` customer data section
 
 - A block used only on pages that are uncacheable by design but that the layouts do not show as such, for example a page a controller makes uncacheable with headers.
 
-- A block placed only in a handle that only uncacheable pages include but whose name starts with a storefront route, such as `customer_account.xml`: the rule takes such a handle for a page of its own, which may be cached.
-
 Known false negatives: a class placed both by layout on an uncacheable page and by code on a cacheable one (`createBlock()` in a template, a Hyvä `$viewModels->require()`, a widget or a CMS `{{block}}`) is left out, and so is one whose virtual type or a preference for a subclass is placed on a cacheable page; only layouts and real subclasses are read.
 
 ## Basis

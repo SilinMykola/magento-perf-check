@@ -155,6 +155,24 @@ namespace Acme\Placed\Block {
         }
     }
 
+    // In acmepromo_account, a handle of the acmepromo route that is no page and that only an account page includes.
+    final class SidebarOnly extends SessionBlock
+    {
+        public function id(): int
+        {
+            return (int) $this->customerSession->getCustomerId();
+        }
+    }
+
+    // In acmepromo_address_form, no page, which has its own cacheable="false" block and which a page includes.
+    final class IncludedPrivate extends SessionBlock
+    {
+        public function id(): int
+        {
+            return (int) $this->customerSession->getCustomerId();
+        }
+    }
+
     // No layout places it.
     final class Unplaced extends SessionBlock
     {
