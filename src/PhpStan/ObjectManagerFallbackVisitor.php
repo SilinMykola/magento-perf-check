@@ -11,16 +11,17 @@ use PhpParser\NodeFinder;
 use PhpParser\NodeVisitorAbstract;
 
 /**
- * Marks ObjectManager::getInstance() calls that are the backward-compatible
- * constructor fallback: "$dependency ?: ObjectManager::getInstance()->get(...)", the same
- * with "??", or, in the constructor, a full ternary such as "$dependency !== null ? $dependency : ...".
- * Adobe documents this pattern as allowed. In a constructor the same fallback written as
- * "if (!isset($dependency)) { ... }" counts too, and so does
- * "$objectManager = ObjectManager::getInstance()" when only fallbacks use the variable.
+ * Marks ObjectManager::getInstance() calls that are the backward-compatible constructor fallback:
+ * "$dependency ?: ObjectManager::getInstance()->get(...)", the same with "??" or "??=", or a full
+ * ternary such as "$dependency !== null ? $dependency : ...". Adobe documents this pattern as allowed.
+ * The same fallback written as "if (!isset($dependency)) { ... }" counts too, and so does
+ * "$objectManager = ObjectManager::getInstance()" when only fallbacks use the variable. All of this
+ * counts in the constructor only, not in closures declared there.
  *
- * Outside the constructor it also marks the lazy getter that fills a missing property once:
+ * Outside the constructor it marks the lazy getter that fills a missing property once:
  * "if ($this->dependency === null) { $this->dependency = ObjectManager::getInstance()->get(...); }",
- * also through a local variable that the block assigns and then stores in the property.
+ * also through a local variable that the block assigns and then stores in the property, and the same in
+ * one expression: "$this->dependency = $this->dependency ?? ...", with "?:", or "$this->dependency ??= ...".
  * It runs once per object, so it costs next to nothing.
  */
 final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
@@ -36,17 +37,6 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
         }
         if ($node instanceof Stmt\ClassMethod && $node->stmts !== null) {
             $this->markLazyGetters($node->stmts);
-        }
-        $fallback = $node instanceof Expr ? $this->fallbackOf($node, false) : null;
-        if ($fallback === null) {
-            return null;
-        }
-        $expr = $fallback;
-        while ($expr instanceof Expr\MethodCall) {
-            $expr = $expr->var;
-        }
-        if ($this->looksLikeGetInstance($expr)) {
-            $expr->setAttribute(self::FALLBACK, true);
         }
 
         return null;
@@ -87,7 +77,6 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
                 $expr = $expr->var;
             }
             $inFallback[spl_object_id($expr)] = true;
-            // The full ternary counts in the constructor only; "?:" and "??" are marked wherever they are.
             if ($this->looksLikeGetInstance($expr)) {
                 $expr->setAttribute(self::FALLBACK, true);
             }
@@ -138,6 +127,26 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
      */
     private function markLazyGetters(array $stmts): void
     {
+        // The same getter in one expression: "$this->x = $this->x ?? <dependency>", "?:", or "$this->x ??= <dependency>".
+        foreach ($this->find($stmts, static fn (Node $node): bool => $node instanceof Expr\Assign
+            || $node instanceof Expr\AssignOp\Coalesce) as $assign) {
+            /** @var Expr\Assign|Expr\AssignOp\Coalesce $assign */
+            $fallback = $assign instanceof Expr\AssignOp\Coalesce ? $assign->expr : $this->fallbackOf($assign->expr, false);
+            $tested = match (true) {
+                $assign instanceof Expr\AssignOp\Coalesce => $assign->var,
+                $assign->expr instanceof Expr\BinaryOp\Coalesce => $assign->expr->left,
+                $assign->expr instanceof Expr\Ternary => $assign->expr->cond,
+                default => null,
+            };
+            if ($fallback === null || $tested === null || self::cacheProperty($assign->var) === null
+                || !self::sameValue($tested, $assign->var) || !$this->isDependency($fallback, [])
+            ) {
+                continue;
+            }
+            foreach (self::dependencyRoots($fallback) as $root) {
+                $root->setAttribute(self::FALLBACK, true);
+            }
+        }
         foreach ($this->find($stmts, static fn (Node $node): bool => $node instanceof Stmt\If_) as $if) {
             /** @var Stmt\If_ $if */
             $tested = $this->testedAsMissing($if->cond);
@@ -148,7 +157,7 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
                 }
                 continue;
             }
-            $property = self::propertyOfThis($tested);
+            $property = self::cacheProperty($tested);
             $dependency = $property !== null ? $this->storedInProperty($property, $if->stmts) : null;
             foreach ($dependency !== null ? self::dependencyRoots($dependency) : [] as $root) {
                 $root->setAttribute(self::FALLBACK, true);
@@ -166,7 +175,7 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
     {
         return $this->storedDependency(
             $block,
-            static fn (Expr $expr): ?Expr => $expr instanceof Expr\Assign && self::propertyOfThis($expr->var) === $property
+            static fn (Expr $expr): ?Expr => $expr instanceof Expr\Assign && self::cacheProperty($expr->var) === $property
                 ? $expr->expr : null,
             null,
         );
@@ -204,7 +213,7 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * What a fallback expression falls back to: the right side of "??", the else of "?:", or the branch
+     * What a fallback expression falls back to: the right side of "??" or "??=", the else of "?:", or the branch
      * of a full ternary taken when the value it tests is missing, such as "$x !== null ? $x : <fallback>"
      * or "$x === null ? <fallback> : $x", when $fullTernary allows it.
      */
@@ -212,6 +221,9 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
     {
         if ($node instanceof Expr\BinaryOp\Coalesce) {
             return $node->right;
+        }
+        if ($node instanceof Expr\AssignOp\Coalesce) {
+            return $node->expr;
         }
         if (!$node instanceof Expr\Ternary) {
             return null;
@@ -258,9 +270,9 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
         if ($a instanceof Expr\Variable && $b instanceof Expr\Variable) {
             return is_string($a->name) && $a->name === $b->name;
         }
-        $property = self::propertyOfThis($a);
+        $property = self::cacheProperty($a);
 
-        return $property !== null && $property === self::propertyOfThis($b);
+        return $property !== null && $property === self::cacheProperty($b);
     }
 
     /**
@@ -357,10 +369,17 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * The name of "$this->name", or null for anything else.
+     * A property a lazy getter can keep the object in: "name" for "$this->name", "::name" for "self::$name"
+     * or "static::$name", which keep it once per process; null for anything else.
      */
-    private static function propertyOfThis(?Expr $expr): ?string
+    private static function cacheProperty(?Expr $expr): ?string
     {
+        if ($expr instanceof Expr\StaticPropertyFetch && $expr->class instanceof Node\Name
+            && in_array($expr->class->toLowerString(), ['self', 'static'], true) && $expr->name instanceof Node\VarLikeIdentifier
+        ) {
+            return '::' . $expr->name->toString();
+        }
+
         return $expr instanceof Expr\PropertyFetch && $expr->var instanceof Expr\Variable && $expr->var->name === 'this'
             && $expr->name instanceof Node\Identifier ? $expr->name->toString() : null;
     }

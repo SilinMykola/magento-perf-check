@@ -485,3 +485,78 @@ final class LazyGetterThroughLocal
         return $this->other;
     }
 }
+
+final class FallbackScope
+{
+    private ?object $a = null;
+    private ?object $b = null;
+    private ?object $c = null;
+    /** @var ?list<mixed> */
+    private ?array $list = null;
+    /** @var callable */
+    private $later;
+
+    public function __construct(?object $param = null)
+    {
+        $param ??= ObjectManager::getInstance()->get(\stdClass::class);
+        $this->later = static fn (?object $x): object => $x ?: ObjectManager::getInstance()->get(\stdClass::class); // reported: a closure runs later
+    }
+
+    public function keptGetters(): void
+    {
+        $this->a = $this->a ?? ObjectManager::getInstance()->get(\stdClass::class);
+        $this->b = $this->b ?: ObjectManager::getInstance()->get(\stdClass::class);
+        $this->c ??= ObjectManager::getInstance()->get(\stdClass::class);
+    }
+
+    public function notKept(?object $given): object
+    {
+        $this->a = $this->b ?? ObjectManager::getInstance()->get(\stdClass::class); // reported: another property is tested
+        $local = $given ?: ObjectManager::getInstance()->get(\stdClass::class); // reported: not kept
+        $this->c ??= ObjectManager::getInstance()->get(\stdClass::class)->create(); // reported: more than the dependency
+        $this->list ??= [ObjectManager::getInstance()->get(\stdClass::class), $given]; // reported: more than the dependency
+
+        return $this->a ?? ObjectManager::getInstance()->get(\stdClass::class); // reported: not kept
+    }
+}
+
+final class FallbackScopeEdges
+{
+    private static ?object $shared = null;
+    private static ?object $other = null;
+    private static ?object $third = null;
+    private ?object $a = null;
+    /** @var ?list<object> */
+    private ?array $list = null;
+    /** @var array<string, object> */
+    private array $instances = [];
+
+    public function __construct(?object $x = null, ?object $y = null)
+    {
+        $objectManager = ObjectManager::getInstance();
+        $y ??= $objectManager->get(\stdClass::class);
+        $this->instances['x'] = new \ArrayObject([$x ?: ObjectManager::getInstance()->get(\stdClass::class), $y]);
+    }
+
+    public function allowed(): object
+    {
+        self::$shared = self::$shared ?? ObjectManager::getInstance()->get(\stdClass::class);
+        static::$other ??= ObjectManager::getInstance()->get(\stdClass::class);
+        if (self::$third === null) {
+            self::$third = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        $this->list ??= [ObjectManager::getInstance()->get(\stdClass::class), ObjectManager::getInstance()->get(\stdClass::class)];
+
+        return $this->a ??= ObjectManager::getInstance()->get(\stdClass::class);
+    }
+
+    public function reported(?object $local, string $type): void
+    {
+        $local = $local ?? ObjectManager::getInstance()->get(\stdClass::class); // reported: a local variable is not kept
+        $this->a = $this->a ? $this->a : ObjectManager::getInstance()->get(\stdClass::class); // reported: full ternary outside the constructor
+        $this->instances[$type] ??= ObjectManager::getInstance()->get($type); // reported: a service locator by key
+        $later = function (): void {
+            $this->a = $this->a ?: ObjectManager::getInstance()->get(\stdClass::class); // reported: in a closure
+        };
+    }
+}

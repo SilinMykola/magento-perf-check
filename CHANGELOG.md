@@ -6,6 +6,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Changed
+
+- P-DI-06 takes the constructor fallback, `$param ?: ObjectManager::getInstance()->get(...)` and `??`, as allowed in the constructor only; closures declared there do not count. Outside the constructor the lazy getter may be written in one expression that keeps the object in the property it tests, `$this->x = $this->x ?? ...`, `?:` or `$this->x ??= ...`, and may keep it in a static property of `self` or `static`; anything else is reported, such as `return $this->_resource ?: ObjectManager::getInstance()->get(...)`. The fallback written as `$param ??= ...` in a constructor is no longer reported, by P-DI-06 or by the experimental P-DI-02. Measured on Magento 2.4.9 core and on the packagist, extended and github parts of the calibration corpus: 7 findings more in core and 1 in the Packagist modules, each a call outside a constructor (6 do not keep the object, one sits in `_construct()`, which Magento calls without arguments), and 2 `??=` fallbacks less in core. **This can change a CI result:** P-DI-06 is a `warning` of the default set.
+
 ### Fixed
 
 - The loop rules (P-LOOP-01, P-LOOP-03, P-LOOP-11 and the others) follow a `try` inside a loop. A call in a `catch` after which the loop is left, such as a delete before `throw $e`, runs at most once and is no longer reported. A call in the `try` itself is left out only when every `catch` leaves the loop too: a repository throws `NoSuchEntityException` after its query, so an empty `catch` still lets each missing id cost one. A call in a `finally` is left out only when what follows the `try` leaves the loop and neither the `try` nor a `catch` holds `continue`, `break` or `goto`.

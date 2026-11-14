@@ -106,3 +106,27 @@ final class ReturnsParentCall extends Base
         return parent::__construct();
     }
 }
+
+final class CoalesceAssignFallback
+{
+    public function __construct(?object $resolver = null)
+    {
+        $resolver ??= ObjectManager::getInstance()->get(\stdClass::class);
+        $this->resolver = $resolver;
+    }
+
+    public object $resolver;
+}
+
+final class CoalesceAssignWork
+{
+    public function __construct(?ManagerInterface $eventManager = null)
+    {
+        $eventManager ??= $this->build();
+    }
+
+    private function build(): ManagerInterface
+    {
+        throw new \LogicException();
+    }
+}

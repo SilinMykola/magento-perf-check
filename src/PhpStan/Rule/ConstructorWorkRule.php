@@ -78,13 +78,19 @@ final class ConstructorWorkRule implements Rule
             return true;
         }
 
-        $target = $expr instanceof Expr\Assign ? $expr->var : null;
+        $target = $expr instanceof Expr\Assign || $expr instanceof Expr\AssignOp\Coalesce ? $expr->var : null;
         $toProperty = $target instanceof Expr\PropertyFetch
             && $target->var instanceof Expr\Variable && $target->var->name === 'this';
+        // "$param ??= <fallback>" is "$param = $param ?? <fallback>".
+        $value = match (true) {
+            $expr instanceof Expr\Assign => $expr->expr,
+            $expr instanceof Expr\AssignOp\Coalesce => new Expr\BinaryOp\Coalesce($expr->var, $expr->expr),
+            default => null,
+        };
 
-        return $expr instanceof Expr\Assign
+        return $value !== null
             && ($toProperty || $target instanceof Expr\Variable)
-            && $this->isPlainValue($expr->expr);
+            && $this->isPlainValue($value);
     }
 
     private static function isParentConstructorCall(Expr $expr): bool
