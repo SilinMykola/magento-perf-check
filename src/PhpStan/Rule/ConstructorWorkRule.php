@@ -78,13 +78,19 @@ final class ConstructorWorkRule implements Rule
             return true;
         }
 
-        $target = $expr instanceof Expr\Assign ? $expr->var : null;
+        $target = $expr instanceof Expr\Assign || $expr instanceof Expr\AssignOp\Coalesce ? $expr->var : null;
         $toProperty = $target instanceof Expr\PropertyFetch
             && $target->var instanceof Expr\Variable && $target->var->name === 'this';
+        // "$param ??= <fallback>" is "$param = $param ?? <fallback>".
+        $value = match (true) {
+            $expr instanceof Expr\Assign => $expr->expr,
+            $expr instanceof Expr\AssignOp\Coalesce => new Expr\BinaryOp\Coalesce($expr->var, $expr->expr),
+            default => null,
+        };
 
-        return $expr instanceof Expr\Assign
+        return $value !== null
             && ($toProperty || $target instanceof Expr\Variable)
-            && $this->isPlainValue($expr->expr);
+            && $this->isPlainValue($value);
     }
 
     private static function isParentConstructorCall(Expr $expr): bool
@@ -162,6 +168,10 @@ final class ConstructorWorkRule implements Rule
         $fallback = match (true) {
             $expr instanceof Expr\BinaryOp\Coalesce => [$expr->left, $expr->right],
             $expr instanceof Expr\Ternary && $expr->if === null => [$expr->cond, $expr->else],
+            // "$x !== null ? $x : ObjectManager::getInstance()->get(...)": the visitor checked the condition and
+            // marked the object manager call of the branch that runs when the value is missing.
+            $expr instanceof Expr\Ternary && $this->isMarkedFallback($expr->else) => [$expr->if, $expr->else],
+            $expr instanceof Expr\Ternary && $this->isMarkedFallback($expr->if) => [$expr->else, $expr->if],
             default => null,
         };
         if ($fallback === null) {
@@ -174,10 +184,27 @@ final class ConstructorWorkRule implements Rule
         if ($this->isPlainValue($default) || $default instanceof Expr\New_) {
             return true;
         }
-        while ($default instanceof Expr\MethodCall) {
-            $default = $default->var;
+        return $this->isMarkedFallback($default);
+    }
+
+    /**
+     * "ObjectManager::getInstance()->get(...)" or "->create(...)" whose root ObjectManagerFallbackVisitor marked
+     * as the documented fallback, with plain arguments: a further call, or a call in an argument, is work.
+     */
+    private function isMarkedFallback(Expr $expr): bool
+    {
+        if (!$expr instanceof Expr\MethodCall || !$expr->name instanceof Node\Identifier
+            || !in_array($expr->name->toLowerString(), ['get', 'create'], true)
+            || !$expr->var instanceof Expr\StaticCall || $expr->var->getAttribute(ObjectManagerFallbackVisitor::FALLBACK) !== true
+        ) {
+            return false;
+        }
+        foreach ($expr->getArgs() as $arg) {
+            if (!$this->isPlainValue($arg->value)) {
+                return false;
+            }
         }
 
-        return $default instanceof Expr\StaticCall && $default->getAttribute(ObjectManagerFallbackVisitor::FALLBACK) === true;
+        return true;
     }
 }

@@ -175,7 +175,7 @@ Two runs on one project at the same time SHALL each analyze their own paths. Wit
 - **THEN** each report lists findings from its own paths only
 
 ### Requirement: Projects with the PHPStan extension installer
-The analysis SHALL run only this package's rules and the extensions the command includes itself, whatever `phpstan/extension-installer` lists in the analyzed project or next to the tool. The command SHALL keep the installer from adding extensions, so that no file is included twice and no other extension's rules run. From `bitexpert/phpstan-magento` the analysis SHALL use the type extensions; the command SHALL switch off those of its own rules that have parameters.
+The analysis SHALL run only this package's rules and the extensions the command includes itself, whatever `phpstan/extension-installer` lists in the analyzed project or next to the tool. The command SHALL keep the installer from adding extensions, so that no file is included twice and no other extension's rules run. From `bitexpert/phpstan-magento` the analysis SHALL use the type extensions; the command SHALL switch off those of its own rules that have parameters. The command SHALL include `bitexpert/phpstan-magento` only when its `parametersSchema` declares every parameter it sets; otherwise it SHALL run without it and give a `generated-code` notice that names the missing parameter.
 
 #### Scenario: Installer includes both extensions
 - **WHEN** the project's installer list holds this package and `bitexpert/phpstan-magento`
@@ -194,3 +194,7 @@ The analysis SHALL run only this package's rules and the extensions the command 
 - **WHEN** `bitexpert/phpstan-magento` is installed next to the tool
 - **THEN** the generated configuration sets `magento.checkCollectionViaFactory`, `magento.checkServiceContracts`, `magento.checkResourceModelsUsedDirectly` and `extdn.setTemplateDisallowedForBlockClasses` to `false`
 - **AND** without bitExpert the generated configuration has none of these parameters
+
+#### Scenario: bitExpert without the declared switches
+- **WHEN** the installed `bitexpert/phpstan-magento` sets `extdn.setTemplateDisallowedForBlockClasses` but does not declare it in `parametersSchema`, as 0.30.0 does
+- **THEN** the analysis runs without it, the generated configuration does not include it, and a `generated-code` notice names the missing parameter

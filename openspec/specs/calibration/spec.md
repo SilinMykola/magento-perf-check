@@ -88,14 +88,18 @@ For a rule whose M1 spot checks showed a recurring false-positive pattern, the f
 ### Requirement: Published calibration report
 `docs/calibration.md` SHALL state:
 - the corpus (link to the manifest), the tool version and the date;
-- for each default rule: the number of findings, sample size, TP, TP-low, FP, unclear, precision, impact share, how many verdicts the owner re-checked, and the decision (kept, downgraded, experimental, insufficient data);
+- for each rule of the default set at round 1, with its severity at that round: the number of findings, sample size, TP, TP-low, FP, unclear, precision, impact share, how many verdicts the owner re-checked, and the decision (kept, downgraded, experimental, insufficient data);
 - the limitations of the method.
 
-The README section "What our rules are based on" SHALL link it. The rule registry and the SPEC catalog SHALL reflect every decision.
+The README section "What our rules are based on" SHALL link it. The rule registry and the SPEC catalog SHALL reflect every decision that no later round's report replaces.
 
 #### Scenario: Catalog matches the report
 - **WHEN** the report says a rule moved to experimental
-- **THEN** the rule's status in the registry is experimental, the SPEC catalog shows 🧪, and the README rule table no longer lists it in the default set
+- **THEN** unless a later round's report moves it back, the rule's status in the registry is experimental, the SPEC catalog shows 🧪, and the README rule table no longer lists it in the default set
+
+#### Scenario: Regenerated page is stable
+- **WHEN** a later round adds a rule to the default set, moves one out of it or changes its severity, or a run is repeated, and `bin/calibration/report` runs again
+- **THEN** the round 1 table of `docs/calibration.md` lists exactly the round 1 rules with their round 1 severities and decisions, and the runs table lists the runs round 1 used
 
 ### Requirement: Follow-ups from grading
 Recurring false-positive patterns found during grading that need a rule change beyond this change's specs SHALL be listed in `docs/calibration/follow-ups.md`, per rule, with the graded findings that show them. `docs/calibration.md` SHALL link that list.
@@ -153,3 +157,25 @@ The file to share SHALL NOT hold a path, a module, class, vendor or project name
 #### Scenario: Report with paths and names
 - **WHEN** a report has findings in `app/code/ClientName/Secret/` and a notice that names a module
 - **THEN** the file to share contains none of these, and the local file contains the paths
+
+### Requirement: GitHub corpus part
+The calibration corpus SHALL have a third part, `github`, built under `var/corpus/github` as a hard-linked copy of the `extended` part and of the modules of the `packagist` part. It SHALL hold up to 50 modules from the most-starred GitHub repositories with the topic `magento2-module` that are not archived and not forks. A repository SHALL be passed over when its module or Composer name is already in the copy, when it holds no single module of type `magento2-module`, when one of its requirements is neither installed in the copy at a fitting version nor a module of the copy, when its `registration.php` fails the check of the `extended` part, when it contains a symbolic link, or when it cannot be cloned. The `packagist` and `extended` parts SHALL stay unchanged.
+
+#### Scenario: Module already in the corpus
+- **WHEN** a repository's Composer name is that of a module in the `extended` part
+- **THEN** the repository is not copied and the manifest records it as skipped
+
+#### Scenario: Requirement missing
+- **WHEN** a repository requires a package that is neither installed in the copy nor a module of the copy
+- **THEN** the repository is not copied and the manifest records the requirement
+
+#### Scenario: Only the new modules are analyzed
+- **WHEN** `bin/calibration/run github` runs
+- **THEN** the report holds findings only under the paths of the modules listed in the `github` section of the manifest
+
+### Requirement: GitHub part manifest and clones
+The repositories of the `github` part SHALL be cloned into `var/corpus/github-clones`, which a rebuild of the part keeps and reuses without a fetch. `docs/calibration/corpus.json` SHALL list every repository of the part with its Composer name, module, stars and commit, and every skipped repository with the reason.
+
+#### Scenario: Rebuild on the same machine
+- **WHEN** the `github` part is built a second time
+- **THEN** every repository that is selected again keeps the commit of the first build

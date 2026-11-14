@@ -159,39 +159,165 @@ final class TryAroundLoop
     }
 
     /**
+     * In a try inside the loop, a call counts as running once only when no catch can go on with the loop.
+     *
      * @param list<int> $ids
      */
-    public function stillInLoop(array $ids): ?object
+    public function leavesLoopThroughTry(array $ids): ?object
     {
         foreach ($ids as $id) {
             try {
+                $product = $this->productRepository->getById($id);
+                break;
+            } catch (\Throwable $e) {
+                return null;
+            }
+        }
+        foreach ($ids as $id) {
+            foreach ($ids as $other) {
+                try {
+                    $this->check($other);
+                } catch (\Throwable $e) {
+                    if ($id > 0) {
+                        $this->productRepository->getById($id);
+                    }
+                    throw $e;
+                }
+            }
+        }
+        foreach ($ids as $id) {
+            try {
+                $this->check($id);
+            } finally {
                 return $this->productRepository->getById($id);
+            }
+        }
+        foreach ($ids as $id) {
+            try {
+                $this->check($id);
+            } catch (\Throwable $e) {
+                $this->productRepository->getById($id);
+            }
+
+            return null;
+        }
+        foreach ($ids as $id) {
+            try {
+                $this->check($id);
+            } finally {
+                $this->productRepository->getById($id);
+            }
+
+            return null;
+        }
+        foreach ($ids as $id) {
+            try {
+                return $this->productRepository->getById($id);
+            } finally {
+                $this->check($id);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param list<int> $ids
+     * @return list<object>
+     */
+    public function stillInLoop(array $ids): array
+    {
+        $products = [];
+        foreach ($ids as $id) {
+            try {
+                return [$this->productRepository->getById($id)]; // reported: a missing id goes on with the loop
             } catch (\Throwable $e) {
                 continue;
+            }
+        }
+        foreach ($ids as $id) {
+            if ($id > 0) {
+                try {
+                    $product = $this->productRepository->getById($id); // reported: the empty catch goes on
+                    break;
+                } catch (\Throwable $e) {
+                }
+            }
+        }
+        foreach ($ids as $id) {
+            try {
+                $product = $this->productRepository->getById($id); // reported: its own catch takes the throw
+                if ($id > 1) {
+                    throw new \RuntimeException();
+                }
+
+                return [$product];
+            } catch (\RuntimeException $e) {
+                continue;
+            }
+        }
+        foreach ($ids as $id) {
+            try {
+                foreach ($ids as $other) {
+                    return [$this->productRepository->getById($other)]; // reported: the catch goes on with the outer loop
+                }
+            } catch (\Throwable $e) {
+                continue;
+            }
+        }
+        foreach ($ids as $id) {
+            try {
+                $products[] = $this->productRepository->getById($id); // reported: the loop goes on
+            } catch (\Throwable $e) {
+                return [];
+            }
+        }
+        foreach ($ids as $id) {
+            try {
+                $this->check($id);
+            } catch (\Throwable $e) {
+                $this->productRepository->getById($id); // reported: the catch goes on with the loop
+            }
+        }
+        foreach ($ids as $id) {
+            try {
+                if ($id < 0) {
+                    continue;
+                }
+                $this->check($id);
+            } finally {
+                $this->productRepository->getById($id); // reported: the finally also runs after continue
+            }
+
+            return [];
+        }
+        foreach ($ids as $id) {
+            foreach ($ids as $other) {
+                try {
+                    $this->productRepository->getById($other); // reported: break leaves the inner loop only
+                    break;
+                } catch (\Throwable $e) {
+                    return [];
+                }
             }
         }
         try {
             foreach ($ids as $id) {
                 try {
-                    return $this->productRepository->getById($id);
+                    return [$this->productRepository->getById($id)]; // reported: the inner catch goes on
                 } catch (\Throwable $e) {
                     continue;
                 }
             }
         } catch (\Throwable $e) {
-            return null;
-        }
-        foreach ($ids as $id) {
-            try {
-                foreach ($ids as $other) {
-                    return $this->productRepository->getById($other);
-                }
-            } catch (\Throwable $e) {
-                continue;
-            }
+            return [];
         }
 
-        return null;
+        return $products;
+    }
+
+    private function check(int $id): void
+    {
     }
 }
 

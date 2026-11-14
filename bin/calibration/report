@@ -8,19 +8,64 @@ declare(strict_types=1);
  * docs/calibration.md (change m2-calibration, design D3).
  *
  *   report           write docs/calibration.md and print the decisions
- *   report --check   validate the grading tables and print the decisions
+ *   report --check   validate the round 1 grading tables and print the decisions
+ *   report --print   print the page instead of writing it (a test compares it with docs/calibration.md)
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use Silin\MagentoPerfCheck\Rule\RuleRegistry;
-use Silin\MagentoPerfCheck\Rule\RuleStatus;
 use Silin\MagentoPerfCheck\Rule\Severity;
 
 const ROOT = __DIR__ . '/../..';
 const VERDICTS = ['TP', 'TP-low', 'FP', 'unclear'];
 const MIN_GRADED = 10;
 const MIN_IMPACT_SHARE = 0.5;
+
+/**
+ * The default set and its severities when round 1 was graded (2026-10-24), in catalog order. This page
+ * records that round: later rounds moved rules in and out of the default set and changed severities,
+ * so reading the current catalog would recompute old decisions against new severities.
+ */
+const ROUND_1 = [
+    'X-LAY-01' => Severity::Warning,
+    'P-LOOP-01' => Severity::Error,
+    'P-COL-02' => Severity::Error,
+    'P-COL-01' => Severity::Warning,
+    'P-LOOP-02' => Severity::Error,
+    'P-LOOP-03' => Severity::Warning,
+    'P-LOOP-07' => Severity::Warning,
+    'P-DI-01' => Severity::Error,
+    'P-DI-02' => Severity::Warning,
+    'P-DI-03' => Severity::Error,
+    'P-DI-06' => Severity::Warning,
+    'P-FPC-01' => Severity::Error,
+    'P-FPC-02' => Severity::Warning,
+    'P-FPC-05' => Severity::Warning,
+    'P-FPC-06' => Severity::Error,
+    'P-FPC-09' => Severity::Error,
+    'P-FPC-10' => Severity::Error,
+    'P-PLG-01' => Severity::Warning,
+    'T-01' => Severity::Warning,
+    'X-SETUP-01' => Severity::Warning,
+    'X-LAY-02' => Severity::Error,
+    'X-EVT-01' => Severity::Warning,
+    'X-EVT-02' => Severity::Warning,
+    'X-EVT-03' => Severity::Warning,
+    'X-SEC-01' => Severity::Error,
+    'X-MQ-01' => Severity::Warning,
+    'X-IDX-01' => Severity::Warning,
+    'X-DB-01' => Severity::Error,
+    'X-GQL-01' => Severity::Error,
+];
+
+/**
+ * The runs round 1 was sampled from. Rerunning "bin/calibration/run core" rewrites docs/calibration/runs/,
+ * so the page keeps what round 1 used: run, project, paths, wall time, peak RSS, tool commit, date.
+ */
+const ROUND_1_RUNS = [
+    ['core', 'var/corpus/magento', 'vendor/magento', 128, 3627, '4f32744', '2026-10-24'],
+    ['packagist', 'var/corpus/magento', 'app/code', 13, 2772, '4f32744', '2026-10-24'],
+];
 
 /**
  * @return array{rows: list<array{n: int, location: string, verdict: string, reason: string, recheck: bool, owner: string}>, total: int}
@@ -97,20 +142,16 @@ function decide(Severity $severity, int $graded, ?float $precision, ?float $impa
 }
 
 $check = in_array('--check', $argv, true);
-$registry = new RuleRegistry();
 $results = [];
 $allProblems = [];
-foreach ($registry->all() as $rule) {
-    if ($rule->status !== RuleStatus::Default) {
-        continue;
-    }
-    $file = ROOT . '/docs/calibration/graded/' . $rule->id . '.md';
+foreach (ROUND_1 as $id => $severity) {
+    $file = ROOT . '/docs/calibration/graded/' . $id . '.md';
     if (!is_file($file)) {
-        $results[$rule->id] = ['rule' => $rule, 'total' => 0, 'counts' => array_fill_keys(VERDICTS, 0), 'rechecked' => 0, 'changed' => 0, 'graded' => 0, 'precision' => null, 'impactShare' => null];
+        $results[$id] = ['severity' => $severity, 'total' => 0, 'counts' => array_fill_keys(VERDICTS, 0), 'rechecked' => 0, 'changed' => 0, 'graded' => 0, 'precision' => null, 'impactShare' => null];
         continue;
     }
     $parsed = parseGrades($file);
-    array_push($allProblems, ...problems($rule->id, $parsed['rows']));
+    array_push($allProblems, ...problems($id, $parsed['rows']));
     $counts = array_fill_keys(VERDICTS, 0);
     $rechecked = 0;
     $changed = 0;
@@ -124,8 +165,8 @@ foreach ($registry->all() as $rule) {
         }
     }
     $graded = $counts['TP'] + $counts['TP-low'] + $counts['FP'];
-    $results[$rule->id] = [
-        'rule' => $rule,
+    $results[$id] = [
+        'severity' => $severity,
         'total' => $parsed['total'],
         'counts' => $counts,
         'rechecked' => $rechecked,
@@ -136,26 +177,28 @@ foreach ($registry->all() as $rule) {
     ];
 }
 
+// Later rounds keep their grading in docs/calibration/graded/round-N/; a file here for another rule is a mistake.
+foreach (glob(ROOT . '/docs/calibration/graded/*.md') ?: [] as $file) {
+    if (!isset(ROUND_1[basename($file, '.md')])) {
+        $allProblems[] = basename($file) . ': not a rule of round 1; later rounds grade in docs/calibration/graded/round-N/';
+    }
+}
 if ($allProblems !== []) {
     fwrite(STDERR, implode("\n", $allProblems) . "\n");
     exit(1);
 }
 $corpus = json_decode((string) file_get_contents(ROOT . '/docs/calibration/corpus.json'), true, 512, JSON_THROW_ON_ERROR);
-$metas = [];
-foreach (glob(ROOT . '/docs/calibration/runs/*.meta.json') ?: [] as $metaFile) {
-    $metas[] = json_decode((string) file_get_contents($metaFile), true, 512, JSON_THROW_ON_ERROR);
-}
 
 $rows = '';
 $decisions = [];
 foreach ($results as $id => $r) {
-    $decision = $r['total'] === 0 ? 'no findings in the corpus' : decide($r['rule']->severity, $r['graded'], $r['precision'], $r['impactShare']);
+    $decision = $r['total'] === 0 ? 'no findings in the corpus' : decide($r['severity'], $r['graded'], $r['precision'], $r['impactShare']);
     $decisions[$id] = $decision;
     $rows .= sprintf(
         "| [%s](rules/%s.md) | %s | %d | %d | %d | %d | %d | %d | %s | %s | %d (%d changed) | %s |\n",
         $id,
         $id,
-        $r['rule']->severity->value,
+        $r['severity']->value,
         $r['total'],
         array_sum($r['counts']),
         $r['counts']['TP'],
@@ -179,8 +222,8 @@ if ($check) {
 }
 
 $runs = '';
-foreach ($metas as $meta) {
-    $runs .= sprintf("| %s | `%s` | `--paths=%s` | %d s | %d MB | %s | %s |\n", $meta['run'], $meta['project'], $meta['paths'], $meta['wallSeconds'], $meta['peakRssMb'], $meta['toolCommit'], $meta['date']);
+foreach (ROUND_1_RUNS as [$run, $project, $paths, $wallSeconds, $peakRssMb, $toolCommit, $date]) {
+    $runs .= sprintf("| %s | `%s` | `--paths=%s` | %d s | %d MB | %s | %s |\n", $run, $project, $paths, $wallSeconds, $peakRssMb, $toolCommit, $date);
 }
 
 $modules = count($corpus['packagist']['modules'] ?? []);
@@ -194,6 +237,12 @@ $extended = isset($corpus['extended'])
         $corpus['extended']['hyva'][count($corpus['extended']['hyva']) - 1]['version'],
     )
     : '';
+$github = isset($corpus['github'])
+    ? sprintf(
+        "\n- Not used on this page: a third part, `github`, with %d modules from the most-starred GitHub repositories with the topic `magento2-module`, which the [third held-out check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out-3.md) uses",
+        count($corpus['github']['modules']),
+    )
+    : '';
 $report = <<<MD
     # Calibration
 
@@ -205,7 +254,7 @@ $report = <<<MD
 
     - Magento {$corpus['magento']['version']} core (`vendor/magento`)
     - {$modules} most-downloaded `magento2-module` packages from Packagist that install on that version (`app/code` of the corpus copy)
-    {$mageOs}{$extended}
+    {$mageOs}{$extended}{$github}
 
     Test code is excluded (the tool's default), and so are `*-sample-data` modules at sampling time.
 
@@ -247,6 +296,10 @@ $report = <<<MD
     - The corpus is open-source code. Project code may use patterns the corpus does not contain.
 
     MD;
+if (in_array('--print', $argv, true)) {
+    echo $report;
+    exit(0);
+}
 file_put_contents(ROOT . '/docs/calibration.md', $report);
 
 foreach ($decisions as $id => $decision) {

@@ -6,6 +6,22 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-14
+
+### Changed
+
+- P-DI-06 takes the constructor fallback, `$param ?: ObjectManager::getInstance()->get(...)` and `??`, as allowed in the constructor only; closures declared there do not count. Outside the constructor the lazy getter may be written in one expression that keeps the object in the property it tests, `$this->x = $this->x ?? ...`, `?:` or `$this->x ??= ...`, and may keep it in a static property of `self` or `static`; anything else is reported, such as `return $this->_resource ?: ObjectManager::getInstance()->get(...)`. The fallback written as `$param ??= ...` in a constructor is no longer reported, by P-DI-06 or by the experimental P-DI-02. Measured on Magento 2.4.9 core and on the packagist, extended and github parts of the calibration corpus: 7 findings more in core and 1 in the Packagist modules, each a call outside a constructor (6 do not keep the object, one sits in `_construct()`, which Magento calls without arguments), and 2 `??=` fallbacks less in core. **This can change a CI result:** P-DI-06 is a `warning` of the default set.
+
+### Fixed
+
+- The command no longer stops with "Invalid configuration: Unexpected item 'parameters › extdn'" in a project with `bitexpert/phpstan-magento` 0.30.0 or older. Those versions do not declare all the parameters the command sets to switch their own rules off, so PHPStan rejected the configuration. The command now includes `bitexpert/phpstan-magento` only when it declares all of them, and otherwise runs without it and gives a `generated-code` notice: update it to 0.32.0 or later with PHPStan 1.12, or 0.40.0 or later with PHPStan 2.
+- P-DI-02 (experimental) no longer reports the constructor fallback written as a full ternary, `$config !== null ? $config : ObjectManager::getInstance()->get(...)`, which P-DI-06 already allows. The fallback it allows is now exactly one `get()` or `create()` call on the object manager with plain arguments; a further call on the result, such as `->get(Map::class)->getData()`, or a call in an argument counts as work. On the calibration corpus this removes 6 findings in Magento 2.4.9 core and 1 in the GitHub modules, and adds 1 in core.
+- X-LAY-01 (experimental) leaves out `hyvareactcheckout_reactcheckout_` handles, the checkout page of Hyvä React Checkout, with the other personal pages of known modules.
+- Both came from [round 20](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-20.md), which graded the experimental rules on the 50 GitHub modules; no rule changed status.
+- The loop rules (P-LOOP-01, P-LOOP-03, P-LOOP-11 and the others) follow a `try` inside a loop. A call in a `catch` after which the loop is left, such as a delete before `throw $e`, runs at most once and is no longer reported. A call in the `try` itself is left out only when every `catch` leaves the loop too: a repository throws `NoSuchEntityException` after its query, so an empty `catch` still lets each missing id cost one. A call in a `finally` is left out only when what follows the `try` leaves the loop and neither the `try` nor a `catch` holds `continue`, `break` or `goto`.
+- P-DI-06 no longer reports the constructor fallback written as a full ternary in the constructor, `$config !== null ? $config : ObjectManager::getInstance()->get(...)` and the reversed and `isset()` or `!empty()` forms, nor a lazy getter that assigns the object to a local variable before it stores it in the tested property.
+- Both came from the [third held-out check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out-3.md), on 50 modules from GitHub, a new part of the calibration corpus: 62 graded findings of the default set, 58 correct. On the whole corpus the fixes remove 6 P-DI-06 and 1 P-LOOP-11 findings in Magento 2.4.9 core and 3 in the new modules, and add none.
+
 ## [0.9.1] - 2026-11-13
 
 ### Changed
@@ -202,7 +218,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.1...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.1...v0.8.0

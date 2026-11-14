@@ -1,0 +1,1799 @@
+{
+    "summary": {
+        "incomplete": false,
+        "project": "var/corpus/github",
+        "paths": [
+            "app/code/FriendsOfHyva/ReactCheckout",
+            "app/code/MarkShust/PageBuilderSourceCode",
+            "app/code/Swissup/SearchMysqlLegacy",
+            "app/code/Bodak/CheckoutCustomForm",
+            "app/code/MagePal/CustomShippingRate",
+            "app/code/MarkShust/SimpleData",
+            "app/code/MarkShust/OrderGrid",
+            "app/code/Zepgram/DisableSearchEngine",
+            "app/code/Baldwin/ImageCleanup",
+            "app/code/Faonni/SmartCategory",
+            "app/code/Mageprince/BuyNow",
+            "app/code/MagePal/PreviewCheckoutSuccessPage",
+            "app/code/MagePal/GuestToCustomer",
+            "app/code/MagePsycho/CustomShipping",
+            "app/code/RunAsRoot/MessageQueueRetry",
+            "app/code/Faonni/Price",
+            "app/code/GhoSter/OutOfStockAtLast",
+            "app/code/LizardMedia/VarnishWarmer",
+            "app/code/Mageprince/Faq",
+            "app/code/Shkoliar/GridColors",
+            "app/code/MagePal/CatalogLazyLoad",
+            "app/code/MagePal/LinkProduct",
+            "app/code/Magestat/SigninPhoneNumber",
+            "app/code/Magefan/LazyLoad",
+            "app/code/Basecom/CspSplitHeader",
+            "app/code/Deved/DisableRegistration",
+            "app/code/Magiccart/Magicmenu",
+            "app/code/Shkoliar/Ngrok",
+            "app/code/ChrisMallory/FreeShippingProgressBar",
+            "app/code/Magefan/ConflictDetector",
+            "app/code/Mageprince/LogViewer",
+            "app/code/MagePsycho/Easypathhints",
+            "app/code/Magefan/RocketJavaScript",
+            "app/code/MagePal/CustomerAccountLinksManager",
+            "app/code/Magepow/Categories",
+            "app/code/Faonni/IndexerUrlRewrite",
+            "app/code/IntegerNet/GlobalCustomLayout",
+            "app/code/Trive/Varnish",
+            "app/code/Magefan/Cli",
+            "app/code/Grasch/AdminUi",
+            "app/code/Magestat/FacebookPixel",
+            "app/code/Magefan/GoogleTagManager",
+            "app/code/Shockwavemk/CronSchedule",
+            "app/code/Divante/PimcoreIntegration",
+            "app/code/Rangerz/Quicklink",
+            "app/code/Macopedia/CategoryImporter",
+            "app/code/Itonomy/ProductVisibilityGrid",
+            "app/code/Aimes/CheckoutDesigns",
+            "app/code/Siteation/DebugBar",
+            "app/code/SamGranger/StoreCodeBodyClass"
+        ],
+        "findings": 211,
+        "bySeverity": {
+            "error": 18,
+            "warning": 103,
+            "info": 90
+        },
+        "byRule": {
+            "P-COL-01": 1,
+            "P-COL-02": 1,
+            "P-COL-03": 1,
+            "P-DI-01": 20,
+            "P-DI-02": 53,
+            "P-DI-04": 10,
+            "P-DI-06": 7,
+            "P-FPC-01": 1,
+            "P-FPC-02": 12,
+            "P-LOOP-01": 9,
+            "P-LOOP-02": 1,
+            "P-LOOP-03": 12,
+            "P-LOOP-11": 1,
+            "P-LOOP-12": 5,
+            "P-PLG-01": 5,
+            "S-PERF-01": 17,
+            "S-TPL-01": 29,
+            "T-01": 12,
+            "T-06": 4,
+            "U-CLI-01": 4,
+            "U-LOG-01": 2,
+            "X-EVT-01": 1,
+            "X-LAY-01": 1,
+            "X-PLG-02": 2
+        },
+        "notices": {
+            "untyped-receiver": 2
+        },
+        "durationSeconds": 9.28,
+        "baseline": null
+    },
+    "findings": [
+        {
+            "ruleId": "P-DI-04",
+            "severity": "info",
+            "file": "app/code/Baldwin/ImageCleanup/Console/Command/RemoveCorruptResizedFiles.php",
+            "line": 24,
+            "message": "[P-DI-04] Baldwin\\ImageCleanup\\Console\\Command\\RemoveCorruptResizedFiles is created on every bin/magento run, whichever command is asked for, and so are its dependencies $userInteraction, $progressIndicator, $mediaDeleter, $corruptResizedFilesFinder. Configure a Proxy in di.xml for those that are costly to create.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-04.md"
+        },
+        {
+            "ruleId": "P-DI-04",
+            "severity": "info",
+            "file": "app/code/Baldwin/ImageCleanup/Console/Command/RemoveObsoleteDatabaseEntries.php",
+            "line": 22,
+            "message": "[P-DI-04] Baldwin\\ImageCleanup\\Console\\Command\\RemoveObsoleteDatabaseEntries is created on every bin/magento run, whichever command is asked for, and so are its dependencies $userInteraction, $dbGalleryDeleter, $obsoleteDbEntriesFinder. Configure a Proxy in di.xml for those that are costly to create.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-04.md"
+        },
+        {
+            "ruleId": "P-DI-04",
+            "severity": "info",
+            "file": "app/code/Baldwin/ImageCleanup/Console/Command/RemoveUnusedCacheHashDirectories.php",
+            "line": 27,
+            "message": "[P-DI-04] Baldwin\\ImageCleanup\\Console\\Command\\RemoveUnusedCacheHashDirectories is created on every bin/magento run, whichever command is asked for, and so are its dependencies $userInteraction, $mediaDeleter, $unusedCacheHashDirFinder, $hyvaThemeFallbackStoreThemeResolver. Configure a Proxy in di.xml for those that are costly to create.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-04.md"
+        },
+        {
+            "ruleId": "P-DI-04",
+            "severity": "info",
+            "file": "app/code/Baldwin/ImageCleanup/Console/Command/RemoveUnusedImageFiles.php",
+            "line": 24,
+            "message": "[P-DI-04] Baldwin\\ImageCleanup\\Console\\Command\\RemoveUnusedImageFiles is created on every bin/magento run, whichever command is asked for, and so are its dependencies $userInteraction, $progressIndicator, $mediaDeleter, $unusedFilesFinder. Configure a Proxy in di.xml for those that are costly to create.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-04.md"
+        },
+        {
+            "ruleId": "P-DI-06",
+            "severity": "warning",
+            "file": "app/code/Baldwin/ImageCleanup/Service/HyvaThemeFallbackStoreThemeResolver.php",
+            "line": 84,
+            "message": "[P-DI-06] ObjectManager::getInstance() is used directly in Baldwin\\ImageCleanup\\Service\\HyvaThemeFallbackStoreThemeResolver. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-06.md"
+        },
+        {
+            "ruleId": "P-FPC-01",
+            "severity": "info",
+            "file": "app/code/Bodak/CheckoutCustomForm/Block/Order/CustomFields.php",
+            "line": 60,
+            "message": "[P-FPC-01] $_isScopePrivate is obsolete and does not work properly. Load private data through customer data sections instead.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Bodak/CheckoutCustomForm/Model/Checkout/LayoutProcessor/Plugin.php",
+            "line": 96,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Bodak/CheckoutCustomForm/Model/Checkout/LayoutProcessor/Plugin.php",
+            "line": 100,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "X-EVT-01",
+            "severity": "warning",
+            "file": "app/code/Bodak/CheckoutCustomForm/etc/events.xml",
+            "line": 7,
+            "message": "[X-EVT-01] Observer \"Bodak_checkout_custom_form_order_load_after\" on \"sales_order_load_after\" runs on every load of this entity type. Observe a more specific event if one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-EVT-01.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/ChrisMallory/FreeShippingProgressBar/ViewModel/Cart/ProgressBar.php",
+            "line": 54,
+            "message": "[P-DI-01] ChrisMallory\\FreeShippingProgressBar\\ViewModel\\Cart\\ProgressBar receives $session (Magento\\Checkout\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Checkout\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/ChrisMallory/FreeShippingProgressBar/ViewModel/Cart/ProgressBar.php",
+            "line": 97,
+            "message": "[P-FPC-02] ChrisMallory\\FreeShippingProgressBar\\ViewModel\\Cart\\ProgressBar reads Magento\\Checkout\\Model\\Session::getQuote() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "P-DI-04",
+            "severity": "info",
+            "file": "app/code/Divante/PimcoreIntegration/Console/Command/AssetsImportCommand.php",
+            "line": 46,
+            "message": "[P-DI-04] Divante\\PimcoreIntegration\\Console\\Command\\AssetsImportCommand is created on every bin/magento run, whichever command is asked for, and so are its dependencies $registry. Configure a Proxy in di.xml for those that are costly to create.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-04.md"
+        },
+        {
+            "ruleId": "U-CLI-01",
+            "severity": "error",
+            "file": "app/code/Divante/PimcoreIntegration/Console/Command/AssetsImportCommand.php",
+            "line": 71,
+            "message": "[U-CLI-01] Divante\\PimcoreIntegration\\Console\\Command\\AssetsImportCommand::execute() has no int return type. Magento 2.4.9 requires Symfony Console 7.4, whose Command::execute() returns int, so PHP cannot load this class; registered as a command in di.xml, it makes every bin/magento call fail. Declare execute(...): int.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/U-CLI-01.md"
+        },
+        {
+            "ruleId": "P-DI-04",
+            "severity": "info",
+            "file": "app/code/Divante/PimcoreIntegration/Console/Command/CategoryImportCommand.php",
+            "line": 47,
+            "message": "[P-DI-04] Divante\\PimcoreIntegration\\Console\\Command\\CategoryImportCommand is created on every bin/magento run, whichever command is asked for, and so are its dependencies $registry. Configure a Proxy in di.xml for those that are costly to create.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-04.md"
+        },
+        {
+            "ruleId": "U-CLI-01",
+            "severity": "error",
+            "file": "app/code/Divante/PimcoreIntegration/Console/Command/CategoryImportCommand.php",
+            "line": 78,
+            "message": "[U-CLI-01] Divante\\PimcoreIntegration\\Console\\Command\\CategoryImportCommand::execute() has no int return type. Magento 2.4.9 requires Symfony Console 7.4, whose Command::execute() returns int, so PHP cannot load this class; registered as a command in di.xml, it makes every bin/magento call fail. Declare execute(...): int.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/U-CLI-01.md"
+        },
+        {
+            "ruleId": "P-DI-04",
+            "severity": "info",
+            "file": "app/code/Divante/PimcoreIntegration/Console/Command/ProductImportCommand.php",
+            "line": 46,
+            "message": "[P-DI-04] Divante\\PimcoreIntegration\\Console\\Command\\ProductImportCommand is created on every bin/magento run, whichever command is asked for, and so are its dependencies $registry. Configure a Proxy in di.xml for those that are costly to create.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-04.md"
+        },
+        {
+            "ruleId": "U-CLI-01",
+            "severity": "error",
+            "file": "app/code/Divante/PimcoreIntegration/Console/Command/ProductImportCommand.php",
+            "line": 77,
+            "message": "[U-CLI-01] Divante\\PimcoreIntegration\\Console\\Command\\ProductImportCommand::execute() has no int return type. Magento 2.4.9 requires Symfony Console 7.4, whose Command::execute() returns int, so PHP cannot load this class; registered as a command in di.xml, it makes every bin/magento call fail. Declare execute(...): int.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/U-CLI-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Cron/OldQueueEntriesRemover.php",
+            "line": 60,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Cron\\OldQueueEntriesRemover does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-LOOP-12",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Cron/ProductPublisher.php",
+            "line": 82,
+            "message": "[P-LOOP-12] Divante\\PimcoreIntegration\\Cron\\ProductPublisher::enableCommonProducts() is called inside a loop and runs a query on every call: it calls Magento\\Catalog\\Api\\ProductRepositoryInterface::getList() on line 100 of ProductPublisher.php. Fetch the data for all items before the loop, with a collection or getList(), and pass it in.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-12.md"
+        },
+        {
+            "ruleId": "P-LOOP-12",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Cron/ProductPublisher.php",
+            "line": 83,
+            "message": "[P-LOOP-12] Divante\\PimcoreIntegration\\Cron\\ProductPublisher::enableConfigurableProducts() is called inside a loop and runs a query on every call: it calls Magento\\Catalog\\Api\\ProductRepositoryInterface::getList() on line 155 of ProductPublisher.php. Fetch the data for all items before the loop, with a collection or getList(), and pass it in.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-12.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Divante/PimcoreIntegration/Cron/ProductPublisher.php",
+            "line": 138,
+            "message": "[P-LOOP-03] Magento\\Catalog\\Api\\ProductRepositoryInterface::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Cron/UnusedAttributeOptionsRemover.php",
+            "line": 49,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Cron\\UnusedAttributeOptionsRemover does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Divante/PimcoreIntegration/Cron/UnusedAttributeOptionsRemover.php",
+            "line": 98,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Cron/UnusedAttributeSetRemover.php",
+            "line": 51,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Cron\\UnusedAttributeSetRemover does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Divante/PimcoreIntegration/Cron/UnusedAttributeSetRemover.php",
+            "line": 79,
+            "message": "[P-LOOP-03] Divante\\PimcoreIntegration\\Api\\AttributeSetRepositoryInterface::deleteById() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Http/Notification/PimcoreNotificator.php",
+            "line": 84,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Http\\Notification\\PimcoreNotificator does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Http/Request/RequestClient.php",
+            "line": 96,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Http\\Request\\RequestClient does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Listeners/NewAttributeListener.php",
+            "line": 143,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Listeners\\NewAttributeListener does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Divante/PimcoreIntegration/Listeners/NewAttributeListener.php",
+            "line": 197,
+            "message": "[P-LOOP-03] Divante\\PimcoreIntegration\\Api\\AttributeSetRepositoryInterface::delete() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Listeners/NewAttributeSetListener.php",
+            "line": 88,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Listeners\\NewAttributeSetListener does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Listeners/StockUpdateListener.php",
+            "line": 52,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Listeners\\StockUpdateListener does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-COL-03",
+            "severity": "info",
+            "file": "app/code/Divante/PimcoreIntegration/Model/CategoryRepository.php",
+            "line": 59,
+            "message": "[P-COL-03] addAttributeToSelect('*') reads the values of every attribute of the entity. Select the attributes this code uses.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-COL-03.md"
+        },
+        {
+            "ruleId": "P-COL-02",
+            "severity": "error",
+            "file": "app/code/Divante/PimcoreIntegration/Model/CategoryRepository.php",
+            "line": 66,
+            "message": "[P-COL-02] Magento\\Catalog\\Model\\ResourceModel\\Category\\Collection::getFirstItem() without setPageSize(): the query has no LIMIT and loads every matching row. Call setPageSize(1) before getFirstItem().",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-COL-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Queue/Action/Asset/PathResolver.php",
+            "line": 44,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Queue\\Action\\Asset\\PathResolver does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Divante/PimcoreIntegration/Queue/Action/Product/MediaGalleryDataModifier.php",
+            "line": 109,
+            "message": "[P-LOOP-03] Divante\\PimcoreIntegration\\Api\\Queue\\AssetQueueRepositoryInterface::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Divante/PimcoreIntegration/Queue/Action/Product/MediaGalleryDataModifier.php",
+            "line": 196,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Queue/Builder/DbQueueBuilder.php",
+            "line": 81,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Queue\\Builder\\DbQueueBuilder does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Queue/Importer/AbstractImporter.php",
+            "line": 93,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Queue\\Importer\\AbstractImporter does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "U-LOG-01",
+            "severity": "error",
+            "file": "app/code/Divante/PimcoreIntegration/Queue/Importer/AbstractImporter.php",
+            "line": 109,
+            "message": "[U-LOG-01] addInfo() on Monolog\\Logger: Monolog 2, which Magento requires from 2.4.4, removed this Monolog 1 method, so from 2.4.4 the call throws \"Call to undefined method\". Use info(), with the same arguments.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/U-LOG-01.md"
+        },
+        {
+            "ruleId": "U-LOG-01",
+            "severity": "error",
+            "file": "app/code/Divante/PimcoreIntegration/Queue/Importer/AbstractImporter.php",
+            "line": 149,
+            "message": "[U-LOG-01] addCritical() on Monolog\\Logger: Monolog 2, which Magento requires from 2.4.4, removed this Monolog 1 method, so from 2.4.4 the call throws \"Call to undefined method\". Use critical(), with the same arguments.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/U-LOG-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Divante/PimcoreIntegration/Queue/Processor/AbstractQueueProcessor.php",
+            "line": 105,
+            "message": "[P-DI-02] The constructor of Divante\\PimcoreIntegration\\Queue\\Processor\\AbstractQueueProcessor does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Faonni/IndexerUrlRewrite/Model/AbstractIndexer.php",
+            "line": 41,
+            "message": "[P-DI-02] The constructor of Faonni\\IndexerUrlRewrite\\Model\\AbstractIndexer does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-PLG-01",
+            "severity": "warning",
+            "file": "app/code/Faonni/Price/Plugin/Directory/Model/Currency.php",
+            "line": 66,
+            "message": "[P-PLG-01] Faonni\\Price\\Plugin\\Directory\\Model\\Currency::aroundConvert() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-PLG-01.md"
+        },
+        {
+            "ruleId": "P-DI-06",
+            "severity": "warning",
+            "file": "app/code/Faonni/SmartCategory/Model/Indexer/AbstractIndexer.php",
+            "line": 182,
+            "message": "[P-DI-06] ObjectManager::getInstance() is used directly in Faonni\\SmartCategory\\Model\\Indexer\\AbstractIndexer. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-06.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Faonni/SmartCategory/Model/Indexer/IndexBuilder.php",
+            "line": 93,
+            "message": "[P-DI-02] The constructor of Faonni\\SmartCategory\\Model\\Indexer\\IndexBuilder does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Faonni/SmartCategory/Model/Rule/Condition/Combine.php",
+            "line": 47,
+            "message": "[P-DI-02] The constructor of Faonni\\SmartCategory\\Model\\Rule\\Condition\\Combine does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Faonni/SmartCategory/Model/Rule/Condition/Product/News.php",
+            "line": 44,
+            "message": "[P-DI-02] The constructor of Faonni\\SmartCategory\\Model\\Rule\\Condition\\Product\\News does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Faonni/SmartCategory/Model/Rule/Condition/Product/Sale.php",
+            "line": 44,
+            "message": "[P-DI-02] The constructor of Faonni\\SmartCategory\\Model\\Rule\\Condition\\Product\\Sale does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/FriendsOfHyva/ReactCheckout/Observer/AddCartInfoInCheckoutConfig.php",
+            "line": 41,
+            "message": "[P-DI-01] FriendsOfHyva\\ReactCheckout\\Observer\\AddCartInfoInCheckoutConfig receives $checkoutSession (Magento\\Checkout\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Checkout\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/FriendsOfHyva/ReactCheckout/ViewModel/ReactCheckoutLocalStorage.php",
+            "line": 38,
+            "message": "[P-DI-01] FriendsOfHyva\\ReactCheckout\\ViewModel\\ReactCheckoutLocalStorage receives $checkoutSession (Magento\\Checkout\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Checkout\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/FriendsOfHyva/ReactCheckout/ViewModel/ReactCheckoutLocalStorage.php",
+            "line": 39,
+            "message": "[P-DI-01] FriendsOfHyva\\ReactCheckout\\ViewModel\\ReactCheckoutLocalStorage receives $customerSession (Magento\\Customer\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Customer\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/FriendsOfHyva/ReactCheckout/ViewModel/ReactCheckoutLocalStorage.php",
+            "line": 69,
+            "message": "[P-FPC-02] FriendsOfHyva\\ReactCheckout\\ViewModel\\ReactCheckoutLocalStorage reads Magento\\Customer\\Model\\Session::getCustomer() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/FriendsOfHyva/ReactCheckout/ViewModel/ReactCheckoutLocalStorage.php",
+            "line": 76,
+            "message": "[P-FPC-02] FriendsOfHyva\\ReactCheckout\\ViewModel\\ReactCheckoutLocalStorage reads Magento\\Checkout\\Model\\Session::getQuote() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/FriendsOfHyva/ReactCheckout/ViewModel/ReactCheckoutLocalStorage.php",
+            "line": 104,
+            "message": "[P-FPC-02] FriendsOfHyva\\ReactCheckout\\ViewModel\\ReactCheckoutLocalStorage reads Magento\\Checkout\\Model\\Session::getQuote() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/FriendsOfHyva/ReactCheckout/ViewModel/ReactCheckoutLocalStorage.php",
+            "line": 111,
+            "message": "[P-FPC-02] FriendsOfHyva\\ReactCheckout\\ViewModel\\ReactCheckoutLocalStorage reads Magento\\Checkout\\Model\\Session::getQuote() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/FriendsOfHyva/ReactCheckout/ViewModel/ReactCheckoutLocalStorage.php",
+            "line": 118,
+            "message": "[P-FPC-02] FriendsOfHyva\\ReactCheckout\\ViewModel\\ReactCheckoutLocalStorage reads Magento\\Checkout\\Model\\Session::getQuote() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/FriendsOfHyva/ReactCheckout/ViewModel/ReactCheckoutLocalStorage.php",
+            "line": 127,
+            "message": "[P-FPC-02] FriendsOfHyva\\ReactCheckout\\ViewModel\\ReactCheckoutLocalStorage reads Magento\\Checkout\\Model\\Session::getQuote() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/FriendsOfHyva/ReactCheckout/ViewModel/ReactCheckoutLocalStorage.php",
+            "line": 136,
+            "message": "[P-FPC-02] FriendsOfHyva\\ReactCheckout\\ViewModel\\ReactCheckoutLocalStorage reads Magento\\Customer\\Model\\Session::getCustomer() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "X-LAY-01",
+            "severity": "warning",
+            "file": "app/code/FriendsOfHyva/ReactCheckout/view/frontend/layout/hyvareactcheckout_reactcheckout_index.xml",
+            "line": 39,
+            "message": "[X-LAY-01] Block \"checkout.container\" in handle \"hyvareactcheckout_reactcheckout_index\" has cacheable=\"false\": every page that uses this handle is excluded from Full Page Cache.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-LAY-01.md"
+        },
+        {
+            "ruleId": "P-PLG-01",
+            "severity": "warning",
+            "file": "app/code/GhoSter/OutOfStockAtLast/Plugin/Model/ResourceModel/Fulltext/Collection/SearchResultApplierPlugin.php",
+            "line": 36,
+            "message": "[P-PLG-01] GhoSter\\OutOfStockAtLast\\Plugin\\Model\\ResourceModel\\Fulltext\\Collection\\SearchResultApplierPlugin::aroundApply() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-PLG-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Grasch/AdminUi/Component/EntitiesSelector.php",
+            "line": 119,
+            "message": "[P-DI-02] The constructor of Grasch\\AdminUi\\Component\\EntitiesSelector does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Grasch/AdminUi/Component/Widget/Form.php",
+            "line": 52,
+            "message": "[P-DI-02] The constructor of Grasch\\AdminUi\\Component\\Widget\\Form does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Itonomy/ProductVisibilityGrid/Block/Adminhtml/ProductVisibilityGrid/Grid.php",
+            "line": 54,
+            "message": "[P-DI-02] The constructor of Itonomy\\ProductVisibilityGrid\\Block\\Adminhtml\\ProductVisibilityGrid\\Grid does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Itonomy/ProductVisibilityGrid/Model/ResourceModel/ProductVisibilityGrid/Collection.php",
+            "line": 69,
+            "message": "[P-DI-02] The constructor of Itonomy\\ProductVisibilityGrid\\Model\\ResourceModel\\ProductVisibilityGrid\\Collection does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/LizardMedia/VarnishWarmer/Controller/Adminhtml/Purge.php",
+            "line": 85,
+            "message": "[P-DI-02] The constructor of LizardMedia\\VarnishWarmer\\Controller\\Adminhtml\\Purge does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/LizardMedia/VarnishWarmer/Model/LockHandler/FileLock.php",
+            "line": 55,
+            "message": "[P-DI-02] The constructor of LizardMedia\\VarnishWarmer\\Model\\LockHandler\\FileLock does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/LizardMedia/VarnishWarmer/Model/ProgressHandler/FileQueueProgressLogger.php",
+            "line": 68,
+            "message": "[P-DI-02] The constructor of LizardMedia\\VarnishWarmer\\Model\\ProgressHandler\\FileQueueProgressLogger does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/LizardMedia/VarnishWarmer/Model/QueueHandler/AbstractQueueHandler.php",
+            "line": 77,
+            "message": "[P-DI-02] The constructor of LizardMedia\\VarnishWarmer\\Model\\QueueHandler\\AbstractQueueHandler does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/LizardMedia/VarnishWarmer/Model/VarnishActionManager.php",
+            "line": 135,
+            "message": "[P-DI-02] The constructor of LizardMedia\\VarnishWarmer\\Model\\VarnishActionManager does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-04",
+            "severity": "info",
+            "file": "app/code/Macopedia/CategoryImporter/Console/Command/CategoriesCommand.php",
+            "line": 92,
+            "message": "[P-DI-04] Macopedia\\CategoryImporter\\Console\\Command\\CategoriesCommand is created on every bin/magento run, whichever command is asked for, and so are its dependencies $fileCsv, $directoryList. Configure a Proxy in di.xml for those that are costly to create.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-04.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Macopedia/CategoryImporter/Console/Command/CategoriesCommand.php",
+            "line": 102,
+            "message": "[P-DI-02] The constructor of Macopedia\\CategoryImporter\\Console\\Command\\CategoriesCommand does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "U-CLI-01",
+            "severity": "error",
+            "file": "app/code/Macopedia/CategoryImporter/Console/Command/CategoriesCommand.php",
+            "line": 137,
+            "message": "[U-CLI-01] Macopedia\\CategoryImporter\\Console\\Command\\CategoriesCommand::execute() has no int return type. Magento 2.4.9 requires Symfony Console 7.4, whose Command::execute() returns int, so PHP cannot load this class; registered as a command in di.xml, it makes every bin/magento call fail. Declare execute(...): int.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/U-CLI-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/MagePal/CustomShippingRate/Helper/Data.php",
+            "line": 183,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/MagePal/CustomShippingRate/view/adminhtml/templates/order/create/shipping/method/form.phtml",
+            "line": 70,
+            "message": "[S-TPL-01] The use of helpers in templates is discouraged. Use ViewModel instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/MagePal/CustomShippingRate/view/adminhtml/templates/order/create/shipping/method/form.phtml",
+            "line": 70,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/MagePal/CustomShippingRate/view/adminhtml/templates/order/create/shipping/method/form.phtml",
+            "line": 70,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/MagePal/CustomShippingRate/view/adminhtml/templates/order/create/shipping/method/form.phtml",
+            "line": 84,
+            "message": "[S-TPL-01] The use of helpers in templates is discouraged. Use ViewModel instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/MagePal/CustomShippingRate/view/adminhtml/templates/order/create/shipping/method/form.phtml",
+            "line": 84,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/MagePal/CustomShippingRate/view/adminhtml/templates/order/create/shipping/method/form.phtml",
+            "line": 84,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "P-PLG-01",
+            "severity": "warning",
+            "file": "app/code/MagePal/CustomerAccountLinksManager/Plugin/View/Element/Html/LinksPlugin.php",
+            "line": 32,
+            "message": "[P-PLG-01] MagePal\\CustomerAccountLinksManager\\Plugin\\View\\Element\\Html\\LinksPlugin::aroundRenderLink() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-PLG-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/MagePal/GuestToCustomer/Block/Adminhtml/Order/View/GuestToCustomerButtonList.php",
+            "line": 39,
+            "message": "[P-DI-02] The constructor of MagePal\\GuestToCustomer\\Block\\Adminhtml\\Order\\View\\GuestToCustomerButtonList does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/MagePal/GuestToCustomer/Block/Customer/LookupForm.php",
+            "line": 61,
+            "message": "[P-DI-01] MagePal\\GuestToCustomer\\Block\\Customer\\LookupForm receives $customerSession (Magento\\Customer\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Customer\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/MagePal/GuestToCustomer/Block/Customer/LookupForm.php",
+            "line": 81,
+            "message": "[P-FPC-02] MagePal\\GuestToCustomer\\Block\\Customer\\LookupForm reads Magento\\Customer\\Model\\Session::getCustomerId() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "P-PLG-01",
+            "severity": "warning",
+            "file": "app/code/MagePal/GuestToCustomer/Plugin/Api/OrderCustomerManagementInterfacePlugin.php",
+            "line": 36,
+            "message": "[P-PLG-01] MagePal\\GuestToCustomer\\Plugin\\Api\\OrderCustomerManagementInterfacePlugin::aroundCreate() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-PLG-01.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/MagePal/PreviewCheckoutSuccessPage/Plugin/Model/Session/SuccessValidatorPlugin.php",
+            "line": 51,
+            "message": "[P-DI-01] MagePal\\PreviewCheckoutSuccessPage\\Plugin\\Model\\Session\\SuccessValidatorPlugin receives $checkoutSession (Magento\\Checkout\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Checkout\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/MagePsycho/CustomShipping/Helper/Data.php",
+            "line": 35,
+            "message": "[P-DI-02] The constructor of MagePsycho\\CustomShipping\\Helper\\Data does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "info",
+            "file": "app/code/MagePsycho/Easypathhints/Model/Cookie.php",
+            "line": 42,
+            "message": "[P-DI-01] MagePsycho\\Easypathhints\\Model\\Cookie receives $cookieManager (Magento\\Framework\\Stdlib\\CookieManagerInterface) without a Proxy: the Technical guidelines (9.10) forbid injecting it into constructors. Configure Magento\\Framework\\Stdlib\\CookieManagerInterface\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/MagePsycho/Easypathhints/Model/Cookie.php",
+            "line": 44,
+            "message": "[P-DI-01] MagePsycho\\Easypathhints\\Model\\Cookie receives $sessionManager (Magento\\Framework\\Session\\SessionManagerInterface) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Framework\\Session\\SessionManagerInterface\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Magefan/ConflictDetector/Model/Config/Reader/Dom.php",
+            "line": 80,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/Magefan/GoogleTagManager/Block/DataLayer/BeginCheckout.php",
+            "line": 43,
+            "message": "[P-DI-01] Magefan\\GoogleTagManager\\Block\\DataLayer\\BeginCheckout receives $checkoutSession (Magento\\Checkout\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Checkout\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/Magefan/GoogleTagManager/Block/DataLayer/BeginCheckout.php",
+            "line": 61,
+            "message": "[P-FPC-02] Magefan\\GoogleTagManager\\Block\\DataLayer\\BeginCheckout reads Magento\\Checkout\\Model\\Session::getQuote() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/Magefan/GoogleTagManager/Block/DataLayer/Purchase.php",
+            "line": 42,
+            "message": "[P-DI-01] Magefan\\GoogleTagManager\\Block\\DataLayer\\Purchase receives $checkoutSession (Magento\\Checkout\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Checkout\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-06",
+            "severity": "warning",
+            "file": "app/code/Magefan/GoogleTagManager/Block/DataLayer/PurchaseGetOrderFromRequest.php",
+            "line": 36,
+            "message": "[P-DI-06] ObjectManager::getInstance() is used directly in Magefan\\GoogleTagManager\\Block\\DataLayer\\PurchaseGetOrderFromRequest. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-06.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/Magefan/GoogleTagManager/Block/DataLayer/ViewCart.php",
+            "line": 43,
+            "message": "[P-DI-01] Magefan\\GoogleTagManager\\Block\\DataLayer\\ViewCart receives $checkoutSession (Magento\\Checkout\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Checkout\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/Magefan/GoogleTagManager/Block/DataLayer/ViewCart.php",
+            "line": 61,
+            "message": "[P-FPC-02] Magefan\\GoogleTagManager\\Block\\DataLayer\\ViewCart reads Magento\\Checkout\\Model\\Session::getQuote() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "P-LOOP-01",
+            "severity": "error",
+            "file": "app/code/Magefan/GoogleTagManager/Model/AbstractDataLayer.php",
+            "line": 186,
+            "message": "[P-LOOP-01] Magento\\Catalog\\Api\\CategoryRepositoryInterface::get() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-01.md"
+        },
+        {
+            "ruleId": "P-LOOP-01",
+            "severity": "error",
+            "file": "app/code/Magefan/GoogleTagManager/Model/AbstractDataLayer.php",
+            "line": 227,
+            "message": "[P-LOOP-01] Magento\\Catalog\\Api\\CategoryRepositoryInterface::get() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-01.md"
+        },
+        {
+            "ruleId": "P-LOOP-01",
+            "severity": "error",
+            "file": "app/code/Magefan/GoogleTagManager/Model/DataLayer/Cart/Item.php",
+            "line": 79,
+            "message": "[P-LOOP-01] Magento\\Catalog\\Api\\ProductRepositoryInterface::getById() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-01.md"
+        },
+        {
+            "ruleId": "P-COL-01",
+            "severity": "warning",
+            "file": "app/code/Magefan/GoogleTagManager/Model/Transaction/Log.php",
+            "line": 112,
+            "message": "[P-COL-01] count() on Magento\\Framework\\Model\\ResourceModel\\Db\\Collection\\AbstractCollection loads every row of the collection to count it. Use getSize(), which runs a COUNT query.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-COL-01.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magefan/GoogleTagManager/view/frontend/templates/js_code.phtml",
+            "line": 77,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "P-DI-06",
+            "severity": "warning",
+            "file": "app/code/Magefan/LazyLoad/Model/Config.php",
+            "line": 158,
+            "message": "[P-DI-06] ObjectManager::getInstance() is used directly in Magefan\\LazyLoad\\Model\\Config. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-06.md"
+        },
+        {
+            "ruleId": "X-PLG-02",
+            "severity": "info",
+            "file": "app/code/Magefan/LazyLoad/Plugin/BlockPlugin.php",
+            "line": 79,
+            "message": "[X-PLG-02] Magefan\\LazyLoad\\Plugin\\BlockPlugin::afterToHtml() is a plugin on magento\\framework\\view\\element\\abstractblock, so it runs for every rendered block or layout element of every page. Put it on the specific class it is meant for, or keep it very cheap.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-PLG-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Magefan/RocketJavaScript/Model/Controller/ResultPlugin.php",
+            "line": 55,
+            "message": "[P-DI-02] The constructor of Magefan\\RocketJavaScript\\Model\\Controller\\ResultPlugin does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-PLG-01",
+            "severity": "warning",
+            "file": "app/code/Magefan/RocketJavaScript/Model/Controller/ResultPlugin.php",
+            "line": 68,
+            "message": "[P-PLG-01] Magefan\\RocketJavaScript\\Model\\Controller\\ResultPlugin::aroundRenderResult() calls $proceed once, unconditionally and with unchanged arguments. A before and/or after plugin does the same with less overhead.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-PLG-01.md"
+        },
+        {
+            "ruleId": "P-DI-06",
+            "severity": "warning",
+            "file": "app/code/Magefan/RocketJavaScript/Model/Controller/ResultPlugin.php",
+            "line": 184,
+            "message": "[P-DI-06] ObjectManager::getInstance() is used directly in Magefan\\RocketJavaScript\\Model\\Controller\\ResultPlugin. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-06.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Magepow/Categories/Block/Categories.php",
+            "line": 96,
+            "message": "[P-DI-02] The constructor of Magepow\\Categories\\Block\\Categories does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Magepow/Categories/Helper/Data.php",
+            "line": 27,
+            "message": "[P-DI-02] The constructor of Magepow\\Categories\\Helper\\Data does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories.phtml",
+            "line": 33,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories.phtml",
+            "line": 33,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories.phtml",
+            "line": 33,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories.phtml",
+            "line": 33,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories.phtml",
+            "line": 40,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories.phtml",
+            "line": 41,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories.phtml",
+            "line": 50,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories_widget.phtml",
+            "line": 26,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories_widget.phtml",
+            "line": 28,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories_widget.phtml",
+            "line": 32,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories_widget.phtml",
+            "line": 35,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories_widget.phtml",
+            "line": 35,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories_widget.phtml",
+            "line": 35,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories_widget.phtml",
+            "line": 35,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories_widget.phtml",
+            "line": 37,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories_widget.phtml",
+            "line": 42,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/categories_widget.phtml",
+            "line": 54,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/cmspage.phtml",
+            "line": 36,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Magepow/Categories/view/frontend/templates/cmspage.phtml",
+            "line": 37,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "P-LOOP-11",
+            "severity": "error",
+            "file": "app/code/Mageprince/BuyNow/Controller/Cart/Add.php",
+            "line": 94,
+            "message": "[P-LOOP-11] ObjectManager::get() is called inside a loop. Inject the dependency through the constructor, or a factory when each iteration needs a new object.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-11.md"
+        },
+        {
+            "ruleId": "P-LOOP-01",
+            "severity": "error",
+            "file": "app/code/Mageprince/Faq/Controller/Adminhtml/Faq/InlineEdit.php",
+            "line": 86,
+            "message": "[P-LOOP-01] Mageprince\\Faq\\Model\\FaqRepository::getById() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-01.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Mageprince/Faq/Controller/Adminhtml/Faq/InlineEdit.php",
+            "line": 88,
+            "message": "[P-LOOP-03] Mageprince\\Faq\\Model\\FaqRepository::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "P-LOOP-01",
+            "severity": "error",
+            "file": "app/code/Mageprince/Faq/Controller/Adminhtml/FaqGroup/InlineEdit.php",
+            "line": 86,
+            "message": "[P-LOOP-01] Mageprince\\Faq\\Model\\FaqGroupRepository::getById() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-01.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Mageprince/Faq/Controller/Adminhtml/FaqGroup/InlineEdit.php",
+            "line": 88,
+            "message": "[P-LOOP-03] Mageprince\\Faq\\Model\\FaqGroupRepository::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/Mageprince/Faq/Helper/Data.php",
+            "line": 52,
+            "message": "[P-DI-01] Mageprince\\Faq\\Helper\\Data receives $customerSession (Magento\\Customer\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Customer\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Mageprince/Faq/Model/Faq/DataProvider.php",
+            "line": 64,
+            "message": "[P-DI-02] The constructor of Mageprince\\Faq\\Model\\Faq\\DataProvider does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Mageprince/Faq/Model/FaqGroup/DataProvider.php",
+            "line": 74,
+            "message": "[P-DI-02] The constructor of Mageprince\\Faq\\Model\\FaqGroup\\DataProvider does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Mageprince/Faq/Model/ImageUploader.php",
+            "line": 95,
+            "message": "[P-DI-02] The constructor of Mageprince\\Faq\\Model\\ImageUploader does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-LOOP-02",
+            "severity": "error",
+            "file": "app/code/Mageprince/Faq/Observer/ConfigChange.php",
+            "line": 101,
+            "message": "[P-LOOP-02] Magento\\Framework\\Model\\ResourceModel\\Db\\Collection\\AbstractCollection is created and loaded (getFirstItem()) inside a loop: one query per iteration. Load one collection for all items before the loop and look items up in it.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-02.md"
+        },
+        {
+            "ruleId": "P-LOOP-01",
+            "severity": "error",
+            "file": "app/code/Mageprince/Faq/Observer/ConfigChange.php",
+            "line": 105,
+            "message": "[P-LOOP-01] Magento\\UrlRewrite\\Model\\UrlRewrite::load() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-01.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Mageprince/Faq/Observer/ConfigChange.php",
+            "line": 108,
+            "message": "[P-LOOP-03] Magento\\UrlRewrite\\Model\\UrlRewrite::delete() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Mageprince/Faq/Observer/ConfigChange.php",
+            "line": 115,
+            "message": "[P-LOOP-03] Magento\\UrlRewrite\\Model\\UrlRewrite::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "T-06",
+            "severity": "info",
+            "file": "app/code/Mageprince/Faq/view/frontend/templates/faq_main.phtml",
+            "line": 33,
+            "message": "[T-06] This <img> has no width and height: the browser cannot reserve its space before it loads, so the page shifts when it arrives. Set both attributes to the image's size.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-06.md"
+        },
+        {
+            "ruleId": "T-06",
+            "severity": "info",
+            "file": "app/code/Mageprince/Faq/view/frontend/templates/faq_main.phtml",
+            "line": 51,
+            "message": "[T-06] This <img> has no width and height: the browser cannot reserve its space before it loads, so the page shifts when it arrives. Set both attributes to the image's size.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-06.md"
+        },
+        {
+            "ruleId": "T-06",
+            "severity": "info",
+            "file": "app/code/Mageprince/Faq/view/frontend/templates/faq_main.phtml",
+            "line": 59,
+            "message": "[T-06] This <img> has no width and height: the browser cannot reserve its space before it loads, so the page shifts when it arrives. Set both attributes to the image's size.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-06.md"
+        },
+        {
+            "ruleId": "T-06",
+            "severity": "info",
+            "file": "app/code/Mageprince/Faq/view/frontend/templates/faq_main_hyva.phtml",
+            "line": 51,
+            "message": "[T-06] This <img> has no width and height: the browser cannot reserve its space before it loads, so the page shifts when it arrives. Set both attributes to the image's size.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-06.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Mageprince/LogViewer/Ui/DataProvider/LogFile/ListingDataProvider.php",
+            "line": 94,
+            "message": "[P-DI-02] The constructor of Mageprince\\LogViewer\\Ui\\DataProvider\\LogFile\\ListingDataProvider does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/Magestat/FacebookPixel/Block/Checkout.php",
+            "line": 63,
+            "message": "[P-DI-01] Magestat\\FacebookPixel\\Block\\Checkout receives $checkoutSession (Magento\\Checkout\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Checkout\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-FPC-02",
+            "severity": "warning",
+            "file": "app/code/Magestat/FacebookPixel/Block/Checkout.php",
+            "line": 96,
+            "message": "[P-FPC-02] Magestat\\FacebookPixel\\Block\\Checkout reads Magento\\Checkout\\Model\\Session::getQuote() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-FPC-02.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/Magestat/FacebookPixel/Block/Success.php",
+            "line": 49,
+            "message": "[P-DI-01] Magestat\\FacebookPixel\\Block\\Success receives $checkoutSession (Magento\\Checkout\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Checkout\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/Magestat/SigninPhoneNumber/Block/Form/Edit.php",
+            "line": 49,
+            "message": "[P-DI-01] Magestat\\SigninPhoneNumber\\Block\\Form\\Edit receives $customerSession (Magento\\Customer\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Customer\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/Magestat/SigninPhoneNumber/Block/Form/Login.php",
+            "line": 43,
+            "message": "[P-DI-01] Magestat\\SigninPhoneNumber\\Block\\Form\\Login receives $customerSession (Magento\\Customer\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Customer\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/Magestat/SigninPhoneNumber/Block/Form/Register.php",
+            "line": 64,
+            "message": "[P-DI-01] Magestat\\SigninPhoneNumber\\Block\\Form\\Register receives $customerSession (Magento\\Customer\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Customer\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-06",
+            "severity": "warning",
+            "file": "app/code/Magestat/SigninPhoneNumber/Model/AccountManagement.php",
+            "line": 236,
+            "message": "[P-DI-06] ObjectManager::getInstance() is used directly in Magestat\\SigninPhoneNumber\\Model\\AccountManagement. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-06.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magestat/SigninPhoneNumber/view/frontend/templates/form/edit.phtml",
+            "line": 25,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magestat/SigninPhoneNumber/view/frontend/templates/form/edit.phtml",
+            "line": 27,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magestat/SigninPhoneNumber/view/frontend/templates/form/edit.phtml",
+            "line": 28,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magestat/SigninPhoneNumber/view/frontend/templates/form/edit.phtml",
+            "line": 29,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magestat/SigninPhoneNumber/view/frontend/templates/form/register.phtml",
+            "line": 18,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magestat/SigninPhoneNumber/view/frontend/templates/form/register.phtml",
+            "line": 28,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magestat/SigninPhoneNumber/view/frontend/templates/form/register.phtml",
+            "line": 33,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magestat/SigninPhoneNumber/view/frontend/templates/form/register.phtml",
+            "line": 38,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magestat/SigninPhoneNumber/view/frontend/templates/form/register.phtml",
+            "line": 48,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magestat/SigninPhoneNumber/view/frontend/templates/form/register.phtml",
+            "line": 53,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "T-01",
+            "severity": "info",
+            "file": "app/code/Magestat/SigninPhoneNumber/view/frontend/templates/form/register.phtml",
+            "line": 58,
+            "message": "[T-01] The template creates a block with getLayout()->createBlock(). The Technical guidelines forbid this; declare the block in layout XML and render it with getChildHtml(), or use a view model.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/T-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Magiccart/Magicmenu/Block/Menu.php",
+            "line": 164,
+            "message": "[P-DI-02] The constructor of Magiccart\\Magicmenu\\Block\\Menu does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-LOOP-12",
+            "severity": "warning",
+            "file": "app/code/Magiccart/Magicmenu/Block/Menu.php",
+            "line": 402,
+            "message": "[P-LOOP-12] Magiccart\\Magicmenu\\Block\\Menu::getTreeCategories() is called inside a loop and runs a query on every call: it calls Magento\\Catalog\\Model\\Category::load() on line 898 of Menu.php. Fetch the data for all items before the loop, with a collection or getList(), and pass it in.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-12.md"
+        },
+        {
+            "ruleId": "P-LOOP-12",
+            "severity": "warning",
+            "file": "app/code/Magiccart/Magicmenu/Block/Menu.php",
+            "line": 479,
+            "message": "[P-LOOP-12] Magiccart\\Magicmenu\\Block\\Menu::getTreeCategories() is called inside a loop and runs a query on every call: it calls Magento\\Catalog\\Model\\Category::load() on line 898 of Menu.php. Fetch the data for all items before the loop, with a collection or getList(), and pass it in.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-12.md"
+        },
+        {
+            "ruleId": "P-LOOP-01",
+            "severity": "error",
+            "file": "app/code/Magiccart/Magicmenu/Block/Menu.php",
+            "line": 898,
+            "message": "[P-LOOP-01] Magento\\Catalog\\Model\\Category::load() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-01.md"
+        },
+        {
+            "ruleId": "P-LOOP-12",
+            "severity": "warning",
+            "file": "app/code/Magiccart/Magicmenu/Block/Menu.php",
+            "line": 905,
+            "message": "[P-LOOP-12] Magiccart\\Magicmenu\\Block\\Menu::getTreeCategories() is called inside a loop and runs a query on every call: it calls Magento\\Catalog\\Model\\Category::load() on line 898 of Menu.php. Fetch the data for all items before the loop, with a collection or getList(), and pass it in.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-12.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Magiccart/Magicmenu/Controller/Adminhtml/Action.php",
+            "line": 94,
+            "message": "[P-DI-02] The constructor of Magiccart\\Magicmenu\\Controller\\Adminhtml\\Action does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Magiccart/Magicmenu/Controller/Adminhtml/Extra/MassDelete.php",
+            "line": 38,
+            "message": "[P-LOOP-03] Magiccart\\Magicmenu\\Api\\MagicmenuRepositoryInterface::deleteById() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "P-LOOP-01",
+            "severity": "error",
+            "file": "app/code/Magiccart/Magicmenu/Controller/Adminhtml/Extra/MassStatus.php",
+            "line": 40,
+            "message": "[P-LOOP-01] Magiccart\\Magicmenu\\Api\\MagicmenuRepositoryInterface::getById() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-01.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Magiccart/Magicmenu/Controller/Adminhtml/Extra/MassStatus.php",
+            "line": 43,
+            "message": "[P-LOOP-03] Magiccart\\Magicmenu\\Api\\MagicmenuRepositoryInterface::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Magiccart/Magicmenu/Controller/Adminhtml/Menu/MassDelete.php",
+            "line": 38,
+            "message": "[P-LOOP-03] Magiccart\\Magicmenu\\Api\\MagicmenuRepositoryInterface::deleteById() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "P-LOOP-01",
+            "severity": "error",
+            "file": "app/code/Magiccart/Magicmenu/Controller/Adminhtml/Menu/MassStatus.php",
+            "line": 40,
+            "message": "[P-LOOP-01] Magiccart\\Magicmenu\\Api\\MagicmenuRepositoryInterface::getById() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-01.md"
+        },
+        {
+            "ruleId": "P-LOOP-03",
+            "severity": "info",
+            "file": "app/code/Magiccart/Magicmenu/Controller/Adminhtml/Menu/MassStatus.php",
+            "line": 43,
+            "message": "[P-LOOP-03] Magiccart\\Magicmenu\\Api\\MagicmenuRepositoryInterface::save() is called inside a loop: one write (and its events and plugins) per iteration. Prefer a batch operation where one exists.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-LOOP-03.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Magiccart/Magicmenu/Helper/Data.php",
+            "line": 42,
+            "message": "[P-DI-02] The constructor of Magiccart\\Magicmenu\\Helper\\Data does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Shockwavemk/CronSchedule/view/adminhtml/templates/cronschedule/index/index/content.phtml",
+            "line": 68,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Shockwavemk/CronSchedule/view/adminhtml/templates/cronschedule/index/index/content.phtml",
+            "line": 69,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Shockwavemk/CronSchedule/view/adminhtml/templates/cronschedule/index/index/content.phtml",
+            "line": 82,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "S-TPL-01",
+            "severity": "info",
+            "file": "app/code/Shockwavemk/CronSchedule/view/adminhtml/templates/cronschedule/index/index/content.phtml",
+            "line": 90,
+            "message": "[S-TPL-01] The use of $this in templates is deprecated. Use $block instead. (Magento2.Templates.ThisInTemplate)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-TPL-01.md"
+        },
+        {
+            "ruleId": "P-DI-04",
+            "severity": "info",
+            "file": "app/code/Siteation/DebugBar/Console/McpServerCommand.php",
+            "line": 27,
+            "message": "[P-DI-04] Siteation\\DebugBar\\Console\\McpServerCommand is created on every bin/magento run, whichever command is asked for, and so are its dependencies $server. Configure a Proxy in di.xml for those that are costly to create.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-04.md"
+        },
+        {
+            "ruleId": "P-DI-04",
+            "severity": "info",
+            "file": "app/code/Siteation/DebugBar/Console/ReportCommand.php",
+            "line": 30,
+            "message": "[P-DI-04] Siteation\\DebugBar\\Console\\ReportCommand is created on every bin/magento run, whichever command is asked for, and so are its dependencies $store, $report. Configure a Proxy in di.xml for those that are costly to create.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-04.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Siteation/DebugBar/Mcp/Server.php",
+            "line": 64,
+            "message": "[P-DI-02] The constructor of Siteation\\DebugBar\\Mcp\\Server does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "info",
+            "file": "app/code/Siteation/DebugBar/Model/AccessKey.php",
+            "line": 43,
+            "message": "[P-DI-01] Siteation\\DebugBar\\Model\\AccessKey receives $cookies (Magento\\Framework\\Stdlib\\CookieManagerInterface) without a Proxy: the Technical guidelines (9.10) forbid injecting it into constructors. Configure Magento\\Framework\\Stdlib\\CookieManagerInterface\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "X-PLG-02",
+            "severity": "info",
+            "file": "app/code/Siteation/DebugBar/Plugin/View/BlockPlugin.php",
+            "line": 34,
+            "message": "[X-PLG-02] Siteation\\DebugBar\\Plugin\\View\\BlockPlugin::aroundToHtml() is a plugin on magento\\framework\\view\\element\\abstractblock, so it runs for every rendered block or layout element of every page. Put it on the specific class it is meant for, or keep it very cheap.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-PLG-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Adapter/Mysql/Aggregation/DataProvider.php",
+            "line": 75,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\Model\\Adapter\\Mysql\\Aggregation\\DataProvider does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Adapter/Mysql/Aggregation/DataProvider/SelectBuilderForAttribute.php",
+            "line": 65,
+            "message": "[P-DI-01] Swissup\\SearchMysqlLegacy\\Model\\Adapter\\Mysql\\Aggregation\\DataProvider\\SelectBuilderForAttribute receives $customerSession (Magento\\Customer\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Customer\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-01",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Adapter/Mysql/Dynamic/DataProvider.php",
+            "line": 90,
+            "message": "[P-DI-01] Swissup\\SearchMysqlLegacy\\Model\\Adapter\\Mysql\\Dynamic\\DataProvider receives $customerSession (Magento\\Customer\\Model\\Session) without a Proxy: it is created together with this class, and a session starts on creation. Configure Magento\\Customer\\Model\\Session\\Proxy for this argument in di.xml; do not type-hint the Proxy.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Adapter/Mysql/Dynamic/DataProvider.php",
+            "line": 98,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\Model\\Adapter\\Mysql\\Dynamic\\DataProvider does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Adapter/Mysql/Filter/Preprocessor.php",
+            "line": 118,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\Model\\Adapter\\Mysql\\Filter\\Preprocessor does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Adapter/Mysql/Plugin/Aggregation/Category/DataProvider.php",
+            "line": 68,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\Model\\Adapter\\Mysql\\Plugin\\Aggregation\\Category\\DataProvider does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Indexer/Fulltext/Action/Full.php",
+            "line": 256,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\Model\\Indexer\\Fulltext\\Action\\Full does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Indexer/IndexerHandler.php",
+            "line": 94,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\Model\\Indexer\\IndexerHandler does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Indexer/IndexerHandler.php",
+            "line": 214,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Search/FiltersExtractor.php",
+            "line": 35,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Search/FiltersExtractor.php",
+            "line": 38,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Search/FiltersExtractor.php",
+            "line": 41,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Search/FiltersExtractor.php",
+            "line": 73,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Search/FiltersExtractor.php",
+            "line": 80,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Search/FiltersExtractor.php",
+            "line": 87,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/Model/Search/TableMapper.php",
+            "line": 70,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\Model\\Search\\TableMapper does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Swissup/SearchMysqlLegacy/SearchAdapter/Mysql/Aggregation/Builder/Dynamic.php",
+            "line": 80,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/SearchAdapter/Mysql/Aggregation/Builder/Range.php",
+            "line": 51,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\SearchAdapter\\Mysql\\Aggregation\\Builder\\Range does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Swissup/SearchMysqlLegacy/SearchAdapter/Mysql/Aggregation/Builder/Range.php",
+            "line": 93,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Swissup/SearchMysqlLegacy/SearchAdapter/Mysql/Aggregation/Builder/Range.php",
+            "line": 98,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "S-PERF-01",
+            "severity": "info",
+            "file": "app/code/Swissup/SearchMysqlLegacy/SearchAdapter/Mysql/Aggregation/Builder/Range.php",
+            "line": 100,
+            "message": "[S-PERF-01] array_merge(...) is used in a loop and is a resources greedy construction. (Magento2.Performance.ForeachArrayMerge)",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/S-PERF-01.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/SearchAdapter/Mysql/ConditionManager.php",
+            "line": 34,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\SearchAdapter\\Mysql\\ConditionManager does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/SearchAdapter/Mysql/Mapper.php",
+            "line": 125,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\SearchAdapter\\Mysql\\Mapper does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/SearchAdapter/Mysql/Query/Builder/MatchBuilder.php",
+            "line": 93,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\SearchAdapter\\Mysql\\Query\\Builder\\MatchBuilder does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/SearchAdapter/Mysql/TemporaryStorage.php",
+            "line": 49,
+            "message": "[P-DI-02] The constructor of Swissup\\SearchMysqlLegacy\\SearchAdapter\\Mysql\\TemporaryStorage does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        },
+        {
+            "ruleId": "P-DI-06",
+            "severity": "warning",
+            "file": "app/code/Swissup/SearchMysqlLegacy/SearchAdapter/Mysql/TemporaryStorage.php",
+            "line": 49,
+            "message": "[P-DI-06] ObjectManager::getInstance() is used directly in Swissup\\SearchMysqlLegacy\\SearchAdapter\\Mysql\\TemporaryStorage. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-06.md"
+        },
+        {
+            "ruleId": "P-DI-02",
+            "severity": "warning",
+            "file": "app/code/Trive/Varnish/Model/Http/XMagentoTags.php",
+            "line": 24,
+            "message": "[P-DI-02] The constructor of Trive\\Varnish\\Model\\Http\\XMagentoTags does work beyond assigning dependencies and validating arguments. Move it to the method that needs the result, so it does not run every time the object is created.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/P-DI-02.md"
+        }
+    ],
+    "notices": [
+        {
+            "source": "untyped-receiver",
+            "message": "[notice:P-COL-02] getFirstItem() on a receiver of unknown type",
+            "file": "app/code/Macopedia/CategoryImporter/Console/Command/CategoriesCommand.php",
+            "line": 258
+        },
+        {
+            "source": "untyped-receiver",
+            "message": "[notice:P-COL-02] getFirstItem() on a receiver of unknown type",
+            "file": "app/code/Macopedia/CategoryImporter/Console/Command/CategoriesCommand.php",
+            "line": 271
+        }
+    ]
+}

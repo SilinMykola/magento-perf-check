@@ -67,6 +67,23 @@ final class ObjectManagerUsageRuleTest extends RuleTestCase
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 398],
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 404],
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\DataLazyGetters. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 409],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\TernaryFallbacks. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 442],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\TernaryFallbacks. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 443],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\TernaryFallbacks. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 448],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\LazyGetterThroughLocal. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 472],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\LazyGetterThroughLocal. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 476],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\LazyGetterThroughLocal. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 481],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScope. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 502],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScope. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 514],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScope. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 515],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScope. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 516],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScope. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 517],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScope. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 519],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScopeEdges. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 555],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScopeEdges. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 556],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScopeEdges. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 557],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScopeEdges. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 559],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\InstanceofFallback. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 572],
         ]);
     }
 }

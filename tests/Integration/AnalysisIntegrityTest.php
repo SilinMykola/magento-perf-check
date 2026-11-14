@@ -462,6 +462,46 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertSame(['setTemplateDisallowedForBlockClasses' => false], $parameters['extdn'] ?? null);
     }
 
+    public function testBitExpertThatDoesNotDeclareItsSwitchesIsLeftOut(): void
+    {
+        // bitexpert/phpstan-magento 0.30.0 sets two switches that its parametersSchema does not declare, so PHPStan
+        // rejects any configuration that includes it ("Unexpected item 'parameters › extdn'").
+        $neon = <<<'NEON'
+            parameters:
+                magento:
+                    checkCollectionViaFactory: true
+                    checkServiceContracts: true
+                    checkResourceModelsUsedDirectly: true
+                extdn:
+                    setTemplateDisallowedForBlockClasses: true
+            parametersSchema:
+                magento: structure([
+                    checkCollectionViaFactory: bool()
+                    checkServiceContracts: bool()
+                ])
+
+            NEON;
+        $project = $this->project([
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Block/Foo.php' => self::SESSION_BLOCK,
+            'bitexpert/extension.neon' => $neon,
+        ]);
+        $runner = new PhpStanRunner(new RuleRegistry(), null, $project . '/bitexpert');
+
+        [$exitCode, $stdout, $stderr] = $this->runCommand($project, ['--format=json'], $runner);
+
+        self::assertNotSame(Application::EXIT_ERROR, $exitCode, $stderr);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        self::assertSame(['P-DI-01'], array_column($report['findings'], 'ruleId'));
+        $messages = array_column(array_filter((array) $report['notices'], static fn (array $n): bool => $n['source'] === 'generated-code'), 'message');
+        self::assertCount(2, $messages);
+        self::assertStringContainsString('does not declare the parameter magento.checkResourceModelsUsedDirectly', $messages[0]);
+        $configs = glob(WorkDirectory::forProject($project) . '/phpstan-*.neon') ?: [];
+        self::assertCount(1, $configs);
+        self::assertStringNotContainsString('bitexpert', (string) file_get_contents($configs[0]));
+    }
+
     public function testEnabledCodingStandardRuleIsInTheReport(): void
     {
         $merge = "<?php\nnamespace Acme\\Demo;\nclass Export\n{\n    public function run(array \$groups): array\n    {\n        \$result = [];\n"

@@ -10,7 +10,7 @@
 
 A `__construct` with a statement other than:
 - assigning, to a property or a local variable, a parameter, a literal, a constant, or a cast of one of these;
-- the same with a `??` or `?:` fallback whose default is such a value, a `new` expression, or `ObjectManager::getInstance()->get(...)` (the documented backward-compatible fallback);
+- the same with a `??` or `?:` fallback whose default is such a value, a `new` expression, or one `ObjectManager::getInstance()->get(...)` or `->create(...)` call with such values as arguments (the documented backward-compatible fallback; a further call on its result is work), also written as `$param ??= ...` or as a full ternary such as `$param !== null ? $param : ObjectManager::getInstance()->get(...)`;
 - calling `parent::__construct(...)`;
 - argument validation: `if` or `foreach` blocks that contain nothing but throwing an exception.
 

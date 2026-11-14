@@ -348,3 +348,43 @@ final class MagicSetters
         }
     }
 }
+
+final class CatchInLoop
+{
+    /**
+     * @param list<Product> $products
+     */
+    public function allowed(array $products, Product $set): void
+    {
+        foreach ($products as $product) {
+            foreach ($products as $other) {
+                try {
+                    $this->check($other);
+                } catch (\Exception $e) {
+                    if ($product->getId()) {
+                        $set->delete();
+                    }
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    /**
+     * @param list<Product> $products
+     */
+    public function reported(array $products, Product $set): void
+    {
+        foreach ($products as $product) {
+            try {
+                $this->check($product);
+            } catch (\Exception $e) {
+                $set->delete();
+            }
+        }
+    }
+
+    private function check(Product $product): void
+    {
+    }
+}

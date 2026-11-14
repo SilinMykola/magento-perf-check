@@ -191,11 +191,11 @@
         "skipped": [
             {
                 "name": "hyva-themes/magento2-graphql-view-model",
-                "reason": "needs the Hyvä theme stack"
+                "reason": "needs the Hyv\u00e4 theme stack"
             },
             {
                 "name": "hyva-themes/magento2-graphql-tokens",
-                "reason": "needs the Hyvä theme stack"
+                "reason": "needs the Hyv\u00e4 theme stack"
             }
         ]
     },
@@ -204,7 +204,7 @@
         "reason": "composer create-project mage-os/project-community-edition from https://repo.mage-os.org/ hung three times on 2026-10-23/24 on stalled downloads (no CPU use, no file written for 10 minutes), also with COMPOSER_MAX_PARALLEL_HTTP=4 and with a GitHub token. The owner decided to calibrate without it; Mage-OS is a fork of the same core."
     },
     "extended": {
-        "selection": "the next 100 packages of type magento2-module by downloads after the packagist part, chosen the same way, Hyvä packages included; a package whose registration.php holds more than the standard register() call is skipped",
+        "selection": "the next 100 packages of type magento2-module by downloads after the packagist part, chosen the same way, Hyv\u00e4 packages included; a package whose registration.php holds more than the standard register() call is skipped",
         "date": "2026-11-10",
         "paths": [
             "app/code",
@@ -1053,6 +1053,711 @@
             {
                 "name": "splashlab/magento-2-cors-requests",
                 "reason": "type none"
+            }
+        ]
+    },
+    "github": {
+        "selection": "the 50 most-starred GitHub repositories with the topic magento2-module, not archived and not forks, that hold one module of type magento2-module not yet in the corpus, whose requirements the copy meets (PHP 8.4.0) and whose registration.php is standard; default branch, cloned with --depth 1",
+        "date": "2026-11-13",
+        "base": "hard-linked copy of the extended part",
+        "modules": [
+            {
+                "repository": "friends-of-hyva/magento2-react-checkout",
+                "name": "hyva-themes/magento2-react-checkout",
+                "module": "FriendsOfHyva_ReactCheckout",
+                "stars": 193,
+                "commit": "fff0ec0ae454ceaeba4322b1d2a776b64b8be07d",
+                "path": "app/code/FriendsOfHyva/ReactCheckout"
+            },
+            {
+                "repository": "markshust/magento2-module-pagebuildersourcecode",
+                "name": "markshust/magento2-module-pagebuildersourcecode",
+                "module": "MarkShust_PageBuilderSourceCode",
+                "stars": 119,
+                "commit": "fc32fd948ef4a222105c8ff3a17f40419cfe4835",
+                "path": "app/code/MarkShust/PageBuilderSourceCode"
+            },
+            {
+                "repository": "swissup/module-search-mysql-legacy",
+                "name": "swissup/module-search-mysql-legacy",
+                "module": "Swissup_SearchMysqlLegacy",
+                "stars": 105,
+                "commit": "db007202993e6fcbf53a10c9924afd22eb36e66d",
+                "path": "app/code/Swissup/SearchMysqlLegacy"
+            },
+            {
+                "repository": "sbodak/magento2-checkout-custom-form",
+                "name": "sbodak/magento2-checkout-custom-form",
+                "module": "Bodak_CheckoutCustomForm",
+                "stars": 100,
+                "commit": "110890eea67e5932da395a579efd28368a0b07d9",
+                "path": "app/code/Bodak/CheckoutCustomForm"
+            },
+            {
+                "repository": "magepal/magento2-custom-shipping-rate",
+                "name": "magepal/magento2-customshippingrate",
+                "module": "MagePal_CustomShippingRate",
+                "stars": 96,
+                "commit": "f2ca911656b7ae5ec88782f8d7fa71ab4fb6f23d",
+                "path": "app/code/MagePal/CustomShippingRate"
+            },
+            {
+                "repository": "markshust/magento2-module-simpledata",
+                "name": "markshust/magento2-module-simpledata",
+                "module": "MarkShust_SimpleData",
+                "stars": 94,
+                "commit": "75cd52787c59a526e1952d6183350e91470e865c",
+                "path": "app/code/MarkShust/SimpleData"
+            },
+            {
+                "repository": "markshust/magento2-module-ordergrid",
+                "name": "markshust/magento2-module-ordergrid",
+                "module": "MarkShust_OrderGrid",
+                "stars": 90,
+                "commit": "158a79f0300021e7aedd3365c0ef8d613c92c69f",
+                "path": "app/code/MarkShust/OrderGrid"
+            },
+            {
+                "repository": "zepgram/module-disable-search-engine",
+                "name": "zepgram/module-disable-search-engine",
+                "module": "Zepgram_DisableSearchEngine",
+                "stars": 86,
+                "commit": "4478f6020b284c7eedfd65499e1a356c4def859c",
+                "path": "app/code/Zepgram/DisableSearchEngine"
+            },
+            {
+                "repository": "baldwin-agency/magento2-module-image-cleanup",
+                "name": "baldwin/magento2-module-image-cleanup",
+                "module": "Baldwin_ImageCleanup",
+                "stars": 85,
+                "commit": "a9188294ed92ac315ec172513cfe88b37aef4abb",
+                "path": "app/code/Baldwin/ImageCleanup"
+            },
+            {
+                "repository": "karliuka/m2.SmartCategory",
+                "name": "faonni/module-smart-category",
+                "module": "Faonni_SmartCategory",
+                "stars": 84,
+                "commit": "481e7d4e0c390f40cd75031ae110eb5a1ee2dc1e",
+                "path": "app/code/Faonni/SmartCategory"
+            },
+            {
+                "repository": "mageprince/magento2-buynow",
+                "name": "mageprince/module-buynow",
+                "module": "Mageprince_BuyNow",
+                "stars": 82,
+                "commit": "b8ab94a21df26c6c09f1721ec62bf2eeb7377abb",
+                "path": "app/code/Mageprince/BuyNow"
+            },
+            {
+                "repository": "magepal/magento2-preview-checkout-success-page",
+                "name": "magepal/magento2-preview-checkout-success-page",
+                "module": "MagePal_PreviewCheckoutSuccessPage",
+                "stars": 78,
+                "commit": "54f86d84fd740f46f96e39c851981c0ac2b3699b",
+                "path": "app/code/MagePal/PreviewCheckoutSuccessPage"
+            },
+            {
+                "repository": "magepal/magento2-guest-to-customer",
+                "name": "magepal/magento2-guest-to-customer",
+                "module": "MagePal_GuestToCustomer",
+                "stars": 69,
+                "commit": "0a6ac3c3f933e8762fd9335d35c83d310766c35b",
+                "path": "app/code/MagePal/GuestToCustomer"
+            },
+            {
+                "repository": "MagePsycho/magento2-custom-shipping",
+                "name": "magepsycho/magento2-custom-shipping",
+                "module": "MagePsycho_CustomShipping",
+                "stars": 69,
+                "commit": "61d9260e9029f681e7a4d97e7cff38bcd5d42951",
+                "path": "app/code/MagePsycho/CustomShipping"
+            },
+            {
+                "repository": "run-as-root/magento2-message-queue-retry",
+                "name": "run-as-root/magento2-message-queue-retry",
+                "module": "RunAsRoot_MessageQueueRetry",
+                "stars": 64,
+                "commit": "88e113ef107c1cc6eb41084b790799827fcbac7c",
+                "path": "app/code/RunAsRoot/MessageQueueRetry"
+            },
+            {
+                "repository": "karliuka/m2.Price",
+                "name": "faonni/module-price",
+                "module": "Faonni_Price",
+                "stars": 63,
+                "commit": "136d7f7b99a8bcc00e43d978ec7603a74086e7e5",
+                "path": "app/code/Faonni/Price"
+            },
+            {
+                "repository": "tuyennn/magento2-outofstockatlast",
+                "name": "ghoster/module-outofstockatlast",
+                "module": "GhoSter_OutOfStockAtLast",
+                "stars": 62,
+                "commit": "acbf5c434d50f34b6194666ba4c4412bb62da946",
+                "path": "app/code/GhoSter/OutOfStockAtLast"
+            },
+            {
+                "repository": "lizardmedia/varnish-warmer-magento2",
+                "name": "lizardmedia/module-varnish-warmer",
+                "module": "LizardMedia_VarnishWarmer",
+                "stars": 61,
+                "commit": "b9217acc1a4d464b41232af4ccd036a67dab2bf3",
+                "path": "app/code/LizardMedia/VarnishWarmer"
+            },
+            {
+                "repository": "mageprince/magento2-FAQ",
+                "name": "mageprince/module-faq",
+                "module": "Mageprince_Faq",
+                "stars": 60,
+                "commit": "e84668ae2546d1134ac74bc717e81ea9c513146d",
+                "path": "app/code/Mageprince/Faq"
+            },
+            {
+                "repository": "shkoliar/magento-grid-colors",
+                "name": "shkoliar/magento-grid-colors",
+                "module": "Shkoliar_GridColors",
+                "stars": 59,
+                "commit": "c62284f9b9ff152c9d623d9cacf9cabf93c4ee2e",
+                "path": "app/code/Shkoliar/GridColors"
+            },
+            {
+                "repository": "magepal/magento2-catalog-lazy-load",
+                "name": "magepal/magento2-cataloglazyload",
+                "module": "MagePal_CatalogLazyLoad",
+                "stars": 57,
+                "commit": "f69e7a5f8c08ab20158377005ccfcb8ee599a920",
+                "path": "app/code/MagePal/CatalogLazyLoad"
+            },
+            {
+                "repository": "magepal/magento2-link-product",
+                "name": "magepal/link-product",
+                "module": "MagePal_LinkProduct",
+                "stars": 55,
+                "commit": "7709ec101c56857cb6ae726e0e230d81602eb24d",
+                "path": "app/code/MagePal/LinkProduct"
+            },
+            {
+                "repository": "williankeller/magento2-sign-in-with-phone-number",
+                "name": "magestat/module-sign-in-with-phone-number",
+                "module": "Magestat_SigninPhoneNumber",
+                "stars": 54,
+                "commit": "f16c168552af0e7e951e7d427a553e05fac3a974",
+                "path": "app/code/Magestat/SigninPhoneNumber"
+            },
+            {
+                "repository": "magefan/module-lazyload",
+                "name": "magefan/module-lazyload",
+                "module": "Magefan_LazyLoad",
+                "stars": 52,
+                "commit": "dcaf3cd07d9a2799b76b312a055e4404f77310a7",
+                "path": "app/code/Magefan/LazyLoad"
+            },
+            {
+                "repository": "basecom/magento2-csp-split-header",
+                "name": "basecom/magento2-csp-split-header",
+                "module": "Basecom_CspSplitHeader",
+                "stars": 51,
+                "commit": "2e2328a3be76dbe78b792986dea66dd2f9fda359",
+                "path": "app/code/Basecom/CspSplitHeader"
+            },
+            {
+                "repository": "deved-it/magento2-disable-customer-registration",
+                "name": "deved/magento2-disable-customer-registration",
+                "module": "Deved_DisableRegistration",
+                "stars": 50,
+                "commit": "eb61d73d7cb2baed814aedbedcc5ac1da0c10990",
+                "path": "app/code/Deved/DisableRegistration"
+            },
+            {
+                "repository": "magepow/magento-2-mega-menu",
+                "name": "magiccart/magicmenu",
+                "module": "Magiccart_Magicmenu",
+                "stars": 49,
+                "commit": "22809b08f63cf64bc35ecca04dc05a46e79a55dc",
+                "path": "app/code/Magiccart/Magicmenu"
+            },
+            {
+                "repository": "shkoliar/magento-ngrok",
+                "name": "shkoliar/magento-ngrok",
+                "module": "Shkoliar_Ngrok",
+                "stars": 49,
+                "commit": "d53065a8a81b0e7e04b04b815c64b44ceed2e0a6",
+                "path": "app/code/Shkoliar/Ngrok"
+            },
+            {
+                "repository": "christophermallory/magento2-freeshipping-progress-bar",
+                "name": "chrismallory/module-freeshipping-progress-bar",
+                "module": "ChrisMallory_FreeShippingProgressBar",
+                "stars": 48,
+                "commit": "223b7d6a9f8c3e1e00534c1589a210b6909095a1",
+                "path": "app/code/ChrisMallory/FreeShippingProgressBar"
+            },
+            {
+                "repository": "magefan/module-conflict-detector",
+                "name": "magefan/module-conflict-detector",
+                "module": "Magefan_ConflictDetector",
+                "stars": 47,
+                "commit": "26273ee3aa1eb942c9feafdbd9aac66cd5367e9d",
+                "path": "app/code/Magefan/ConflictDetector"
+            },
+            {
+                "repository": "mageprince/magento2-logviewer",
+                "name": "mageprince/module-log-viewer",
+                "module": "Mageprince_LogViewer",
+                "stars": 45,
+                "commit": "6b21289d1248eb1457b13d31ee45b1054aa129cf",
+                "path": "app/code/Mageprince/LogViewer"
+            },
+            {
+                "repository": "MagePsycho/magento2-easy-template-path-hints",
+                "name": "magepsycho/magento2-easy-template-path-hints",
+                "module": "MagePsycho_Easypathhints",
+                "stars": 44,
+                "commit": "e90ab3c1ca4c095d9650b293339939bec5669f96",
+                "path": "app/code/MagePsycho/Easypathhints"
+            },
+            {
+                "repository": "magefan/module-rocketjavascript",
+                "name": "magefan/module-rocketjavascript",
+                "module": "Magefan_RocketJavaScript",
+                "stars": 43,
+                "commit": "fb7294047ed06dfb9955def688c6184f97bd244a",
+                "path": "app/code/Magefan/RocketJavaScript"
+            },
+            {
+                "repository": "magepal/magento2-customer-account-links-manager",
+                "name": "magepal/magento2-customeraccountlinksmanager",
+                "module": "MagePal_CustomerAccountLinksManager",
+                "stars": 40,
+                "commit": "c1be40dbfa04a06d6ee7add1123b96ff1ecae9ab",
+                "path": "app/code/MagePal/CustomerAccountLinksManager"
+            },
+            {
+                "repository": "magepow/magento-2-categories",
+                "name": "magepow/categories",
+                "module": "Magepow_Categories",
+                "stars": 40,
+                "commit": "e0b14222e5b36adf84cd29bfb90f113a2ca8a694",
+                "path": "app/code/Magepow/Categories"
+            },
+            {
+                "repository": "karliuka/m2.IndexerUrlRewrite",
+                "name": "faonni/module-indexer-url-rewrite",
+                "module": "Faonni_IndexerUrlRewrite",
+                "stars": 40,
+                "commit": "794e5bd9496cda9443557231870f08e1a27c7ddd",
+                "path": "app/code/Faonni/IndexerUrlRewrite"
+            },
+            {
+                "repository": "integer-net/magento2-global-custom-layout",
+                "name": "integer-net/magento2-global-custom-layout",
+                "module": "IntegerNet_GlobalCustomLayout",
+                "stars": 40,
+                "commit": "fc8d562748b5590a32a3c83af36196da78bd0cbc",
+                "path": "app/code/IntegerNet/GlobalCustomLayout"
+            },
+            {
+                "repository": "trive-digital/magento2-varnish-fixes",
+                "name": "trive/varnish",
+                "module": "Trive_Varnish",
+                "stars": 39,
+                "commit": "0fa9d2aff532128877425d881af765b277ecfb4e",
+                "path": "app/code/Trive/Varnish"
+            },
+            {
+                "repository": "magefan/module-cli",
+                "name": "magefan/module-cli",
+                "module": "Magefan_Cli",
+                "stars": 37,
+                "commit": "5156dbdad1cb7d609548d6794c53acca3ab2882f",
+                "path": "app/code/Magefan/Cli"
+            },
+            {
+                "repository": "graschik/magento-2-admin-ui",
+                "name": "grasch/module-admin-ui",
+                "module": "Grasch_AdminUi",
+                "stars": 37,
+                "commit": "e3aaaedc8894eda50de11a58ecee8d8d2235ba2b",
+                "path": "app/code/Grasch/AdminUi"
+            },
+            {
+                "repository": "williankeller/magento2-facebook-pixel",
+                "name": "magestat/module-facebook-pixel",
+                "module": "Magestat_FacebookPixel",
+                "stars": 36,
+                "commit": "8119d5f33e6e56749c1779f983c9a51fd6e192e4",
+                "path": "app/code/Magestat/FacebookPixel"
+            },
+            {
+                "repository": "magefan/module-google-tag-manager",
+                "name": "magefan/module-google-tag-manager",
+                "module": "Magefan_GoogleTagManager",
+                "stars": 36,
+                "commit": "69563d146162e4af08cc7671ff6d586cc721bb2e",
+                "path": "app/code/Magefan/GoogleTagManager"
+            },
+            {
+                "repository": "shockwavemk/magento2-module-cron-schedule",
+                "name": "shockwavemk/magento2-module-cron-schedule",
+                "module": "Shockwavemk_CronSchedule",
+                "stars": 34,
+                "commit": "a0e50b95f8830329ec8988e0a54684377c5fc30c",
+                "path": "app/code/Shockwavemk/CronSchedule"
+            },
+            {
+                "repository": "DivanteLtd/magento2-pimcore-bridge",
+                "name": "divante-ltd/module-pimcore-integration",
+                "module": "Divante_PimcoreIntegration",
+                "stars": 34,
+                "commit": "884a7af04f8f71e9fcf6cdc03b37003f4feedf12",
+                "path": "app/code/Divante/PimcoreIntegration"
+            },
+            {
+                "repository": "rangerz/magento2-module-quicklink",
+                "name": "rangerz/magento2-module-quicklink",
+                "module": "Rangerz_Quicklink",
+                "stars": 34,
+                "commit": "6947943257eec38cd64eb9dd70e068ab9cafcb2f",
+                "path": "app/code/Rangerz/Quicklink"
+            },
+            {
+                "repository": "macopedia/CategoryImporter",
+                "name": "macopedia/magento2-categoryimporter",
+                "module": "Macopedia_CategoryImporter",
+                "stars": 34,
+                "commit": "bbd0a32e5470a677d86d7fd322ffc9330a3cf7d5",
+                "path": "app/code/Macopedia/CategoryImporter"
+            },
+            {
+                "repository": "Itonomy/magento2-product-visibillitygrid",
+                "name": "itonomy/productvisibilitygrid",
+                "module": "Itonomy_ProductVisibilityGrid",
+                "stars": 34,
+                "commit": "319012f21b080764bd4cf63f547e43e4712d0873",
+                "path": "app/code/Itonomy/ProductVisibilityGrid"
+            },
+            {
+                "repository": "robaimes/module-checkout-designs",
+                "name": "aimes/module-checkout-designs",
+                "module": "Aimes_CheckoutDesigns",
+                "stars": 33,
+                "commit": "cbee3dcb6a501df39b4882b9495b8ef7a169b22d",
+                "path": "app/code/Aimes/CheckoutDesigns"
+            },
+            {
+                "repository": "Siteation/magento2-debugbar",
+                "name": "siteation/magento2-debugbar",
+                "module": "Siteation_DebugBar",
+                "stars": 32,
+                "commit": "35da8d078ddd10d4d4bcb322f4ad68b7036096b4",
+                "path": "app/code/Siteation/DebugBar"
+            },
+            {
+                "repository": "samgranger/StoreCodeBodyClass",
+                "name": "samgranger/module-store-code-body-class",
+                "module": "SamGranger_StoreCodeBodyClass",
+                "stars": 32,
+                "commit": "3ee96eaebecd749459bfad8e8239b610da23da92",
+                "path": "app/code/SamGranger/StoreCodeBodyClass"
+            }
+        ],
+        "skipped": [
+            {
+                "name": "SnowdogApps/magento2-menu",
+                "reason": "package snowdog/module-menu already in the corpus"
+            },
+            {
+                "name": "mageplaza/magento-2-smtp",
+                "reason": "package mageplaza/module-smtp already in the corpus"
+            },
+            {
+                "name": "elgentos/magento2-regenerate-catalog-urls",
+                "reason": "package elgentos/regenerate-catalog-urls already in the corpus"
+            },
+            {
+                "name": "baldwin-agency/magento2-module-url-data-integrity-checker",
+                "reason": "package baldwin/magento2-module-url-data-integrity-checker already in the corpus"
+            },
+            {
+                "name": "magewirephp/magewire",
+                "reason": "package magewirephp/magewire already in the corpus"
+            },
+            {
+                "name": "danslo/CleanCheckout",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "markshust/magento2-module-disabletwofactorauth",
+                "reason": "package markshust/magento2-module-disabletwofactorauth already in the corpus"
+            },
+            {
+                "name": "yireo/Yireo_Webp2",
+                "reason": "package yireo/magento2-webp2 already in the corpus"
+            },
+            {
+                "name": "mageplaza/magento-2-social-login",
+                "reason": "package mageplaza/magento-2-social-login already in the corpus"
+            },
+            {
+                "name": "firebearstudio/importexportfree",
+                "reason": "requires php ~5.5.0|~5.6.0|~7.0.0|~7.1, kunalvarma05/dropbox-php-sdk 0.2.*"
+            },
+            {
+                "name": "hyva-themes/magento2-hyva-admin",
+                "reason": "package hyva-themes/module-magento2-admin already in the corpus"
+            },
+            {
+                "name": "ctidigital/magento2-configurator",
+                "reason": "package ctidigital/magento2-configurator already in the corpus"
+            },
+            {
+                "name": "avstudnitz/AvS_ScopeHint2",
+                "reason": "package avstudnitz/scopehint2 already in the corpus"
+            },
+            {
+                "name": "yireo/Yireo_GoogleTagManager2",
+                "reason": "package yireo/magento2-googletagmanager2 already in the corpus"
+            },
+            {
+                "name": "bitExpert/magento2-force-login",
+                "reason": "package bitexpert/magento2-force-customer-login already in the corpus"
+            },
+            {
+                "name": "Adyen/adyen-magento2",
+                "reason": "package adyen/module-payment already in the corpus"
+            },
+            {
+                "name": "redchamps/clean-admin-menu",
+                "reason": "package redchamps/module-clean-admin-menu already in the corpus"
+            },
+            {
+                "name": "MagestyApps/module-web-images",
+                "reason": "package magestyapps/module-web-images already in the corpus"
+            },
+            {
+                "name": "tddwizard/magento2-fixtures",
+                "reason": "requires magento/zendframework1 ^1.14, fakerphp/faker ^1.9.1"
+            },
+            {
+                "name": "opengento/magento2-gdpr",
+                "reason": "requires tecnickcom/tcpdf ^6.4"
+            },
+            {
+                "name": "firegento/firegento-magesetup2",
+                "reason": "package firegento/magesetup2 already in the corpus"
+            },
+            {
+                "name": "mageplaza/magento-2-blog",
+                "reason": "package mageplaza/magento-2-blog-extension already in the corpus"
+            },
+            {
+                "name": "5mehulhelp5/MagentoExtensions",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "magepal/magento2-reindex",
+                "reason": "package magepal/magento2-reindex already in the corpus"
+            },
+            {
+                "name": "Goomento/PageBuilder",
+                "reason": "requires goomento/module-core >=1.0.13, goomento/module-page-builder-api >=1.0.0, goomento/module-page-builder-sample-data >=1.0.0"
+            },
+            {
+                "name": "magefan/module-login-as-customer",
+                "reason": "package magefan/module-login-as-customer already in the corpus"
+            },
+            {
+                "name": "yireo/Yireo_Whoops",
+                "reason": "package yireo/magento2-whoops already in the corpus"
+            },
+            {
+                "name": "graycoreio/magento2-cors",
+                "reason": "package graycore/magento2-cors already in the corpus"
+            },
+            {
+                "name": "staempfli/magento2-module-seo",
+                "reason": "requires php ^7.0|^7.1|^7.2, magento/module-catalog ~101.0|~102.0|~103.0, magento/module-cms ~101.0|~102.0|~103.0"
+            },
+            {
+                "name": "firebearstudio/magento2-import-export-sample-files",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "elgentos/LargeConfigProducts",
+                "reason": "requires php ~7.1.3||~7.2.0||~7.3.0||~7.4.0"
+            },
+            {
+                "name": "yireo/Yireo_ExtensionChecker",
+                "reason": "requires guzzlehttp/guzzle ^7.15.2"
+            },
+            {
+                "name": "yireo/Yireo_CheckoutTester2",
+                "reason": "package yireo/magento2-checkouttester2 already in the corpus"
+            },
+            {
+                "name": "yireo/Yireo_LinkPreload",
+                "reason": "requires symfony/dom-crawler ^2.7|^3.0|^4.0|^5.0|^6.0|^7.0"
+            },
+            {
+                "name": "Genaker/Magento2OPcacheGUI",
+                "reason": "requires amnuts/opcache-gui ^3.0"
+            },
+            {
+                "name": "ho-nl/magento2-ReachDigital_TestFramework",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "roma-glushko/magento2-dev-plus-exam",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "magefan/module-wysiwyg-advanced",
+                "reason": "package magefan/module-wysiwyg-advanced already in the corpus"
+            },
+            {
+                "name": "elgentos/magento2-serversideanalytics",
+                "reason": "requires br33f/php-ga4-mp ^0.1.5"
+            },
+            {
+                "name": "nans/Magestudy",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "run-as-root/magento2-prometheus-exporter",
+                "reason": "registration.php is missing or holds more than the standard register() call"
+            },
+            {
+                "name": "m2-systemcode/CustomerIdentityBrazil",
+                "reason": "requires systemcode/base ^2.0, systemcode/customer ^1.0"
+            },
+            {
+                "name": "mage2pro/stripe",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "postnl/postnl-magento2",
+                "reason": "package tig/postnl-magento2 already in the corpus"
+            },
+            {
+                "name": "mageplaza/magento-2-delete-orders",
+                "reason": "package mageplaza/module-delete-orders already in the corpus"
+            },
+            {
+                "name": "walkwizus/magento2-module-meilisearch",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "magefan/module-geoip",
+                "reason": "package magefan/module-geoip already in the corpus"
+            },
+            {
+                "name": "ctidigital/magento2-google-address-lookup",
+                "reason": "requires php 7.*"
+            },
+            {
+                "name": "fnogatz/magento2-matomo",
+                "reason": "requires php ~7.0.0|~7.1.0|~7.2.0|~7.3.0|~7.4.0|~8.1.0|~8.2.0"
+            },
+            {
+                "name": "rafaelstz/magento2-quicklink",
+                "reason": "requires php ~7.4.0||~8.1.0"
+            },
+            {
+                "name": "php-enqueue/magento2-enqueue",
+                "reason": "requires enqueue/enqueue ^0.8, enqueue/simple-client ^0.8"
+            },
+            {
+                "name": "tuyennn/magento2-change-customer-password",
+                "reason": "package ghoster/changecustomerpassword already in the corpus"
+            },
+            {
+                "name": "magefan/magento2-zero-downtime-deploy",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "discorgento/module-queue",
+                "reason": "requires discorgento/module-core ^2.0.3"
+            },
+            {
+                "name": "magento-hackathon/m2-content-provisioning",
+                "reason": "no composer.json of type magento2-module"
+            },
+            {
+                "name": "flurrybox/enhanced-privacy",
+                "reason": "requires php ^7.0, flurrybox/module-core ^1.0.0"
+            },
+            {
+                "name": "crankycyclops/DiscountCodeUrl",
+                "reason": "requires php ~7.1.0||~7.2.0||~7.3.0||~7.4.0||~8.0.0||~8.1.0||~8.2.0"
+            },
+            {
+                "name": "EaDesgin/Magento2-City-Dropdown",
+                "reason": "requires eadesignro/module-eacore >=0.3"
+            },
+            {
+                "name": "lizardmedia/product-attachments-magento2",
+                "reason": "requires php ~7.1.0|~7.2.0|~7.3.0|~7.4.0"
+            },
+            {
+                "name": "mageplaza/magento-2-reports",
+                "reason": "package mageplaza/module-reports already in the corpus"
+            },
+            {
+                "name": "elgentos/magento2-prismicio",
+                "reason": "requires elgentos/prismic-php-sdk ^6.1"
+            },
+            {
+                "name": "mageplaza/magento-2-ajax-layered-navigation",
+                "reason": "package mageplaza/module-ajax-layered-navigation already in the corpus"
+            },
+            {
+                "name": "magenizr/Magenizr_ResetUiBookmarks",
+                "reason": "requires php ~7.4.0||~8.0.0||~8.1.0||~8.2.0||~8.3.0"
+            },
+            {
+                "name": "firebearstudio/ConfigurableProducts",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "yuriyakishin/novaposhta",
+                "reason": "requires php ~7.1.3||~7.2.0, magento/framework 102.0.*, magento/module-backend 101.0.*"
+            },
+            {
+                "name": "magefan/module-translation",
+                "reason": "package magefan/module-translation already in the corpus"
+            },
+            {
+                "name": "kiwicommerce/magento2-inventory-log",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "magepow/magento-2-speed-optimizer",
+                "reason": "no etc/module.xml at the repository root or in src/"
+            },
+            {
+                "name": "genecommerce/module-braintree-magento2",
+                "reason": "requires magento/module-customer 101.0.*||102.0.*, magento/module-config 101.0.*||101.1.*, magento/module-sales 101.0.*||102.0.*"
+            },
+            {
+                "name": "magecomp/Magento-2-ChatGPT-AI-Content-Generator",
+                "reason": "requires php ~5.5.0||~5.6.0||~7.0.0||~7.1.0||~7.2.0||~7.3.0||~7.4.0||~8.1.0||~8.2.0"
+            },
+            {
+                "name": "opengento/magento2-hoodoor",
+                "reason": "requires firebase/php-jwt ^6.10"
+            },
+            {
+                "name": "mageplaza/magento-2-google-recaptcha",
+                "reason": "package mageplaza/module-google-recaptcha already in the corpus"
+            },
+            {
+                "name": "magepal/magento2-edit-order-email",
+                "reason": "package magepal/magento2-edit-order-email already in the corpus"
+            },
+            {
+                "name": "mageworx/search-suite-autocomplete",
+                "reason": "package mageworx/module-searchsuiteautocomplete already in the corpus"
             }
         ]
     }

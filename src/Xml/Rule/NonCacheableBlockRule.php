@@ -69,6 +69,7 @@ final class NonCacheableBlockRule implements XmlRule
         'sharecart_index_download', // Mageplaza Share Cart: a PDF of the current cart
         'mailchimp_cart_loadquote', // Mailchimp: a cart restored from an email link
         'blog_non_cacheable', // Magefan Blog: post preview
+        'hyvareactcheckout_reactcheckout_', // Hyvä React Checkout: the checkout page of the current quote (docs/calibration/round-20.md)
     ];
 
     /** @var list<string> */
