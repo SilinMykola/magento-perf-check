@@ -6,6 +6,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-14
+
 ### Changed
 
 - P-DI-06 takes the constructor fallback, `$param ?: ObjectManager::getInstance()->get(...)` and `??`, as allowed in the constructor only; closures declared there do not count. Outside the constructor the lazy getter may be written in one expression that keeps the object in the property it tests, `$this->x = $this->x ?? ...`, `?:` or `$this->x ??= ...`, and may keep it in a static property of `self` or `static`; anything else is reported, such as `return $this->_resource ?: ObjectManager::getInstance()->get(...)`. The fallback written as `$param ??= ...` in a constructor is no longer reported, by P-DI-06 or by the experimental P-DI-02. Measured on Magento 2.4.9 core and on the packagist, extended and github parts of the calibration corpus: 7 findings more in core and 1 in the Packagist modules, each a call outside a constructor (6 do not keep the object, one sits in `_construct()`, which Magento calls without arguments), and 2 `??=` fallbacks less in core. **This can change a CI result:** P-DI-06 is a `warning` of the default set.
@@ -216,7 +218,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.1...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.7.1...v0.8.0

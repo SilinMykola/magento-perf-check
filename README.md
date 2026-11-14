@@ -12,11 +12,11 @@ Finds performance and Full Page Cache anti-patterns in Magento 2 and Mage-OS cod
 $ vendor/bin/magento-perf-check --paths=app/code/Mollie/Payment/Controller/Express/Process.php,app/code/Magefan/Community/Model/GetCategoryByProduct.php
 app/code/Magefan/Community/Model/GetCategoryByProduct.php
      73  error    [P-LOOP-01] Magento\Catalog\Api\CategoryRepositoryInterface::get() is called inside a loop: one database query per iteration. Fetch all items before the loop with a collection or getList().
-         https://github.com/SilinMykola/magento-perf-check/blob/v0.9.1/docs/rules/P-LOOP-01.md
+         https://github.com/SilinMykola/magento-perf-check/blob/v0.10.0/docs/rules/P-LOOP-01.md
 
 app/code/Mollie/Payment/Controller/Express/Process.php
      58  error    [P-FPC-06] Mollie\Payment\Controller\Express\Process handles GET only but calls Magento\Quote\Api\CartRepositoryInterface::save(). Change state only on POST or PUT: GET responses can be cached and served without running this code.
-         https://github.com/SilinMykola/magento-perf-check/blob/v0.9.1/docs/rules/P-FPC-06.md
+         https://github.com/SilinMykola/magento-perf-check/blob/v0.10.0/docs/rules/P-FPC-06.md
 
 2 finding(s): 2 error, 0 warning, 0 info. Analyzed app/code/Mollie/Payment/Controller/Express/Process.php, app/code/Magefan/Community/Model/GetCategoryByProduct.php in 0.8 s.
 ```
