@@ -6,6 +6,11 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Fixed
+
+- P-FPC-02 (experimental) no longer reports a block or view model that the project's frontend layouts place only on pages that are never cached: pages whose layout holds a `cacheable="false"` block, as Magento's cart, checkout, customer account, order and wishlist pages do, account pages that include `customer_account`, and handles only those include. A `cacheable="false"` block with an `ifconfig` or a removed parent, one a layout removes, and one on the shop-wide `default`, `catalog_*` or `cms_*` handles that X-LAY-03 reports does not count. A class that no layout names, one also placed on a page that may be cached, and one whose subclass is placed there are still reported. On the calibration corpus this removes 16 findings in Magento 2.4.9 core, 6 in the Packagist modules, 7 in the extended part and 11 of the 12 in the GitHub modules; the 28 of them that earlier rounds had graded were all false.
+- T-06 (experimental) no longer reports an image whose box its `style` attribute or a `<style>` rule of the same template fixes, such as `.faq img.group-image { width: 6.25rem; height: 6.25rem; }`: a height in a length unit with a width or an `aspect-ratio`, or a width with an `aspect-ratio`. A `width` or `height` attribute counts with the CSS. Rules in at-rules such as `@media`, in a `<style>` for another medium and with pseudo-classes do not count, and a later rule that resets the size wins. On the calibration corpus this removes 1 finding, in the GitHub modules.
+
 ## [0.11.0] - 2026-11-14
 
 ### Added

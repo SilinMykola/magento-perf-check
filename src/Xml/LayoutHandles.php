@@ -37,16 +37,42 @@ final class LayoutHandles
      */
     public static function fromProject(string $projectRoot, array $modules): self
     {
-        $files = [];
         $routes = [];
+        foreach (array_keys($modules) as $root) {
+            $routesXml = (string) @file_get_contents($root . '/etc/frontend/routes.xml');
+            if (preg_match_all('#<route\s[^>]*\bid\s*=\s*"([^"]+)"#', $routesXml, $m) > 0) {
+                $routes += array_fill_keys($m[1], true);
+            }
+        }
+
+        $includedBy = [];
+        $accountPages = [];
+        foreach (self::layoutFiles($projectRoot, $modules) as $file) {
+            $handle = basename($file, '.xml');
+            foreach (self::directUpdates($file) as $included) {
+                if ($included === self::ACCOUNT_HANDLE) {
+                    $accountPages[$handle] = true;
+                }
+                $includedBy[$included][$handle] = true;
+            }
+        }
+
+        return new self($includedBy, $accountPages, $routes);
+    }
+
+    /**
+     * The frontend and base layout files of the given modules and of the frontend themes, as fromProject() reads them.
+     *
+     * @param array<string, string> $modules absolute directory => name of every enabled module
+     * @return list<string>
+     */
+    public static function layoutFiles(string $projectRoot, array $modules): array
+    {
+        $files = [];
         $enabled = array_flip($modules);
         foreach (array_keys($modules) as $root) {
             foreach (['frontend', 'base'] as $area) {
                 array_push($files, ...self::xmlFilesUnder($root . '/view/' . $area . '/layout'));
-            }
-            $routesXml = (string) @file_get_contents($root . '/etc/frontend/routes.xml');
-            if (preg_match_all('#<route\s[^>]*\bid\s*=\s*"([^"]+)"#', $routesXml, $m) > 0) {
-                $routes += array_fill_keys($m[1], true);
             }
         }
         $themes = [
@@ -62,19 +88,7 @@ final class LayoutHandles
             }
         }
 
-        $includedBy = [];
-        $accountPages = [];
-        foreach (array_unique($files) as $file) {
-            $handle = basename($file, '.xml');
-            foreach (self::directUpdates($file) as $included) {
-                if ($included === self::ACCOUNT_HANDLE) {
-                    $accountPages[$handle] = true;
-                }
-                $includedBy[$included][$handle] = true;
-            }
-        }
-
-        return new self($includedBy, $accountPages, $routes);
+        return array_values(array_unique($files));
     }
 
     /**

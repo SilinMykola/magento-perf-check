@@ -168,6 +168,25 @@ final class TemplateMarkup
     }
 
     /**
+     * The CSS of the template's <style> elements for all media, outside HTML comments, joined. A <style> in a
+     * <template> counts: it applies once the template is put into the page.
+     */
+    public function styleSheet(): string
+    {
+        preg_match_all('/<style\b((?:"[^"]*"|\'[^\']*\'|[^>"\'])*)>(.*?)<\/style\s*>/is', $this->html, $matches, PREG_SET_ORDER);
+        $css = [];
+        foreach ($matches as [, $attributes, $body]) {
+            // A sheet for print or for some screens only does not fix the box everywhere.
+            $media = strtolower(trim(self::attributes($attributes)['media'] ?? 'all'));
+            if (in_array($media, ['all', 'screen', ''], true)) {
+                $css[] = $body;
+            }
+        }
+
+        return implode("\n", $css);
+    }
+
+    /**
      * Whether PHP prints part of the tag outside its quoted attribute values, so that it may add
      * attributes the rule cannot see.
      *

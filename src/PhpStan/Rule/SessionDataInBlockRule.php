@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
+use Silin\MagentoPerfCheck\PhpStan\ProjectIndexProvider;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
+use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 
 /**
  * P-FPC-02: a block or view model reads customer data from the session; on cacheable
- * pages that data is not there (or ends up in the cached page).
+ * pages that data is not there (or ends up in the cached page). A class that frontend layouts place only on
+ * pages that are never cached, such as the cart, the checkout or the customer account, is left out, unless a
+ * subclass of it is placed on a page that may be cached and runs the same code there.
  *
  * @implements Rule<MethodCall>
  */
@@ -35,7 +39,13 @@ final class SessionDataInBlockRule implements Rule
 
     private readonly MagentoTypes $types;
 
-    public function __construct(ReflectionProvider $reflectionProvider)
+    /** @var ?list<string> classes placed on pages that may be cached */
+    private ?array $onCacheablePages = null;
+
+    /** @var array<string, bool> class => placed only on uncacheable pages */
+    private array $onlyOnUncacheable = [];
+
+    public function __construct(private readonly ReflectionProvider $reflectionProvider, private readonly ProjectIndexProvider $index)
     {
         $this->types = new MagentoTypes($reflectionProvider);
     }
@@ -59,7 +69,7 @@ final class SessionDataInBlockRule implements Rule
             return [];
         }
         $session = $this->types->subtypeOf($scope->getType($node->var), self::SESSION);
-        if ($session === null) {
+        if ($session === null || ($class !== null && $this->onlyOnUncacheablePages($class))) {
             return [];
         }
 
@@ -73,5 +83,26 @@ final class SessionDataInBlockRule implements Rule
                 $node->name->toString(),
             ))->identifier(self::IDENTIFIER)->build(),
         ];
+    }
+
+    private function onlyOnUncacheablePages(ClassReflection $class): bool
+    {
+        return $this->onlyOnUncacheable[$class->getName()] ??= $this->decideOnlyOnUncacheable($class);
+    }
+
+    private function decideOnlyOnUncacheable(ClassReflection $class): bool
+    {
+        $index = $this->index->get();
+        if (!$index->isOnlyOnUncacheablePages($class->getName())) {
+            return false;
+        }
+        // A subclass on a cacheable page runs this code there; it may be outside the analyzed files.
+        foreach ($this->onCacheablePages ??= $index->classesOnCacheablePages() as $placed) {
+            if ($this->reflectionProvider->hasClass($placed) && $this->reflectionProvider->getClass($placed)->isSubclassOf($class->getName())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

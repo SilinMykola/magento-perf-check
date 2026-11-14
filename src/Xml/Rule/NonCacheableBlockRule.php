@@ -106,7 +106,7 @@ final class NonCacheableBlockRule implements XmlRule
     {
         $handle = (string) $file->handle;
         $page = self::withoutHyvaPrefix($handle);
-        [$id, $severity] = $page === 'default' || $this->startsWithAny($page, self::ERROR_HANDLE_PREFIXES)
+        [$id, $severity] = self::isShopWide($handle)
             ? [self::SHOP_WIDE_ID, Severity::Error]
             : [self::ID, Severity::Warning];
 
@@ -151,6 +151,38 @@ final class NonCacheableBlockRule implements XmlRule
         }
 
         return $findings;
+    }
+
+    /**
+     * Whether the handle is shared by many or high-traffic pages (X-LAY-03): default, catalog_* and cms_*,
+     * also with a hyva_ prefix.
+     */
+    public static function isShopWide(string $handle): bool
+    {
+        $page = self::withoutHyvaPrefix($handle);
+        foreach (self::ERROR_HANDLE_PREFIXES as $prefix) {
+            if (str_starts_with($page, $prefix)) {
+                return true;
+            }
+        }
+
+        return $page === 'default';
+    }
+
+    /**
+     * Whether the default allowlist names the handle, or the handle that a hyva_ handle extends.
+     */
+    public static function isDefaultAllowlisted(string $handle): bool
+    {
+        foreach ([$handle, self::withoutHyvaPrefix($handle)] as $candidate) {
+            foreach (self::DEFAULT_ALLOWLIST as $prefix) {
+                if (str_starts_with($candidate, $prefix)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function isAllowlisted(string $handle): bool

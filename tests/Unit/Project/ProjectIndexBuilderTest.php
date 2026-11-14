@@ -37,6 +37,19 @@ final class ProjectIndexBuilderTest extends TestCase
         return (new ProjectIndexBuilder($this->cacheDir))->build($real);
     }
 
+    public function testLayoutPlacementsKeepTheClassNamesAsWritten(): void
+    {
+        $index = $this->index();
+
+        // PHPStan finds a class it has not read yet only by its written name, so the case must be kept.
+        self::assertContains('Acme\\Placed\\Block\\CartChild', $index->classesOnCacheablePages());
+        self::assertTrue($index->isOnlyOnUncacheablePages('\\ACME\\Placed\\Block\\CartOnly'));
+        self::assertFalse($index->isOnlyOnUncacheablePages('Acme\\Placed\\Block\\Mixed'));
+
+        // The cached index answers the same.
+        self::assertContains('Acme\\Placed\\Block\\CartChild', $this->index()->classesOnCacheablePages());
+    }
+
     public function testModulesFromAppCodeAndComposerPackages(): void
     {
         // Acme_Core, Acme_Gift, Acme_Promo, Magento_Sales, Acme_SrcLayout (in src/); acme/library is not a module.
