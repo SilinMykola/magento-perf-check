@@ -19,6 +19,7 @@ Instructions for anyone changing this repository, people and coding agents alike
 ```sh
 composer test        # PHPUnit, with PHPStan 2.x
 bin/test-phpstan1    # the same suite against PHPStan 1.12
+bin/test-install 1.12.1 0.11.0 installer skipped   # Composer install of this checkout into an empty project, then a run
 composer analyse     # PHPStan at level max on src/
 openspec validate --specs
 ```

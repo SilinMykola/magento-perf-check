@@ -41,6 +41,32 @@ jobs:
       - run: composer install --no-interaction --no-progress --prefer-dist
       - run: bin/test-phpstan1
 
+  install:
+    # Installs the checkout with Composer into an empty project and runs the command: a configuration that
+    # PHPStan rejects with some versions of PHPStan or bitexpert/phpstan-magento only shows up there.
+    name: Install (PHPStan ${{ matrix.phpstan }}, bitexpert ${{ matrix.bitexpert }} ${{ matrix.expect }}, ${{ matrix.installer }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {phpstan: '1.12.0', bitexpert: 'none', installer: 'no-installer', expect: 'absent'}
+          # A module that requires bitexpert/phpstan-magento ^0.11 brings 0.11.0 next to PHPStan 1.12.
+          - {phpstan: '1.12.1', bitexpert: '0.11.0', installer: 'installer', expect: 'skipped'}
+          - {phpstan: '1.12.1', bitexpert: '0.11.0', installer: 'no-installer', expect: 'skipped'}
+          - {phpstan: '~1.12.0', bitexpert: '0.32.0', installer: 'installer', expect: 'included'}
+          - {phpstan: '^2.0', bitexpert: '^0.44', installer: 'installer', expect: 'included'}
+          - {phpstan: '^2.0', bitexpert: 'none', installer: 'no-installer', expect: 'absent'}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.3'
+          coverage: none
+      - run: bin/test-install "${{ matrix.phpstan }}" "${{ matrix.bitexpert }}" "${{ matrix.installer }}" "${{ matrix.expect }}"
+
   static-analysis:
     name: Self-analysis and specs
     runs-on: ubuntu-latest

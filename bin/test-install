@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# Installs this checkout with Composer into a throwaway project, the way users install it, and runs the
+# command there. A configuration PHPStan rejects only shows up in such an install, not in the unit tests.
+#
+# Usage: bin/test-install <phpstan constraint> <bitexpert constraint|none> <installer|no-installer> <included|skipped|absent>
+# The last argument says what the command must do with bitexpert/phpstan-magento: include it, leave it out with
+# an "is not used" notice (a version that does not declare its switches), or run without it (not installed).
+# Example: bin/test-install 1.12.1 0.11.0 installer skipped
+set -euo pipefail
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+phpstan="${1:?PHPStan constraint, such as 1.12.1 or ^2.0}"
+bitexpert="${2:?bitexpert constraint or none}"
+installer="${3:?installer or no-installer}"
+expect="${4:?included, skipped or absent}"
+case "$installer" in installer|no-installer) ;; *) echo "third argument: installer or no-installer" >&2; exit 2;; esac
+case "$expect" in included|skipped|absent) ;; *) echo "fourth argument: included, skipped or absent" >&2; exit 2;; esac
+work="$(mktemp -d "${TMPDIR:-/tmp}/magento-perf-check-install.XXXXXX")"
+trap 'rm -rf "$work"' EXIT
+
+# The package as Composer would see it: a copy of the checkout without its own vendor directory.
+mkdir "$work/package"
+rsync -a --exclude /vendor --exclude /composer.lock --exclude /.git --exclude /var --exclude /.phpunit.cache "$root/" "$work/package/"
+cd "$work"
+cat > composer.json <<JSON
+{
+    "name": "acme/install-check",
+    "version": "1.0.0",
+    "repositories": [{"type": "path", "url": "package", "options": {"symlink": false, "versions": {"silin/magento-perf-check": "999.0.0"}}}],
+    "config": {"allow-plugins": {"phpstan/extension-installer": true}}
+}
+JSON
+packages=("phpstan/phpstan:$phpstan" "silin/magento-perf-check:999.0.0")
+[ "$bitexpert" != none ] && packages+=("bitexpert/phpstan-magento:$bitexpert")
+[ "$installer" = installer ] && packages+=("phpstan/extension-installer")
+composer require --dev --no-interaction --no-progress "${packages[@]}"
+composer show --no-interaction | grep -E '^(phpstan/|bitexpert/|silin/)' || true
+
+mkdir -p app/etc app/code/Acme/Demo/etc app/code/Acme/Demo/Model
+cat > app/code/Acme/Demo/etc/module.xml <<'XML'
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd"><module name="Acme_Demo"/></config>
+XML
+cat > app/code/Acme/Demo/Model/Locator.php <<'PHP'
+<?php
+namespace Acme\Demo\Model;
+
+class Locator
+{
+    public function get(): object
+    {
+        return \Magento\Framework\App\ObjectManager::getInstance()->get(\stdClass::class);
+    }
+}
+PHP
+
+set +e
+vendor/bin/magento-perf-check --format=json --fail-on=warning > report.json 2> stderr.txt
+code=$?
+set -e
+if [ "$code" -ne 1 ]; then
+    echo "install check failed: exit code $code" >&2
+    cat stderr.txt report.json >&2
+    exit 1
+fi
+# The finding must be there, and bitexpert/phpstan-magento handled as expected: with it included there is no
+# generated-code notice, left out there is its "is not used" notice, not installed there is only the one about
+# generated/code.
+php -r '
+    $report = json_decode((string) file_get_contents("report.json"), true, 512, JSON_THROW_ON_ERROR);
+    $messages = array_column(array_filter($report["notices"], static fn (array $n): bool => $n["source"] === "generated-code"), "message");
+    $skipped = array_filter($messages, static fn (string $m): bool => str_contains($m, "bitexpert/phpstan-magento") && str_contains($m, "is not used"));
+    $problems = [];
+    if (!in_array("P-DI-06", array_column($report["findings"], "ruleId"), true)) {
+        $problems[] = "no P-DI-06 finding";
+    }
+    $ok = match ($argv[1]) {
+        "included" => $messages === [],
+        "skipped" => count($skipped) === 1,
+        "absent" => count($messages) === 1 && $skipped === [],
+    };
+    if (!$ok) {
+        $problems[] = "bitexpert/phpstan-magento not " . $argv[1] . "; generated-code notices: " . json_encode($messages);
+    }
+    if ($problems !== []) {
+        fwrite(STDERR, "install check failed: " . implode("; ", $problems) . "\n");
+        exit(1);
+    }
+' "$expect"
+echo "install check passed: PHPStan $phpstan, bitexpert $bitexpert ($expect), $installer"
