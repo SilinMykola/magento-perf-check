@@ -560,3 +560,21 @@ final class FallbackScopeEdges
         };
     }
 }
+
+final class InstanceofFallback
+{
+    public function __construct(?object $a = null, ?object $b = null, string $type = \stdClass::class)
+    {
+        if (!$a instanceof $type) {
+            $a = ObjectManager::getInstance()->get(\stdClass::class);
+        }
+        if (!$b instanceof ($this->build())) {
+            $b = ObjectManager::getInstance()->get(\stdClass::class); // reported: the condition does work
+        }
+    }
+
+    private function build(): string
+    {
+        return \stdClass::class;
+    }
+}

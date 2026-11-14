@@ -130,3 +130,84 @@ final class CoalesceAssignWork
         throw new \LogicException();
     }
 }
+
+final class TernaryFallback
+{
+    public object $config;
+    public object $other;
+
+    public function __construct(?object $config = null, ?object $other = null)
+    {
+        $this->config = $config !== null ? $config : ObjectManager::getInstance()->get(\stdClass::class);
+        $this->other = $other === null ? ObjectManager::getInstance()->get(\stdClass::class) : $other;
+    }
+}
+
+final class TernaryWithWork
+{
+    public object $config;
+
+    public function __construct(?object $config = null)
+    {
+        $this->config = $config !== null ? $config : $this->build();
+    }
+
+    private function build(): object
+    {
+        return new \stdClass();
+    }
+}
+
+final class FallbackWithWork
+{
+    public object $a;
+    public object $b;
+    public object $d;
+
+    public function __construct(?object $a = null, ?object $b = null, ?object $d = null)
+    {
+        $this->a = $a ?? ObjectManager::getInstance()->get(\stdClass::class, ['data' => ['x' => 1]]);
+        $this->d = $d ?? ObjectManager::getInstance()->create(\stdClass::class);
+        $this->b = $b ?? ObjectManager::getInstance()->get(\stdClass::class)->load(1);
+    }
+}
+
+final class FallbackArgumentWork
+{
+    public object $c;
+
+    public function __construct(?object $c = null)
+    {
+        $this->c = $c ?? ObjectManager::getInstance()->get($this->resolve());
+    }
+
+    private function resolve(): string
+    {
+        return \stdClass::class;
+    }
+}
+
+final class TernaryConditionWork
+{
+    public object $config;
+
+    public function __construct(?object $config = null)
+    {
+        $this->config = $this->isOn() ? $config : ObjectManager::getInstance()->get(\stdClass::class);
+    }
+
+    private function isOn(): bool
+    {
+        return true;
+    }
+}
+
+final class FallbackOtherCall
+{
+    public mixed $e;
+
+    public function __construct(mixed $e = null)
+    {
+        $this->e = $e ?? ObjectManager::getInstance()->configure(['preferences' => []]);
+    }
+}

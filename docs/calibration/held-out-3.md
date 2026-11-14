@@ -65,7 +65,7 @@ The part is a copy of the Magento 2.4.9 corpus project with the 125 Packagist mo
 
 The run ([`runs/github/`](runs/github/github.meta.json), tool commit 70ea6e2) enabled every rule, experimental ones included: 211 findings, `incomplete: false`, two notices for receivers of unknown type. 16 modules have no finding. 70 findings come from 11 rules of the default set.
 
-Up to 12 findings per rule of the default set were drawn with a fixed seed (20261113) and graded once by reading the code, by graders who did not write the rules, with the verdicts of the [method](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration.md#method). The four false positives were checked again against the code before the rules were changed. No time or memory was measured.
+Up to 12 findings per rule of the default set were drawn with a fixed seed (20261113: the findings of each rule sorted by file and line; for a rule with more than 12, Python's `random.Random(20261113).sample(findings, 12)`, one generator drawing for the rules in alphabetical order, and the drawn findings sorted again by file and line) and graded once by reading the code, by graders who did not write the rules, with the verdicts of the [method](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration.md#method). The four false positives were checked again against the code before the rules were changed. No time or memory was measured.
 
 | Rule | Findings | Graded | TP | TP-low | FP |
 |---|---|---|---|---|---|

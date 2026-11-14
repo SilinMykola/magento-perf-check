@@ -487,7 +487,8 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
         return match (true) {
             $cond instanceof Expr\BooleanNot && $cond->expr instanceof Expr\Isset_ && count($cond->expr->vars) === 1
                 => $cond->expr->vars[0],
-            $cond instanceof Expr\BooleanNot && $cond->expr instanceof Expr\Instanceof_ => $cond->expr->expr,
+            $cond instanceof Expr\BooleanNot && $cond->expr instanceof Expr\Instanceof_ && ($cond->expr->class instanceof Node\Name || $cond->expr->class instanceof Expr\Variable)
+                => $cond->expr->expr,
             $cond instanceof Expr\BooleanNot && $cond->expr instanceof Expr\FuncCall && $cond->expr->name instanceof Node\Name
                 && $cond->expr->name->toLowerString() === 'is_object' && count($cond->expr->getArgs()) === 1
                 => $cond->expr->getArgs()[0]->value,

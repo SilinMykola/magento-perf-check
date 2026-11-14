@@ -83,6 +83,7 @@ final class ObjectManagerUsageRuleTest extends RuleTestCase
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScopeEdges. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 556],
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScopeEdges. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 557],
             ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\FallbackScopeEdges. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 559],
+            ['[P-DI-06] ObjectManager::getInstance() is used directly in ObjectManagerUsageFixture\\InstanceofFallback. Inject the dependency through the constructor (a factory or Proxy if it must be created lazily).', 572],
         ]);
     }
 }
