@@ -41,6 +41,7 @@ final class ArchiveContentsTest extends TestCase
         '.gitignore',
         'AGENTS.md',
         'bin/calibration',
+        'bin/test-install',
         'bin/test-phpstan1',
         'docs/SPEC.md',
         'docs/adr',

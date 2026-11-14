@@ -4,6 +4,7 @@
 /.gitignore export-ignore
 /AGENTS.md export-ignore
 /bin/calibration export-ignore
+/bin/test-install export-ignore
 /bin/test-phpstan1 export-ignore
 /docs/SPEC.md export-ignore
 /docs/adr export-ignore

@@ -125,7 +125,7 @@ final class Application
             'sarif' => new SarifReporter($registry),
             'checkstyle' => new CheckstyleReporter(),
             'github' => new GithubReporter(),
-            default => new TableReporter($registry),
+            default => new TableReporter($registry, $this->colors($options), $options->verbose),
         };
         $report = $reporter->render($result);
         if ($options->outputFile === null) {
@@ -254,6 +254,20 @@ final class Application
         }
 
         return array_values($notices);
+    }
+
+    private function colors(Options $options): bool
+    {
+        $windows = DIRECTORY_SEPARATOR === '\\';
+
+        return ColorChoice::decide(
+            $options->color,
+            $options->outputFile !== null,
+            getenv('NO_COLOR'),
+            getenv('TERM'),
+            stream_isatty($this->stdout),
+            !$windows || (function_exists('sapi_windows_vt100_support') && @sapi_windows_vt100_support($this->stdout, true)),
+        );
     }
 
     private function analyze(Options $options): AnalysisResult
