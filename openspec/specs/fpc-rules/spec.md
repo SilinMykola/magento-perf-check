@@ -21,7 +21,7 @@ P-FPC-01 SHALL report, as `info`, a declaration of `$_isScopePrivate` with the d
 - **THEN** P-FPC-01 reports nothing
 
 ### Requirement: P-FPC-02 customer data from session in blocks
-P-FPC-02 SHALL report, as `warning`, calls to `getCustomer`, `getCustomerId` or `getQuote` on a subtype of `Magento\Framework\Session\SessionManagerInterface`. The call must be made in a frontend block (an `AbstractBlock` subclass not under a `Block\Adminhtml` namespace) or a view model (implements `Magento\Framework\View\Element\Block\ArgumentInterface` and is not a collection). `getCustomerGroupId()` SHALL NOT be reported: page cache depersonalization keeps the customer group, and it is part of the cache key. A class that the project's frontend layouts name (`<block class>`, `<referenceBlock class>`, an `<argument>` or `<item>` of type `object`) only on handles no cacheable page uses SHALL NOT be reported, unless a subclass of it is named on a handle a cacheable page may use. Handles no cacheable page uses are those whose layout files hold a `cacheable="false"` block that neither it nor an element around it has an `ifconfig` and that no layout file of the handle removes, except shop-wide handles X-LAY-03 reports (`default`, `catalog_*`, `cms_*` outside its allowlist); account pages that include `customer_account`; and handles only such handles include, unless the handle is a page of a storefront controller action, which may be cached.
+P-FPC-02 SHALL report, as `warning`, calls to `getCustomer`, `getCustomerId` or `getQuote` on a subtype of `Magento\Framework\Session\SessionManagerInterface`. The call must be made in a frontend block (an `AbstractBlock` subclass not under a `Block\Adminhtml` namespace) or a view model (implements `Magento\Framework\View\Element\Block\ArgumentInterface` and is not a collection). A call on a backend session (`Magento\Backend\Model\Session`, `Magento\Backend\Model\Session\Quote`, `Magento\Backend\Model\Auth\Session` or a subtype) SHALL NOT be reported: Magento core sets their customer and quote only while an order is created in the admin. `getCustomerGroupId()` SHALL NOT be reported: page cache depersonalization keeps the customer group, and it is part of the cache key. A class that the project's frontend layouts name (`<block class>`, `<referenceBlock class>`, an `<argument>` or `<item>` of type `object`) only on handles no cacheable page uses SHALL NOT be reported, unless a subclass of it is named on a handle a cacheable page may use. Handles no cacheable page uses are those whose layout files hold a `cacheable="false"` block that neither it nor an element around it has an `ifconfig` and that no layout file of the handle removes, except shop-wide handles X-LAY-03 reports (`default`, `catalog_*`, `cms_*` outside its allowlist); account pages that include `customer_account`; and handles only such handles include, unless the handle is a page of a storefront controller action, which may be cached.
 
 #### Scenario: Block reads customer
 - **WHEN** a block method calls `$this->customerSession->getCustomerId()`
@@ -37,6 +37,10 @@ P-FPC-02 SHALL report, as `warning`, calls to `getCustomer`, `getCustomerId` or 
 
 #### Scenario: Admin block
 - **WHEN** a block under `Block\Adminhtml` calls `$this->backendQuoteSession->getQuote()`
+- **THEN** P-FPC-02 reports nothing
+
+#### Scenario: Backend session outside Block\Adminhtml
+- **WHEN** a block under `Block\Form` calls `getQuote()` on a `Magento\Backend\Model\Session\Quote`
 - **THEN** P-FPC-02 reports nothing
 
 #### Scenario: Block only on uncacheable pages

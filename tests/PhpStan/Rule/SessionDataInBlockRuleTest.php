@@ -29,6 +29,9 @@ final class SessionDataInBlockRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/../Fixtures/fpc.php'], [
             ['[P-FPC-02] Acme\\Promo\\Block\\PromoBlock reads Magento\\Customer\\Model\\Session::getCustomerId() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.', 21],
             ['[P-FPC-02] Acme\\Promo\\ViewModel\\MiniCart reads Magento\\Checkout\\Model\\Session::getQuote() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.', 44],
+            // A receiver that may be a storefront session is reported, named by its storefront class: a union with one, or the interface.
+            ['[P-FPC-02] Acme\\Promo\\Block\\Form\\EitherSession reads Magento\\Customer\\Model\\Session::getCustomerId() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.', 840],
+            ['[P-FPC-02] Acme\\Promo\\Block\\Form\\EitherSession reads Magento\\Framework\\Session\\SessionManagerInterface::getCustomerId() during rendering. On cacheable pages the session is depersonalized, so this data is missing or cached for everyone; load it through customer data sections.', 840],
         ]);
     }
 

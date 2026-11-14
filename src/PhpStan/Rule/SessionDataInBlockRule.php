@@ -13,6 +13,8 @@ use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
+use PHPStan\Type\ObjectType;
+use PHPStan\Type\Type;
 
 /**
  * P-FPC-02: a block or view model reads customer data from the session; on cacheable
@@ -33,6 +35,15 @@ final class SessionDataInBlockRule implements Rule
      */
     private const METHODS = ['getcustomer', 'getcustomerid', 'getquote'];
     private const SESSION = 'Magento\Framework\Session\SessionManagerInterface';
+    /**
+     * Magento core sets their customer and quote only while an order is created in the admin; on the storefront
+     * Session\Quote::getQuote() returns a new, empty quote.
+     */
+    private const BACKEND_SESSIONS = [
+        'Magento\Backend\Model\Session',
+        'Magento\Backend\Model\Session\Quote',
+        'Magento\Backend\Model\Auth\Session',
+    ];
     private const ABSTRACT_BLOCK = 'Magento\Framework\View\Element\AbstractBlock';
     private const VIEW_MODEL = 'Magento\Framework\View\Element\Block\ArgumentInterface';
     private const COLLECTION = 'Magento\Framework\Data\Collection';
@@ -68,8 +79,22 @@ final class SessionDataInBlockRule implements Rule
         if (!$frontendBlock && !$viewModel) {
             return [];
         }
-        $session = $this->types->subtypeOf($scope->getType($node->var), self::SESSION);
-        if ($session === null || ($class !== null && $this->onlyOnUncacheablePages($class))) {
+        $receiver = $scope->getType($node->var);
+        $session = $this->types->subtypeOf($receiver, self::SESSION);
+        if ($session === null) {
+            return [];
+        }
+        if ($this->isBackendSession($receiver)) {
+            return [];
+        }
+        // Of a union such as Session\Quote|Customer\Model\Session, name the class that may be a storefront session.
+        foreach ($receiver->getObjectClassNames() as $name) {
+            if (!$this->isBackendSession(new ObjectType($name))) {
+                $session = $name;
+                break;
+            }
+        }
+        if ($class !== null && $this->onlyOnUncacheablePages($class)) {
             return [];
         }
 
@@ -83,6 +108,17 @@ final class SessionDataInBlockRule implements Rule
                 $node->name->toString(),
             ))->identifier(self::IDENTIFIER)->build(),
         ];
+    }
+
+    private function isBackendSession(Type $type): bool
+    {
+        foreach (self::BACKEND_SESSIONS as $backend) {
+            if (MagentoTypes::isObjectOf($type, $backend)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function onlyOnUncacheablePages(ClassReflection $class): bool

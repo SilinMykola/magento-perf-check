@@ -798,3 +798,46 @@ namespace Acme\Promo\Controller\Payment {
         }
     }
 }
+
+namespace Acme\Promo\Block\Form {
+    use Magento\Backend\Model\Session\Quote;
+    use Magento\Framework\View\Element\AbstractBlock;
+
+    class OrderQuote extends Quote
+    {
+    }
+
+    final class AdminPayment extends AbstractBlock
+    {
+        public function __construct(
+            private readonly OrderQuote $backendSession,
+            private readonly \Magento\Backend\Model\Session $session,
+            private readonly \Magento\Backend\Model\Auth\Session $authSession,
+        ) {
+        }
+
+        public function getQuote(): object
+        {
+            return $this->backendSession->getQuote();
+        }
+
+        public function getCustomerIds(): array
+        {
+            return [$this->session->getCustomerId(), $this->authSession->getCustomerId()];
+        }
+    }
+
+    final class EitherSession extends AbstractBlock
+    {
+        public function __construct(
+            private readonly Quote|\Magento\Customer\Model\Session $session,
+            private readonly \Magento\Framework\Session\SessionManagerInterface $anySession,
+        ) {
+        }
+
+        public function getCustomerIds(): array
+        {
+            return [$this->session->getCustomerId(), $this->anySession->getCustomerId()];
+        }
+    }
+}
