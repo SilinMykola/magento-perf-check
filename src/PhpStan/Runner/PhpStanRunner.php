@@ -6,6 +6,9 @@ namespace Silin\MagentoPerfCheck\PhpStan\Runner;
 
 use Composer\InstalledVersions;
 use JsonException;
+use Nette\Neon\Entity;
+use Nette\Neon\Exception as NeonException;
+use Nette\Neon\Neon;
 use Silin\MagentoPerfCheck\Cli\UsageException;
 use Silin\MagentoPerfCheck\Process\Subprocess;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
@@ -32,6 +35,12 @@ final class PhpStanRunner
      * include, and passes the option on to its workers. With this empty list, the installer adds none:
      * no file is included twice and no other extension of the project runs.
      */
+    /** The switches of bitexpert/phpstan-magento that turn its own rules off. */
+    private const BITEXPERT_SWITCHES = [
+        'magento' => ['checkCollectionViaFactory', 'checkServiceContracts', 'checkResourceModelsUsedDirectly'],
+        'extdn' => ['setTemplateDisallowedForBlockClasses'],
+    ];
+
     private const EMPTY_EXTENSION_INSTALLER = <<<'PHP'
         <?php
 
@@ -143,15 +152,26 @@ final class PhpStanRunner
      */
     private function generatedCodeNotices(string $projectRoot): array
     {
-        if ($this->bitExpertRoot() !== null) {
+        $bitExpert = $this->bitExpertRoot();
+        $gap = $bitExpert !== null ? $this->bitExpertGap($bitExpert) : null;
+        if ($bitExpert !== null && $gap === null) {
             return [];
         }
+        $notices = $gap === null ? [] : [new Notice(
+            'generated-code',
+            sprintf(
+                'bitexpert/phpstan-magento%s is not used: %s, and PHPStan would reject the configuration. Update it to 0.30.1 or later.',
+                $this->bitExpertRoot === null && InstalledVersions::isInstalled('bitexpert/phpstan-magento')
+                    ? ' ' . InstalledVersions::getPrettyVersion('bitexpert/phpstan-magento') : '',
+                $gap,
+            ),
+        )];
         $generated = $projectRoot . '/generated/code';
         if (is_dir($generated) && array_diff(scandir($generated) ?: [], ['.', '..']) !== []) {
-            return [];
+            return $notices;
         }
 
-        return [new Notice(
+        return [...$notices, new Notice(
             'generated-code',
             'generated/code is missing or empty, so the types of proxies and extension attributes are unknown and calls on them are not checked. '
             . 'Run bin/magento setup:di:compile, or install bitexpert/phpstan-magento in the tool.',
@@ -205,7 +225,7 @@ final class PhpStanRunner
             $includes[] = realpath(self::PACKAGE_ROOT . '/' . $file) ?: self::PACKAGE_ROOT . '/' . $file;
         }
         $bitExpert = $this->bitExpertRoot();
-        $bitExpertIncluded = $bitExpert !== null && is_file($bitExpert . '/extension.neon');
+        $bitExpertIncluded = $bitExpert !== null && $this->bitExpertGap($bitExpert) === null;
         if ($bitExpertIncluded) {
             $includes[] = $bitExpert . '/extension.neon';
         }
@@ -235,10 +255,10 @@ final class PhpStanRunner
             'magentoPerf' => ['reportUntypedReceivers' => true, 'projectRoot' => $projectRoot, 'indexFingerprint' => $indexFingerprint],
         ];
         if ($bitExpertIncluded) {
-            // Its types are what the analysis needs; its own rules are not about performance. Every version that
-            // installs next to PHPStan 1.12 or 2.x (0.32.0 and 0.40.0 on) has these switches.
-            $parameters['magento'] = ['checkCollectionViaFactory' => false, 'checkServiceContracts' => false, 'checkResourceModelsUsedDirectly' => false];
-            $parameters['extdn'] = ['setTemplateDisallowedForBlockClasses' => false];
+            // Its types are what the analysis needs; its own rules are not about performance.
+            foreach (self::BITEXPERT_SWITCHES as $section => $switches) {
+                $parameters[$section] = array_fill_keys($switches, false);
+            }
         }
 
         // NEON is a superset of JSON for these values.
@@ -262,6 +282,36 @@ final class PhpStanRunner
         }
 
         return $root . '/phpstan';
+    }
+
+    /**
+     * Why bitexpert/phpstan-magento at $root cannot be included, or null when it can: its extension.neon must
+     * declare every switch that turns its own rules off. 0.30.0 sets two of them without declaring them, and
+     * PHPStan then rejects the whole configuration.
+     */
+    private function bitExpertGap(string $root): ?string
+    {
+        $file = $root . '/extension.neon';
+        try {
+            $neon = is_file($file) ? Neon::decode((string) file_get_contents($file)) : null;
+        } catch (NeonException) {
+            $neon = null;
+        }
+        if (!is_array($neon)) {
+            return 'its extension.neon cannot be read';
+        }
+        foreach (self::BITEXPERT_SWITCHES as $section => $switches) {
+            $schemas = $neon['parametersSchema'] ?? null;
+            $schema = is_array($schemas) ? $schemas[$section] ?? null : null;
+            $declared = $schema instanceof Entity && is_array($schema->attributes[0] ?? null) ? array_keys($schema->attributes[0]) : [];
+            foreach ($switches as $switch) {
+                if (!in_array($switch, $declared, true)) {
+                    return sprintf('its extension.neon does not declare the parameter %s.%s', $section, $switch);
+                }
+            }
+        }
+
+        return null;
     }
 
     private function bitExpertRoot(): ?string
