@@ -6,6 +6,15 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Added
+
+- `--verbose` (`-v`) lists every file and the message of each finding in the table report.
+- `--color=auto|always|never`: in a terminal the table report colors the severities and makes rule IDs links to their pages (OSC 8). `auto` is the default and stays off when stdout is not a terminal, `NO_COLOR` is not empty or `TERM` is `dumb`; a report written with `--output` has no colors.
+
+### Changed
+
+- The table report, the default, is made for reading: one block per rule and severity, errors first, with the rule's title, the number of findings, the documentation link and one line per file such as `Model/Two.php:37, 40`. Without `--verbose` the messages of single findings are left out, and an info rule lists 5 files. The text of the summary line is unchanged, but a hint line now follows it and the table is no longer meant for parsing: scripts should read `--format=json`, which does not change, nor do SARIF, Checkstyle and GitHub output.
+
 ## [0.10.0] - 2026-11-14
 
 ### Changed

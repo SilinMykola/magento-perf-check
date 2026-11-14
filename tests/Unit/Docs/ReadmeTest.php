@@ -36,14 +36,17 @@ final class ReadmeTest extends TestCase
     public function testExampleOutputShowsOnlyGradedTruePositives(): void
     {
         self::assertSame(1, preg_match('/```text\n(.*?)```/s', $this->readme(), $m));
-        $file = null;
+        // The table report: a rule block "SEVERITY RULE-ID  title  ×n", then "file:line, line" per file.
+        $rule = null;
         $findings = [];
         foreach (explode("\n", $m[1]) as $line) {
-            if (preg_match('#^((?:app|vendor)/\S+\.(?:php|xml|phtml|graphqls))$#', $line, $f) === 1) {
-                $file = $f[1];
-            } elseif (preg_match('/^\s+(\d+)\s+\w+\s+\[([A-Z0-9-]+)\]/', $line, $f) === 1) {
-                self::assertNotNull($file);
-                $findings[] = [$f[2], $file . ':' . $f[1]];
+            if (preg_match('/^(?:ERROR|WARNING|INFO)\s+([A-Z0-9-]+)\s/', $line, $f) === 1) {
+                $rule = $f[1];
+            } elseif (preg_match('#^\s+((?:app|vendor)/\S+\.(?:php|xml|phtml|graphqls)):([\d, ]+)$#', $line, $f) === 1) {
+                self::assertNotNull($rule);
+                foreach (explode(', ', $f[2]) as $lineNumber) {
+                    $findings[] = [$rule, $f[1] . ':' . $lineNumber];
+                }
             }
         }
 

@@ -30,6 +30,24 @@ final class OptionsTest extends TestCase
         self::assertSame(['app/code'], $options->paths);
         self::assertSame('table', $options->format);
         self::assertSame(Severity::Error, $options->failOn);
+        self::assertFalse($options->verbose);
+        self::assertSame('auto', $options->color);
+    }
+
+    public function testVerboseAndColor(): void
+    {
+        self::assertTrue(Options::fromArgv(['--project=' . $this->project(), '-v'], __DIR__)->verbose);
+        $options = Options::fromArgv(['--project=' . $this->project(), '--verbose', '--color=never'], __DIR__);
+        self::assertTrue($options->verbose);
+        self::assertSame('never', $options->color);
+    }
+
+    public function testInvalidColor(): void
+    {
+        $this->expectException(UsageException::class);
+        $this->expectExceptionMessage('--color must be one of: auto, always, never.');
+
+        Options::fromArgv(['--project=' . $this->project(), '--color=yes'], __DIR__);
     }
 
     public function testNotAMagentoProject(): void

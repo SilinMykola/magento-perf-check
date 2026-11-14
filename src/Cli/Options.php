@@ -12,6 +12,7 @@ final class Options
     public const DEFAULT_PATHS = ['app/code', 'app/design'];
     public const FORMATS = ['table', 'json', 'sarif', 'checkstyle', 'github'];
     public const CONFIG_FILE = 'magento-perf-check.neon';
+    public const COLORS = ['auto', 'always', 'never'];
 
     /**
      * @param list<string> $paths relative to the project root
@@ -33,6 +34,8 @@ final class Options
         public readonly bool $version = false,
         public readonly ?string $outputFile = null,
         public readonly ?MagentoVersion $targetVersion = null,
+        public readonly bool $verbose = false,
+        public readonly string $color = 'auto',
     ) {
     }
 
@@ -53,7 +56,15 @@ final class Options
                 $values['include-tests'] = '1';
                 continue;
             }
-            if (preg_match('/^--(project|paths|format|fail-on|memory-limit|config|baseline|generate-baseline|output|target-version)=(.*)$/s', $argument, $m) !== 1) {
+            if ($argument === '--color') {
+                $values['color'] = 'always';
+                continue;
+            }
+            if ($argument === '--verbose' || $argument === '-v') {
+                $values['verbose'] = '1';
+                continue;
+            }
+            if (preg_match('/^--(project|paths|format|fail-on|memory-limit|config|baseline|generate-baseline|output|target-version|color)=(.*)$/s', $argument, $m) !== 1) {
                 throw new UsageException(sprintf('Unknown argument "%s". Run with --help for usage.', $argument));
             }
             $values[$m[1]] = $m[2];
@@ -77,6 +88,11 @@ final class Options
         $format = $values['format'] ?? 'table';
         if (!in_array($format, self::FORMATS, true)) {
             throw new UsageException(sprintf('Unknown format "%s". Supported formats: %s.', $format, implode(', ', self::FORMATS)));
+        }
+
+        $color = $values['color'] ?? 'auto';
+        if (!in_array($color, self::COLORS, true)) {
+            throw new UsageException('--color must be one of: ' . implode(', ', self::COLORS) . '.');
         }
 
         $failOn = Severity::tryFrom($values['fail-on'] ?? 'error');
@@ -129,6 +145,8 @@ final class Options
             false,
             isset($values['output']) ? $inCwd($values['output']) : null,
             $targetVersion,
+            isset($values['verbose']),
+            $color,
         );
     }
 
@@ -233,6 +251,9 @@ final class Options
               --target-version=<v>  Also run the enabled upgrade rules for changes up to this
                                     Magento version, such as 2.4.9; without it, those of the
                                     installed version run.
+              -v, --verbose         Table report: list every file and the message of each finding.
+              --color=<when>        Table report colors and rule links: auto (default: when
+                                    stdout is a terminal and NO_COLOR is empty), always or never.
               --memory-limit=<v>    Memory limit for PHPStan (default: 2G).
               --version             Show the version.
               -h, --help            Show this help.

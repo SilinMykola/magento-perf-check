@@ -54,6 +54,8 @@ The tool needs PHPStan 1.12 or 2.x. On 2.4.5 to 2.4.8 the constraint allows 1.12
 | `--baseline=<file>`, `--generate-baseline=<file>` | Report only new findings; see [Baseline](baseline.md). |
 | `--output=<file>` | Write the report, in the chosen `--format`, to `<file>` (relative to the current directory) instead of the console, and print a one-line summary. The exit code is the same. The file's directory must exist. |
 | `--target-version=<version>` | Also run the [upgrade rules](#upgrade-rules) for changes up to this Magento version, such as `2.4.9` or `2.4.8-p3`. An invalid version exits with code 2. |
+| `--verbose`, `-v` | Table report: list every file and the message of each finding. By default the table report shows one block per rule and severity, errors first, with the rule's title, documentation link and places as `file:line, line`, and at most 5 files for an info rule. |
+| `--color=auto\|always\|never` | Colors and clickable rule IDs (OSC 8 terminal links) in the table report. Default `auto`: on when stdout is a terminal, `NO_COLOR` is empty and `TERM` is not `dumb`. `--color` alone means `always`. Never with `--output`. |
 | `--memory-limit=<value>` | Memory limit for PHPStan. Default: `2G`. |
 | `--version` | Print the version. |
 

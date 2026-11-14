@@ -88,12 +88,31 @@ final class ApplicationTest extends TestCase
         self::assertSame('app/code/Acme/Promo/Model/Broken.php', $report['notices'][1]['file']);
     }
 
+    public function testColorAlwaysAndNever(): void
+    {
+        [, $always] = $this->runCommand(['--color=always']);
+        [, $never] = $this->runCommand(['--color=never', '--verbose']);
+
+        self::assertStringContainsString("\e[1;37;41mERROR  \e[0m", $always);
+        self::assertStringNotContainsString("\e", $never);
+        self::assertStringContainsString("        app/code/Acme/Promo/Model/PriceExporter.php\n             23 Magento\\", $never);
+
+        $file = sys_get_temp_dir() . '/mpc-color-' . getmypid() . '.txt';
+        $this->runCommand(['--color=always', '--output=' . $file]);
+        $written = (string) file_get_contents($file);
+        unlink($file);
+        self::assertStringContainsString('ERROR   P-LOOP-01', $written);
+        self::assertStringNotContainsString("\e", $written, 'a report file has no colors');
+    }
+
     public function testTableReport(): void
     {
         [$exitCode, $stdout] = $this->runCommand([]);
 
         self::assertSame(Application::EXIT_FINDINGS, $exitCode);
-        self::assertStringContainsString("app/code/Acme/Promo/Model/PriceExporter.php\n     23  error    [P-LOOP-01]", $stdout);
+        self::assertStringContainsString("ERROR   P-LOOP-01  ", $stdout);
+        self::assertStringContainsString("        app/code/Acme/Promo/Model/PriceExporter.php:23\n", $stdout);
+        self::assertStringNotContainsString("\e", $stdout, 'no colors when stdout is not a terminal');
         self::assertStringContainsString('3 finding(s): 2 error, 1 warning, 0 info.', $stdout);
         self::assertStringContainsString('2 analysis notice(s) not reported as findings (1 generated-code, 1 phpstan-parse)', $stdout);
     }

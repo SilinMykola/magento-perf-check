@@ -73,7 +73,7 @@ The command SHALL run both the XML and the PHP analysis and report their finding
 
 ### Requirement: Output formats
 The command SHALL support these formats on stdout:
-- `--format=table` (default).
+- `--format=table` (default): for people, one block per rule and severity (errors, then warnings, then info) with the severity, rule ID, rule title and number of findings, the documentation link, and one line `file:line, line` per file. Without `--verbose`, messages of single findings are left out and an info rule lists 5 files when more than 6 have findings; `--verbose` lists every file and each finding's line and message. With `--color=auto` (the default) colors and OSC 8 links to the rule pages are used only when stdout is a terminal, `NO_COLOR` is empty and `TERM` is not `dumb`; `--color=always` and `--color=never` force it; a report written with `--output` has none.
 - `--format=json`: one JSON document with the findings and a summary of counts per severity and run duration.
 - `--format=sarif`: one SARIF 2.1.0 log.
 - `--format=checkstyle`: one Checkstyle XML document.
@@ -82,8 +82,20 @@ The command SHALL support these formats on stdout:
 Machine formats SHALL contain nothing else on stdout.
 
 #### Scenario: Table output
-- **WHEN** the command runs without `--format`
-- **THEN** findings are printed grouped by file with line, severity, rule ID and message, followed by a summary
+- **WHEN** the command runs without `--format` and finds three P-LOOP-01 errors in two files and one P-DI-06 warning
+- **THEN** a P-LOOP-01 block comes first with "ERROR", the rule ID, its title and "3 findings", its documentation link and one line per file such as `app/code/Acme/A/Model/Two.php:37, 40`, then the P-DI-06 block, followed by the summary line `4 finding(s): 3 error, 1 warning, 0 info.`
+
+#### Scenario: Table output in detail
+- **WHEN** the command runs with `--verbose`
+- **THEN** each file of each block is followed by the line and message of each of its findings, and no file is left out
+
+#### Scenario: Colors only in a terminal
+- **WHEN** `--color=auto` is in effect and stdout is not a terminal, `NO_COLOR` is not empty or `TERM` is `dumb`; or `--color=never` is given; or the report is written with `--output`
+- **THEN** the table report contains no escape sequences
+
+#### Scenario: Colors on request
+- **WHEN** `--color=always` is given and the report goes to stdout
+- **THEN** severities are colored labels and rule IDs are OSC 8 links to their pages, whatever `NO_COLOR` says
 
 #### Scenario: JSON output
 - **WHEN** the command runs with `--format=json`
