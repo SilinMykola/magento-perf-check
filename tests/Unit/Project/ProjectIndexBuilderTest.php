@@ -220,6 +220,28 @@ final class ProjectIndexBuilderTest extends TestCase
         exec('rm -rf ' . escapeshellarg($copy));
     }
 
+    public function testFingerprintFollowsStylesheets(): void
+    {
+        $source = realpath(__DIR__ . '/../../Fixtures/Project/indexed');
+        self::assertIsString($source);
+        $copy = sys_get_temp_dir() . '/mpr-index-project-' . bin2hex(random_bytes(4));
+        exec('cp -R ' . escapeshellarg($source) . ' ' . escapeshellarg($copy));
+        $builder = new ProjectIndexBuilder($this->cacheDir);
+        $before = $builder->fingerprint($copy);
+
+        // T-06 reads the module's stylesheets: a changed one makes cached PHP results out of date.
+        $less = $copy . '/app/code/Acme/Promo/view/frontend/web/css/source/_module.less';
+        mkdir(dirname($less), 0777, true);
+        file_put_contents($less, ".banner img { width: 10px; height: 10px; }\n");
+        $added = $builder->fingerprint($copy);
+        self::assertNotSame($before, $added);
+
+        file_put_contents($less, ".banner img { width: 20px; height: 10px; }\n");
+        touch($less, time() + 5);
+        self::assertNotSame($added, $builder->fingerprint($copy));
+        exec('rm -rf ' . escapeshellarg($copy));
+    }
+
     public function testDisabledModuleLeftOutAndCacheFollowsConfig(): void
     {
         $source = realpath(__DIR__ . '/../../Fixtures/Project/indexed');

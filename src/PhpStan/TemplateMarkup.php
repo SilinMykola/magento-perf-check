@@ -147,24 +147,72 @@ final class TemplateMarkup
     /**
      * Opening tags with this name outside <template> elements, whose content the browser does not render.
      *
-     * @return list<array{attributes: array<string, string>, line: int}>
+     * @return list<array{attributes: array<string, string>, line: int, offset: int}>
      */
     public function tags(string $name): array
     {
         $inert = $this->templateRanges();
         $tags = [];
-        if (preg_match_all('/<' . preg_quote($name, '/') . '\b((?:"[^"]*"|\'[^\']*\'|[^>"\'])*)>/i', $this->html, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER) > 0) {
+        // "<img-zoom>" is another element.
+        if (preg_match_all('/<' . preg_quote($name, '/') . '(?![\w-])((?:"[^"]*"|\'[^\']*\'|[^>"\'])*)>/i', $this->html, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER) > 0) {
             foreach ($matches as [[, $at], [$attributes]]) {
                 foreach ($inert as [$from, $to]) {
                     if ($at > $from && $at < $to) {
                         continue 2;
                     }
                 }
-                $tags[] = ['attributes' => self::attributes($attributes), 'line' => substr_count($this->html, "\n", 0, $at) + 1];
+                $tags[] = ['attributes' => self::attributes($attributes), 'line' => substr_count($this->html, "\n", 0, $at) + 1, 'offset' => $at];
             }
         }
 
         return $tags;
+    }
+
+    /**
+     * The elements around each <img>, by the offset of its tag as tags('img') gives it: tag name and classes,
+     * outermost first, as far as this template opens them. A wrapper that a parent template or a layout container
+     * adds is not known. Null when the template does not open and close each element as often, as when PHP
+     * branches open one of two wrappers that a single tag closes: the elements around an image are not known then.
+     *
+     * @return ?array<int, list<array{tag: string, classes: list<string>}>>
+     */
+    public function imageAncestors(): ?array
+    {
+        $inert = $this->templateRanges();
+        $void = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'];
+        $stack = [];
+        $images = [];
+        $balance = [];
+        preg_match_all('/<(\/?)([a-zA-Z][\w-]*)(?![\w-])((?:"[^"]*"|\'[^\']*\'|[^>"\'])*)>/', $this->html, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
+        foreach ($matches as [[$text, $at], [$closing], [$tag], [$attributes]]) {
+            foreach ($inert as [$from, $to]) {
+                if ($at > $from && $at < $to) {
+                    continue 2;
+                }
+            }
+            $tag = strtolower($tag);
+            if (!in_array($tag, $void, true) && ($closing === '/' || !str_ends_with(rtrim($text, "> \t\n"), '/'))) {
+                $balance[$tag] = ($balance[$tag] ?? 0) + ($closing === '/' ? -1 : 1);
+            }
+            if ($closing === '/') {
+                for ($i = count($stack) - 1; $i >= 0; --$i) {
+                    if ($stack[$i]['tag'] === $tag) {
+                        array_splice($stack, $i);
+                        break;
+                    }
+                }
+                continue;
+            }
+            if ($tag === 'img') {
+                $images[$at] = $stack;
+            }
+            if (!in_array($tag, $void, true) && !str_ends_with(rtrim($text, "> \t\n"), '/')) {
+                $class = self::attributes($attributes)['class'] ?? '';
+                $stack[] = ['tag' => $tag, 'classes' => preg_split('/\s+/', trim($class), -1, PREG_SPLIT_NO_EMPTY) ?: []];
+            }
+        }
+
+        return array_filter($balance) === [] ? $images : null;
     }
 
     /**

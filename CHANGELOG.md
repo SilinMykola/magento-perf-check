@@ -12,6 +12,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Fixed
 
+- T-06 (experimental) also reads the CSS and LESS files under `web/css` of the template's module, or of its theme, and leaves out an image whose box a rule there fixes, when the elements the rule names around the image are around it in the template. LESS nesting and Magento's `& when (@media-common = true)` guard are followed; a Hyvä template, whose theme does not compile a module's LESS, gets only the CSS files. On the calibration corpus this removes 5 findings in the extended part and 2 in the GitHub modules, 5 in the second GitHub part; of them, 5 were graded false in rounds 20 and 22, 3 TP-low in [round 9](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-9.md), which a re-check found sized by the module's LESS (two social icons at 25 by 25 px and a related post image at 200 px high), and 4 were never graded: two more of those icons and two blog images that the module's CSS sizes. None is added. Changing a module's or theme's stylesheet now also makes cached results out of date.
+
 - X-GQL-02 (experimental) no longer reports `$cartRepository->get($cartItem->getQuoteId())` in a resolver, as core's `BundlePriceDetails` calls it for each cart item: the items share the cart, which `QuoteRepository` keeps. On the calibration corpus this removes that 1 finding in Magento 2.4.9 core, graded false in [round 22](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-22.md).
 
 - The rules no longer read arguments from a first-class callable such as `strlen(...)` or `$this->method(...)`. With PHP assertions on, as in a test run, a controller that holds one stopped the analysis of its file.

@@ -209,13 +209,14 @@ final class ProjectIndexBuilder
     {
         $modules = $this->moduleRoots($projectRoot);
 
-        return $this->fingerprintOf($modules, $this->indexedFiles($projectRoot, $modules), [...LayoutHandles::layoutFiles($projectRoot, $modules), ...self::routeFiles($modules)]);
+        return $this->fingerprintOf($modules, $this->indexedFiles($projectRoot, $modules), [...LayoutHandles::layoutFiles($projectRoot, $modules), ...self::routeFiles($modules), ...self::stylesheetFiles($projectRoot, $modules)]);
     }
 
     /**
      * @param array<string, string> $modules module root => module name
      * @param list<array{path: string, module: string, area: string, name: string}> $files
-     * @param list<string> $layouts frontend layout files and the storefront routes that tell which handles are pages
+     * @param list<string> $layouts frontend layout files, the storefront routes that tell which handles are pages, and
+     *     the stylesheets T-06 reads
      */
     private function fingerprintOf(array $modules, array $files, array $layouts): string
     {
@@ -239,6 +240,42 @@ final class ProjectIndexBuilder
         foreach (array_keys($modules) as $root) {
             array_push($files, ...LayoutHandles::controllerFiles($root));
         }
+
+        return $files;
+    }
+
+    /**
+     * The CSS and LESS files that T-06 reads beside a template: under web/css of each module's view/frontend and
+     * view/base, and of the themes in app/design/frontend and their module folders. A PHP result cached before
+     * one of them changed is out of date.
+     *
+     * @param array<string, string> $modules
+     * @return list<string>
+     */
+    private static function stylesheetFiles(string $projectRoot, array $modules): array
+    {
+        $directories = [];
+        foreach (array_keys($modules) as $root) {
+            array_push($directories, $root . '/view/frontend/web/css', $root . '/view/base/web/css');
+        }
+        array_push($directories, ...(glob($projectRoot . '/app/design/frontend/*/*/web/css') ?: []), ...(glob($projectRoot . '/app/design/frontend/*/*/*_*/web/css') ?: []));
+        $files = [];
+        foreach ($directories as $directory) {
+            if (!is_dir($directory)) {
+                continue;
+            }
+            try {
+                $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS), \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD);
+                foreach ($iterator as $file) {
+                    if ($file instanceof \SplFileInfo && preg_match('/\.(css|less)$/', $file->getFilename()) === 1) {
+                        $files[] = $file->getPathname();
+                    }
+                }
+            } catch (\UnexpectedValueException) {
+                continue;
+            }
+        }
+        sort($files);
 
         return $files;
     }

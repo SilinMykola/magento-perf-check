@@ -1,0 +1,24 @@
+// Compiled into the theme's styles.
+& when (@media-common = true) {
+    .card {
+        img.avatar {
+            width: 40px;
+            height: 40px;
+        }
+    }
+}
+
+@media (min-width: 768px) {
+    .wide {
+        width: 10px;
+        height: 10px;
+    }
+}
+
+.card {
+    &__thumb {
+        width: 8px;
+        height: 8px;
+    }
+}
+.x { background: url( //cdn.example/x.png); } .lead img.tiny { width: 2px; height: 2px; }

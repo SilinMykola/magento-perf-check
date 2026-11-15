@@ -69,6 +69,21 @@ final class ImageWithoutDimensionsRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/../Fixtures/templates/view/frontend/templates/image-css-img.phtml'], []);
     }
 
+    public function testStylesheetsOfTheModuleAndTheThemeCount(): void
+    {
+        // module.css sizes .box .hero, _module.less sizes .card img.avatar behind a guard; .wide only in @media, .plain
+        // only in a .min.css, and the last .hero is not inside a .box.
+        $this->analyse([__DIR__ . '/../Fixtures/styled-module/view/frontend/templates/styled.phtml'], [[self::MESSAGE, 3], [self::MESSAGE, 4], [self::MESSAGE, 5]]);
+        // A Hyvä template gets the module's CSS, not its LESS, which a Hyvä theme does not compile.
+        $this->analyse([__DIR__ . '/../Fixtures/styled-module/view/frontend/templates/hyva/styled.phtml'], [[self::MESSAGE, 2]]);
+        // PHP branches open one of two wrappers: the elements around the image are not known, so .box .hero does not count.
+        $this->analyse([__DIR__ . '/../Fixtures/styled-module/view/frontend/templates/branches.phtml'], [[self::MESSAGE, 2]]);
+        // <img-zoom> is no image; BEM "&__thumb", a rule after "url( //...)" on one line and view/base count.
+        $this->analyse([__DIR__ . '/../Fixtures/styled-module/view/frontend/templates/elements.phtml'], [[self::MESSAGE, 2]]);
+        // The theme's module folder sizes .header .logo, the theme itself .badge.
+        $this->analyse([__DIR__ . '/../Fixtures/app/design/frontend/Acme/shop/Acme_Shop/templates/logo.phtml'], [[self::MESSAGE, 3]]);
+    }
+
     public function testAdminTemplateIsLeftOut(): void
     {
         $this->analyse([__DIR__ . '/../Fixtures/templates/view/adminhtml/templates/admin.phtml'], []);
