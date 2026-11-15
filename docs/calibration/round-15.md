@@ -20,7 +20,7 @@ This round grades the experimental rules on five private Magento stores, which h
 |---|---|---|---|---|---|---|---|---|---|---|
 | [J-DEP-01](../rules/J-DEP-01.md) | warning | 50 | 35 | 24 | 10 | 1 | 0 | 97 % | 71 % | default set |
 | [X-LAY-01](../rules/X-LAY-01.md) | warning | 15 | 15 | 3 | 4 | 8 | 0 | 47 % | 43 % | experimental |
-| [X-GQL-02](../rules/X-GQL-02.md) | warning | 7 | 7 | 7 | 0 | 0 | 0 | 100 % | 100 % | experimental |
+| [X-GQL-02](../rules/X-GQL-02.md) | warning | 7 | 7 | 0 | 7 | 0 | 0 | 100 % | 0 % | experimental |
 
 The J-DEP-01 and X-LAY-01 rows add the grades of [round 12](round-12.md) and [round 8](round-8.md) to those of this round: the findings column counts the corpus findings of those rounds and the private ones.
 
@@ -36,7 +36,7 @@ The four scripts that are not loaded were first graded FP. The owner ruled on 20
 - TP-low, 1: the captcha of the contact page, as in round 8.
 - FP, 8: pages that are personal by design: handles that only the customer's order pages and order e-mails include (three), a print of the current cart, two account pages of commerce modules, a print page, and a payment redirect.
 
-**X-GQL-02.** 7 findings, all in store C, all correct: the resolvers of fields on products, categories and custom option values call `ProductRepositoryInterface::get()`, `CategoryRepository::get()`, a collection's `getFirstItem()` or `fetchRow()` once per element of the list they are part of.
+**X-GQL-02.** 7 findings, all in store C, all correct: the resolvers of fields on products, categories and custom option values call `ProductRepositoryInterface::get()`, `CategoryRepository::get()`, a collection's `getFirstItem()` or `fetchRow()` once per element of the list they are part of. A re-check for [round 22](round-22.md), on 2026-11-15, found that the store's storefront asks for these fields for one element, a few cart items, or not at all, so all seven are TP-low; the decision stays the same.
 
 ## Timing
 

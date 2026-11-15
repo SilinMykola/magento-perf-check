@@ -14,4 +14,5 @@ interface ProductInterface {
     brand_deferred: String @resolver(class: "Acme\\Promo\\Resolver\\Deferred")
     brand_rows: String @resolver(class: "Acme\\Promo\\Resolver\\Rows")
     brand_store: String @resolver(class: "Acme\\Promo\\Resolver\\Configured")
+    brand_cart: String @resolver(class: "Acme\\Promo\\Resolver\\CartOfItem")
 }

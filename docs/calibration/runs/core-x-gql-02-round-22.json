@@ -1,0 +1,139 @@
+{
+    "run": "core",
+    "project": "var/corpus/magento",
+    "paths": "vendor/magento",
+    "config": "every experimental rule enabled",
+    "toolCommit": "7975005",
+    "date": "2026-11-15",
+    "note": "Only the X-GQL-02 findings of the run are kept.",
+    "findings": [
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-bundle-graph-ql/Model/Resolver/BundlePriceDetails.php",
+            "line": 69,
+            "message": "[X-GQL-02] Magento\\Quote\\Api\\CartRepositoryInterface::get() runs a query in the resolver of BundleProduct.price_details, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-catalog-graph-ql/Model/Resolver/Category/ProductsCount.php",
+            "line": 72,
+            "message": "[X-GQL-02] Magento\\Catalog\\Model\\ResourceModel\\Product\\Collection::getSize() runs a query in the resolver of CategoryInterface.product_count, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-catalog-graph-ql/Model/Resolver/CategoryTree.php",
+            "line": 77,
+            "message": "[X-GQL-02] Magento\\Catalog\\Model\\ResourceModel\\Category\\Collection::count() runs a query in the resolver of CategoryTree.children, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-catalog-inventory-graph-ql/Model/Resolver/OnlyXLeftInStockResolver.php",
+            "line": 54,
+            "message": "[X-GQL-02] Magento\\Catalog\\Api\\ProductRepositoryInterface::get() runs a query in the resolver of ProductInterface.only_x_left_in_stock, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-catalog-inventory-graph-ql/Model/Resolver/QuantityResolver.php",
+            "line": 82,
+            "message": "[X-GQL-02] Magento\\Catalog\\Api\\ProductRepositoryInterface::get() runs a query in the resolver of ProductInterface.quantity, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-catalog-inventory-graph-ql/Model/Resolver/StockStatusProvider.php",
+            "line": 70,
+            "message": "[X-GQL-02] Magento\\CatalogInventory\\Api\\StockStatusRepositoryInterface::get() runs a query in the resolver of ProductInterface.stock_status, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-catalog-inventory-graph-ql/Model/Resolver/StockStatusProvider.php",
+            "line": 80,
+            "message": "[X-GQL-02] Magento\\CatalogInventory\\Api\\StockStatusRepositoryInterface::get() runs a query in the resolver of ProductInterface.stock_status, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-catalog-inventory-graph-ql/Model/Resolver/StockStatusProvider.php",
+            "line": 95,
+            "message": "[X-GQL-02] Magento\\CatalogInventory\\Api\\StockStatusRepositoryInterface::get() runs a query in the resolver of ProductInterface.stock_status, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-catalog-inventory-graph-ql/Model/Resolver/StockStatusProvider.php",
+            "line": 115,
+            "message": "[X-GQL-02] Magento\\Catalog\\Api\\ProductRepositoryInterface::get() runs a query in the resolver of ProductInterface.stock_status, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-downloadable-graph-ql/Resolver/Order/Item/Links.php",
+            "line": 121,
+            "message": "[X-GQL-02] Magento\\Downloadable\\Model\\ResourceModel\\Link\\Collection::getItems() runs a query in the resolver of DownloadableOrderItem.downloadable_links, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-gift-message-graph-ql/Model/Resolver/Cart/Item/GiftMessage.php",
+            "line": 57,
+            "message": "[X-GQL-02] Magento\\GiftMessage\\Api\\ItemRepositoryInterface::get() runs a query in the resolver of SimpleCartItem.gift_message, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-gift-message-graph-ql/Model/Resolver/Order/GiftMessage.php",
+            "line": 83,
+            "message": "[X-GQL-02] Magento\\GiftMessage\\Api\\OrderRepositoryInterface::get() runs a query in the resolver of CustomerOrder.gift_message, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-gift-message-graph-ql/Model/Resolver/Order/Item/GiftMessage.php",
+            "line": 60,
+            "message": "[X-GQL-02] Magento\\GiftMessage\\Api\\OrderItemRepositoryInterface::get() runs a query in the resolver of OrderItemInterface.gift_message, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-review-graph-ql/Model/Resolver/Product/RatingSummary.php",
+            "line": 85,
+            "message": "[X-GQL-02] Magento\\Review\\Model\\Review\\Summary::load() runs a query in the resolver of ProductInterface.rating_summary, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-wishlist-graph-ql/Model/Resolver/WishlistItems.php",
+            "line": 69,
+            "message": "[X-GQL-02] Magento\\Wishlist\\Model\\ResourceModel\\Item\\Collection::getItems() runs a query in the resolver of Wishlist.items_v2, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        },
+        {
+            "ruleId": "X-GQL-02",
+            "severity": "warning",
+            "file": "vendor/magento/module-wishlist-graph-ql/Model/Resolver/WishlistItemsResolver.php",
+            "line": 95,
+            "message": "[X-GQL-02] Magento\\Wishlist\\Model\\ResourceModel\\Item\\Collection::getItems() runs a query in the resolver of Wishlist.items, a field on a type returned inside a list: one query per list element. Implement BatchResolverInterface, or collect the ids and load them once in a deferred value.",
+            "docUrl": "https://github.com/SilinMykola/magento-perf-check/blob/main/docs/rules/X-GQL-02.md"
+        }
+    ]
+}

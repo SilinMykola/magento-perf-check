@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Severity | `warning` |
-| Status | experimental, off by default: the calibration corpus gives no finding; [calibration round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md) graded 7 on a private store, all correct, fewer than the 10 a decision needs |
+| Status | experimental, off by default: [calibration round 22](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-22.md) graded 26 findings on the Magento 2.4.9 core, GitHub modules and a private store, 92 % correct, but only 25 % of the correct ones matter in practice |
 | Analyzer | PHPStan and the project's `schema.graphqls` files, identifier `magentoPerf.resolverQuery` |
 
 ## What it catches
@@ -13,6 +13,8 @@ A query made directly in a class that implements `ResolverInterface` and is the 
 A query is `load()` on a model or a flat or EAV resource model, `get()` or `getById()` on a repository, `getList()` with search criteria on a repository, running a database collection, including with `foreach`, and a fetch on a database adapter. Store, website and store group repositories read cached configuration and are not reported.
 
 A resolver that only reads `$value` or formats it is not reported: most resolvers on list types are like that, and they cost nothing. A query in a constructor or in a closure is not reported either, because it runs once per request or later for all elements. A closure that is a callback of `array_map()` or `array_walk()` runs per element, so it is reported.
+
+`$cartRepository->get($cartItem->getQuoteId())` with a cart item (`Magento\Quote\Api\Data\CartItemInterface`) is not reported: the items of a list in a cart share the cart, which the cart query loaded and `QuoteRepository` keeps by id.
 
 ## Why it hurts performance
 
@@ -47,6 +49,11 @@ return $this->valueFactory->create(fn () => $this->brandCollector->getName($valu
 ```
 
 ## Known false positives
+
+- A resolver that runs its query only for the top-level field and returns what the parent already set for the nodes of a list, as core's `CategoryTree` does for `children`, is still reported.
+- A field the storefront never asks for in a list costs nothing there; the rule sees the schema, not the queries clients send.
+- A resolver whose field another module declares again with its own resolver does not run, as `Magento_InventoryGraphQl` does for `stock_status` and `only_x_left_in_stock`; the rule still reports the resolver it replaces.
+- A resolver that returns before its query under a setting, such as core's `quantity` under the default `cataloginventory/options/not_available_message`, is still reported.
 
 - A type reachable through a list that in practice is returned one at a time. `StoreConfig` is an example: `availableStores` returns a list of it, but `storeConfig` is the usual query.
 - A list that is always short. The rule does not know the size.

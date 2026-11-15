@@ -12,6 +12,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Fixed
 
+- X-GQL-02 (experimental) no longer reports `$cartRepository->get($cartItem->getQuoteId())` in a resolver, as core's `BundlePriceDetails` calls it for each cart item: the items share the cart, which `QuoteRepository` keeps. On the calibration corpus this removes that 1 finding in Magento 2.4.9 core, graded false in [round 22](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-22.md).
+
 - The rules no longer read arguments from a first-class callable such as `strlen(...)` or `$this->method(...)`. With PHP assertions on, as in a test run, a controller that holds one stopped the analysis of its file.
 
 - P-FPC-05 no longer reports a `Cache-Control` value built as `sprintf('public, max-age=%d', $ttl)` or `'max-age=' . $ttl`: a computed value now counts by its literal parts, and is reported when they say `no-cache`, `no-store` or `private`, or when a part other than a literal may be something else than a number. `setHeader()` on a block, which only sets the block's `header` data, is no longer reported either. Found by the [fourth held-out check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out-4.md), which graded all five P-FPC-05 findings on 100 GitHub modules as false.

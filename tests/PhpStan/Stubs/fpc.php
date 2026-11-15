@@ -125,7 +125,19 @@ namespace Magento\Customer\Api\Data {
     }
 }
 
+namespace Magento\Quote\Api {
+    interface CartRepositoryInterface
+    {
+        public function get(int $cartId): object;
+    }
+}
+
 namespace Magento\Quote\Api\Data {
+    interface CartItemInterface
+    {
+        public function getQuoteId(): ?int;
+    }
+
     interface CartInterface
     {
         public function getId(): ?int;
