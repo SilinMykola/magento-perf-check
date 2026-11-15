@@ -243,6 +243,12 @@ $github = isset($corpus['github'])
         count($corpus['github']['modules']),
     )
     : '';
+$github2 = isset($corpus['github2'])
+    ? sprintf(
+        "\n- Not used on this page: a fourth part, `github2`, with the next %d modules from those GitHub repositories",
+        count($corpus['github2']['modules']),
+    )
+    : '';
 $report = <<<MD
     # Calibration
 
@@ -254,7 +260,7 @@ $report = <<<MD
 
     - Magento {$corpus['magento']['version']} core (`vendor/magento`)
     - {$modules} most-downloaded `magento2-module` packages from Packagist that install on that version (`app/code` of the corpus copy)
-    {$mageOs}{$extended}{$github}
+    {$mageOs}{$extended}{$github}{$github2}
 
     Test code is excluded (the tool's default), and so are `*-sample-data` modules at sampling time.
 
