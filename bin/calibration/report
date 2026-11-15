@@ -245,7 +245,7 @@ $github = isset($corpus['github'])
     : '';
 $github2 = isset($corpus['github2'])
     ? sprintf(
-        "\n- Not used on this page: a fourth part, `github2`, with the next %d modules from those GitHub repositories",
+        "\n- Not used on this page: a fourth part, `github2`, with %d more modules from those GitHub repositories, which the [fourth held-out check](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/held-out-4.md) uses",
         count($corpus['github2']['modules']),
     )
     : '';

@@ -41,6 +41,23 @@ final class ModelLoadInLoopRuleTest extends RuleTestCase
             ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 289],
             ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 297],
             ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 307],
+            // A caching repository with the same arguments in every iteration queries once; anything a loop changes counts.
+            ['[P-LOOP-01] Magento\Catalog\Model\Product::load()' . $suffix, 367],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 373],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 375],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 377],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 382],
+            ['[P-LOOP-01] Magento\Catalog\Api\ProductRepositoryInterface::getById()' . $suffix, 383],
+            // Anything that may change the argument outside it, or make the repository load again, counts.
+            ['[P-LOOP-01] Magento\\Catalog\\Api\\ProductRepositoryInterface::get()' . $suffix, 411],
+            ['[P-LOOP-01] Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()' . $suffix, 422],
+            ['[P-LOOP-01] Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()' . $suffix, 434],
+            ['[P-LOOP-01] Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()' . $suffix, 447],
+            ['[P-LOOP-01] Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()' . $suffix, 459],
+            ['[P-LOOP-01] Magento\\Catalog\\Api\\ProductRepositoryInterface::get()' . $suffix, 469],
+            ['[P-LOOP-01] Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()' . $suffix, 481],
+            ['[P-LOOP-01] Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()' . $suffix, 519],
+            ['[P-LOOP-01] Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()' . $suffix, 534],
         ]);
     }
 }

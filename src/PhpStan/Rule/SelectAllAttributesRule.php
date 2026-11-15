@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
+use Silin\MagentoPerfCheck\PhpStan\CallArgs;
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -30,7 +31,7 @@ final class SelectAllAttributesRule implements Rule
 
     public function processNode(Node $node, Scope $scope): array
     {
-        $attribute = $node->getArgs()[0]->value ?? null;
+        $attribute = CallArgs::of($node)[0]->value ?? null;
         if (!$node->name instanceof Node\Identifier
             || $node->name->toLowerString() !== 'addattributetoselect'
             || !$attribute instanceof Node\Scalar\String_

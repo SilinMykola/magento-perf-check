@@ -578,3 +578,60 @@ final class InstanceofFallback
         return \stdClass::class;
     }
 }
+
+final class LazyGetterWithLocalObjectManager
+{
+    private ?object $repository = null;
+    private ?object $other = null;
+
+    public function allowed(): object
+    {
+        if (null === $this->repository) {
+            $objectManager = ObjectManager::getInstance();
+            $this->repository = $objectManager->get(\stdClass::class);
+        }
+
+        return $this->repository;
+    }
+
+    public function reported(): object
+    {
+        if (null === $this->other) {
+            $objectManager = ObjectManager::getInstance(); // reported: the block does more than store one object
+            $this->other = $objectManager->get(\stdClass::class);
+            $this->other->ready = true;
+        }
+
+        return $this->other;
+    }
+
+    public function reusesObjectManager(): object
+    {
+        if (null === $this->repository) {
+            $objectManager = ObjectManager::getInstance(); // reported: the method asks it for more
+            $this->repository = $objectManager->get(\stdClass::class);
+        }
+
+        return $objectManager->create(\stdClass::class);
+    }
+
+    public function capturedInClosure(): callable
+    {
+        if (null === $this->repository) {
+            $objectManager = ObjectManager::getInstance(); // reported: a closure keeps it
+            $this->repository = $objectManager->get(\stdClass::class);
+        }
+
+        return static fn (): object => $objectManager->create(\stdClass::class);
+    }
+
+    public function configures(): object
+    {
+        if (null === $this->other) {
+            $objectManager = ObjectManager::getInstance(); // reported: not a get() or create()
+            $this->other = $objectManager->configure([]);
+        }
+
+        return $this->other;
+    }
+}

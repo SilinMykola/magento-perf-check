@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
+use Silin\MagentoPerfCheck\PhpStan\CallArgs;
 use Silin\MagentoPerfCheck\PhpStan\ProjectIndexProvider;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
@@ -228,7 +229,7 @@ final class AroundPluginRule implements Rule
     private function passesArgumentsThrough(Stmt\ClassMethod $method, Expr\FuncCall $call): bool
     {
         $expected = array_slice($method->params, 2);
-        $args = $call->getArgs();
+        $args = CallArgs::of($call);
         if (count($args) !== count($expected)) {
             return false;
         }

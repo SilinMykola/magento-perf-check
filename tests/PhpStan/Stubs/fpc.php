@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 namespace Magento\Framework\View\Element {
-    abstract class AbstractBlock
+    interface BlockInterface
+    {
+    }
+
+    abstract class AbstractBlock implements BlockInterface
     {
         /** @var bool */
         protected $_isScopePrivate = false;

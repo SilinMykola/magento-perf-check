@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
+use Silin\MagentoPerfCheck\PhpStan\CallArgs;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Stmt;
 use PhpParser\NodeFinder;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
+use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
+use PHPStan\Type\Type;
+use PHPStan\Type\TypeUtils;
 
 /**
  * P-FPC-05: no-cache or private headers set where the response could otherwise be cached.
@@ -26,6 +30,8 @@ final class NoCacheHeadersRule implements Rule
 
     private const ACTION = 'Magento\Framework\App\ActionInterface';
     private const GET_ACTION = 'Magento\Framework\App\Action\HttpGetActionInterface';
+    /** A block's setHeader() is DataObject's magic setter of the "header" data key, not a response header. */
+    private const BLOCK = 'Magento\Framework\View\Element\BlockInterface';
     private const RESOLVERS = [
         'Magento\Framework\GraphQl\Query\ResolverInterface',
         'Magento\Framework\GraphQl\Query\Resolver\BatchResolverInterface',
@@ -37,6 +43,10 @@ final class NoCacheHeadersRule implements Rule
         'Magento\PageCache\Controller\Block\Render',
         'Magento\Downloadable\Controller\Download\\',
     ];
+
+    public function __construct(private readonly ReflectionProvider $reflectionProvider)
+    {
+    }
 
     public function getNodeType(): string
     {
@@ -50,7 +60,7 @@ final class NoCacheHeadersRule implements Rule
         }
         $call = (new NodeFinder())->findFirst(
             [$node],
-            fn (Node $n): bool => $n instanceof MethodCall && $this->setsNoCache($n),
+            fn (Node $n): bool => $n instanceof MethodCall && $this->setsNoCache($n, $scope),
         );
         if (!$call instanceof MethodCall || !$call->name instanceof Node\Identifier) {
             return [];
@@ -70,14 +80,17 @@ final class NoCacheHeadersRule implements Rule
         ];
     }
 
-    private function setsNoCache(MethodCall $call): bool
+    private function setsNoCache(MethodCall $call, Scope $scope): bool
     {
         $name = $call->name instanceof Node\Identifier ? $call->name->toLowerString() : '';
         if ($name === 'setnocacheheaders' || $name === 'setprivateheaders') {
             // A controller's own helper with such a name is not the response; what it sets is reported inside it.
             return !($call->var instanceof Node\Expr\Variable && $call->var->name === 'this');
         }
-        $args = $call->getArgs();
+        if ($call->isFirstClassCallable()) {
+            return false;
+        }
+        $args = CallArgs::of($call);
         $header = $args[0]->value ?? null;
         if ($name !== 'setheader'
             || !$header instanceof Node\Scalar\String_
@@ -86,11 +99,97 @@ final class NoCacheHeadersRule implements Rule
         ) {
             return false;
         }
+        if ($this->isBlockOnly($scope->getType($call->var))) {
+            return false;
+        }
         $value = $args[1]->value ?? null;
+        if ($value === null) {
+            return true;
+        }
+        // A computed value may disable caching. Its literal parts tell when they can: a value that says
+        // no-cache, no-store or private does, and one built as "public, max-age=%d", whose other parts can
+        // only be numbers, asks for caching.
+        [$literals, $numbersOnly] = $this->parts($value, $scope);
+        $literal = implode(' ', $literals);
+        if (preg_match('/no-cache|no-store|private/i', $literal) === 1) {
+            return true;
+        }
 
-        // A computed value may disable caching; a literal one only when it says so.
-        return !$value instanceof Node\Scalar\String_
-            || preg_match('/no-cache|no-store|private/i', $value->value) === 1;
+        return !$value instanceof Node\Scalar\String_ && !($numbersOnly && preg_match('/public|max-age/i', $literal) === 1);
+    }
+
+    /**
+     * Whether every object the receiver can be is a block, as with LayoutInterface::getBlock(), which
+     * returns BlockInterface|bool. A part of unknown type may be the response.
+     */
+    private function isBlockOnly(Type $receiver): bool
+    {
+        $blocks = 0;
+        foreach (TypeUtils::flattenTypes($receiver) as $part) {
+            if ($part->isScalar()->yes() || $part->isNull()->yes()) {
+                continue;
+            }
+            $classes = $part->getObjectClassNames();
+            if ($classes === [] || array_filter($classes, fn (string $class): bool => !$this->isBlock($class)) !== []) {
+                return false;
+            }
+            ++$blocks;
+        }
+
+        return $blocks > 0;
+    }
+
+    private function isBlock(string $class): bool
+    {
+        return $this->reflectionProvider->hasClass($class) && $this->reflectionProvider->getClass($class)->is(self::BLOCK);
+    }
+
+    /**
+     * The string literals that a header value is built from, by concatenation, interpolation or as the
+     * format of sprintf(), and whether every other part can only be a number: an int, or a sprintf()
+     * conversion other than %s.
+     *
+     * @return array{list<string>, bool}
+     */
+    private function parts(Node\Expr $value, Scope $scope): array
+    {
+        if ($value instanceof Node\Scalar\String_) {
+            return [[$value->value], true];
+        }
+        if ($value instanceof Node\Expr\BinaryOp\Concat) {
+            [$left, $leftNumbers] = $this->parts($value->left, $scope);
+            [$right, $rightNumbers] = $this->parts($value->right, $scope);
+
+            return [[...$left, ...$right], $leftNumbers && $rightNumbers];
+        }
+        if ($value instanceof Node\Expr\FuncCall && $value->name instanceof Node\Name && $value->name->toLowerString() === 'sprintf'
+            && !$value->isFirstClassCallable() && (CallArgs::of($value)[0]->value ?? null) instanceof Node\Scalar\String_
+        ) {
+            $format = CallArgs::of($value)[0]->value->value;
+            preg_match_all('/%(?:\d+\$)?[-+ 0]*(?:\'.)?\d*(?:\.\d+)?([a-zA-Z%])/', $format, $conversions);
+
+            return [[$format], !in_array('s', $conversions[1], true)];
+        }
+        if ($value instanceof Node\Scalar) {
+            // "public, max-age={$ttl}": the literal parts of an interpolated string, which php-parser 4 and 5
+            // name differently, and its embedded expressions.
+            $literals = [];
+            $numbers = true;
+            foreach ($value->getSubNodeNames() as $name) {
+                foreach (is_array($value->$name) ? $value->$name : [] as $part) {
+                    // In php-parser 4 a string part is a Scalar too, so it is tested first.
+                    if (is_object($part) && property_exists($part, 'value') && is_string($part->value)) {
+                        $literals[] = $part->value;
+                    } elseif ($part instanceof Node\Expr) {
+                        $numbers = $numbers && $scope->getType($part)->isInteger()->yes();
+                    }
+                }
+            }
+
+            return [$literals, $numbers];
+        }
+
+        return [[], $scope->getType($value)->isInteger()->yes()];
     }
 
     private function servesCacheableRequests(ClassReflection $class): bool
