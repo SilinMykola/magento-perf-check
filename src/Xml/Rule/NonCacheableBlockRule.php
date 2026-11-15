@@ -74,6 +74,10 @@ final class NonCacheableBlockRule implements XmlRule
         'mailchimp_cart_loadquote', // Mailchimp: a cart restored from an email link
         'blog_non_cacheable', // Magefan Blog: post preview
         'hyvareactcheckout_reactcheckout_', // Hyvä React Checkout: the checkout page of the current quote (docs/calibration/round-20.md)
+        'bonlineco_checkout', // Bonlineco Checkout: a handle its observer adds to the checkout page only (docs/calibration/round-22.md)
+        'withdrawal_guest_view', // Zwernemann Withdrawal: one order of the guest whose email the session holds
+        'withdrawal_index_success', // the confirmation that reads the order from the customer session
+        'withdrawal_index_view', // the logged-in customer's own order
     ];
 
     /** @var list<string> */
