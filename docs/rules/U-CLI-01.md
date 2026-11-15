@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Severity | `error` (`magentoPerf.consoleCommandReturnType`) |
-| Status | experimental, off by default: [calibration round 7](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-7.md) found 9 findings, all correct (fewer than 10: insufficient data). Enable it with `enabled: true` in `magento-perf-check.neon` |
+| Status | default set, after [calibration round 21](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-21.md): 36 findings on the corpus and private stores, all correct |
 | Analyzer | PHPStan |
 | Upgrade rule | for Magento 2.4.9: runs when the installed version or `--target-version` is 2.4.9 or newer ([configuration](../configuration.md#upgrade-rules)) |
 | Protects | compatibility ([ADR 8](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/adr/0008-scope-beyond-performance.md)) |

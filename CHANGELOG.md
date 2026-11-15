@@ -6,6 +6,10 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+### Changed
+
+- U-CLI-01 joins the default set at `error` after [calibration round 21](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-21.md): with the findings of rounds 7 and 20 and of five private stores, 36 graded findings, all correct and all mattering. **This can change a CI result:** on a project on Magento 2.4.9 or later, or with `--target-version=2.4.9` or later, a console command whose `execute()` has no `int` return type is now reported without configuration.
+
 ### Fixed
 
 - P-FPC-02 (experimental) no longer reports a call on a backend session (`Magento\Backend\Model\Session`, `Session\Quote`, `Auth\Session` or a subtype), such as an admin payment form outside `Block\Adminhtml` makes: Magento core sets their customer and quote only while an order is created in the admin. On the calibration corpus this removes 9 findings in the Packagist modules, all graded false before.

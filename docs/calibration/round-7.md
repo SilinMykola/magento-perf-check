@@ -22,7 +22,7 @@ This round measures U-CLI-01, the first upgrade rule (SPEC milestone M7). The ve
 - `ScandiPWA\PersistedQuery\Console\Command\PersistedQueryFlushCommand`;
 - `Sivaschenko\CleanMedia\Command\CatalogMedia`.
 
-Each declares `execute()` with no return type in a class that extends Symfony's `Command`, and each module registers it in the `commands` argument of `CommandList` in its `di.xml`, checked on 2026-11-10. Loading the Snowdog class on the 2.4.9 corpus gives `PHP Fatal error: Declaration of ...::execute(...) must be compatible with Symfony\Component\Console\Command\Command::execute(...): int`; the other eight have the same declaration. All of these modules are the newest versions whose requirements allow 2.4.9.
+Each declares `execute()` with no return type in a class that extends Symfony's `Command`, and each module registers it in the `commands` argument of `CommandList` in its `di.xml`, checked on 2026-11-10; MageMojo's `CronCommand` instead replaces core's `Magento\Cron\Console\Command\CronCommand` through a `<preference>`, and Magento_Cron registers that command (noted in [round 21](round-21.md)). Loading the Snowdog class on the 2.4.9 corpus gives `PHP Fatal error: Declaration of ...::execute(...) must be compatible with Symfony\Component\Console\Command\Command::execute(...): int`; the other eight have the same declaration. All of these modules are the newest versions whose requirements allow 2.4.9.
 
 A first run also reported `MagentoHackathon\Composer\Magento\Command\DeployCommand` in the core's `magento/magento-composer-installer`. That package is a Composer plugin, which `bin/magento` does not load, and the plugin does not register that class as a Composer command either. The rule now leaves Composer plugins out, as P-DI-02 does.
 
