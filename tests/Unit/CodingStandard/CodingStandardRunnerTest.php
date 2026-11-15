@@ -274,6 +274,35 @@ final class CodingStandardRunnerTest extends TestCase
         self::assertStringContainsString('coding standard is not installed', $notices[0]->message);
     }
 
+    public function testDeprecationsDoNotHideTheErrorOfPhpcs(): void
+    {
+        $stderr = str_repeat("PHP Deprecated:  Implicitly marking parameter \$config as nullable is deprecated\n\nDeprecated: the same\n\n", 3)
+            . "PHP Parse error:  syntax error, unexpected token \"{\" in Config.php on line 420\n";
+        $this->fakeVendor([
+            CodingStandardRunner::STANDARD . '/Sniffs/Performance/ForeachArrayMergeSniff.php' => "<?php\n",
+            CodingStandardRunner::PHPCS => "<?php\nfwrite(STDERR, " . var_export($stderr, true) . ");\nexit(255);\n",
+        ]);
+
+        [, $notices] = $this->runSniffs(['S-PERF-01']);
+
+        self::assertCount(1, $notices);
+        self::assertStringContainsString('PHP Parse error:  syntax error', $notices[0]->message);
+        self::assertStringNotContainsString('Deprecated', $notices[0]->message);
+    }
+
+    public function testErrorOfPhpcsOnStdoutAfterOnlyDeprecations(): void
+    {
+        $this->fakeVendor([
+            CodingStandardRunner::STANDARD . '/Sniffs/Performance/ForeachArrayMergeSniff.php' => "<?php\n",
+            CodingStandardRunner::PHPCS => "<?php\nfwrite(STDERR, \"PHP Deprecated:  old code\\n\");\necho 'ERROR: Referenced sniff does not exist';\nexit(3);\n",
+        ]);
+
+        [, $notices] = $this->runSniffs(['S-PERF-01']);
+
+        self::assertCount(1, $notices);
+        self::assertStringContainsString('Referenced sniff does not exist', $notices[0]->message);
+    }
+
     public function testInternalPhpcsErrorIsANotice(): void
     {
         $report = json_encode(['files' => [$this->project . '/app/code/Acme/Demo/Model/Export.php' => ['messages' => [

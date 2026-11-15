@@ -113,7 +113,14 @@ final class CodingStandardRunner
 
         $report = json_decode($stdout, true);
         if (!is_array($report) || !is_array($report['files'] ?? null)) {
-            $output = implode("\n", array_slice(explode("\n", trim($stderr !== '' ? $stderr : $stdout)), 0, 5));
+            // Deprecation notices of an older vendor/ on a newer PHP come first and would hide the error that matters:
+            // stderr without them, else what phpcs printed itself, else stderr as it is.
+            $meaningful = static fn (string $text): array => array_values(array_filter(
+                array_map('rtrim', explode("\n", $text)),
+                static fn (string $line): bool => trim($line) !== '' && preg_match('/^(PHP )?Deprecated:/', $line) !== 1,
+            ));
+            $lines = $meaningful($stderr) ?: $meaningful($stdout) ?: explode("\n", trim($stderr));
+            $output = implode("\n", array_slice($lines, 0, 5));
 
             return [[], [...$notices, $this->notice(trim(sprintf("phpcs did not return a JSON report, so %s did not run.\n%s", implode(', ', $ruleIds), $output)))]];
         }
