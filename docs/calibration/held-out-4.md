@@ -160,6 +160,25 @@ Effect of these changes on every part of the corpus, with all rules on and the r
 
 No finding was added. Of the removed ones, only the github2 ones were graded, all as false here; none is in an earlier graded sample.
 
+## The findings left out of the sample
+
+After the changes above, the default set reports 181 findings on this part. The 83 that the sample did not draw were graded later the same day, all of them, in the same way and by graders who did not write the rules, against the run of commit e4a1cc9:
+
+| Rule | Findings | TP | TP-low | FP |
+|---|---|---|---|---|
+| P-DI-01 | 47 | 2 | 45 | 0 |
+| P-DI-06 | 6 | 0 | 6 | 0 |
+| P-LOOP-01 | 20 | 3 | 15 | 2 |
+| P-LOOP-03 | 10 | 0 | 10 | 0 |
+| **All** | **83** | **5** | **76** | **2** |
+
+81 of 83 verdicts are correct (98 %) and 5 of those 81 matter in practice: the base class of five flat-rate carriers and a quote totals collector, built on every rate or totals collection, GraphQL and REST included, where they start a session nothing else needs (P-DI-01); and one provider of the blog's category, tag and author pages and two GraphQL resolvers that load posts, categories or tags one by one (P-LOOP-01). Both false positives are P-LOOP-01 and stay reported; they are listed under the rule's known false positives:
+
+- A third-party repository whose `get()` reads a status file once and keeps it in memory: the rule takes a repository by its name and cannot tell that this one does not query the database.
+- A product loaded under a condition that only one option of a quote item meets, followed by `break`, inside a `try` with an empty `catch`: when the load throws, the loop goes on, so the rule cannot rule out a second call.
+
+With the sample, every one of the 187 findings that the default set reported on this part before the changes is graded: 104 in the sample, of which 6 false ones were removed, and 83 here. Together 176 of 187 are correct (94 %).
+
 ## Limitations
 
 - 100 modules, picked by stars, and one grading of each finding. A verdict can miss a caller outside the files read.
@@ -361,3 +380,108 @@ No finding was added. Of the removed ones, only the github2 ones were graded, al
 | app/code/Adyen/ExpressCheckout/view/frontend/layout/default.xml:4 | TP | Adds Adyen's 137 KB `adyen.css` as a blocking stylesheet on every storefront page, while the express buttons render only on the product page and the cart. |
 | app/code/Msp/OwlCarousel2/view/frontend/layout/default.xml:3 | TP | Adds `owl.carousel.min.css` to every page although only pages that start a carousel need it. |
 | app/code/RicardoMartins/PagSeguro/view/frontend/layout/default_head_blocks.xml:4 | TP | `pagseguro.css` styles only checkout payment fields, yet every storefront page loads it. |
+
+## Grading tables of the findings left out of the sample
+
+### P-DI-01
+
+| Location | Verdict | Reason |
+|---|---|---|
+| app/code/Adyen/ExpressCheckout/Block/Buttons/AbstractButton.php:123 | TP-low | Checkout session injected without Proxy into express-button blocks rendered on frontend product/cart pages, where the ContextPlugin already starts the session on a cache miss. |
+| app/code/Adyen/ExpressCheckout/CustomerData/AdyenPaymentMethods.php:38 | TP-low | Section source built only during customer/section/load, a frontend action that already has the session started. |
+| app/code/Adyen/ExpressCheckout/Model/ExpressCancel.php:19 | TP-low | REST service (/V1/adyen/express/cancel/mine) starts the checkout session on creation but uses it only conditionally; rarely called path. |
+| app/code/Adyen/ExpressCheckout/Model/Ui/AdyenExpressConfigProvider.php:51 | TP-low | Checkout config provider built on the checkout page, which needs the session anyway. |
+| app/code/Adyen/ExpressCheckout/Observer/ReinstateQuote.php:42 | TP-low | Observer on checkout_onepage_controller_success_action; the success action needs the checkout session anyway. |
+| app/code/Adyen/ExpressCheckout/Plugin/Checkout/Controller/Cart/Add.php:36 | TP-low | Plugin on the cart add controller, which runs with the session already started. |
+| app/code/Adyen/ExpressCheckout/Plugin/CustomerData/Cart.php:58 | TP-low | Plugin on the cart customer-data section, only built during section load where the session is started. |
+| app/code/Backendorf/Installment/Block/AllInstallments.php:49 | TP-low | Product view block (catalog_product_view, created by a price plugin) on frontend pages where the session is already started on a cache miss. |
+| app/code/Bonlineco/Checkout/Observer/ValidateCheckoutAccess.php:29 | TP-low | Observer on controller_action_predispatch_checkout_index_index; checkout page needs the session anyway. |
+| app/code/Bonlineco/Checkout/ViewModel/CheckoutData.php:38 | TP-low | View model used only in the checkout layout, where the session is needed anyway. |
+| app/code/Fc/CustomHandles/Observer/AddHandles.php:47 | TP-low | Frontend layout_load_before observer runs only on cache-miss page renders after the ContextPlugin has started the session. |
+| app/code/Gaiterjones/BuyXGetY/Helper/Data.php:24 | TP-low | Helper used by models triggered on cart add/save frontend events, where the session is already active and getQuote is read. |
+| app/code/GalacticLabs/CustomerGroupPaymentFilters/Observer/PaymentMethodAvailable.php:18 | TP-low | payment_method_is_active observer reads the customer session first thing in execute, so a Proxy would gain nothing on the payment-list path. |
+| app/code/Hevelop/InvoiceRequest/Observer/SaveDataToOrderObserver.php:30 | TP-low | sales_order_place_before observer immediately calls checkoutSession->getQuote(); once per order placement. |
+| app/code/IMI/FriendlyCaptcha/Model/Provider/Failure/RedirectUrl/BeforeAuthUrlProvider.php:33 | TP-low | Frontend captcha failure redirect provider built on login/auth form posts, where the session is active. |
+| app/code/JetRails/Cloudflare/Helper/Adminhtml/Data.php:50 | TP-low | Admin helper used by admin controllers/blocks and API models; admin session already started (CLI does not start sessions). |
+| app/code/MagePal/CheckoutSuccessMiscScript/Block/Checkout/Success.php:54 | TP-low | Block only on checkout_onepage_success, which needs the checkout session. |
+| app/code/Magefan/AutoRelatedProduct/Block/Adminhtml/TmpInfo.php:46 | TP-low | Admin block in adminhtml default layout; admin session is always started. |
+| app/code/Magefan/FacebookPixel/Block/Pixel/InitiateCheckout.php:48 | TP-low | Pixel block only on checkout_index_index layouts, where the session is needed. |
+| app/code/Magefan/FacebookPixel/Block/Pixel/Purchase.php:47 | TP-low | Pixel block only on checkout success layouts, where the session is needed. |
+| app/code/Magefan/Notifications/Observer/Controller/ActionPredispatch.php:60 | TP-low | adminhtml controller_action_predispatch observer; admin auth session is already started. |
+| app/code/Mageplaza/Multiflatrates/Model/Carrier/AbstractCarrier.php:104 | TP | Five flat-rate carriers built on every shipping rate collection (storefront, REST, GraphQL) start the backend quote session, which is read only in the admin area. |
+| app/code/Mbissonho/RememberAdminLastPage/Model/Auth/CompletedAdminAuthentication.php:33 | TP-low | Admin login helper; admin auth session is needed there anyway. |
+| app/code/Mbissonho/RememberAdminLastPage/Plugin/Backend/ResumeLastPageOnDashboard.php:54 | TP-low | adminhtml-only plugin; admin auth session is always started. |
+| app/code/O2TI/SigepWebCarrier/Block/Adminhtml/Plp/Edit/Button/GetDeclaration.php:47 | TP-low | PlpSession extends SessionManager; admin UI button provider, admin session already active. |
+| app/code/O2TI/SigepWebCarrier/Block/Adminhtml/Plp/Edit/Button/GetShippingReportTotals.php:47 | TP-low | PlpSession extends SessionManager; admin UI button provider, admin session already active. |
+| app/code/O2TI/SigepWebCarrier/Ui/Component/Listing/DataProvider/PlpOrder.php:43 | TP-low | PlpSession extends SessionManager; admin listing data provider, admin session already active. |
+| app/code/PagBank/PaymentMagento/Block/Sales/Order/Success.php:56 | TP-low | Block only on checkout_onepage_success, which needs the checkout session. |
+| app/code/PagBank/PaymentMagento/Model/Adminhtml/Source/PaymentGroup.php:44 | TP-low | Admin system config fieldset frontend_model; admin session always active. |
+| app/code/PagBank/PaymentMagento/Model/Quote/Address/Total/PagbankInterest.php:51 | TP | Quote totals collector built on every totals collection (storefront, REST, GraphQL, admin) injects a checkout session it never uses, starting a session where nothing else would. |
+| app/code/PixelOpen/Plausible/Plugin/GoalCart.php:26 | TP-low | Plugin on the cart index controller; built with the action, session already started. |
+| app/code/PixelOpen/Plausible/Plugin/GoalOrder.php:33 | TP-low | Plugin on the checkout success controller; session already started. |
+| app/code/RicardoMartins/PagSeguro/Block/Adminhtml/Payment/Info/Actions.php:22 | TP-low | Admin block on sales_order_view; admin session always active. |
+| app/code/RicardoMartins/PagSeguro/Block/Payment/Info.php:15 | TP-low | Payment info block rendered on order views, success page and emails (email send under cron does not start a session); low cost. |
+| app/code/RicardoMartins/PagSeguro/Block/Payment/InfoCc.php:26 | TP-low | Payment info block rendered on order views and emails; low-frequency paths where the session is active or not startable. |
+| app/code/RicardoMartins/PagSeguro/Helper/Cookie.php:32 | TP-low | SessionManager used only for cookie path/domain; built with the Redirect method and an Ajax controller, alongside other session dependencies. |
+| app/code/RicardoMartins/PagSeguro/Model/Method/Cc.php:75 | TP-low | Payment method model starts the admin auth session on creation, but isAvailable reads it at once on the payment-list path, so a Proxy gains little there. |
+| app/code/RicardoMartins/PagSeguro/Model/Method/Redirect.php:87 | TP-low | Payment method model starts the admin auth session on creation; isAvailable reads it at once on the payment-list path. |
+| app/code/RicardoMartins/PagSeguro/Model/Method/Tef.php:71 | TP-low | Payment method model starts the admin auth session on creation; isAvailable reads it at once on the payment-list path. |
+| app/code/RicardoMartins/PagSeguro/Model/Payment.php:69 | TP-low | Payment method model starts the admin auth session on creation; the session is read in its availability check on the same path. |
+| app/code/RicardoMartins/PagSeguro/Observer/CreditMemoObserver.php:22 | TP-low | adminhtml-only observer; admin auth session always active. |
+| app/code/RohitKundale/OrderComment/Plugin/Model/Checkout/PaymentInformationManagement.php:73 | TP-low | Plugin on PaymentInformationManagement (REST checkout) that reads/writes the checkout session in its methods anyway; once per order. |
+| app/code/Yireo/NewRelic2/Model/Observer.php:76 | TP-low | Abstract base used only by controller_action_pre/postdispatch observers (frontend/admin actions with a started session); the model_save_after/delete/cron observers have own constructors without the session. |
+| app/code/Yireo/SyncGraphQlSessionWithFrontend/Plugin/AddCartTokenToCartSection.php:56 | TP-low | Frontend plugin on the cart customer-data section, built during section load where the session is started. |
+| app/code/Zwernemann/Withdrawal/Block/Withdrawal/Success.php:20 | TP-low | Block only on the withdrawal success page, a frontend action with a started session. |
+| app/code/Zwernemann/Withdrawal/Block/Withdrawal/View.php:37 | TP-low | Generic session in a block on withdrawal view pages (frontend and admin) where a session is already started. |
+| app/code/Zwernemann/Withdrawal/Block/Withdrawal/View.php:38 | TP-low | Customer session in a block on withdrawal view pages, where a session is already started. |
+
+### P-DI-06
+
+| Location | Verdict | Reason |
+|---|---|---|
+| app/code/MagePsycho/StorePricing/Model/Preference/Catalog/Product/Attribute/Backend/Startdate.php:25 | TP-low | setScope() calls ObjectManager::getInstance()->create() for a helper outside any allowed form; runs once per attribute backend setup, so cost is small. |
+| app/code/Magefan/FacebookPixel/Block/Pixel/PurchaseGetOrderFromRequest.php:35 | TP-low | getOrderFactory() returns ObjectManager::getInstance()->get(OrderFactory) without keeping it, not an allowed lazy getter; called once per success page. |
+| app/code/Magefan/ProductLabel/Controller/Adminhtml/Rule/Save.php:48 | TP-low | prepareConditions() creates a RuleFactory through the object manager instead of injecting it; admin save action. |
+| app/code/Magefan/ProductLabel/Model/ProductLabelAction.php:144 | TP-low | Constructor fetches an optional dependency through the object manager when a module is enabled, not the documented null-parameter fallback; one call per object. |
+| app/code/Magentiz/SplitDb/Adapter/Pdo/Mysql.php:69 | TP-low | Constructor creates the read connection with ObjectManager::getInstance()->create() instead of an injected factory; once per adapter instance. |
+| app/code/Magiccart/Magicslider/Block/Adminhtml/Magicslider/Helper/Form/Gallery.php:25 | TP-low | getDataObject() fetches a product collection factory through the object manager; admin form block. |
+
+### P-LOOP-01
+
+| Location | Verdict | Reason |
+|---|---|---|
+| app/code/Angeo/LlmsTxt/Model/Pipeline/SinglePassGenerator.php:371 | FP | `get()` of the module's `Model/Repository/GenerationStatusRepository.php` goes through its private `load()`, which reads a JSON file under `var/` once and keeps it in `$this->data`, so no database query runs per format. |
+| app/code/ElNino/ProductLinksNavigator/Helper/ParentProductHelper.php:64 | TP-low | getById() per parent id in array_map loads each parent product (distinct ids, not cached); admin product edit tab with a short parent list. |
+| app/code/ElNino/ProductLinksNavigator/Helper/ProductUrlGenerator.php:88 | TP-low | getById($productId, false, $storeId) per store loads the product once per store view (cache key includes store); admin product form and grid column only. |
+| app/code/Gaiterjones/BuyXGetY/Model/BuyXGetY.php:183 | TP-low | ProductRepository::get() per configured X SKU on cart save loads each distinct product; the list is a small admin-configured rule set. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Author/MassEnable.php:35 | TP-low | getById() loads each selected author again though the collection already has it; admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Category/InlineEdit.php:54 | TP-low | getById() per edited row loads each category (plus link queries); admin inline edit of a grid page. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Category/MassDisable.php:35 | TP-low | getById() reloads each selected category with its link queries; admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Category/MassEnable.php:35 | TP-low | getById() reloads each selected category with its link queries; admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Post/MassEnable.php:36 | TP-low | getById() reloads each selected post plus five link queries; admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Tag/InlineEdit.php:54 | TP-low | getById() per edited row loads each tag (plus link queries); admin inline edit. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Tag/MassDisable.php:35 | TP-low | getById() reloads each selected tag with its link queries; admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Tag/MassEnable.php:35 | TP-low | getById() reloads each selected tag with its link queries; admin mass action. |
+| app/code/MageOS/Blog/Model/Post/PostsByAssignmentProvider.php:147 | TP | hydrate() loads each post by id; `Model/PostRepository::getById()` keeps nothing between calls (one load plus five link queries each) for storefront category, tag and author pages with up to 50 posts. |
+| app/code/MageOS/Blog/Model/RelatedPostsProvider/AlgorithmicLoader.php:103 | TP-low | Each related post id is loaded with getById() (load plus link queries), but the list is capped by the related-posts limit (default 3-5). |
+| app/code/MageOS/Blog/Model/RelatedPostsProvider/ManualRelationLoader.php:60 | TP-low | Each manually related post is loaded with getById(), but the select is limited to the related-posts limit (default 3-5). |
+| app/code/MageOS/Blog/Model/Resolver/Post/CategoriesResolver.php:40 | TP | GraphQL field resolver loads every category of a post through `Model/CategoryRepository::getById()`, which keeps nothing between calls (load plus link queries), multiplied by every post in a posts list query. |
+| app/code/MageOS/Blog/Model/Resolver/Post/TagsResolver.php:40 | TP | GraphQL field resolver loads every tag of a post through `Model/TagRepository::getById()`, which keeps nothing between calls (load plus link queries), multiplied by every post in a posts list query. |
+| app/code/Magefan/FacebookPixel/Model/AbstractPixel.php:93 | TP-low | CategoryRepository::get() per path id loads each ancestor category not yet cached; path depth is a handful, once per product page. |
+| app/code/Magefan/FacebookPixel/Model/AbstractPixel.php:130 | TP-low | CategoryRepository::get() per assigned category id loads each distinct category; storefront product page but usually a few categories and FPC-cached. |
+| app/code/Magefan/FacebookPixel/Model/Pixel/Cart/Content.php:57 | FP | getById() sits under `if ($option->getCode() === 'simple_product')` followed by break, and a quote item keeps at most one option per code ([`Quote\Item::addOption()`](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/app/code/Magento/Quote/Model/Quote/Item.php#L655-L661)), so it runs at most once per options loop (the per-cart-item cost is in the caller, P-LOOP-12 territory). |
+
+### P-LOOP-03
+
+| Location | Verdict | Reason |
+|---|---|---|
+| app/code/MageOS/Blog/Controller/Adminhtml/Author/MassDelete.php:35 | TP-low | deleteById() per selected author (load plus delete each); admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Author/MassDisable.php:37 | TP-low | save() per selected author; admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Category/MassDelete.php:35 | TP-low | deleteById() per selected category; admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Category/MassDisable.php:37 | TP-low | save() per selected category; admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Post/MassDelete.php:35 | TP-low | deleteById() per selected post; admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Post/MassEnable.php:38 | TP-low | save() per selected post; admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Tag/MassDisable.php:37 | TP-low | save() per selected tag; admin mass action. |
+| app/code/MageOS/Blog/Controller/Adminhtml/Tag/MassEnable.php:37 | TP-low | save() per selected tag; admin mass action. |
+| app/code/O2TI/SigepWebCarrier/Cron/DeleteEmptyPlps.php:73 | TP-low | deleteById() per empty PLP id; cron job. |
+| app/code/O2TI/SigepWebCarrier/Model/PlpRepository.php:203 | TP-low | PlpOrder resource save() per order id added to a PLP; admin controller and web API, one row per order. |

@@ -62,6 +62,8 @@ $product = $this->productRepository->getById($id);
 
 - `ProductRepository` caches products by id, so repeated calls with the same id within one request are cheap. The rule sees an argument that no loop changes, but not ids that repeat in a list.
 - A project preference that replaces one of those caching repositories with one that does not cache is not seen: the rule trusts the core implementation.
+- A third-party repository is taken by its name: one whose `get()` reads data it already keeps in memory or in a file, not the database, is still reported.
+- A call followed by `break` inside a `try` with an empty `catch` is reported: when the call throws, the loop goes on and may call again. When the condition around the call can match only one item, the call runs once.
 - Loops with a small, fixed bound (for example two or three iterations) cost little. Suppress with a reason.
 - The rule does not follow calls into other methods: a loop that calls a method which loads a model is reported by the experimental [P-LOOP-12](P-LOOP-12.md).
 
