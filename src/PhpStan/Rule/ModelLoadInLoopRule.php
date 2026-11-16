@@ -108,7 +108,8 @@ final class ModelLoadInLoopRule implements Rule
             return false;
         }
         foreach (CallArgs::of($node) as $arg) {
-            if ($arg->unpack || !self::sameInEveryIteration($arg->value, $writes)) {
+            // A named argument may be forceReload: true.
+            if ($arg->unpack || $arg->name !== null || !self::sameInEveryIteration($arg->value, $writes)) {
                 return false;
             }
         }

@@ -51,7 +51,7 @@ final class ImageWithoutDimensionsRule implements Rule
             // A stylesheet of the module serves every template of it, so its rules count only where the elements
             // they name around the image are around it in this template too.
             $rules ??= [
-                ...array_map(static fn (array $rule): array => [...$rule, 'ancestors' => true], self::cssRules(self::flatten(self::stylesheetsOf($scope->getFile())))),
+                ...array_map(static fn (array $rule): array => [...$rule, 'ancestors' => true], self::stylesheetRulesOf($scope->getFile())),
                 ...array_map(static fn (array $rule): array => [...$rule, 'ancestors' => false], self::cssRules((string) $markup?->styleSheet())),
             ];
             if (self::fixesBox([...$sized, ...self::cascade($attributes['class'] ?? '', $attributes['style'] ?? '', $rules, $ancestors === null ? null : ($ancestors[$offset] ?? []))])) {
@@ -67,15 +67,17 @@ final class ImageWithoutDimensionsRule implements Rule
         return $errors;
     }
 
-    /** @var array<string, string> stylesheet text by directory */
+    /** @var array<string, list<array{selectors: list<string>, declarations: array<string, string>}>> stylesheet rules by directory */
     private static array $stylesheets = [];
 
     /**
      * The CSS and LESS files that style a template: under web/css of its module's view/frontend and
      * view/base, or of the theme's module folder and the theme itself. Whether a layout loads a CSS file,
-     * or a theme compiles a LESS one, is not checked.
+     * or a theme compiles a LESS one, is not checked. Their rules, parsed once per directory.
+     *
+     * @return list<array{selectors: list<string>, declarations: array<string, string>}>
      */
-    private static function stylesheetsOf(string $template): string
+    private static function stylesheetRulesOf(string $template): array
     {
         $template = str_replace('\\', '/', $template);
         $directories = [];
@@ -86,12 +88,12 @@ final class ImageWithoutDimensionsRule implements Rule
         }
         // A Hyvä theme builds its styles with Tailwind and does not compile the LESS of a module.
         $hyva = preg_match('#/hyva/|hyva[^/]*\.phtml$#i', $template) === 1;
-        $css = '';
+        $rules = [];
         foreach ($directories as $directory) {
-            $css .= self::$stylesheets[$directory . ($hyva ? '#css' : '')] ??= self::readStylesheets($directory, $hyva);
+            $rules = [...$rules, ...(self::$stylesheets[$directory . ($hyva ? '#css' : '')] ??= self::cssRules(self::flatten(self::readStylesheets($directory, $hyva))))];
         }
 
-        return $css;
+        return $rules;
     }
 
     private static function readStylesheets(string $directory, bool $cssOnly): string
@@ -231,8 +233,10 @@ final class ImageWithoutDimensionsRule implements Rule
     {
         $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
         do {
-            $css = (string) preg_replace('/@[^{};]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/', '', $css, -1, $count);
-        } while ($count > 0);
+            // On a PCRE limit, as with an at-rule of tens of thousands of rules, flatten() drops the at-rules instead.
+            $stripped = preg_replace('/@[^{};]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/', '', $css, -1, $count);
+            $css = $stripped ?? self::flatten($css);
+        } while ($stripped !== null && $count > 0);
         $rules = [];
         if (preg_match_all('/([^{}]+)\{([^{}]*)\}/', $css, $matches, PREG_SET_ORDER) > 0) {
             foreach ($matches as [, $selectors, $declarations]) {
@@ -246,7 +250,8 @@ final class ImageWithoutDimensionsRule implements Rule
     /**
      * The declarations that reach an image with these classes, in source order, then its style attribute. A rule
      * counts when a selector ends in "img" or in a compound of classes the image has, with or without "img", such
-     * as ".faq img.group-image"; the ancestors are not checked, pseudo-classes and attribute selectors do not
+     * as ".faq img.group-image". A stylesheet's rule counts only when the elements it names before the image are
+     * around it; a template's own rule needs no such elements. Pseudo-classes, ids and attribute selectors do not
      * count, and !important and specificity are not followed: a later rule wins.
      *
      * @param list<array{selectors: list<string>, declarations: array<string, string>, ancestors: bool}> $rules
@@ -264,7 +269,7 @@ final class ImageWithoutDimensionsRule implements Rule
                 $last = (string) array_pop($parts);
                 if ((strcasecmp($last, 'img') === 0 || (preg_match('/^(?:img)?((?:\.[\w-]+)+)$/i', $last, $m) === 1
                     && array_diff(explode('.', ltrim($m[1], '.')), $classes) === []))
-                    && (!$rule['ancestors'] || self::surrounds($parts, $around))
+                    && ($rule['ancestors'] ? self::surrounds($parts, $around) : self::onlyTagsAndClasses($parts))
                 ) {
                     $declarations = array_merge($declarations, $rule['declarations']);
                     break;
@@ -273,6 +278,24 @@ final class ImageWithoutDimensionsRule implements Rule
         }
 
         return array_merge($declarations, self::declarations($style));
+    }
+
+    /**
+     * Whether every compound is a tag name with classes, or "*": one with a pseudo-class, an id or an attribute, as in
+     * "a:hover img", applies only sometimes. The template's own rules are not matched against the elements around
+     * the image, but these still do not count.
+     *
+     * @param list<string> $compounds
+     */
+    private static function onlyTagsAndClasses(array $compounds): bool
+    {
+        foreach ($compounds as $compound) {
+            if (preg_match('/^(?:\*|(?:[a-z][\w-]*)?(?:\.[\w-]+)*)$/i', $compound) !== 1) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

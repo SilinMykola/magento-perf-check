@@ -534,6 +534,30 @@ final class ChangedElsewhere
             $this->productRepository->getById($n); // reported: a closure changes it by reference
         }
     }
+
+    /**
+     * @param list<int> $ids
+     * @param list<string> $stores
+     */
+    public function byCallback(array $ids, array $stores): void
+    {
+        array_map(function (int $id) use ($stores): void {
+            foreach ($stores as $store) {
+                $this->productRepository->getById($id); // reported: array_map() passes another id each time
+            }
+        }, $ids);
+        array_map(fn (int $id) => $this->productRepository->get('sku-1'), $ids); // not reported: the same SKU each time, which the repository keeps
+    }
+
+    /**
+     * @param list<string> $stores
+     */
+    public function byNamedForceReload(string $sku, array $stores): void
+    {
+        foreach ($stores as $store) {
+            $this->productRepository->get($sku, forceReload: true); // reported: it loads again every time
+        }
+    }
 }
 
 final class FirstClassCallables

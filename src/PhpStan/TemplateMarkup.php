@@ -185,8 +185,9 @@ final class TemplateMarkup
         $balance = [];
         preg_match_all('/<(\/?)([a-zA-Z][\w-]*)(?![\w-])((?:"[^"]*"|\'[^\']*\'|[^>"\'])*)>/', $this->html, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
         foreach ($matches as [[$text, $at], [$closing], [$tag], [$attributes]]) {
+            // The <template> tag itself is skipped too: its closing tag is inside the range.
             foreach ($inert as [$from, $to]) {
-                if ($at > $from && $at < $to) {
+                if ($at >= $from && $at < $to) {
                     continue 2;
                 }
             }

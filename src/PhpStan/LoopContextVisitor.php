@@ -27,8 +27,9 @@ use PhpParser\NodeVisitorAbstract;
  * create() in that same iteration: in the call chain itself, or through a variable
  * assigned inside the loop body. One collection gets one mark: its first loading call.
  *
- * A method call inside foreach/for/while/do also gets LOOP_WRITES: the variables that the enclosing
- * loops, or a closure between them and the call, may change, so an argument made only of others has
+ * A method call inside foreach/for/while/do, or inside a callback that array_map() and the like call for
+ * each item, also gets LOOP_WRITES: the variables that the enclosing loops and callbacks, or a closure
+ * between them and the call, may change, so an argument made only of others has
  * the same value in every iteration. The key "*" stands for any variable: a loop that changes variables
  * it does not name, or one in a function that takes references, which may change a variable anywhere.
  */
@@ -130,7 +131,10 @@ final class LoopContextVisitor extends NodeVisitorAbstract
         if ($node instanceof Node\FunctionLike && !$node instanceof Expr\ArrowFunction) {
             $this->references[] = self::takesReferences($node);
         }
-        if (self::isLoop($node) || ($this->writes !== [] && ($node instanceof Expr\Closure || $node instanceof Expr\ArrowFunction))) {
+        // A callback that array_map() and the like call per item changes its parameters like a loop does.
+        if (self::isLoop($node) || (($this->writes !== [] || $node->getAttribute(self::ITERATION_SCOPE) === true)
+            && ($node instanceof Expr\Closure || $node instanceof Expr\ArrowFunction))
+        ) {
             $written = self::writtenVariables($node);
             if (end($this->references) === true) {
                 $written['*'] = true;
@@ -232,7 +236,7 @@ final class LoopContextVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * Whether a closure pushed a set on entry. It did when a loop encloses it, which leaving the
+     * Whether a closure pushed a set on entry. It did when a loop encloses it or it is a callback called for each item, which leaving the
      * closure cannot see any more; the set on top then is the closure's own.
      */
     private function closesWrites(Expr\Closure|Expr\ArrowFunction $closure): bool
