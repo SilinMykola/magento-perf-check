@@ -101,6 +101,10 @@ Effect of these changes on every part of the corpus, with all rules on and the r
 
 No finding was added, and none of the removed ones is in an earlier graded sample.
 
+## The findings left out of the sample
+
+The sample left out 8 of the 70 findings: all from P-DI-01, which had 20. They were graded on 2026-11-16 in the same way, against the run of commit e4a1cc9: 8 TP-low. Six classes are built only where the session is started anyway (checkout, cart, success and customer account pages), one search data provider reads the session at once, and one class built on every request injects only the cookie manager, which starts no session. Every one of the 70 findings is now graded: 66 correct (94 %). This part also has four U-CLI-01 findings, reported since that rule joined the default set; they were graded in [round 20](graded/round-20/U-CLI-01.md), all TP.
+
 ## Limitations
 
 - 50 modules, picked by stars, and one grading of each finding. A verdict can miss a caller outside the files read.
@@ -225,3 +229,18 @@ No finding was added, and none of the removed ones is in an earlier graded sampl
 | Location | Verdict | Reason |
 |---|---|---|
 | app/code/Bodak/CheckoutCustomForm/etc/events.xml:7 | TP-low | The observer does run after every order model load in all areas, but orders load only on checkout success, customer account, admin and API paths, not catalog pages, and the observer only copies five fields already on the order into extension attributes without a query. |
+
+## Grading table of the findings left out of the sample
+
+### P-DI-01
+
+| Location | Verdict | Reason |
+|---|---|---|
+| app/code/FriendsOfHyva/ReactCheckout/ViewModel/ReactCheckoutLocalStorage.php:39 | TP-low | No Proxy in the module's etc/*.xml, but the view model is only used in layout hyvareactcheckout_reactcheckout_index.xml (checkout page action, session started anyway) and reads both sessions at once. |
+| app/code/Magefan/GoogleTagManager/Block/DataLayer/Purchase.php:42 | TP-low | No Proxy in Magefan/GoogleTagManager/etc/di.xml, but the block sits only on checkout_onepage_success.xml and redsys_checkout_success.xml, frontend actions that need the checkout session for getLastRealOrder() anyway. |
+| app/code/Magefan/GoogleTagManager/Block/DataLayer/ViewCart.php:43 | TP-low | No Proxy in Magefan/GoogleTagManager/etc/di.xml, but the block sits only on checkout_cart_index.xml (cart action) and reads getQuote() when rendered. |
+| app/code/Magestat/FacebookPixel/Block/Checkout.php:63 | TP-low | No Proxy in the module's di.xml, but the block sits only on checkout_index_index.xml (checkout action, session already started) and reads the quote from the session. |
+| app/code/Magestat/SigninPhoneNumber/Block/Form/Edit.php:49 | TP-low | No Proxy in Magestat/SigninPhoneNumber/etc/di.xml or in vendor/magento/module-customer for the parent block; the block sits only on customer_account_edit.xml (cacheable=false account page, session needed anyway). |
+| app/code/Magestat/SigninPhoneNumber/Block/Form/Register.php:64 | TP-low | No Proxy in Magestat/SigninPhoneNumber/etc/di.xml or core di.xml for the parent block; the block sits only on customer_account_create.xml, a frontend action where ContextPlugin reads the customer session anyway. |
+| app/code/Siteation/DebugBar/Model/AccessKey.php:43 | TP-low | Guideline 9.10 holds and no cookie manager Proxy is in Siteation/DebugBar/etc/di.xml; AccessKey is built on every request via the eager RequestEligibility in HttpPlugin, but PhpCookieManager starts no session, so the cost is negligible. |
+| app/code/Swissup/SearchMysqlLegacy/Model/Adapter/Mysql/Dynamic/DataProvider.php:90 | TP-low | No Proxy in Swissup/SearchMysqlLegacy/etc/di.xml (only priceTableResolver configured); this search price data provider can also be built for GraphQL search, but getAggregations() reads getCustomerGroupId() at once, so a Proxy would start the session anyway. |
