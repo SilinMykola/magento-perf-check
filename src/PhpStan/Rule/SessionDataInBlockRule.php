@@ -5,16 +5,22 @@ declare(strict_types=1);
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
+use Silin\MagentoPerfCheck\PhpStan\ProjectIndexProvider;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
+use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
+use PHPStan\Type\ObjectType;
+use PHPStan\Type\Type;
 
 /**
  * P-FPC-02: a block or view model reads customer data from the session; on cacheable
- * pages that data is not there (or ends up in the cached page).
+ * pages that data is not there (or ends up in the cached page). A class that frontend layouts place only on
+ * pages that are never cached, such as the cart, the checkout or the customer account, is left out, unless a
+ * subclass of it is placed on a page that may be cached and runs the same code there.
  *
  * @implements Rule<MethodCall>
  */
@@ -29,13 +35,28 @@ final class SessionDataInBlockRule implements Rule
      */
     private const METHODS = ['getcustomer', 'getcustomerid', 'getquote'];
     private const SESSION = 'Magento\Framework\Session\SessionManagerInterface';
+    /**
+     * Magento core sets their customer and quote only while an order is created in the admin; on the storefront
+     * Session\Quote::getQuote() returns a new, empty quote.
+     */
+    private const BACKEND_SESSIONS = [
+        'Magento\Backend\Model\Session',
+        'Magento\Backend\Model\Session\Quote',
+        'Magento\Backend\Model\Auth\Session',
+    ];
     private const ABSTRACT_BLOCK = 'Magento\Framework\View\Element\AbstractBlock';
     private const VIEW_MODEL = 'Magento\Framework\View\Element\Block\ArgumentInterface';
     private const COLLECTION = 'Magento\Framework\Data\Collection';
 
     private readonly MagentoTypes $types;
 
-    public function __construct(ReflectionProvider $reflectionProvider)
+    /** @var ?list<string> classes placed on pages that may be cached */
+    private ?array $onCacheablePages = null;
+
+    /** @var array<string, bool> class => placed only on uncacheable pages */
+    private array $onlyOnUncacheable = [];
+
+    public function __construct(private readonly ReflectionProvider $reflectionProvider, private readonly ProjectIndexProvider $index)
     {
         $this->types = new MagentoTypes($reflectionProvider);
     }
@@ -58,8 +79,22 @@ final class SessionDataInBlockRule implements Rule
         if (!$frontendBlock && !$viewModel) {
             return [];
         }
-        $session = $this->types->subtypeOf($scope->getType($node->var), self::SESSION);
+        $receiver = $scope->getType($node->var);
+        $session = $this->types->subtypeOf($receiver, self::SESSION);
         if ($session === null) {
+            return [];
+        }
+        if ($this->isBackendSession($receiver)) {
+            return [];
+        }
+        // Of a union such as Session\Quote|Customer\Model\Session, name the class that may be a storefront session.
+        foreach ($receiver->getObjectClassNames() as $name) {
+            if (!$this->isBackendSession(new ObjectType($name))) {
+                $session = $name;
+                break;
+            }
+        }
+        if ($class !== null && $this->onlyOnUncacheablePages($class)) {
             return [];
         }
 
@@ -73,5 +108,37 @@ final class SessionDataInBlockRule implements Rule
                 $node->name->toString(),
             ))->identifier(self::IDENTIFIER)->build(),
         ];
+    }
+
+    private function isBackendSession(Type $type): bool
+    {
+        foreach (self::BACKEND_SESSIONS as $backend) {
+            if (MagentoTypes::isObjectOf($type, $backend)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function onlyOnUncacheablePages(ClassReflection $class): bool
+    {
+        return $this->onlyOnUncacheable[$class->getName()] ??= $this->decideOnlyOnUncacheable($class);
+    }
+
+    private function decideOnlyOnUncacheable(ClassReflection $class): bool
+    {
+        $index = $this->index->get();
+        if (!$index->isOnlyOnUncacheablePages($class->getName())) {
+            return false;
+        }
+        // A subclass on a cacheable page runs this code there; it may be outside the analyzed files.
+        foreach ($this->onCacheablePages ??= $index->classesOnCacheablePages() as $placed) {
+            if ($this->reflectionProvider->hasClass($placed) && $this->reflectionProvider->getClass($placed)->isSubclassOf($class->getName())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

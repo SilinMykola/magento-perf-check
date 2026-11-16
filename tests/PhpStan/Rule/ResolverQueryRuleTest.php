@@ -47,6 +47,8 @@ final class ResolverQueryRuleTest extends RuleTestCase
             [$message('Magento\Framework\Data\Collection\AbstractDb::load()', 'ProductInterface.brand_foreach_load'), 155],
             [$message('Magento\Catalog\Api\ProductRepositoryInterface::getById()', 'Shared.shared'), 196],
             [$message('Magento\Customer\Model\ResourceModel\Customer::load()', 'ProductInterface.brand_eav'), 223],
+            [$message('Magento\Quote\Api\CartRepositoryInterface::get()', 'ProductInterface.brand_cart'), 241],
+            [$message('Magento\Quote\Api\CartRepositoryInterface::get()', 'ProductInterface.brand_cart'), 242],
         ]);
     }
 }

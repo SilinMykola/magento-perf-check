@@ -158,7 +158,7 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
                 continue;
             }
             $property = self::cacheProperty($tested);
-            $dependency = $property !== null ? $this->storedInProperty($property, $if->stmts) : null;
+            $dependency = $property !== null ? $this->storedInProperty($property, $if->stmts, $stmts) : null;
             foreach ($dependency !== null ? self::dependencyRoots($dependency) : [] as $root) {
                 $root->setAttribute(self::FALLBACK, true);
             }
@@ -170,26 +170,32 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
      * or "$variable = <dependency>; $this->property = $variable".
      *
      * @param Node\Stmt[] $block
+     * @param Node\Stmt[] $method
      */
-    private function storedInProperty(string $property, array $block): ?Expr
+    private function storedInProperty(string $property, array $block, array $method): ?Expr
     {
         return $this->storedDependency(
             $block,
             static fn (Expr $expr): ?Expr => $expr instanceof Expr\Assign && self::cacheProperty($expr->var) === $property
                 ? $expr->expr : null,
             null,
+            $method,
         );
     }
 
     /**
      * The dependency that a lazy getter block stores. Comments aside, the block is one statement whose
      * stored value $storedValue picks out, or "$variable = <dependency>;" and then such a statement that
-     * stores $variable. With $variable null, any local variable will do.
+     * stores $variable. With $variable null, any local variable will do. A block may also keep the object
+     * manager itself in a local variable first: "$om = ObjectManager::getInstance();" and then a statement
+     * that stores "$om->get(...)" or "$om->create(...)", when the method uses that variable nowhere else; that dependency is
+     * returned as if it called getInstance() directly.
      *
      * @param Node\Stmt[] $block
      * @param callable(Expr): ?Expr $storedValue the value that an expression statement stores, or null
+     * @param Node\Stmt[] $method the whole method, where the variable holding the object manager may appear
      */
-    private function storedDependency(array $block, callable $storedValue, ?string $variable): ?Expr
+    private function storedDependency(array $block, callable $storedValue, ?string $variable, array $method): ?Expr
     {
         $work = array_values(array_filter($block, static fn (Node\Stmt $stmt): bool => !$stmt instanceof Stmt\Nop));
         $store = $work !== [] ? end($work) : null;
@@ -201,6 +207,16 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
             return $this->isDependency($value, []) ? $value : null;
         }
         $first = $work[0];
+        if ($value instanceof Expr\MethodCall && $value->var instanceof Expr\Variable && is_string($value->var->name)
+            && $first instanceof Stmt\Expression && $first->expr instanceof Expr\Assign
+            && $first->expr->var instanceof Expr\Variable && $first->expr->var->name === $value->var->name
+            && $this->looksLikeGetInstance($first->expr->expr)
+            && $value->name instanceof Node\Identifier && in_array($value->name->toLowerString(), ['get', 'create'], true)
+            // Closures count too: one that captures the object manager can ask it for more later.
+            && count((new NodeFinder())->find($method, static fn (Node $node): bool => $node instanceof Expr\Variable && $node->name === $value->var->name)) === 2
+        ) {
+            return new Expr\MethodCall($first->expr->expr, $value->name, $value->args);
+        }
         if (!$value instanceof Expr\Variable || !is_string($value->name) || ($variable !== null && $value->name !== $variable)
             || !$first instanceof Stmt\Expression || !$first->expr instanceof Expr\Assign
             || !$first->expr->var instanceof Expr\Variable || $first->expr->var->name !== $value->name
@@ -308,8 +324,9 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
         return $this->storedDependency(
             $block,
             static fn (Expr $expr): ?Expr => $expr instanceof Expr\MethodCall && self::dataKey($expr, 'setdata') === $key
-                ? $expr->getArgs()[1]->value : null,
+                ? CallArgs::of($expr)[1]->value : null,
             $variable ?? '',
+            $method,
         );
     }
 
@@ -323,7 +340,7 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
         ) {
             return null;
         }
-        $args = $expr->getArgs();
+        $args = CallArgs::of($expr);
         if (count($args) !== ($method === 'setdata' ? 2 : 1) || !$args[0]->value instanceof Node\Scalar\String_) {
             return null;
         }
@@ -490,14 +507,14 @@ final class ObjectManagerFallbackVisitor extends NodeVisitorAbstract
             $cond instanceof Expr\BooleanNot && $cond->expr instanceof Expr\Instanceof_ && ($cond->expr->class instanceof Node\Name || $cond->expr->class instanceof Expr\Variable)
                 => $cond->expr->expr,
             $cond instanceof Expr\BooleanNot && $cond->expr instanceof Expr\FuncCall && $cond->expr->name instanceof Node\Name
-                && $cond->expr->name->toLowerString() === 'is_object' && count($cond->expr->getArgs()) === 1
-                => $cond->expr->getArgs()[0]->value,
+                && $cond->expr->name->toLowerString() === 'is_object' && count(CallArgs::of($cond->expr)) === 1
+                => CallArgs::of($cond->expr)[0]->value,
             $cond instanceof Expr\BooleanNot => $cond->expr,
             $cond instanceof Expr\Empty_ => $cond->expr,
             $cond instanceof Expr\BinaryOp\Identical, $cond instanceof Expr\BinaryOp\Equal
                 => $this->isNull($cond->right) ? $cond->left : ($this->isNull($cond->left) ? $cond->right : null),
             $cond instanceof Expr\FuncCall && $cond->name instanceof Node\Name
-                && $cond->name->toLowerString() === 'is_null' && count($cond->getArgs()) === 1 => $cond->getArgs()[0]->value,
+                && $cond->name->toLowerString() === 'is_null' && count(CallArgs::of($cond)) === 1 => CallArgs::of($cond)[0]->value,
             default => null,
         };
     }

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="checkout_acme_renderers"/>
+    <body>
+        <block class="Magento\Framework\View\Element\Template" name="acme.everywhere.private" cacheable="false"/>
+        <block class="Acme\Placed\Block\OnEveryPage" name="acme.everywhere"/>
+        <block class="Magento\Framework\View\Element\Template" name="acme.items">
+            <arguments>
+                <argument name="models" xsi:type="array">
+                    <item name="item" xsi:type="object">Acme\Placed\ViewModel\ItemModel</item>
+                </argument>
+            </arguments>
+        </block>
+    </body>
+</page>

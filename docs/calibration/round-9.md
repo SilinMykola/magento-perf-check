@@ -13,7 +13,7 @@ This round measures T-05 and T-06, the first rules of SPEC milestone M6 (storefr
 | Rule | Severity | Findings | Sampled | TP | TP-low | FP | Unclear | Precision | Impact share | Decision |
 |---|---|---|---|---|---|---|---|---|---|---|
 | [T-05](../rules/T-05.md) | warning | 18 | 18 | 13 | 5 | 0 | 0 | 100 % | 72 % | default set |
-| [T-06](../rules/T-06.md) | info | 103 | 30 | 5 | 21 | 4 | 0 | 87 % | 19 % | experimental |
+| [T-06](../rules/T-06.md) | info | 103 | 30 | 5 | 18 | 7 | 0 | 77 % | 22 % | experimental |
 
 **T-05.** The core gives 1 finding, the 25 modules 4 and the extended part 13.
 - TP, 13:
@@ -24,7 +24,7 @@ This round measures T-05 and T-06, the first rules of SPEC milestone M6 (storefr
 - TP-low, 5: Magefan Blog's tag cloud in the blog sidebar; Mageplaza Core's loader for the pages that include its `mp_add_js_css` handle; Payone's two client scripts on the checkout page; the core Google AdWords conversion script on the order success page.
 - No false positive. Whether the payment providers' documentation asks to load their scripts synchronously was not checked; a script that must block the page belongs in the baseline (rule page, known false positives).
 
-**T-06.** The core gives 11 findings, the 25 modules 17 and the extended part 76.
+**T-06.** The core gives 11 findings, the 25 modules 17 and the extended part 76. A re-check on 2026-11-15, after T-06 began to read the module's stylesheets, found three of the TP-low findings sized by the module's LESS, two social icons and a related post image, and graded them false; the table counts them so, and the decision stays the same.
 - TP, 5: a Mageplaza Banner Slider banner, the featured image of a blog post in Mageplaza Blog's Hyvä template and in Magefan Blog's modern template, Tweakwise's visual navigation images in the product list, and the header image of a Smile Store Locator store page.
 - TP-low, 21: payment marks and logos of PayPal and Payment Services, Luma's CSS preloader and Mageplaza Ajax Layer's loader, Clerk's popup image, card type icons in the customer account, blog author avatars, RSS, share and writing icons, comment avatars, gallery thumbnails, related and recent post images.
 - FP, 4:
@@ -35,4 +35,4 @@ This round measures T-05 and T-06, the first rules of SPEC milestone M6 (storefr
 ## Decisions
 
 - T-05 joins the default set at `warning`: 18 graded findings, 100 % precision and an impact share of 72 %. Its sources are the Hyvä documentation (level A).
-- T-06 stays experimental. It passes the precision threshold, but with an impact share of 19 % it would be an `info` rule whose findings are mostly icons and logos, which adds work to every report for little gain (round 6).
+- T-06 stays experimental. It passes the precision threshold, but with an impact share of 19 % (22 % after the re-check of 2026-11-15) it would be an `info` rule whose findings are mostly icons and logos, which adds work to every report for little gain (round 6).

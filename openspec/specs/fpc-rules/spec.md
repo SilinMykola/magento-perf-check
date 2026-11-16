@@ -21,7 +21,7 @@ P-FPC-01 SHALL report, as `info`, a declaration of `$_isScopePrivate` with the d
 - **THEN** P-FPC-01 reports nothing
 
 ### Requirement: P-FPC-02 customer data from session in blocks
-P-FPC-02 SHALL report, as `warning`, calls to `getCustomer`, `getCustomerId` or `getQuote` on a subtype of `Magento\Framework\Session\SessionManagerInterface`. The call must be made in a frontend block (an `AbstractBlock` subclass not under a `Block\Adminhtml` namespace) or a view model (implements `Magento\Framework\View\Element\Block\ArgumentInterface` and is not a collection). `getCustomerGroupId()` SHALL NOT be reported: page cache depersonalization keeps the customer group, and it is part of the cache key.
+P-FPC-02 SHALL report, as `warning`, calls to `getCustomer`, `getCustomerId` or `getQuote` on a subtype of `Magento\Framework\Session\SessionManagerInterface`. The call must be made in a frontend block (an `AbstractBlock` subclass not under a `Block\Adminhtml` namespace) or a view model (implements `Magento\Framework\View\Element\Block\ArgumentInterface` and is not a collection). A call on a backend session (`Magento\Backend\Model\Session`, `Magento\Backend\Model\Session\Quote`, `Magento\Backend\Model\Auth\Session` or a subtype) SHALL NOT be reported: Magento core sets their customer and quote only while an order is created in the admin. `getCustomerGroupId()` SHALL NOT be reported: page cache depersonalization keeps the customer group, and it is part of the cache key. A class that the project's frontend layouts name (`<block class>`, `<referenceBlock class>`, an `<argument>` or `<item>` of type `object`) only on handles no cacheable page uses SHALL NOT be reported, unless a subclass of it is named on a handle a cacheable page may use. Handles no cacheable page uses are those whose layout files hold a `cacheable="false"` block that neither it nor an element around it has an `ifconfig` and that no layout file of the handle removes, except shop-wide handles X-LAY-03 reports (`default`, `catalog_*`, `cms_*` outside its allowlist); account pages that include `customer_account`; and handles only such handles include, unless the handle is a page of a storefront controller action, which may be cached.
 
 #### Scenario: Block reads customer
 - **WHEN** a block method calls `$this->customerSession->getCustomerId()`
@@ -39,8 +39,22 @@ P-FPC-02 SHALL report, as `warning`, calls to `getCustomer`, `getCustomerId` or 
 - **WHEN** a block under `Block\Adminhtml` calls `$this->backendQuoteSession->getQuote()`
 - **THEN** P-FPC-02 reports nothing
 
+#### Scenario: Backend session outside Block\Adminhtml
+- **WHEN** a block under `Block\Form` calls `getQuote()` on a `Magento\Backend\Model\Session\Quote`
+- **THEN** P-FPC-02 reports nothing
+
+#### Scenario: Block only on uncacheable pages
+- **WHEN** a block that reads `getCustomerId()` is placed only on a handle whose layout holds a `cacheable="false"` block, as Magento's `checkout_cart_index.xml` does, or that includes `customer_account`
+- **THEN** P-FPC-02 reports nothing
+- **WHEN** the same block is also placed in `catalog_product_view.xml`, or only in `default.xml` although a `default.xml` holds a `cacheable="false"` block, or the `cacheable="false"` block has an `ifconfig` or is removed, or a subclass of it is placed in `catalog_product_view.xml`, or no layout places it
+- **THEN** P-FPC-02 reports the call
+
+#### Scenario: Block of the account sidebar
+- **WHEN** a block that reads `getCustomerId()` is placed only in `acmepromo_account.xml`, a handle of the route `acmepromo` without a controller action, which only an account page includes
+- **THEN** P-FPC-02 reports nothing
+
 ### Requirement: P-FPC-05 no-cache headers on cacheable requests
-P-FPC-05 SHALL report, as `warning`, one finding per statement that disables caching: `setNoCacheHeaders()`, `setPrivateHeaders()`, or `setHeader()` with a literal `Cache-Control` name (case-insensitive) and a value that contains `no-cache`, `no-store` or `private`, or is not a literal. It applies in a class that serves cacheable requests (see "P-FPC-05 scope"). The message SHALL ask to confirm that the response is meant to be uncacheable. A call on `$this` SHALL NOT count: a controller's own helper is not the response.
+P-FPC-05 SHALL report, as `warning`, one finding per statement that disables caching: `setNoCacheHeaders()`, `setPrivateHeaders()`, or `setHeader()` with a literal `Cache-Control` name (case-insensitive) and a value that contains `no-cache`, `no-store` or `private`, or is not a literal. A value built from literals, by concatenation, interpolation or as the format of `sprintf()`, counts by those literals: it SHALL be reported when they contain `no-cache`, `no-store` or `private`, and SHALL NOT be when they contain `public` or `max-age` without those and every other part is an `int` or a `sprintf()` conversion other than `%s`, as `sprintf('public, max-age=%d', $ttl)` asks for caching. A `setHeader()` on a block (`Magento\Framework\View\Element\BlockInterface`, such as what `getBlock()` returns) SHALL NOT count: it sets the block's `header` data. It applies in a class that serves cacheable requests (see "P-FPC-05 scope"). The message SHALL ask to confirm that the response is meant to be uncacheable. A call on `$this` SHALL NOT count: a controller's own helper is not the response.
 
 #### Scenario: GET controller sets no-cache
 - **WHEN** a frontend controller implementing `HttpGetActionInterface` calls `$this->getResponse()->setNoCacheHeaders()`
@@ -65,6 +79,16 @@ P-FPC-05 SHALL report, as `warning`, one finding per statement that disables cac
 #### Scenario: Own helper method
 - **WHEN** a GET controller calls `$this->setNoCacheHeaders()`, its own private method, which calls `$this->response->setHeader('Cache-Control', 'no-store')`
 - **THEN** P-FPC-05 reports one warning, on the `setHeader()` call
+
+#### Scenario: Computed public value
+- **WHEN** a GET controller calls `setHeader('Cache-Control', sprintf('public, max-age=%d', $ttl), true)`
+- **THEN** P-FPC-05 reports nothing
+- **WHEN** the format is `'private, max-age=%d'`, or the value is a variable
+- **THEN** P-FPC-05 reports a warning
+
+#### Scenario: Header data of a block
+- **WHEN** a GET controller calls `setHeader('Cache-Control', 'no-cache')` on the result of `$page->getLayout()->getBlock('name')`
+- **THEN** P-FPC-05 reports nothing
 
 ### Requirement: P-FPC-05 scope
 P-FPC-05 SHALL consider only:

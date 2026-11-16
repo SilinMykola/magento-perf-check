@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
+use Silin\MagentoPerfCheck\PhpStan\CallArgs;
 use Silin\MagentoPerfCheck\PhpStan\ObjectManagerFallbackVisitor;
 use Silin\MagentoPerfCheck\PhpStan\OutsideObjectManager;
 use PhpParser\Node;
@@ -199,7 +200,7 @@ final class ConstructorWorkRule implements Rule
         ) {
             return false;
         }
-        foreach ($expr->getArgs() as $arg) {
+        foreach (CallArgs::of($expr) as $arg) {
             if (!$this->isPlainValue($arg->value)) {
                 return false;
             }

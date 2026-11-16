@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
+use Silin\MagentoPerfCheck\PhpStan\CallArgs;
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
@@ -56,7 +57,7 @@ final class UserValueInHttpContextRule implements Rule
         ) {
             return [];
         }
-        $value = $node->getArgs()[1]->value ?? null;
+        $value = CallArgs::of($node)[1]->value ?? null;
         if ($value === null || !$this->isUserValue($value, $scope)) {
             return [];
         }
@@ -118,7 +119,7 @@ final class UserValueInHttpContextRule implements Rule
         if (!in_array($function, self::VALUE_KEEPING_FUNCTIONS, true)) {
             return false;
         }
-        return $this->holdsUserValue($call->getArgs(), $scope);
+        return $this->holdsUserValue(CallArgs::of($call), $scope);
     }
 
     /**

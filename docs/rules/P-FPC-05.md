@@ -10,7 +10,7 @@
 
 A statement that disables caching, with one finding per statement however many headers it sets:
 - `setNoCacheHeaders()` or `setPrivateHeaders()`, on anything but `$this`: a controller's own helper with such a name is not the response;
-- `setHeader()` with a literal `Cache-Control` name and a value that contains `no-cache`, `no-store` or `private`, or is computed at run time.
+- `setHeader()` with a literal `Cache-Control` name and a value that contains `no-cache`, `no-store` or `private`, or is computed at run time. A computed value counts by the literals it is built from, by concatenation, interpolation or as the format of `sprintf()`: `sprintf('private, max-age=%d', $ttl)` is reported, while `sprintf('public, max-age=%d', $ttl)`, `'max-age=' . $ttl` and `"public, max-age={$ttl}"` with an `int` `$ttl` are not, as they ask for caching. The other parts must be numbers: `'max-age=60, ' . $scope` with a string `$scope`, or a `%s` in the format, is reported, as it may say `private`. `setHeader()` on a block, such as what `getLayout()->getBlock()` returns, is not reported: a block's `setHeader()` only sets its `header` data.
 
 `Pragma` is not reported, whatever its value: neither [`Kernel::process()`](https://github.com/magento/magento2/blob/a385d02f60ee6dfa052f12cdc7d82e956581fba5/lib/internal/Magento/Framework/App/PageCache/Kernel.php) nor the Varnish configuration of core reads it from a response, so it does not change what gets cached.
 
@@ -45,6 +45,8 @@ If the page is meant to be cached: remove the call and move personal data to cus
 ## Known false positives
 
 - Pages that are personal by design. The rule is a `warning` and asks for a decision.
+- A computed `public` or `max-age` value whose number is 0 at run time can stop caching; the rule does not see the number.
+- `setHeader()` on a block that the analysis cannot type, such as one read through a property without a type, is still reported.
 
 ## Basis
 

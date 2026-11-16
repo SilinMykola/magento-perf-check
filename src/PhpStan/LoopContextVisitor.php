@@ -26,6 +26,12 @@ use PhpParser\NodeVisitorAbstract;
  * getFirstItem, count) with CREATED_IN_LOOP when their collection was created by
  * create() in that same iteration: in the call chain itself, or through a variable
  * assigned inside the loop body. One collection gets one mark: its first loading call.
+ *
+ * A method call inside foreach/for/while/do, or inside a callback that array_map() and the like call for
+ * each item, also gets LOOP_WRITES: the variables that the enclosing loops and callbacks, or a closure
+ * between them and the call, may change, so an argument made only of others has
+ * the same value in every iteration. The key "*" stands for any variable: a loop that changes variables
+ * it does not name, or one in a function that takes references, which may change a variable anywhere.
  */
 final class LoopContextVisitor extends NodeVisitorAbstract
 {
@@ -35,6 +41,9 @@ final class LoopContextVisitor extends NodeVisitorAbstract
 
     public const CREATED_IN_LOOP = 'magentoPerfCreatedInLoop';
 
+    /** On a method call in a loop statement: array<string, true> of the variable names the enclosing loops may change. */
+    public const LOOP_WRITES = 'magentoPerfLoopWrites';
+
     /** On a method call whose receiver is the value variable of a foreach: the expression that foreach iterates. */
     public const ITERATED_EXPRESSION = 'magentoPerfIteratedExpression';
 
@@ -43,6 +52,7 @@ final class LoopContextVisitor extends NodeVisitorAbstract
     private const ITERATION_SCOPE = 'magentoPerfIterationScope';
     private const RUNS_ONCE = 'magentoPerfRunsOnce';
     private const COVERED_BY_CHAIN = 'magentoPerfCoveredByChain';
+    private const WRITES_PUSHED = 'magentoPerfWritesPushed';
 
     private const LOADING_METHODS = ['load', 'getitems', 'getsize', 'getfirstitem', 'count'];
 
@@ -73,6 +83,12 @@ final class LoopContextVisitor extends NodeVisitorAbstract
     /** @var list<array<string, true>> variables holding array_chunk(), one set per function */
     private array $batches = [[]];
 
+    /** @var list<array<string, true>> variables the enclosing loops and closures may change, merged from the outermost in */
+    private array $writes = [];
+
+    /** @var list<bool> whether each enclosing function takes or makes a reference */
+    private array $references = [false];
+
     /**
      * @param Node[] $nodes
      */
@@ -84,6 +100,8 @@ final class LoopContextVisitor extends NodeVisitorAbstract
         $this->created = [];
         $this->batches = [[]];
         $this->foreaches = [];
+        $this->writes = [];
+        $this->references = [false];
 
         return null;
     }
@@ -110,6 +128,22 @@ final class LoopContextVisitor extends NodeVisitorAbstract
         }
         $this->trackCreatedCollections($node);
         $this->markIteratedExpression($node);
+        if ($node instanceof Node\FunctionLike && !$node instanceof Expr\ArrowFunction) {
+            $this->references[] = self::takesReferences($node);
+        }
+        // A callback that array_map() and the like call per item changes its parameters like a loop does.
+        if (self::isLoop($node) || (($this->writes !== [] || $node->getAttribute(self::ITERATION_SCOPE) === true)
+            && ($node instanceof Expr\Closure || $node instanceof Expr\ArrowFunction))
+        ) {
+            $written = self::writtenVariables($node);
+            if (end($this->references) === true) {
+                $written['*'] = true;
+            }
+            $this->writes[] = [...($this->writes !== [] ? end($this->writes) : []), ...$written];
+        }
+        if ($node instanceof Expr\MethodCall && $this->writes !== [] && $this->depth > 0) {
+            $node->setAttribute(self::LOOP_WRITES, end($this->writes));
+        }
 
         if ($node instanceof Node\FunctionLike && !$node instanceof Expr\ArrowFunction) {
             $this->batches[] = [];
@@ -144,12 +178,12 @@ final class LoopContextVisitor extends NodeVisitorAbstract
         } elseif ($node instanceof Expr\FuncCall && $node->name instanceof Node\Name) {
             $position = self::ITERATING_FUNCTIONS[$node->name->toLowerString()] ?? null;
             if ($position !== null) {
-                $this->markCallback($node->getArgs(), $position);
+                $this->markCallback(CallArgs::of($node), $position);
             }
         } elseif ($node instanceof Expr\MethodCall && $node->name instanceof Node\Identifier) {
             $position = self::ITERATING_METHODS[$node->name->toLowerString()] ?? null;
             if ($position !== null) {
-                $this->markCallback($node->getArgs(), $position);
+                $this->markCallback(CallArgs::of($node), $position);
             }
         }
 
@@ -173,11 +207,107 @@ final class LoopContextVisitor extends NodeVisitorAbstract
         if ($node instanceof Stmt\Foreach_ && end($this->foreaches) === $node) {
             array_pop($this->foreaches);
         }
+        if (self::isLoop($node) || ($node instanceof Expr\Closure || $node instanceof Expr\ArrowFunction) && $this->closesWrites($node)) {
+            array_pop($this->writes);
+        }
         if ($node instanceof Node\FunctionLike && !$node instanceof Expr\ArrowFunction) {
             array_pop($this->batches);
+            array_pop($this->references);
         }
 
         return null;
+    }
+
+    /**
+     * Whether a function makes a reference that a loop could change a variable through: "$a = &$b",
+     * "foreach ($list as &$item)", "use (&$x)" or "global".
+     */
+    private static function takesReferences(Node\FunctionLike $function): bool
+    {
+        return (new NodeFinder())->findFirst($function->getStmts() ?? [], static fn (Node $n): bool => $n instanceof Expr\AssignRef
+            || ($n instanceof Stmt\Foreach_ && $n->byRef)
+            || ($n instanceof Expr\ClosureUse && $n->byRef)
+            || $n instanceof Stmt\Global_) !== null;
+    }
+
+    private static function isLoop(Node $node): bool
+    {
+        return $node instanceof Stmt\Foreach_ || $node instanceof Stmt\For_ || $node instanceof Stmt\While_ || $node instanceof Stmt\Do_;
+    }
+
+    /**
+     * Whether a closure pushed a set on entry. It did when a loop encloses it or it is a callback called for each item, which leaving the
+     * closure cannot see any more; the set on top then is the closure's own.
+     */
+    private function closesWrites(Expr\Closure|Expr\ArrowFunction $closure): bool
+    {
+        return $closure->getAttribute(self::WRITES_PUSHED) === true;
+    }
+
+    /**
+     * The variable names a loop or closure may change: assigned, incremented, unset, declared static or
+     * global, iterated by foreach, caught, a closure's parameters and by-reference uses, and every
+     * variable passed to a function, method or constructor other than get(), getById() or load(), which may take
+     * it by reference (preg_match(), sort()). "*" when it may change others too: a variable variable, extract(), a call of a closure or
+     * other callable held in a variable, include or eval, or a save() or delete(), after which a
+     * repository loads again what it had kept.
+     *
+     * @return array<string, true>
+     */
+    private static function writtenVariables(Node $node): array
+    {
+        $names = [];
+        $add = static function (?Node $target) use (&$names): void {
+            foreach ((new NodeFinder())->findInstanceOf($target !== null ? [$target] : [], Expr\Variable::class) as $variable) {
+                $names[is_string($variable->name) ? $variable->name : '*'] = true;
+            }
+        };
+        if ($node instanceof Expr\Closure || $node instanceof Expr\ArrowFunction) {
+            $node->setAttribute(self::WRITES_PUSHED, true);
+            foreach ($node->params as $param) {
+                $add($param->var);
+            }
+            foreach ($node instanceof Expr\Closure ? $node->uses : [] as $use) {
+                if ($use->byRef) {
+                    $add($use->var);
+                }
+            }
+        }
+        foreach ((new NodeFinder())->find([$node], static fn (Node $n): bool => true) as $n) {
+            $targets = match (true) {
+                $n instanceof Expr\Assign, $n instanceof Expr\AssignRef, $n instanceof Expr\AssignOp,
+                $n instanceof Expr\PreInc, $n instanceof Expr\PostInc, $n instanceof Expr\PreDec, $n instanceof Expr\PostDec => [$n->var],
+                $n instanceof Stmt\Foreach_ => [$n->keyVar, $n->valueVar],
+                $n instanceof Stmt\Unset_, $n instanceof Stmt\Global_, $n instanceof Stmt\Static_ => $n->vars,
+                $n instanceof Stmt\Catch_ => [$n->var],
+                // A repository's get() and getById(), and a model's load(), take nothing by reference.
+                ($n instanceof Expr\MethodCall || $n instanceof Expr\NullsafeMethodCall) && $n->name instanceof Node\Identifier
+                    && in_array($n->name->toLowerString(), ['get', 'getbyid', 'load'], true) => [],
+                $n instanceof Expr\FuncCall, $n instanceof Expr\MethodCall, $n instanceof Expr\NullsafeMethodCall,
+                $n instanceof Expr\StaticCall, $n instanceof Expr\New_ => array_map(static fn (Node\Arg $arg): Expr => $arg->value, CallArgs::of($n)),
+                default => [],
+            };
+            if (self::changesAnyVariable($n)) {
+                $names['*'] = true;
+            }
+            foreach ($targets as $target) {
+                $add($target);
+            }
+        }
+
+        return $names;
+    }
+
+    private static function changesAnyVariable(Node $node): bool
+    {
+        if ($node instanceof Expr\FuncCall) {
+            return !$node->name instanceof Node\Name || in_array($node->name->toLowerString(), ['extract', 'parse_str'], true);
+        }
+        if ($node instanceof Expr\MethodCall || $node instanceof Expr\NullsafeMethodCall) {
+            return !$node->name instanceof Node\Identifier || in_array($node->name->toLowerString(), ['save', 'delete', 'deletebyid'], true);
+        }
+
+        return $node instanceof Expr\Include_ || $node instanceof Expr\Eval_;
     }
 
     /**
@@ -312,7 +442,7 @@ final class LoopContextVisitor extends NodeVisitorAbstract
         if ($position === null) {
             return false;
         }
-        $rows = $call->getArgs()[$position]->value ?? null;
+        $rows = CallArgs::of($call)[$position]->value ?? null;
 
         return $rows !== null && !($rows instanceof Node\Scalar\LNumber && $rows->value === 1);
     }

@@ -11,6 +11,8 @@ declare(strict_types=1);
  *   build-corpus extended    a second copy with the next 100 modules and Hyvä Theme (change extend-calibration-corpus)
  *   build-corpus github      a hard-linked copy of extended with 50 GitHub modules, cloned into
  *                            var/corpus/github-clones (change add-github-corpus)
+ *   build-corpus github2     the same with the next 100 GitHub modules, none of the github part
+ *                            (change add-second-github-corpus)
  *   build-corpus mage-os     composer install of mage-os/project-community-edition
  *   build-corpus --clean     remove var/corpus
  *   build-corpus pick <name> show which version of a package would be taken, and why
@@ -30,6 +32,7 @@ const MANIFEST = ROOT . '/docs/calibration/corpus.json';
 const MODULE_COUNT = 25;
 const EXTENDED_COUNT = 100;
 const GITHUB_COUNT = 50;
+const GITHUB2_COUNT = 100;
 const TARGET_PHP = '8.4.0';
 
 function fail(string $message): never
@@ -549,7 +552,11 @@ function githubCandidates(): Generator
     }
 }
 
-function buildGithub(): void
+/**
+ * @param string $part the manifest section and the directory under var/corpus
+ * @param list<string> $before GitHub parts whose modules this part must not take again
+ */
+function buildGithub(string $part, int $count, array $before = []): void
 {
     // Kept between builds (design D3): an existing clone is reused without a fetch.
     $clones = CORPUS . '/github-clones';
@@ -562,7 +569,25 @@ function buildGithub(): void
         ...array_column($manifest['extended']['modules'], 'name'),
         ...array_column($manifest['extended']['hyva'] ?? [], 'name'),
     ];
-    $target = CORPUS . '/github';
+    // Modules of an earlier GitHub part are not taken again, but they are not in this copy either,
+    // so they cannot meet a requirement.
+    $taken = [];
+    $takenModules = [];
+    foreach ($before as $earlier) {
+        if (!isset($manifest[$earlier]['modules'])) {
+            fail("build the $earlier part first");
+        }
+        array_push($taken, ...array_column($manifest[$earlier]['modules'], 'name'));
+        array_push($takenModules, ...array_column($manifest[$earlier]['modules'], 'module'));
+    }
+    // Core modules live in vendor/, so a repository that reuses one of their names, as one ships its own
+    // Magento_Customer, is not caught by the check of app/code below.
+    $config = include CORPUS . '/magento/app/etc/config.php';
+    $installedModules = is_array($config) && is_array($config['modules'] ?? null) ? array_keys($config['modules']) : [];
+    if ($installedModules === []) {
+        fail('no modules in var/corpus/magento/app/etc/config.php');
+    }
+    $target = CORPUS . '/' . $part;
     if (is_dir($target)) {
         run(['rm', '-rf', $target]);
     }
@@ -575,7 +600,7 @@ function buildGithub(): void
     $modules = [];
     $skipped = [];
     foreach (githubCandidates() as $candidate) {
-        if (count($modules) >= GITHUB_COUNT) {
+        if (count($modules) >= $count) {
             break;
         }
         $repository = (string) $candidate['full_name'];
@@ -621,6 +646,14 @@ function buildGithub(): void
             $skipped[] = skip($repository, "package $name already in the corpus");
             continue;
         }
+        if (in_array($name, $taken, true) || in_array($module, $takenModules, true)) {
+            $skipped[] = skip($repository, "package $name or module $module already in the " . implode(' or ', $before) . ' part');
+            continue;
+        }
+        if (in_array($module, $installedModules, true)) {
+            $skipped[] = skip($repository, "module $module is installed in the Magento copy");
+            continue;
+        }
         [$vendor, $short] = explode('_', $module, 2);
         $destination = $target . '/app/code/' . $vendor . '/' . $short;
         if (is_dir($destination)) {
@@ -657,11 +690,16 @@ function buildGithub(): void
         $present[] = $name;
         echo sprintf("%-55s %s\n", $repository, $module);
     }
-    if (count($modules) < GITHUB_COUNT) {
+    if (count($modules) < $count) {
         fail(sprintf('only %d modules found', count($modules)));
     }
-    $manifest['github'] = [
-        'selection' => sprintf('the %d most-starred GitHub repositories with the topic magento2-module, not archived and not forks, that hold one module of type magento2-module not yet in the corpus, whose requirements the copy meets (PHP %s) and whose registration.php is standard; default branch, cloned with --depth 1', GITHUB_COUNT, TARGET_PHP),
+    $manifest[$part] = [
+        'selection' => sprintf(
+            'the %d most-starred GitHub repositories with the topic magento2-module, not archived and not forks, that hold one module of type magento2-module not yet in the corpus%s, whose requirements the copy meets (PHP %s) and whose registration.php is standard; default branch, cloned with --depth 1',
+            $count,
+            $before === [] ? '' : ' nor in the ' . implode(' and ', $before) . ' part',
+            TARGET_PHP,
+        ),
         'date' => date('Y-m-d'),
         'base' => 'hard-linked copy of the extended part',
         'modules' => $modules,
@@ -709,12 +747,13 @@ match ($command) {
     'magento' => buildMagento(),
     'packagist' => buildPackagist(),
     'extended' => buildExtended(),
-    'github' => buildGithub(),
+    'github' => buildGithub('github', GITHUB_COUNT),
+    'github2' => buildGithub('github2', GITHUB2_COUNT, ['github']),
     'mage-os' => buildMageOs(),
     '--clean' => run(['rm', '-rf', CORPUS]),
     'pick' => (static function () use ($argv): void {
         [$version, $reason] = pickVersion($argv[2] ?? fail('pick needs a package name'), installedVersions());
         echo $version !== null ? $version['version'] . "\n" : "none: $reason\n";
     })(),
-    default => fail('usage: build-corpus magento|packagist|extended|github|mage-os|--clean'),
+    default => fail('usage: build-corpus magento|packagist|extended|github|github2|mage-os|--clean'),
 };

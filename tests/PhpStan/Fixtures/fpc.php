@@ -798,3 +798,121 @@ namespace Acme\Promo\Controller\Payment {
         }
     }
 }
+
+namespace Acme\Promo\Block\Form {
+    use Magento\Backend\Model\Session\Quote;
+    use Magento\Framework\View\Element\AbstractBlock;
+
+    class OrderQuote extends Quote
+    {
+    }
+
+    final class AdminPayment extends AbstractBlock
+    {
+        public function __construct(
+            private readonly OrderQuote $backendSession,
+            private readonly \Magento\Backend\Model\Session $session,
+            private readonly \Magento\Backend\Model\Auth\Session $authSession,
+        ) {
+        }
+
+        public function getQuote(): object
+        {
+            return $this->backendSession->getQuote();
+        }
+
+        public function getCustomerIds(): array
+        {
+            return [$this->session->getCustomerId(), $this->authSession->getCustomerId()];
+        }
+    }
+
+    final class EitherSession extends AbstractBlock
+    {
+        public function __construct(
+            private readonly Quote|\Magento\Customer\Model\Session $session,
+            private readonly \Magento\Framework\Session\SessionManagerInterface $anySession,
+        ) {
+        }
+
+        public function getCustomerIds(): array
+        {
+            return [$this->session->getCustomerId(), $this->anySession->getCustomerId()];
+        }
+    }
+}
+
+namespace Acme\Promo\Controller\Headers {
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+    use Magento\Framework\App\Response\Http;
+    use Magento\Framework\View\Element\BlockInterface;
+
+    final class Computed implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly Http $response,
+            private readonly BlockInterface|bool $block,
+            private readonly int $ttl,
+            private readonly string $value,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            $this->response->setHeader('Cache-Control', sprintf('public, max-age=%d', $this->ttl), true);
+            $this->response->setHeader('Cache-Control', 'max-age=' . $this->ttl, true);
+            $this->response->setHeader('Cache-Control', sprintf('private, max-age=%d', $this->ttl), true); // reported: says private
+            $this->response->setHeader('Cache-Control', 'no-store, max-age=' . $this->ttl, true); // reported: says no-store
+            $this->response->setHeader('Cache-Control', $this->value, true); // reported: nothing tells what it sets
+            // A block's setHeader() sets its "header" data, not a response header.
+            $this->block->setHeader('Cache-Control', 'no-cache');
+
+            return null;
+        }
+    }
+}
+
+namespace Acme\Promo\Controller\Headers {
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+    use Magento\Framework\App\Response\Http;
+
+    final class Interpolated implements HttpGetActionInterface
+    {
+        public function __construct(
+            private readonly Http $response,
+            private readonly int $ttl,
+            private readonly string $scope,
+        ) {
+        }
+
+        public function execute(): mixed
+        {
+            $this->response->setHeader('Cache-Control', "public, max-age={$this->ttl}", true);
+            $this->response->setHeader('Cache-Control', 'max-age=60, ' . $this->scope, true); // reported: the scope may be private
+            $this->response->setHeader('Cache-Control', sprintf('public, %s', $this->scope), true); // reported: %s may be private
+            $this->response->setHeader('Cache-Control', "public, {$this->scope}", true); // reported: may be private
+
+            return null;
+        }
+    }
+}
+
+namespace Acme\Promo\Controller\Headers {
+    use Magento\Framework\App\Action\HttpGetActionInterface;
+    use Magento\Framework\App\Response\Http;
+
+    final class FirstClassCallable implements HttpGetActionInterface
+    {
+        public function __construct(private readonly Http $response)
+        {
+        }
+
+        public function execute(): mixed
+        {
+            $set = $this->response->setHeader(...);
+            $format = sprintf(...);
+
+            return null;
+        }
+    }
+}
