@@ -225,6 +225,8 @@ final class ProjectIndexBuilderTest extends TestCase
             // Acme_Notes widens one constraint by its referenceId and disables the other.
             self::assertSame([['code', 'store_id']], $index->uniqueKeysOf('acme_tag_note'));
             self::assertSame([], $index->uniqueKeysOf('acme_tag_stock'));
+            // Table names are case-insensitive, as MySQL on macOS and Windows treats them, and rules look them up in lower case.
+            self::assertSame([['code']], $index->uniqueKeysOf('acme_tag_case'));
         }
         self::assertSame([['entity_id']], $this->index()->uniqueKeysOf('sales_order'));
     }
@@ -270,6 +272,26 @@ final class ProjectIndexBuilderTest extends TestCase
 
         file_put_contents($less, ".banner img { width: 20px; height: 10px; }\n");
         touch($less, time() + 5);
+        self::assertNotSame($added, $builder->fingerprint($copy));
+        exec('rm -rf ' . escapeshellarg($copy));
+    }
+
+    public function testFingerprintFollowsSetupScripts(): void
+    {
+        $source = realpath(__DIR__ . '/../../PhpStan/Fixtures/unique-keys');
+        self::assertIsString($source);
+        $copy = sys_get_temp_dir() . '/mpr-index-project-' . bin2hex(random_bytes(4));
+        exec('cp -R ' . escapeshellarg($source) . ' ' . escapeshellarg($copy));
+        $builder = new ProjectIndexBuilder($this->cacheDir);
+        $before = $builder->fingerprint($copy);
+
+        // P-COL-02 reads unique keys from setup scripts: a new or changed one makes cached PHP results out of date.
+        $install = $copy . '/app/code/Acme/Tags/Setup/InstallSchema.php';
+        file_put_contents($install, "<?php\n");
+        $added = $builder->fingerprint($copy);
+        self::assertNotSame($before, $added);
+
+        file_put_contents($copy . '/app/code/Acme/Tags/Setup/UpgradeSchema.php', "<?php\n// changed\n", FILE_APPEND);
         self::assertNotSame($added, $builder->fingerprint($copy));
         exec('rm -rf ' . escapeshellarg($copy));
     }

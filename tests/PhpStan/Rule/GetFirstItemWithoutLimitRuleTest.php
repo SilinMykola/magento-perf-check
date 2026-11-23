@@ -92,7 +92,9 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message('Order'), 116],
             [$message('Order'), 130],
             [$message('Stock'), 144],
+            // A unique index that a later version drops.
             [$message('Source'), 161],
+            [$message('Source'), 166],
         ]);
     }
 }

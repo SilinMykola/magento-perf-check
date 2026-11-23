@@ -50,6 +50,8 @@ $item = $collection->getFirstItem();
 
 - A unique column that the rule cannot tie to the collection is not recognized: a main table set by a variable or a constant of another class, a key added to the table by another module's setup script, or a key enforced only by the module's own logic. Add `setPageSize(1)`, or suppress with a reason.
 - A filter on all but one column of a unique key loads only the few rows that differ in that column, and is still reported.
+- A unique index that a setup script drops with `dropIndex()` no longer counts; when the dropped index's name is not a `getIdxName()` call with literal columns, no unique key of that table from the setup scripts counts.
+- A change to the `_init()` call of a collection or its resource model does not make cached results of the file that calls `getFirstItem()` out of date; a change to a module's `db_schema.xml` or setup scripts does.
 - An aggregate query filtered on one id and grouped by it returns one row, and is still reported.
 - A limit or load done through a different variable that refers to the same collection is not seen.
 - A limit set inside a branch counts as set even when the branch is not taken. This trade-off favours fewer false positives.

@@ -156,6 +156,11 @@ namespace Acme\Tags\Model {
                 ->getFirstItem();
         }
 
+        public function uniqueIndexDroppedLater(SourceCollection $sources, string $code): void
+        {
+            $sources->addFieldToFilter('source_code', $code)->getFirstItem();
+        }
+
         public function plainIndexAddedOnTheConnection(SourceCollection $sources, int $productId): void
         {
             $sources->addFieldToFilter('product_id', $productId)->getFirstItem();

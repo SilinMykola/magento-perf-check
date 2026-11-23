@@ -177,9 +177,7 @@ final class CollectionUniqueKeys
         $keys = [];
         foreach (self::SETUP_SCRIPTS as $script) {
             if (is_file($root . '/' . $script)) {
-                foreach ($this->keysFromSetupScript($root . '/' . $script) as $table => $tableKeys) {
-                    $keys[$table] = [...$keys[$table] ?? [], ...$tableKeys];
-                }
+                $keys = $this->keysFromSetupScript($root . '/' . $script, $keys);
             }
         }
 
@@ -188,13 +186,14 @@ final class CollectionUniqueKeys
 
     /**
      * Unique and primary indexes that addIndex() adds, on a table that newTable() builds or on the
-     * connection, and the primary columns of newTable().
+     * connection, and the primary columns of newTable(), after the keys of earlier scripts. dropIndex()
+     * removes the key that getIdxName() names, or every key of the table when the name cannot be read.
      *
+     * @param array<string, list<list<string>>> $keys table => keys
      * @return array<string, list<list<string>>> table => keys
      */
-    private function keysFromSetupScript(string $file): array
+    private function keysFromSetupScript(string $file, array $keys): array
     {
-        $keys = [];
         $primary = [];
         /** @var array<string, ?string> $variables variable => table that newTable() built into it */
         $variables = [];
@@ -226,6 +225,12 @@ final class CollectionUniqueKeys
                 if ($table !== null && $fields !== null && $this->isUniqueType($args[3]->value ?? null)) {
                     $keys[$table][] = $fields;
                 }
+            } elseif ($name === 'dropindex' && ($dropped = $this->tableName($args[0]->value ?? null)) !== null) {
+                // AdapterInterface::dropIndex($tableName, $keyName), the name usually from getIdxName($table, $fields, ...)
+                $index = $args[1]->value ?? null;
+                $fields = $index instanceof Expr\MethodCall && $index->name instanceof Node\Identifier && $index->name->toLowerString() === 'getidxname'
+                    ? $this->columns(CallArgs::of($index)[1]->value ?? null) : null;
+                $keys[$dropped] = $fields === null ? [] : array_values(array_filter($keys[$dropped] ?? [], static fn (array $key): bool => $key !== $fields));
             } elseif ($name === 'addcolumn' && $table !== null) {
                 // Table::addColumn($name, $type, $size, $options)
                 $column = $args[0]->value ?? null;

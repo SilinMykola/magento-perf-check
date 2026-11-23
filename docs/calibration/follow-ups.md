@@ -38,7 +38,7 @@ The rules cannot tell these cases from real findings without guessing. They stay
 
 Row numbers refer to [`graded/round-6/`](graded/round-6/).
 
-- **P-COL-02.** Filters that match one row through a unique index in `db_schema.xml`, `_uniqueFields`, a primary key under another name or a token; a page size set by the caller before it passes the collection in; a collection that an earlier call already loaded.
+- **P-COL-02.** Filters that match one row through `_uniqueFields` or a token; a page size set by the caller before it passes the collection in; a collection that an earlier call already loaded. A unique index or a primary key under another name, declared in `db_schema.xml` or a setup script, is recognized since change p-col-02-unique-keys.
 - **P-FPC-02.** Blocks and view models that render only on pages without full page cache (cart, checkout, customer account, layouts with `cacheable="false"`), or whose session read is not reached while a cacheable page renders.
 - **P-DI-02.** Value and SDK objects that code creates with `new`, not the object manager; `return $this;` in a constructor that otherwise only assigns; a full ternary that falls back to an array literal, which the `?:` and `??` forms already allow. Getters on the context object (`$context->getRequest()` and the like) are correct but always negligible.
 - **P-LOOP-12.** Core repositories that cache by id (`QuoteRepository::get()`, `GroupRepository::getById()` through its registry); a product that the same iteration has just loaded into the repository's cache; a loop that returns on the first hit; a caller that keeps results behind an `isset()` on a map it filled before the loop.

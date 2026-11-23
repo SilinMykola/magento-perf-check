@@ -5,7 +5,7 @@ The index SHALL provide at least:
 - **DI:** per class, the constructor arguments configured with an object type ending in `\Proxy`, in any area, including through virtual types; the plugin classes declared in `di.xml`; and the `preference` elements of the global, `webapi_rest` and `webapi_soap` areas, including `app/etc/di.xml`.
 - **Events:** observer classes per event and area.
 - **Mview:** view IDs declared in `mview.xml`.
-- **Schema:** table names that have a primary key constraint in any `db_schema.xml`, and per table the columns of each `primary` and `unique` constraint. Declarations of one constraint (same `referenceId`) in several modules add up their columns; a constraint that any module declares `disabled="true"` does not count.
+- **Schema:** table names that have a primary key constraint in any `db_schema.xml`, and per table the columns of each `primary` and `unique` constraint. Declarations of one constraint (same `referenceId`) in several modules add up their columns; a constraint that any module declares `disabled="true"` does not count. Table names are kept in lower case. `Setup/InstallSchema.php` and `Setup/UpgradeSchema.php` of every module are part of the fingerprint that invalidates cached PHP results.
 - **Web API:** the service class and method of every route in `webapi.xml`.
 
 #### Scenario: Plugin class known

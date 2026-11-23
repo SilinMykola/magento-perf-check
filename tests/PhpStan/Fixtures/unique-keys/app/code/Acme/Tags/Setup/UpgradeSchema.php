@@ -43,6 +43,23 @@ class UpgradeSchema implements UpgradeSchemaInterface
             );
         }
 
+        if (version_compare($context->getVersion(), '1.0.3', '<')) {
+            $setup->getConnection()->addIndex(
+                $setup->getTable('acme_tag_source'),
+                $setup->getIdxName('acme_tag_source', ['source_code'], AdapterInterface::INDEX_TYPE_UNIQUE),
+                ['source_code'],
+                AdapterInterface::INDEX_TYPE_UNIQUE
+            );
+        }
+
+        if (version_compare($context->getVersion(), '1.0.4', '<')) {
+            // Codes repeat from now on.
+            $setup->getConnection()->dropIndex(
+                $setup->getTable('acme_tag_source'),
+                $setup->getIdxName('acme_tag_source', ['source_code'], AdapterInterface::INDEX_TYPE_UNIQUE)
+            );
+        }
+
         $setup->endSetup();
     }
 }

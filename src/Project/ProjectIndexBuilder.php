@@ -214,7 +214,13 @@ final class ProjectIndexBuilder
     {
         $modules = $this->moduleRoots($projectRoot);
 
-        return $this->fingerprintOf($modules, $this->indexedFiles($projectRoot, $modules), [...LayoutHandles::layoutFiles($projectRoot, $modules), ...self::routeFiles($modules), ...self::stylesheetFiles($projectRoot, $modules)]);
+        // P-COL-02 reads unique keys from the setup scripts of a module, present or not.
+        $setupScripts = [];
+        foreach (array_keys($modules) as $root) {
+            array_push($setupScripts, $root . '/Setup/InstallSchema.php', $root . '/Setup/UpgradeSchema.php');
+        }
+
+        return $this->fingerprintOf($modules, $this->indexedFiles($projectRoot, $modules), [...LayoutHandles::layoutFiles($projectRoot, $modules), ...self::routeFiles($modules), ...self::stylesheetFiles($projectRoot, $modules), ...$setupScripts]);
     }
 
     /**
@@ -501,18 +507,19 @@ final class ProjectIndexBuilder
                     break;
                 case 'db_schema.xml':
                     foreach ($this->elements($xpath, '/schema/table') as $table) {
+                        $tableName = strtolower($table->getAttribute('name'));
                         foreach ($this->elements($xpath, 'constraint', $table) as $constraint) {
                             if ($this->xsiType($constraint) === 'primary') {
                                 $tables[$table->getAttribute('name')] = true;
                             }
                             if (in_array($this->xsiType($constraint), ['primary', 'unique'], true)) {
                                 // Modules merge a constraint by its referenceId: columns add up, and one may disable it.
-                                $id = $table->getAttribute('name') . '|' . $constraint->getAttribute('referenceId');
+                                $id = $tableName . '|' . $constraint->getAttribute('referenceId');
                                 if ($constraint->getAttribute('disabled') === 'true') {
                                     $disabledConstraints[$id] = true;
                                 }
                                 foreach ($this->elements($xpath, 'column', $constraint) as $column) {
-                                    $constraints[$table->getAttribute('name')][$id][strtolower($column->getAttribute('name'))] = true;
+                                    $constraints[$tableName][$id][strtolower($column->getAttribute('name'))] = true;
                                 }
                             }
                         }

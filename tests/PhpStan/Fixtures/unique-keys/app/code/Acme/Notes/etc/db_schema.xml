@@ -7,4 +7,10 @@
         </constraint>
         <constraint xsi:type="unique" referenceId="ACME_TAG_NOTE_STORE" disabled="true"/>
     </table>
+    <table name="Acme_Tag_Case" resource="default">
+        <column xsi:type="varchar" name="code" nullable="false" length="32"/>
+        <constraint xsi:type="unique" referenceId="ACME_TAG_CASE_CODE">
+            <column name="code"/>
+        </constraint>
+    </table>
 </schema>
