@@ -73,6 +73,11 @@ Put it on the line of the call in the loop.
 
 Suppress with a reason.
 
+## Known false negatives
+
+- A query in the fallback of `?:` or `??`, as in `return $product ?: $this->repository->getById($id);`, is not counted, even when every caller in the loop passes no value and the fallback runs each time.
+- `$x ??= $this->repository->getById($id)` on a local variable is still counted as a query on every call.
+
 ## Basis
 
 | Source | Level | What it confirms |
