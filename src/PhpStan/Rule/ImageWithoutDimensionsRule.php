@@ -30,10 +30,13 @@ final class ImageWithoutDimensionsRule implements Rule
     public function processNode(Node $node, Scope $scope): array
     {
         $markup = TemplateMarkup::isStorefrontTemplate($scope->getFile()) ? TemplateMarkup::fromFile($scope->getFile()) : null;
+        if ($markup === null) {
+            return [];
+        }
         $errors = [];
         $rules = null;
-        $ancestors = $markup?->imageAncestors();
-        foreach ($markup?->tags('img') ?? [] as ['attributes' => $attributes, 'line' => $line, 'offset' => $offset]) {
+        $ancestors = $markup->imageAncestors();
+        foreach ($markup->tags('img') as ['attributes' => $attributes, 'line' => $line, 'offset' => $offset]) {
             if ((self::hasSize($attributes, 'width') && self::hasSize($attributes, 'height'))
                 || TemplateMarkup::printsAttributes($attributes)
             ) {
@@ -52,7 +55,7 @@ final class ImageWithoutDimensionsRule implements Rule
             // they name around the image are around it in this template too.
             $rules ??= [
                 ...array_map(static fn (array $rule): array => [...$rule, 'ancestors' => true], self::stylesheetRulesOf($scope->getFile())),
-                ...array_map(static fn (array $rule): array => [...$rule, 'ancestors' => false], self::cssRules((string) $markup?->styleSheet())),
+                ...array_map(static fn (array $rule): array => [...$rule, 'ancestors' => false], self::cssRules((string) $markup->styleSheet())),
             ];
             if (self::fixesBox([...$sized, ...self::cascade($attributes['class'] ?? '', $attributes['style'] ?? '', $rules, $ancestors === null ? null : ($ancestors[$offset] ?? []))])) {
                 continue;
