@@ -98,8 +98,8 @@ final class NonCacheableBlockRuleTest extends TestCase
         // follow includes), a nested include or account mark, cycles alone,
         // and an account mark in a theme folder of a disabled or missing module.
         // A page that defines the customer account navigation itself, or includes a handle that does, is an account
-        // page; a page that only references the navigation is not, and neither is default.xml, which defines it on
-        // every page, so a handle that default.xml includes is reported.
+        // page; a page that only references the navigation is not, and neither is default.xml, which defines it and
+        // includes a handle that defines it: X-LAY-03 reports its block, and a handle that default.xml includes is reported.
         $layout = 'app/code/Acme/Fee/view/frontend/layout/';
         self::assertSame([
             'X-LAY-01 ' . $layout . 'acme_base_only.xml:4',
@@ -123,6 +123,7 @@ final class NonCacheableBlockRuleTest extends TestCase
             'X-LAY-01 ' . $layout . 'hyva_acmeroute_index_index.xml:4',
             'X-LAY-01 ' . $layout . 'hyva_acmeroute_shared_index.xml:4',
             'X-LAY-03 ' . $layout . 'catalog_product_view_type_simple.xml:4',
+            'X-LAY-03 ' . $layout . 'default.xml:6',
         ], $reported);
     }
 
@@ -159,6 +160,6 @@ final class NonCacheableBlockRuleTest extends TestCase
         self::assertIsString($root);
         $result = (new XmlAnalyzer(new FileDiscovery($root), [new NonCacheableBlockRule()]))->analyze(['app/code', 'app/design']);
 
-        self::assertCount(36, $result->findings);
+        self::assertCount(37, $result->findings);
     }
 }

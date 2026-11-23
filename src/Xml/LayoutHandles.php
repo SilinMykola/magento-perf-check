@@ -6,6 +6,7 @@ namespace Silin\MagentoPerfCheck\Xml;
 
 use DOMDocument;
 use DOMElement;
+use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 
 /**
  * The storefront layout handles of a project and how they include each other. Magento merges every layout
@@ -30,7 +31,7 @@ final class LayoutHandles
     /**
      * @param array<string, array<string, true>> $includedBy handle => handles whose layout files include it
      * @param array<string, true> $accountPages handles with a layout file that includes customer_account or defines its
-     *     navigation, or that includes such a handle
+     *     navigation, or that includes such a handle; for a shop-wide handle only the include of customer_account counts
      * @param array<string, true> $pages handles of storefront controller actions: route id, controller path, action
      * @param array<string, bool> $routes storefront route ids => true when their controllers were not found, so each of
      *     their handles counts as a page
@@ -86,8 +87,9 @@ final class LayoutHandles
                 continue;
             }
             // A module's account page may copy the account navigation instead of including customer_account.
-            // default.xml is on every page, so a navigation defined there makes no page an account page.
-            if (self::withoutHyvaPrefix($handle) !== 'default' && self::definesAccountNavigation($document)) {
+            // A shop-wide handle (X-LAY-03), such as default, is on many pages, so a navigation there, as in a header
+            // dropdown, makes none of them an account page.
+            if (!NonCacheableBlockRule::isShopWide($handle) && self::definesAccountNavigation($document)) {
                 $accountPages[$handle] = true;
             }
             foreach (self::directUpdates($document->documentElement) as $included) {
@@ -97,11 +99,12 @@ final class LayoutHandles
                 $includedBy[$included][$handle] = true;
             }
         }
-        // Magento merges included handles recursively, so a handle that includes an account layout is one too.
+        // Magento merges included handles recursively, so a handle that includes an account layout is one too;
+        // a shop-wide handle only when it includes customer_account itself.
         $queue = array_keys($accountPages);
         while ($queue !== []) {
             foreach (array_keys($includedBy[array_pop($queue)] ?? []) as $includer) {
-                if (!isset($accountPages[$includer])) {
+                if (!isset($accountPages[$includer]) && !NonCacheableBlockRule::isShopWide((string) $includer)) {
                     $accountPages[$includer] = true;
                     $queue[] = $includer;
                 }

@@ -6,6 +6,6 @@ Some modules build their customer account pages without `<update handle="custome
 
 ## What Changes
 
-- A layout file that declares a `<block name="customer_account_navigation">` makes its handle an account page, as an include of `customer_account` does. `default` (and `hyva_default`) does not count: it is on every page.
-- A handle that includes an account page's handle, directly or through other handles, is an account page too.
+- A layout file that declares a `<block name="customer_account_navigation">` makes its handle an account page, as an include of `customer_account` does. A shop-wide handle of X-LAY-03 (`default`, `catalog_*`, `cms_*`) does not count, nor does including such a handle make it an account page: only its own include of `customer_account` does, as before.
+- A handle that includes an account page's handle, directly or through other handles, is an account page too, unless it is shop-wide. P-FPC-02 reads the same account pages. The project index version is raised, as its layout part changes.
 - Not changed: payment redirect, return and process pages of payment modules, which were the other seven false findings. Their layouts have nothing that tells them apart from a public page; only the handle name or the controller's code does, and guessing by name would hide true findings. They stay reported; the allowlist and `perf-ignore` cover them.
