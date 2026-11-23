@@ -23,6 +23,8 @@ final class ProjectIndex
      * @param array<string, true> $cronJobs classes that crontab.xml runs
      * @param array<string, list<string>> $webapiMethods service class => methods that webapi.xml routes call
      * @param array<string, list<string>> $webapiPreferences type => classes di.xml prefers for it in the global and web API areas
+     * @param array<string, list<string>> $layoutPlacements block or view model class, as written => frontend layout handles that name it
+     * @param array<string, true> $uncacheableHandles handles of $layoutPlacements that no cacheable page uses
      */
     public function __construct(
         public readonly int $moduleCount,
@@ -37,7 +39,52 @@ final class ProjectIndex
         private readonly array $cronJobs = [],
         private readonly array $webapiMethods = [],
         private readonly array $webapiPreferences = [],
+        private readonly array $layoutPlacements = [],
+        private readonly array $uncacheableHandles = [],
     ) {
+        foreach (array_keys($layoutPlacements) as $class) {
+            $this->placementKeys[self::normalizeClass((string) $class)] = (string) $class;
+        }
+    }
+
+    /** @var array<string, string> normalized class => class as layouts write it */
+    private array $placementKeys = [];
+
+    /**
+     * Whether frontend layouts name the class, as a block or as an object argument such as a view model, and
+     * every handle that does is on pages that are never cached: account pages, pages with a cacheable="false"
+     * block, and handles only those include. A class no layout names gives false.
+     */
+    public function isOnlyOnUncacheablePages(string $class): bool
+    {
+        $handles = $this->layoutPlacements[$this->placementKeys[self::normalizeClass($class)] ?? ''] ?? [];
+        foreach ($handles as $handle) {
+            if (!isset($this->uncacheableHandles[$handle])) {
+                return false;
+            }
+        }
+
+        return $handles !== [];
+    }
+
+    /**
+     * Classes that frontend layouts place on a handle that a cacheable page may use, as layouts write them.
+     *
+     * @return list<string>
+     */
+    public function classesOnCacheablePages(): array
+    {
+        $classes = [];
+        foreach ($this->layoutPlacements as $class => $handles) {
+            foreach ($handles as $handle) {
+                if (!isset($this->uncacheableHandles[$handle])) {
+                    $classes[] = (string) $class;
+                    break;
+                }
+            }
+        }
+
+        return $classes;
     }
 
     public static function normalizeClass(string $class): string
@@ -144,6 +191,8 @@ final class ProjectIndex
             'cronJobs' => $this->cronJobs,
             'webapiMethods' => $this->webapiMethods,
             'webapiPreferences' => $this->webapiPreferences,
+            'layoutPlacements' => $this->layoutPlacements,
+            'uncacheableHandles' => $this->uncacheableHandles,
         ];
     }
 
@@ -152,7 +201,7 @@ final class ProjectIndex
      */
     public static function fromArray(array $data): self
     {
-        /** @var array{moduleCount: int, proxyArguments: array<string, array<string, true>>, pluginClasses: array<string, true>, observers: array<string, list<array{class: string, area: string, module: string}>>, mviewViews: array<string, true>, tablesWithPrimaryKey: array<string, true>, listFieldResolvers: array<string, string>, pluginTargets: array<string, list<string>>, consoleCommands: array<string, true>, cronJobs: array<string, true>, webapiMethods: array<string, list<string>>, webapiPreferences: array<string, list<string>>} $data */
+        /** @var array{moduleCount: int, proxyArguments: array<string, array<string, true>>, pluginClasses: array<string, true>, observers: array<string, list<array{class: string, area: string, module: string}>>, mviewViews: array<string, true>, tablesWithPrimaryKey: array<string, true>, listFieldResolvers: array<string, string>, pluginTargets: array<string, list<string>>, consoleCommands: array<string, true>, cronJobs: array<string, true>, webapiMethods: array<string, list<string>>, webapiPreferences: array<string, list<string>>, layoutPlacements: array<string, list<string>>, uncacheableHandles: array<string, true>} $data */
         return new self(
             $data['moduleCount'],
             $data['proxyArguments'],
@@ -166,6 +215,8 @@ final class ProjectIndex
             $data['cronJobs'],
             $data['webapiMethods'],
             $data['webapiPreferences'],
+            $data['layoutPlacements'],
+            $data['uncacheableHandles'],
         );
     }
 }

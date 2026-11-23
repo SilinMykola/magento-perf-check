@@ -345,3 +345,236 @@ final class MagicSetterOutsideDataObject
         }
     }
 }
+
+final class SameArgumentsEveryIteration
+{
+    public function __construct(
+        private readonly ProductRepositoryInterface $productRepository,
+        private readonly Product $product,
+    ) {
+    }
+
+    /**
+     * @param list<object> $stores
+     * @param list<int> $ids
+     * @param list<string> $lines
+     */
+    public function run(int $id, array $stores, array $ids, array $lines): void
+    {
+        foreach ($stores as $store) {
+            $this->productRepository->getById($id); // not reported: the repository keeps the product it loaded
+            $this->productRepository->getById(self::DEFAULT_ID);
+            $this->product->load($id); // reported: a model keeps nothing
+            foreach ($ids as $other) {
+                $this->productRepository->getById($id);
+            }
+        }
+        foreach ($ids as $each) {
+            $this->productRepository->getById($each); // reported: the loop variable
+            $next = $each + 1;
+            $this->productRepository->getById($next); // reported: assigned in the loop
+            foreach ($stores as $store) {
+                $this->productRepository->getById($each); // reported: the outer loop changes it
+            }
+        }
+        foreach ($lines as $line) {
+            sscanf($line, '%d', $found);
+            $this->productRepository->getById($found); // reported: a function may write its argument
+            $this->apply(fn (int $x) => $this->productRepository->getById($x), $ids); // reported: a closure parameter
+        }
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    private function apply(callable $callback, array $ids): void
+    {
+    }
+
+    private const DEFAULT_ID = 1;
+}
+
+final class ChangedOutsideTheArgument
+{
+    public function __construct(
+        private readonly ProductRepositoryInterface $productRepository,
+        private readonly IdParser $parser,
+    ) {
+    }
+
+    /**
+     * @param list<string> $lines
+     */
+    public function forceReload(string $sku, array $lines): void
+    {
+        foreach ($lines as $line) {
+            $this->productRepository->get($sku, false, null, true); // reported: forceReload loads again
+        }
+    }
+
+    /**
+     * @param list<string> $lines
+     */
+    public function byReference(int $id, array $lines): void
+    {
+        foreach ($lines as $line) {
+            $this->parser->parse($line, $id);
+            $this->productRepository->getById($id); // reported: a method may take it by reference
+        }
+    }
+
+    /**
+     * @param list<array<string, int>> $rows
+     */
+    public function extracted(array $rows): void
+    {
+        $x = 0;
+        foreach ($rows as $row) {
+            extract($row);
+            $this->productRepository->getById($x); // reported: extract() may set it
+        }
+    }
+
+    /**
+     * @param list<array<string, int>> $rows
+     */
+    public function variableVariable(array $rows): void
+    {
+        $y = 0;
+        foreach ($rows as $row) {
+            $name = 'y';
+            $$name = $row['y'];
+            $this->productRepository->getById($y); // reported: a variable variable may be it
+        }
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function referenced(int $id, array $ids): void
+    {
+        $ref = &$id;
+        foreach ($ids as $other) {
+            $ref = $other;
+            $this->productRepository->getById($id); // reported: changed through a reference
+        }
+    }
+
+    /**
+     * @param list<int> $stores
+     */
+    public function saved(string $sku, array $stores): void
+    {
+        foreach ($stores as $store) {
+            $product = $this->productRepository->get($sku); // reported: save() makes it load again
+            $this->productRepository->save($product);
+        }
+    }
+
+    /**
+     * @param list<int> $stores
+     */
+    public function called(int $id, array $stores, callable $next): void
+    {
+        foreach ($stores as $store) {
+            $next();
+            $this->productRepository->getById($id); // reported: a callable may change anything
+        }
+    }
+}
+
+final class IdParser
+{
+    public function parse(string $line, int &$id): void
+    {
+        $id = (int) $line;
+    }
+
+    public static function parseStatic(string $line, int &$id): void
+    {
+        $id = (int) $line;
+    }
+
+    public function run(callable $callback): void
+    {
+        $callback();
+    }
+}
+
+final class ChangedElsewhere
+{
+    public function __construct(
+        private readonly ProductRepositoryInterface $productRepository,
+        private readonly IdParser $parser,
+    ) {
+    }
+
+    /**
+     * @param list<string> $lines
+     */
+    public function byStaticReference(int $id, array $lines): void
+    {
+        foreach ($lines as $line) {
+            IdParser::parseStatic($line, $id);
+            $this->productRepository->getById($id); // reported: a static method may take it by reference
+        }
+    }
+
+    /**
+     * @param list<string> $lines
+     */
+    public function byClosure(array $lines): void
+    {
+        $n = 0;
+        $increment = function () use (&$n): void {
+            ++$n;
+        };
+        foreach ($lines as $line) {
+            $this->parser->run($increment);
+            $this->productRepository->getById($n); // reported: a closure changes it by reference
+        }
+    }
+
+    /**
+     * @param list<int> $ids
+     * @param list<string> $stores
+     */
+    public function byCallback(array $ids, array $stores): void
+    {
+        array_map(function (int $id) use ($stores): void {
+            foreach ($stores as $store) {
+                $this->productRepository->getById($id); // reported: array_map() passes another id each time
+            }
+        }, $ids);
+        array_map(fn (int $id) => $this->productRepository->get('sku-1'), $ids); // not reported: the same SKU each time, which the repository keeps
+    }
+
+    /**
+     * @param list<string> $stores
+     */
+    public function byNamedForceReload(string $sku, array $stores): void
+    {
+        foreach ($stores as $store) {
+            $this->productRepository->get($sku, forceReload: true); // reported: it loads again every time
+        }
+    }
+}
+
+final class FirstClassCallables
+{
+    public function __construct(private readonly ProductRepositoryInterface $productRepository)
+    {
+    }
+
+    /**
+     * @param list<string> $lines
+     */
+    public function run(int $id, array $lines): void
+    {
+        foreach ($lines as $line) {
+            $lengths = array_map(strlen(...), $lines);
+            $load = $this->productRepository->getById(...);
+            $this->productRepository->getById($id); // not reported: strlen(...) and getById(...) pass nothing
+        }
+    }
+}

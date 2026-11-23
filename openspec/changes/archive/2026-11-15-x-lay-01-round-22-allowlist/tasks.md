@@ -1,0 +1,2 @@
+- [x] Add the four handles to the default allowlist, with golden fixtures that fail without them
+- [x] Measure the corpus; update the rule page and the changelog

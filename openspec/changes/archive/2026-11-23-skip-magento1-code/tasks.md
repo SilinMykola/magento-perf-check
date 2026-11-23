@@ -1,0 +1,2 @@
+- [x] Leave Magento 1 code pools and non-theme design folders out, with an integration test that fails without it
+- [x] magento1-code notice; configuration page and changelog

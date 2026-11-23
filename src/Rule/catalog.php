@@ -183,7 +183,7 @@ return [
         $b('lib/web/jquery/compat.js#L1-L4', 'jquery/compat imports every jQuery UI widget: "Import every plugin under the sun. Bad for performance".'),
         $b('app/code/Magento/Theme/view/frontend/requirejs-config.js#L30', 'On the storefront core maps jquery/ui to jquery/compat.'),
         new Source(SourceLevel::B, 'https://github.com/magento/magento2/issues/22995', 'Measured in the issue: "jQueryUI is `227kb` of the shared bundle (unminified), even though only 11% of that is used on the homepage."'),
-    ]),
+    ], appliesFrom: '2.3.3'),
     new RuleDefinition('J-DEP-02', 'A module in the top-level deps of a storefront requirejs-config.js, loaded on every page', Severity::Info, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/frontend-core/javascript/requirejs', '"Adding modules under an independent `deps` configuration will load the specified modules in all pages."'),
         $a('https://developer.adobe.com/commerce/frontend-core/javascript/custom', '"Additional dependencies demand more web requests, which can slow rendering."'),
@@ -277,7 +277,7 @@ return [
         $b('lib/internal/Magento/Framework/ObjectManager/ObjectManager.php#L57-L60', 'create() builds a new instance through the factory on every call.'),
         $b('lib/internal/Magento/Framework/ObjectManager/ObjectManager.php#L68-L76', 'get() builds the shared instance on the first call and returns it from _sharedInstances afterwards.'),
     ], ['magentoPerf.loopObjectManager' => null]),
-    new RuleDefinition('U-CLI-01', 'Console command whose execute() has no int return type (Magento 2.4.9, Symfony Console 7.4)', Severity::Error, RuleStatus::Experimental, [
+    new RuleDefinition('U-CLI-01', 'Console command whose execute() has no int return type (Magento 2.4.9, Symfony Console 7.4)', Severity::Error, RuleStatus::Default, [
         $a('https://developer.adobe.com/commerce/php/development/backward-incompatible-changes/', 'Symfony 7.4 LTS support (2.4.9): "Custom classes that extend Symfony core classes must have updated type declarations and method signatures aligned with Symfony 7.4".'),
         $b('composer.json#L89', 'Magento requires symfony/console ^7.4.'),
         new Source(SourceLevel::B, 'https://github.com/symfony/console/blob/92f58bc4bf97a92ed1b9f367f0cd44f20bde0e87/Command/Command.php#L240', 'Symfony Console 7.4: Command::execute() declares the return type int.'),

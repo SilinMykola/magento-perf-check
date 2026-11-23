@@ -9,6 +9,7 @@ use Silin\MagentoPerfCheck\CodingStandard\CodingStandardRunner;
 use Silin\MagentoPerfCheck\Config\ConfigLoader;
 use Silin\MagentoPerfCheck\PhpStan\Rule\GetFirstItemWithoutLimitRule;
 use Silin\MagentoPerfCheck\PhpStan\Runner\PhpStanRunner;
+use Silin\MagentoPerfCheck\Project\MagentoOneCode;
 use Silin\MagentoPerfCheck\Project\MergeJsFilesRule;
 use Silin\MagentoPerfCheck\Project\ProjectIndexBuilder;
 use Silin\MagentoPerfCheck\Report\AnalysisResult;
@@ -236,24 +237,58 @@ final class Application
     {
         $notices = [];
         foreach ($disabledRoots as $root => $name) {
-            if (!str_starts_with($root, $projectRoot . '/')) {
-                continue;
-            }
-            $relative = substr($root, strlen($projectRoot) + 1);
-            foreach ($paths as $path) {
-                $path = trim($path, '/');
-                if ($path === '.' || str_starts_with($relative . '/', $path . '/') || str_starts_with($path . '/', $relative . '/')) {
-                    $notices[$name] = new Notice(
-                        Notice::SOURCE_DISABLED_MODULE,
-                        sprintf('%s is disabled in app/etc/config.php and was not analyzed.', $name),
-                        $relative,
-                    );
-                    break;
-                }
+            $relative = self::analyzedDir($root, $paths, $projectRoot);
+            if ($relative !== null) {
+                $notices[$name] = new Notice(
+                    Notice::SOURCE_DISABLED_MODULE,
+                    sprintf('%s is disabled in app/etc/config.php and was not analyzed.', $name),
+                    $relative,
+                );
             }
         }
 
         return array_values($notices);
+    }
+
+    /**
+     * One notice for each folder of Magento 1 code that lies in, or holds, an analyzed path.
+     *
+     * @param list<string> $paths
+     * @param list<string> $dirs absolute directories
+     * @return list<Notice>
+     */
+    private static function magentoOneNotices(array $paths, array $dirs, string $projectRoot): array
+    {
+        $notices = [];
+        foreach ($dirs as $dir) {
+            $relative = self::analyzedDir($dir, $paths, $projectRoot);
+            if ($relative !== null) {
+                $notices[] = new Notice(Notice::SOURCE_MAGENTO_ONE, sprintf('%s is Magento 1 code and was not analyzed.', $relative), $relative);
+            }
+        }
+
+        return $notices;
+    }
+
+    /**
+     * The directory relative to the project when it lies in, or holds, an analyzed path; null otherwise.
+     *
+     * @param list<string> $paths
+     */
+    private static function analyzedDir(string $dir, array $paths, string $projectRoot): ?string
+    {
+        if (!str_starts_with($dir, $projectRoot . '/')) {
+            return null;
+        }
+        $relative = substr($dir, strlen($projectRoot) + 1);
+        foreach ($paths as $path) {
+            $path = trim($path, '/');
+            if ($path === '.' || str_starts_with($relative . '/', $path . '/') || str_starts_with($path . '/', $relative . '/')) {
+                return $relative;
+            }
+        }
+
+        return null;
     }
 
     private function colors(Options $options): bool
@@ -319,16 +354,22 @@ final class Application
         }
         // A module disabled in app/etc/config.php does not run: neither its PHP nor its XML is analyzed.
         $disabledRoots = $indexBuilder->disabledModuleRoots($options->projectRoot);
-        $disabledNotices = self::disabledModuleNotices($paths, $disabledRoots, $options->projectRoot);
-        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests, array_keys($disabledRoots)), $enabledXmlRules))->analyze($paths);
+        // Nor does Magento 1 code left over in the project.
+        $magentoOneDirs = MagentoOneCode::dirs($options->projectRoot);
+        $disabledNotices = [
+            ...self::disabledModuleNotices($paths, $disabledRoots, $options->projectRoot),
+            ...self::magentoOneNotices($paths, $magentoOneDirs, $options->projectRoot),
+        ];
+        $excludedDirs = [...array_keys($disabledRoots), ...$magentoOneDirs];
+        $xml = (new XmlAnalyzer(new FileDiscovery($options->projectRoot, $includeTests, $excludedDirs), $enabledXmlRules))->analyze($paths);
         $php = ($this->phpStanRunner ?? new PhpStanRunner($registry))
-            ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests, array_keys($disabledRoots));
+            ->run($options->projectRoot, $paths, $options->memoryLimit, $includeTests, $excludedDirs);
         [$codingStandardFindings, $codingStandardNotices] = (new CodingStandardRunner($registry))->run(
             $options->projectRoot,
             array_values(array_filter(array_keys(CodingStandardRunner::SNIFFS), static fn (string $id): bool => $config->isEnabled($id, $registry))),
             $paths,
             $includeTests,
-            array_keys($disabledRoots),
+            $excludedDirs,
         );
 
         if ($xml->filesFound === 0 && !$php->filesAnalyzed && $disabledNotices === []) {

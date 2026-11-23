@@ -28,7 +28,7 @@ vendor/bin/magento-perf-check --config=vendor/silin/magento-perf-check/resources
 
 [`resources/all-rules.neon`](../resources/all-rules.neon) switches on the experimental rules too. The run analyzes `app/code` and `app/design`. PHPStan keeps a cache, so the first run is the slow one: on the Magento 2.4.9 core it took 84.5 s with a cold cache and 2.7 s on the next run ([round 15, Timing](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md#timing)).
 
-Exit code 0 or 1 means the run finished (1: at least one finding at `error`). Exit code 2 means it failed or is incomplete, and the reason is on the console. If PHPStan ran out of memory, run again with `--memory-limit=4G`; a report with `"incomplete": true` is missing its PHP findings. Notices with the source `coding-standard` (the project has no magento/magento-coding-standard, or one without a sniff an S-* rule runs) or `upgrade-version` (the project is not on the version an upgrade rule checks) are normal.
+Exit code 0 or 1 means the run finished (1: at least one finding at `error`). Exit code 2 means it failed or is incomplete, and the reason is on the console. A file PHPStan dies on is left out with a `phpstan-crash` notice and the rest is analyzed. If the run is still incomplete because PHPStan ran out of memory, run again with `--memory-limit=4G`; a report with `"incomplete": true` is missing its PHP findings. Notices with the source `coding-standard` (the project has no magento/magento-coding-standard, or one without a sniff an S-* rule runs) or `upgrade-version` (the project is not on the version an upgrade rule checks) are normal.
 
 ## 2. Grade the findings
 

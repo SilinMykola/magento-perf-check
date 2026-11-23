@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 namespace Magento\Framework\View\Element {
-    abstract class AbstractBlock
+    interface BlockInterface
+    {
+    }
+
+    abstract class AbstractBlock implements BlockInterface
     {
         /** @var bool */
         protected $_isScopePrivate = false;
@@ -121,7 +125,19 @@ namespace Magento\Customer\Api\Data {
     }
 }
 
+namespace Magento\Quote\Api {
+    interface CartRepositoryInterface
+    {
+        public function get(int $cartId): object;
+    }
+}
+
 namespace Magento\Quote\Api\Data {
+    interface CartItemInterface
+    {
+        public function getQuoteId(): ?int;
+    }
+
     interface CartInterface
     {
         public function getId(): ?int;

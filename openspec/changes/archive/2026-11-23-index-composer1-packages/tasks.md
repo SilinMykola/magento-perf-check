@@ -1,0 +1,2 @@
+- [x] Read Composer 1 entries from vendor/<name>, with a test that fails without it
+- [x] Measure the corpus and the private projects; update the changelog

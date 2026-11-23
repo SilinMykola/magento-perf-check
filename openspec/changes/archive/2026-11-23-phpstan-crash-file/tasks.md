@@ -1,0 +1,2 @@
+- [x] Find the file a single PHPStan process dies on, leave it out and run again, with an integration test that fails without it
+- [x] Configuration page, calibration report guide and changelog

@@ -134,7 +134,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         if ($node instanceof Expr\FuncCall && $node->name instanceof Node\Name
             && in_array($node->name->toLowerString(), ['count', 'sizeof'], true)
         ) {
-            $key = $this->rootKey($node->getArgs()[0]->value ?? null);
+            $key = $this->rootKey(CallArgs::of($node)[0]->value ?? null);
             $this->mark($node, $key);
             if ($key !== null && ($this->functionRowUses()[$key] ?? 0) > 0) {
                 $node->setAttribute(self::ROWS_USED_ELSEWHERE, true);
@@ -335,12 +335,12 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         }
 
         if ($name === 'addidfilter' || $name === 'setidfilter') {
-            return $this->isEquality($call->getArgs()[0]->value ?? null);
+            return $this->isEquality(CallArgs::of($call)[0]->value ?? null);
         }
         if ($name !== 'addfieldtofilter' && $name !== 'addattributetofilter') {
             return false;
         }
-        $args = $call->getArgs();
+        $args = CallArgs::of($call);
         $field = $args[0]->value ?? null;
         if (!$field instanceof Node\Scalar\String_) {
             return false;

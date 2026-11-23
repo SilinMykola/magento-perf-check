@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
+use Silin\MagentoPerfCheck\PhpStan\CallArgs;
 use Silin\MagentoPerfCheck\PhpStan\LoopContextVisitor;
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 use Silin\MagentoPerfCheck\PhpStan\ProjectIndexProvider;
@@ -31,6 +32,8 @@ final class ResolverQueryRule implements Rule
 
     private const RESOLVER = 'Magento\Framework\GraphQl\Query\ResolverInterface';
     private const DB_ADAPTER = 'Magento\Framework\DB\Adapter\AdapterInterface';
+    private const CART_REPOSITORY = 'Magento\Quote\Api\CartRepositoryInterface';
+    private const CART_ITEM = 'Magento\Quote\Api\Data\CartItemInterface';
 
     /** Calls that run the query of a collection. */
     public const COLLECTION_QUERIES = ['load', 'getitems', 'getsize', 'getfirstitem', 'getlastitem', 'getdata', 'count', 'toarray', 'getcolumnvalues', 'getallids'];
@@ -58,7 +61,7 @@ final class ResolverQueryRule implements Rule
             return [];
         }
         $class = $this->queryClass($node->name->toLowerString(), $scope->getType($node->var), $scope);
-        if ($class === null) {
+        if ($class === null || $this->cartOfItem($node, $scope)) {
             return [];
         }
 
@@ -91,6 +94,21 @@ final class ResolverQueryRule implements Rule
             $query,
             $field,
         ))->identifier(self::IDENTIFIER)->build();
+    }
+
+    /**
+     * The cart of a cart item: the items of a list share the cart, which the cart query loaded and
+     * QuoteRepository keeps by id, so "$cartRepository->get($cartItem->getQuoteId())" queries nothing.
+     */
+    private function cartOfItem(MethodCall $call, Scope $scope): bool
+    {
+        $argument = CallArgs::of($call)[0]->value ?? null;
+
+        return $call->name instanceof Node\Identifier && $call->name->toLowerString() === 'get'
+            && MagentoTypes::isObjectOf($scope->getType($call->var), self::CART_REPOSITORY)
+            && $argument instanceof MethodCall && $argument->name instanceof Node\Identifier
+            && $argument->name->toLowerString() === 'getquoteid'
+            && MagentoTypes::isObjectOf($scope->getType($argument->var), self::CART_ITEM);
     }
 
     private function queryClass(string $method, Type $type, Scope $scope): ?string

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
+use Silin\MagentoPerfCheck\PhpStan\CallArgs;
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -47,7 +48,7 @@ final class CacheCleanRule implements Rule
         }
         $method = $node->name->toLowerString();
         $type = $scope->getType($node->var);
-        $args = $node->getArgs();
+        $args = CallArgs::of($node);
 
         if ($method === 'cleantype' && $this->types->subtypeOf($type, self::TYPE_LIST) !== null && isset($args[0])) {
             $values = array_map(static fn ($string): string => $string->getValue(), $scope->getType($args[0]->value)->getConstantStrings());

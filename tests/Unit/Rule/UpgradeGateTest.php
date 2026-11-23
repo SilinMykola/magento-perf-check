@@ -71,6 +71,21 @@ final class UpgradeGateTest extends TestCase
         self::assertTrue((new UpgradeGate(null, null))->runs(null));
     }
 
+    public function testRuleThatAppliesFromAVersionIsSilentOnlyBelowTheInstalledOne(): void
+    {
+        $rule = (new RuleRegistry())->find('J-DEP-01');
+        self::assertNotNull($rule);
+        $v = static fn (string $version): MagentoVersion => MagentoVersion::parse($version) ?? throw new \LogicException($version);
+
+        // Core split jQuery UI into per-widget modules in 2.3.3; before that the advice cannot be followed.
+        self::assertFalse((new UpgradeGate($v('2.2.3'), null))->runs($rule));
+        self::assertFalse((new UpgradeGate($v('2.3.2'), $v('2.4.9')))->runs($rule));
+        self::assertTrue((new UpgradeGate($v('2.3.3'), null))->runs($rule));
+        self::assertTrue((new UpgradeGate($v('2.4.9'), null))->runs($rule));
+        // Without vendor/magento/magento2-base the version is unknown: the rule runs.
+        self::assertTrue((new UpgradeGate(null, null))->runs($rule));
+    }
+
     public function testConsoleExecuteResultRuleRunsFromTheSymfony54Patches(): void
     {
         $rule = (new RuleRegistry())->find('U-CLI-02');

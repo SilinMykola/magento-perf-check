@@ -32,6 +32,7 @@ P-LOOP-01 SHALL NOT report:
 - Receivers whose type PHPStan cannot resolve.
 - `load()` on `Magento\Directory\Model\Currency`, which only sets the currency code.
 - `get()` or `getById()` on `Magento\Store\Api\StoreRepositoryInterface`, `WebsiteRepositoryInterface` or `GroupRepositoryInterface`, which read cached configuration.
+- `get()` or `getById()` on a repository that keeps what it loaded for the rest of the request (`Magento\Catalog\Api\ProductRepositoryInterface`, `CategoryRepositoryInterface`, `ProductAttributeRepositoryInterface`, `Magento\Customer\Api\CustomerRepositoryInterface`, `Magento\Sales\Api\OrderRepositoryInterface`, `Magento\Quote\Api\CartRepositoryInterface`, `Magento\Eav\Api\AttributeRepositoryInterface`), when every argument is a literal, a constant, or a variable that no enclosing loop statement changes: assigns, increments, unsets, iterates, catches, declares `static` or `global`, passes to a function, method or constructor other than `get()`, `getById()` or `load()`, or takes as a closure parameter or by-reference use; the parameters of a callback that an iterating function such as `array_map()` calls SHALL count as changed too. Every variable SHALL count as changed in a loop with a variable variable, `extract()` or `parse_str()`, a call of a callable held in a variable, `include`, `eval`, or a `save()`, `delete()` or `deleteById()` call, and in a function that makes a reference. A fourth argument, `ProductRepository`'s `$forceReload`, SHALL be absent or the literal `false`, and no argument SHALL be passed by name. Such a call queries in the first iteration only.
 
 #### Scenario: Outside a loop
 - **WHEN** `$this->productRepository->getById($id)` is called once in a method body without a loop
@@ -56,6 +57,12 @@ P-LOOP-01 SHALL NOT report:
 #### Scenario: Load that runs no query
 - **WHEN** `$currency->load($code)` or `$this->storeRepository->getById($id)` is called inside a loop
 - **THEN** P-LOOP-01 reports nothing
+
+#### Scenario: Same id in every iteration
+- **WHEN** `$this->productRepository->getById($id)` is called in a loop over stores and `$id` is a parameter of the method that the loop does not change
+- **THEN** P-LOOP-01 reports nothing
+- **WHEN** the argument is the loop variable, a variable assigned in the loop, a variable that an enclosing loop changes, or the receiver is a model's `load($id)`
+- **THEN** P-LOOP-01 reports the call
 
 ### Requirement: P-LOOP-02 collection created and loaded in a loop
 P-LOOP-02 SHALL report, as `error`, a collection that is created and then loaded within one loop iteration. A collection is created by `create()` returning a database collection, either directly in a chain or through a variable assigned inside the same loop body. It is loaded by `load()`, `getItems()`, `getSize()`, `getFirstItem()` or `count()`. One collection SHALL give one finding, on its first loading call.

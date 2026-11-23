@@ -110,7 +110,7 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
     {
         foreach ($finder->findInstanceOf($statements, Expr\MethodCall::class) as $call) {
             $name = $call->name instanceof Node\Identifier ? $call->name->toLowerString() : '';
-            $header = $call->getArgs()[0]->value ?? null;
+            $header = CallArgs::of($call)[0]->value ?? null;
             if ($name === 'setpublicheaders'
                 || ($name === 'setheader' && $header instanceof Node\Scalar\String_ && strtolower($header->value) === 'cache-control')
             ) {
@@ -172,7 +172,7 @@ final class ControllerResultVisitor extends NodeVisitorAbstract
      */
     private function createsUncacheableType(Expr\MethodCall $create): bool
     {
-        $type = $create->getArgs()[0]->value ?? null;
+        $type = CallArgs::of($create)[0]->value ?? null;
 
         return $type instanceof Expr\ClassConstFetch && $type->name instanceof Node\Identifier
             && in_array($type->name->toString(), ['TYPE_REDIRECT', 'TYPE_FORWARD', 'TYPE_JSON', 'TYPE_RAW'], true);

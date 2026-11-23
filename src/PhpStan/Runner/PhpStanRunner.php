@@ -29,6 +29,7 @@ final class PhpStanRunner
     private const PACKAGE_ROOT = __DIR__ . '/../../..';
 
     private const MAX_PASSES = 5;
+    private const CRASH_FILES = 'crash-files.json';
 
     /** The switches of bitexpert/phpstan-magento that turn its own rules off. */
     private const BITEXPERT_SWITCHES = [
@@ -104,23 +105,70 @@ final class PhpStanRunner
 
         // A pattern, not the directory: PHPStan 1.12 would also leave out a sibling whose name starts the same.
         $excludedPatterns = array_map(static fn (string $dir): string => $dir . '/*', $excludedDirs);
-        $excluded = [];
         $parseNotices = [];
+        // Files found to kill PHPStan in an earlier run with the same memory limit stay out while
+        // unchanged, so this run starts with the configuration that run ended with and PHPStan's
+        // result cache stays valid. The notice names only those in the analyzed paths.
+        $known = $this->crashFiles($workDir);
+        $excluded = [];
+        foreach ($known as $file => [$hash, $reason, $limit]) {
+            if ($limit === $memoryLimit && is_file($file) && md5_file($file) === $hash) {
+                $excluded[] = $file;
+                if ($this->isAnalyzed($file, $absolutePaths, [...$excludedPatterns, ...$testPatterns])) {
+                    $parseNotices[] = $this->crashNotice($file, $reason, $projectRoot);
+                }
+            }
+        }
         $autoloadFile = $this->writeConfig($workDir, self::EMPTY_EXTENSION_INSTALLER, '.php');
+        $crashed = null;
         for ($pass = 1; $pass <= self::MAX_PASSES; ++$pass) {
+            $exclusions = [...$excludedPatterns, ...$excluded];
             $config = $this->writeConfig(
                 $workDir,
-                $this->config($projectRoot, $absolutePaths, $testPatterns, [...$excludedPatterns, ...$excluded], $workDir . '/cache', $indexFingerprint),
+                $this->config($projectRoot, $absolutePaths, $testPatterns, $exclusions, $workDir . '/cache', $indexFingerprint),
             );
             $result = $this->analyse($config, $autoloadFile, $projectRoot, $memoryLimit);
             $unparsable = array_diff(array_keys($result['unparsable']), $excluded);
             if ($unparsable === []) {
-                return new PhpStanResult($result['findings'], [...$notices, ...$parseNotices, ...$result['notices']], $result['filesFound']);
+                $complete = new PhpStanResult($result['findings'], [...$notices, ...$parseNotices, ...$result['notices']], $result['filesFound']);
+                // A worker that dies, as on an obfuscated file that exhausts the memory limit, takes the
+                // findings of every file with it. One process with --debug names each file before it
+                // analyzes it, so the last one named is where it died. As that process holds the memory
+                // of all files before it, the file is left out only when it also kills an analysis of
+                // its own; then the rest is analyzed again. A file with an internal error would stop the
+                // single process first, so those are left out of it.
+                $crash = null;
+                if ($this->workerDied($result)) {
+                    $debugConfig = $this->writeConfig($workDir, $this->config(
+                        $projectRoot,
+                        $absolutePaths,
+                        $testPatterns,
+                        [...$exclusions, ...$this->internalErrorFiles($result)],
+                        $workDir . '/cache',
+                        $indexFingerprint,
+                    ));
+                    $crash = $this->crashingFile($debugConfig, $autoloadFile, $projectRoot, $memoryLimit);
+                }
+                if ($crash === null || in_array($crash[0], $excluded, true)
+                    || !$this->crashesAlone($crash[0], $projectRoot, $testPatterns, $exclusions, $workDir, $indexFingerprint, $autoloadFile, $memoryLimit)) {
+                    return $complete;
+                }
+                $crashed = $complete;
+                $excluded[] = $crash[0];
+                $parseNotices[] = $this->crashNotice($crash[0], $crash[1], $projectRoot);
+                $known[$crash[0]] = [(string) md5_file($crash[0]), $crash[1], $memoryLimit];
+                $this->saveCrashFiles($workDir, $known);
+                continue;
             }
             foreach ($unparsable as $file) {
                 $excluded[] = $file;
                 array_push($parseNotices, ...$result['unparsable'][$file]);
             }
+        }
+
+        // Out of passes while files kept killing workers: the incomplete result says so.
+        if ($crashed !== null) {
+            return $crashed;
         }
 
         throw new UsageException(sprintf(
@@ -176,6 +224,168 @@ final class PhpStanRunner
             'generated/code is missing or empty, so the types of proxies and extension attributes are unknown and calls on them are not checked. '
             . ($gap === null ? 'Run bin/magento setup:di:compile, or install bitexpert/phpstan-magento in the tool.' : 'Run bin/magento setup:di:compile.'),
         )];
+    }
+
+    private function crashNotice(string $file, string $reason, string $projectRoot): Notice
+    {
+        return new Notice(
+            Notice::SOURCE_PHPSTAN_CRASH,
+            'PHPStan died on this file, so it was left out of the analysis: ' . $reason,
+            $this->relative($file, $projectRoot),
+        );
+    }
+
+    /**
+     * Files an earlier run found to kill PHPStan, with the MD5 of their content then, the reason and the memory limit.
+     *
+     * @return array<string, array{string, string, string}>
+     */
+    private function crashFiles(string $workDir): array
+    {
+        $data = json_decode((string) @file_get_contents($workDir . '/' . self::CRASH_FILES), true);
+        $files = [];
+        foreach (is_array($data) ? $data : [] as $file => $entry) {
+            if (is_string($file) && is_array($entry) && is_string($entry[0] ?? null) && is_string($entry[1] ?? null) && is_string($entry[2] ?? null)) {
+                $files[$file] = [$entry[0], $entry[1], $entry[2]];
+            }
+        }
+
+        return $files;
+    }
+
+    /**
+     * Two runs on the same project at once may each drop the other's new entry; that file is then
+     * searched for again.
+     *
+     * @param array<string, array{string, string, string}> $files
+     */
+    private function saveCrashFiles(string $workDir, array $files): void
+    {
+        $temporary = $workDir . '/' . self::CRASH_FILES . '.' . getmypid();
+        if (@file_put_contents($temporary, json_encode($files, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)) !== false) {
+            @rename($temporary, $workDir . '/' . self::CRASH_FILES);
+        }
+    }
+
+    /**
+     * @param list<string> $paths absolute
+     * @param list<string> $excludedPatterns fnmatch() patterns
+     */
+    private function isAnalyzed(string $file, array $paths, array $excludedPatterns): bool
+    {
+        // --paths=. gives <root>/. and test patterns such as <root>/./Test/*.
+        foreach ($excludedPatterns as $pattern) {
+            if (fnmatch(str_replace('/./', '/', $pattern), $file)) {
+                return false;
+            }
+        }
+        foreach ($paths as $path) {
+            $path = preg_replace('#/\.$#', '', $path) ?? $path;
+            if ($file === $path || str_starts_with($file, rtrim($path, '/') . '/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Files named by an internal error of the run ("... while analysing file <path>").
+     *
+     * @param array{notices: list<Notice>} $result
+     * @return list<string>
+     */
+    private function internalErrorFiles(array $result): array
+    {
+        $files = [];
+        foreach ($result['notices'] as $notice) {
+            if ($notice->source === Notice::SOURCE_ANALYSIS_FAILURE
+                && preg_match('/ while analysing file (.+?\.(?:php|phtml))\b/', $notice->message, $m) === 1) {
+                $files[] = $m[1];
+            }
+        }
+
+        return $files;
+    }
+
+    /**
+     * @param array{notices: list<Notice>} $result
+     */
+    private function workerDied(array $result): bool
+    {
+        foreach ($result['notices'] as $notice) {
+            // A dead worker; not a timeout or an internal error, which a single process does not locate.
+            if ($notice->source === Notice::SOURCE_ANALYSIS_FAILURE
+                && (str_contains($notice->message, 'Child process error') || str_contains($notice->message, 'memory limit'))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Whether an analysis of this file alone, with the same limit, also fails.
+     *
+     * @param list<string> $testPatterns
+     * @param list<string> $exclusions
+     */
+    private function crashesAlone(string $file, string $projectRoot, array $testPatterns, array $exclusions, string $workDir, string $indexFingerprint, string $autoloadFile, string $memoryLimit): bool
+    {
+        $config = $this->writeConfig($workDir, $this->config($projectRoot, [$file], $testPatterns, $exclusions, $workDir . '/cache', $indexFingerprint));
+        try {
+            $result = $this->analyse($config, $autoloadFile, $projectRoot, $memoryLimit);
+        } catch (UsageException) {
+            return true;
+        }
+
+        return $this->workerDied($result);
+    }
+
+    /**
+     * The file a single PHPStan process dies on, with the last line of its error output, or null
+     * when it does not die.
+     *
+     * @return array{string, string}|null
+     */
+    private function crashingFile(string $config, string $autoloadFile, string $projectRoot, string $memoryLimit): ?array
+    {
+        [$exitCode, $stdout, $stderr] = Subprocess::run([
+            PHP_BINARY,
+            $this->phpstanBinary ?? $this->findPhpstan(),
+            'analyse',
+            '--debug',
+            '--no-progress',
+            '--no-interaction',
+            '--error-format=json',
+            '--memory-limit=' . $memoryLimit,
+            '--configuration=' . $config,
+            '--autoload-file=' . $autoloadFile,
+        ], $projectRoot, 'PHPStan');
+        if ($exitCode === 0 || $exitCode === 1) {
+            return null;
+        }
+        $file = null;
+        foreach (preg_split('/\R/', $stdout) ?: [] as $line) {
+            if ($line !== '' && is_file($line)) {
+                $file = $line;
+            }
+        }
+        if ($file === null) {
+            return null;
+        }
+        // The stack trace comes first; the line that says why is near the end.
+        $reason = 'exit code ' . $exitCode;
+        foreach (['crashed', 'Fatal error'] as $marker) {
+            foreach (preg_split('/\R/', $stderr) ?: [] as $line) {
+                if (str_contains($line, $marker)) {
+                    $reason = trim($line);
+                    break 2;
+                }
+            }
+        }
+
+        return [$file, $reason];
     }
 
     /**

@@ -15,7 +15,7 @@ final class NoCacheHeadersRuleTest extends RuleTestCase
 {
     protected function getRule(): Rule
     {
-        return new NoCacheHeadersRule();
+        return new NoCacheHeadersRule($this->createReflectionProvider());
     }
 
     public static function getAdditionalConfigFiles(): array
@@ -34,6 +34,14 @@ final class NoCacheHeadersRuleTest extends RuleTestCase
             ['[P-FPC-05] setHeader() in Acme\\Promo\\Controller\\Feed\\OwnHelper makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 564],
             // setHeader() with a cache header counts on any receiver.
             ['[P-FPC-05] setHeader() in Acme\\Promo\\Controller\\Feed\\OwnHelper makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 569],
+            // A computed value counts unless its literal parts ask for caching; a block's setHeader() is no header.
+            ['[P-FPC-05] setHeader() in Acme\\Promo\\Controller\\Headers\\Computed makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 864],
+            ['[P-FPC-05] setHeader() in Acme\\Promo\\Controller\\Headers\\Computed makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 865],
+            ['[P-FPC-05] setHeader() in Acme\\Promo\\Controller\\Headers\\Computed makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 866],
+            // The computed part of a public value must be a number.
+            ['[P-FPC-05] setHeader() in Acme\\Promo\\Controller\\Headers\\Interpolated makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 891],
+            ['[P-FPC-05] setHeader() in Acme\\Promo\\Controller\\Headers\\Interpolated makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 892],
+            ['[P-FPC-05] setHeader() in Acme\\Promo\\Controller\\Headers\\Interpolated makes the response uncacheable by Varnish and the built-in page cache. Confirm this is intended.', 893],
         ]);
     }
 }

@@ -224,7 +224,34 @@ final class ThroughEavResource implements ResolverInterface
     }
 }
 
+final class CartOfItem implements ResolverInterface
+{
+    public function __construct(
+        private readonly \Magento\Quote\Api\CartRepositoryInterface $carts,
+        private readonly \Magento\Quote\Api\Data\CartItemInterface $item,
+        private readonly int $quoteId,
+        private readonly \Acme\Promo\Service\PlacedOrder $order,
+    ) {
+    }
+
+    public function resolve(): void
+    {
+        // The first is not reported: the items of a list share the cart that the cart query loaded; the other two are.
+        $this->carts->get($this->item->getQuoteId());
+        $this->carts->get($this->quoteId);
+        $this->carts->get($this->order->getQuoteId());
+    }
+}
+
 namespace Acme\Promo\Service;
+
+final class PlacedOrder
+{
+    public function getQuoteId(): int
+    {
+        return 1;
+    }
+}
 
 final class BrandLoader
 {

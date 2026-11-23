@@ -37,10 +37,42 @@ final class ProjectIndexBuilderTest extends TestCase
         return (new ProjectIndexBuilder($this->cacheDir))->build($real);
     }
 
+    public function testLayoutPlacementsKeepTheClassNamesAsWritten(): void
+    {
+        $index = $this->index();
+
+        // PHPStan finds a class it has not read yet only by its written name, so the case must be kept.
+        self::assertContains('Acme\\Placed\\Block\\CartChild', $index->classesOnCacheablePages());
+        self::assertTrue($index->isOnlyOnUncacheablePages('\\ACME\\Placed\\Block\\CartOnly'));
+        self::assertFalse($index->isOnlyOnUncacheablePages('Acme\\Placed\\Block\\Mixed'));
+
+        // The cached index answers the same.
+        self::assertContains('Acme\\Placed\\Block\\CartChild', $this->index()->classesOnCacheablePages());
+    }
+
     public function testModulesFromAppCodeAndComposerPackages(): void
     {
         // Acme_Core, Acme_Gift, Acme_Promo, Magento_Sales, Acme_SrcLayout (in src/); acme/library is not a module.
         self::assertSame(5, $this->index()->moduleCount);
+    }
+
+    public function testComposerOneListWithoutInstallPaths(): void
+    {
+        $source = realpath(__DIR__ . '/../../Fixtures/Project/indexed');
+        self::assertIsString($source);
+        $copy = sys_get_temp_dir() . '/mpr-index-project-' . bin2hex(random_bytes(4));
+        exec('cp -R ' . escapeshellarg($source) . ' ' . escapeshellarg($copy));
+        // Composer 1 wrote a plain list and no install-path: packages lie in vendor/<name>.
+        file_put_contents($copy . '/vendor/composer/installed.json', '[{"name": "magento/module-sales"}, {"name": "acme/library"}, {"name": "acme/src-module"}, {"name": "acme/not-installed"}]');
+
+        try {
+            $index = (new ProjectIndexBuilder($this->cacheDir))->build($copy);
+
+            self::assertSame(5, $index->moduleCount);
+            self::assertTrue($index->tableHasPrimaryKey('sales_order'));
+        } finally {
+            exec('rm -rf ' . escapeshellarg($copy));
+        }
     }
 
     public function testResolversOfFieldsOnListTypes(): void
@@ -204,6 +236,28 @@ final class ProjectIndexBuilderTest extends TestCase
         touch($diXml, time() + 5);
 
         self::assertFalse($builder->build($copy)->hasProxyArgument('Acme\Promo\Block\Banner', 'customerSession'));
+        exec('rm -rf ' . escapeshellarg($copy));
+    }
+
+    public function testFingerprintFollowsStylesheets(): void
+    {
+        $source = realpath(__DIR__ . '/../../Fixtures/Project/indexed');
+        self::assertIsString($source);
+        $copy = sys_get_temp_dir() . '/mpr-index-project-' . bin2hex(random_bytes(4));
+        exec('cp -R ' . escapeshellarg($source) . ' ' . escapeshellarg($copy));
+        $builder = new ProjectIndexBuilder($this->cacheDir);
+        $before = $builder->fingerprint($copy);
+
+        // T-06 reads the module's stylesheets: a changed one makes cached PHP results out of date.
+        $less = $copy . '/app/code/Acme/Promo/view/frontend/web/css/source/_module.less';
+        mkdir(dirname($less), 0777, true);
+        file_put_contents($less, ".banner img { width: 10px; height: 10px; }\n");
+        $added = $builder->fingerprint($copy);
+        self::assertNotSame($before, $added);
+
+        file_put_contents($less, ".banner img { width: 20px; height: 10px; }\n");
+        touch($less, time() + 5);
+        self::assertNotSame($added, $builder->fingerprint($copy));
         exec('rm -rf ' . escapeshellarg($copy));
     }
 

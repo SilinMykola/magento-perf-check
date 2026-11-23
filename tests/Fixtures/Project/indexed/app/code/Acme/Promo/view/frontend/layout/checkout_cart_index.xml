@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- As in Magento_Checkout: the cart has a cacheable="false" block. -->
+        <block class="Magento\Checkout\Block\Cart" name="checkout.cart" cacheable="false"/>
+        <block class="Acme\Placed\Block\CartOnly" name="acme.cart.only"/>
+        <block class="Acme\Placed\Block\Mixed" name="acme.mixed.cart"/>
+        <block class='Acme\Placed\Block\CartParent' name="acme.cart.parent"/>
+        <block class="Acme\Placed\Block\ByReference" name="acme.by.reference.cart"/>
+        <block class="Acme\Placed\Block\IncludedByDefault" name="acme.included.cart"/>
+        <referenceBlock name="checkout.cart">
+            <arguments>
+                <argument name="view_model" xsi:type="object">Acme\Placed\ViewModel\CartModel</argument>
+                <argument name="item_model" xsi:type="object">Acme\Placed\ViewModel\ItemModel</argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

@@ -57,6 +57,28 @@ namespace Magento\Checkout\Model {
     }
 }
 
+namespace Magento\Backend\Model {
+    class Session extends \Magento\Framework\Session\SessionManager
+    {
+    }
+}
+
+namespace Magento\Backend\Model\Auth {
+    class Session extends \Magento\Framework\Session\SessionManager
+    {
+    }
+}
+
+namespace Magento\Backend\Model\Session {
+    class Quote extends \Magento\Framework\Session\SessionManager
+    {
+        public function getQuote(): object
+        {
+            return new \stdClass();
+        }
+    }
+}
+
 namespace Magento\Framework\Stdlib {
     interface CookieManagerInterface
     {

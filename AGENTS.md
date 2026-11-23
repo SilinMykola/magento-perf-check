@@ -26,6 +26,13 @@ openspec validate --specs
 
 Both PHPStan majors must pass: Magento 2.4.9 pins `phpstan/phpstan ^1.9` (1.12 in its lock file), see [ADR 1](docs/adr/0001-support-phpstan-1-12-and-2.md).
 
+## Releases
+
+People who watch the repository get a notice for every release, so a release goes out only when it is ready and rarely:
+- Every change in it was measured on the whole calibration corpus before and after (`bin/calibration/run`, or the same runs with all rules enabled), each changed finding was checked against the code, and an independent review of the diff was resolved. A finding that a graded sample had as `TP` and that disappears stops the change until it is explained.
+- CI is green on the release commit, the install job included.
+- Changes collect on `develop` and are released together, about once a week. An out-of-turn release is only for a defect that stops the command from running for users.
+
 ## Running against a Magento project
 - Run the tool on the host against a Magento checkout: `php bin/magento-perf-check --project=/path/to/magento`. The project needs its own `composer install`; no database or container is needed.
 - Treat that project as read-only: do not install this package into it through a symlinked path repository, and do not change its files (SPEC section 9a). To test an install, use a copy.

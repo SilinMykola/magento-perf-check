@@ -10,6 +10,8 @@ The index SHALL be built from every module of the project:
 - `app/code`;
 - every package under `vendor` that contains `etc/module.xml`, including `vendor/magento` and `vendor/mage-os`.
 
+Packages SHALL be found through `vendor/composer/installed.json` in both formats: Composer 2 (`packages` list with `install-path`) and Composer 1 (a plain list without `install-path`, where the package lies in `vendor/<package name>`).
+
 This scope SHALL hold regardless of `--paths` and test exclusion. Findings SHALL still be reported only for files under the analyzed paths.
 
 A module set to `0` in the `modules` list of `app/etc/config.php` SHALL be left out of the index and out of the analysis, under the directory Composer installed it in and the one it resolves to; when it lies in or holds an analyzed path, one `disabled-module` notice SHALL name it. A module missing from that list, or a project without the file, SHALL count as enabled. The file SHALL be read as text, never run. The list of indexed modules SHALL be part of the cache key, so a module enabled, disabled or added SHALL invalidate cached results.
@@ -21,6 +23,10 @@ A module set to `0` in the `modules` list of `app/etc/config.php` SHALL be left 
 #### Scenario: Core declares the table
 - **WHEN** `app/code/Acme/Gift/etc/db_schema.xml` adds a column to `sales_order` and the primary key of `sales_order` is declared in `vendor/magento/module-sales`
 - **THEN** rules see that `sales_order` has a primary key
+
+#### Scenario: Project installed with Composer 1
+- **WHEN** `vendor/composer/installed.json` is a plain list whose `magento/module-sales` entry has no `install-path`
+- **THEN** the module in `vendor/magento/module-sales` is indexed and rules see that `sales_order` has a primary key
 
 #### Scenario: Disabled module
 - **WHEN** `app/etc/config.php` sets `Acme_Old` to `0`
@@ -83,3 +89,18 @@ The index SHALL know the classes in the `commands` argument of `CommandList` or 
 #### Scenario: Cron job
 - **WHEN** `etc/crontab.xml` has a job with `instance="Acme\Promo\Cron\Sync"`
 - **THEN** the index reports that class as a cron job
+
+### Requirement: Magento 1 code is not analyzed
+The folders `app/code/core`, `app/code/community` and `app/code/local`, and every folder `app/design/<area>/<package>/<theme>` that has neither `theme.xml` nor `registration.php`, SHALL be left out of the analysis, as Magento 2 does not run them. When such a folder lies in, or holds, an analyzed path, one `magento1-code` notice SHALL name it. A folder `app/code/<Vendor>/<Module>` without `etc/module.xml` SHALL still be analyzed.
+
+#### Scenario: Magento 1 code pool
+- **WHEN** `app/code/community/Acme/Old/Model/Foo.php` calls the object manager
+- **THEN** nothing is reported for it and a `magento1-code` notice names `app/code/community`
+
+#### Scenario: Magento 1 theme
+- **WHEN** `app/design/frontend/base/default` has no `theme.xml` and no `registration.php`
+- **THEN** its templates are not analyzed and a `magento1-code` notice names it
+
+#### Scenario: Magento 2 theme
+- **WHEN** `app/design/frontend/Acme/shop` has `theme.xml`
+- **THEN** its templates are analyzed

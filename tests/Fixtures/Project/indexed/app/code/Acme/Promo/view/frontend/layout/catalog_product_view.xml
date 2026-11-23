@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <block class="Acme\Placed\Block\Mixed" name="acme.mixed.product"/>
+        <block class="Acme\Placed\Block\CartChild" name="acme.cart.child"/>
+        <referenceBlock name="product.info" class="Acme\Placed\Block\ByReference"/>
+    </body>
+</page>

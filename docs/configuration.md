@@ -64,11 +64,13 @@ To check one module or folder, pass it in `--paths`, for example `--paths=app/co
 Exit codes:
 - `0`: no finding at or above `--fail-on`.
 - `1`: at least one such finding.
-- `2`: the tool itself failed or the result cannot be trusted: invalid options, a path that is not a Magento project, nothing to analyze in the given paths, or a PHPStan crash. When a PHPStan worker dies or hits `--memory-limit`, PHPStan drops its findings, so the report may hold only XML findings. `"incomplete": true` marks it in `--format=json`, the reason goes to stderr, and no baseline is written.
+- `2`: the tool itself failed or the result cannot be trusted: invalid options, a path that is not a Magento project, nothing to analyze in the given paths, or a PHPStan crash. When a PHPStan worker dies or hits `--memory-limit`, PHPStan drops the findings of every file. The tool then runs PHPStan once more in a single process with `--debug`, which names each file before it analyzes it, and, when the file it dies on also kills an analysis of its own, leaves that file out with a `phpstan-crash` notice and analyzes the rest again; an obfuscated file of a few hundred kilobytes can be such a file. The file is remembered in the tool's temp directory while its content and `--memory-limit` stay the same, so later runs leave it out from the start and keep PHPStan's result cache; a run with another limit tries it again; on a store of about 4,800 PHP, template and XML files the search took 23 s once. A timeout or an internal PHPStan error is not searched for this way. When the single process does not die, or dies on a file that analyzes fine alone, the report may hold only XML findings: `"incomplete": true` marks it in `--format=json`, the reason goes to stderr, and no baseline is written.
 
 Some files cannot be analyzed, such as XML that does not parse, PHP with syntax errors, or a class PHPStan cannot reflect. They are skipped and counted as analysis notices in the summary; `--format=json` lists them. With `--format=sarif`, `checkstyle` or `github`, or with `--output`, that summary goes to stderr.
 
 A module set to `0` in the `modules` list of `app/etc/config.php` does not run, so it is not analyzed: one `disabled-module` notice names it when it lies in the analyzed paths, and its configuration does not count for other modules (a Proxy in its `di.xml`, for example). The file is read as text, not run. A module missing from that list counts as enabled.
+
+Magento 1 code left over in a Magento 2 project is not analyzed either, as Magento 2 never runs it: the Magento 1 code pools `app/code/core`, `app/code/community` and `app/code/local`, and a folder `app/design/<area>/<package>/<theme>` that has neither `theme.xml` nor `registration.php`. One `magento1-code` notice names each such folder in the analyzed paths.
 
 The experimental S-* rules ([S-PERF-01](rules/S-PERF-01.md) and the others) are sniffs of magento/magento-coding-standard. When one of them is enabled, the command runs the project's phpcs (`vendor/squizlabs/php_codesniffer`) with the project's coding standard and only those sniffs, on the same paths; test code and disabled modules are left out as for the other rules. The coding standard's own ruleset leaves some sniffs out of more files, such as `Fixtures` directories. Without phpcs or the coding standard in the project, one `coding-standard` notice says so and the other rules run as usual.
 
@@ -79,9 +81,9 @@ Rules with the `U-` prefix, such as [U-CLI-01](rules/U-CLI-01.md), find code tha
 - without the option, the rules for the installed version and older ones run, since the code they find is broken now;
 - a target below the installed version hides nothing.
 
-The installed version is read from `vendor/magento/magento2-base/composer.json`; a pre-release suffix such as `-rc2` is ignored. Mage-OS has its own version numbers, and a core checkout has no such file: there, upgrade rules run only with `--target-version`, and one `upgrade-version` notice says so while the configuration enables one of them. A rule that the configuration enables and that does not run because neither version has its change is named in an `upgrade-version` notice as well. A rule of the default set that does not run is skipped without a notice. [U-CLI-02](rules/U-CLI-02.md) is in the default set; the other upgrade rules are experimental, so they also need `enabled: true`.
+The installed version is read from `vendor/magento/magento2-base/composer.json`; a pre-release suffix such as `-rc2` is ignored. Mage-OS has its own version numbers, and a core checkout has no such file: there, upgrade rules run only with `--target-version`, and one `upgrade-version` notice says so while the configuration enables one of them. A rule that the configuration enables and that does not run because neither version has its change is named in an `upgrade-version` notice as well. A rule of the default set that does not run is skipped without a notice. [U-CLI-01](rules/U-CLI-01.md) and [U-CLI-02](rules/U-CLI-02.md) are in the default set; the other upgrade rules are experimental, so they also need `enabled: true`.
 
-The version gate is part of the `magento-perf-check` command, so with PHPStan directly the upgrade rules, U-CLI-02 of the default set included, are only in `extension-experimental.neon`. Through it they run whatever the installed version: on 2.4.8, U-CLI-01 reports code that still works there, and before 2.4.4-p12 or 2.4.5-p11, U-CLI-02 reports a command that Symfony Console 4.4 still runs, with a deprecation, and before 2.4.4, U-LOG-01 reports calls that Monolog 1 still has. Ignore their identifiers until the upgrade.
+The version gate is part of the `magento-perf-check` command, so with PHPStan directly the upgrade rules, U-CLI-01 and U-CLI-02 of the default set included, are only in `extension-experimental.neon`. Through it they run whatever the installed version: on 2.4.8, U-CLI-01 reports code that still works there, and before 2.4.4-p12 or 2.4.5-p11, U-CLI-02 reports a command that Symfony Console 4.4 still runs, with a deprecation, and before 2.4.4, U-LOG-01 reports calls that Monolog 1 still has. Ignore their identifiers until the upgrade.
 
 ## Security
 
@@ -112,6 +114,8 @@ magentoPerf:
     layout:
         # Extra handle prefixes that X-LAY-01 and X-LAY-03 must not report.
         # A prefix also covers the hyva_ copy of a handle: acme_account_ covers hyva_acme_account_index.
+        # The prefixes name pages, the handles of storefront controller actions, and handles that no layout
+        # includes. A handle that layouts include is judged by the pages that include it, prefix or not.
         allowlistHandles:
             - acme_account_
         # true: use only the prefixes above instead of adding them to the default list.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
+use Silin\MagentoPerfCheck\PhpStan\CallArgs;
 use Silin\MagentoPerfCheck\PhpStan\CollectionStateVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
@@ -38,7 +39,7 @@ final class CollectionCountRule implements Rule
         ) {
             return [];
         }
-        $argument = $node->getArgs()[0] ?? null;
+        $argument = CallArgs::of($node)[0] ?? null;
         if ($argument === null) {
             return [];
         }
