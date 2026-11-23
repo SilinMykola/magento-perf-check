@@ -6,6 +6,8 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-23
+
 ### Changed
 
 - U-CLI-01 joins the default set at `error` after [calibration round 21](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-21.md): with the findings of rounds 7 and 20 and of five private stores, 36 graded findings, all correct and all mattering. **This can change a CI result:** on a project on Magento 2.4.9 or later, or with `--target-version=2.4.9` or later, a console command whose `execute()` has no `int` return type is now reported without configuration.
@@ -264,7 +266,8 @@ First release.
   - `info`: P-DI-06, P-FPC-01, P-LOOP-03, T-01.
 - Experimental rules, off by default: P-COL-02, P-DI-02, P-FPC-02, P-PLG-01, X-LAY-01.
 
-[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/SilinMykola/magento-perf-check/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/SilinMykola/magento-perf-check/compare/v0.9.0...v0.9.1
