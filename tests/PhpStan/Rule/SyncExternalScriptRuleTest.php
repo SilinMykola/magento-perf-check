@@ -41,4 +41,13 @@ final class SyncExternalScriptRuleTest extends RuleTestCase
     {
         $this->analyse([__DIR__ . '/../Fixtures/templates/view/adminhtml/templates/admin.phtml'], []);
     }
+
+    public function testEmailTemplateIsLeftOut(): void
+    {
+        // A template under templates/email, of a module or of a theme, renders an email, where no script runs.
+        $this->analyse([__DIR__ . '/../Fixtures/templates/view/frontend/templates/email/order/items.phtml'], []);
+        $this->analyse([__DIR__ . '/../Fixtures/app/design/frontend/Acme/shop/Magento_Sales/templates/email/items.phtml'], []);
+        // A storefront template named after email is still a page.
+        $this->analyse([__DIR__ . '/../Fixtures/templates/view/frontend/templates/newsletter/email.phtml'], [[self::MESSAGE, 5]]);
+    }
 }

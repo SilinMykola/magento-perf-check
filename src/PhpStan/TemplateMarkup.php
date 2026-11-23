@@ -29,14 +29,16 @@ final class TemplateMarkup
     }
 
     /**
-     * A template of the storefront: in a module's view/frontend or view/base, or in a frontend theme.
+     * A template of the storefront: in a module's view/frontend or view/base, or in a frontend theme. One under
+     * templates/email, as Magento_Sales::email/items.phtml, renders part of an email, not of a page.
      */
     public static function isStorefrontTemplate(string $file): bool
     {
         $file = str_replace('\\', '/', $file);
 
         return str_ends_with($file, '.phtml')
-            && (str_contains($file, '/view/frontend/') || str_contains($file, '/view/base/') || str_contains($file, '/design/frontend/'));
+            && (str_contains($file, '/view/frontend/') || str_contains($file, '/view/base/') || str_contains($file, '/design/frontend/'))
+            && !str_contains($file, '/templates/email/');
     }
 
     public static function fromFile(string $file): ?self

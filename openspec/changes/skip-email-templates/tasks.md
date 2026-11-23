@@ -1,0 +1,2 @@
+- [x] Leave templates under `templates/email` out of T-05 and T-06, with tests for a module's and a theme's email template that fail without it, and one that a storefront template named after email is still reported
+- [x] Rule pages and changelog
