@@ -14,6 +14,7 @@ A `getFirstItem()` call on a database collection (a subtype of `Magento\Framewor
 - **An earlier load:** `load()`, `getItems()`, `count()`, `getFirstItem()` or a `foreach` over the collection. The items are already in memory, so `getFirstItem()` runs no query.
 - **Rows used anyway:** the same function, before or after the call, iterates the collection or calls `load()`, `getItems()`, `getLastItem()` or `getColumnValues()` on it. Adding a limit would then drop rows the code needs.
 - **A unique-key filter:** `addIdFilter()`, `setIdFilter()`, or `addFieldToFilter()`/`addAttributeToFilter()` on `entity_id`, `sku`, `increment_id` or `username` (optionally with a table alias such as `main_table.`), with a plain value or an `['eq' => ...]` condition. At most one row matches.
+- **A filter on a declared unique key:** equality filters on every column of a primary or unique key of the collection's main table, composite keys included, with no table alias or `main_table.`. The key is read from any `db_schema.xml` of the project, or from `addIndex()` with `INDEX_TYPE_UNIQUE` or `INDEX_TYPE_PRIMARY` and `primary` columns of `newTable()` in `Setup/InstallSchema.php` and `Setup/UpgradeSchema.php` of the module that holds the resource model. The main table is the first argument of `_init()` in the resource model's `_construct()` (a string or a string constant of that class); the resource model is the second argument of `_init()` in the collection's `_construct()` or a parent's. A filter on part of a key is still reported.
 
 ## Why it hurts performance
 
@@ -47,7 +48,9 @@ $item = $collection->getFirstItem();
 
 ## Known false positives
 
-- A filter on another column that is unique in your schema (for example a custom `code` column) is not recognized. Add `setPageSize(1)`, or suppress with a reason.
+- A unique column that the rule cannot tie to the collection is not recognized: a main table set by a variable or a constant of another class, a key added to the table by another module's setup script, or a key enforced only by the module's own logic. Add `setPageSize(1)`, or suppress with a reason.
+- A filter on all but one column of a unique key loads only the few rows that differ in that column, and is still reported.
+- An aggregate query filtered on one id and grouped by it returns one row, and is still reported.
 - A limit or load done through a different variable that refers to the same collection is not seen.
 - A limit set inside a branch counts as set even when the branch is not taken. This trade-off favours fewer false positives.
 

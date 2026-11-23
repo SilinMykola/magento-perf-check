@@ -25,6 +25,12 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     public const LOADED = 'magentoPerfCollectionLoaded';
     public const UNIQUE_FILTER = 'magentoPerfCollectionUniqueFilter';
 
+    /**
+     * Set on getFirstItem(): the main-table columns the collection is filtered on with an
+     * equality, lower case, for a rule that knows the table's unique keys.
+     */
+    public const EQUALITY_COLUMNS = 'magentoPerfCollectionEqualityColumns';
+
     /** Set on count() and getFirstItem() when the same function uses the collection's rows elsewhere. */
     public const ROWS_USED_ELSEWHERE = 'magentoPerfCollectionRowsUsedElsewhere';
 
@@ -45,6 +51,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
 
     /** Columns that identify at most one row. */
     private const UNIQUE_COLUMNS = ['entity_id', 'sku', 'increment_id', 'username'];
+
+    /** Prefix of the facts that name a column filtered with an equality. */
+    private const COLUMN_FACT = 'column:';
 
     /** Methods after which the collection holds its items in memory. */
     private const LOADING_METHODS = ['load', 'getitems', 'count', 'getfirstitem', 'getlastitem'];
@@ -89,6 +98,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
                 if ($this->chainHas($node->expr, $fact)) {
                     $this->record($key, $fact);
                 }
+            }
+            foreach ($this->chainColumns($node->expr) as $column) {
+                $this->record($key, self::COLUMN_FACT . $column);
             }
 
             return null;
@@ -170,11 +182,23 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
                     $node->setAttribute($fact, true);
                 }
             }
+            $columns = $this->chainColumns($node->var);
+            foreach (array_keys($key === null ? [] : ($this->frames[count($this->frames) - 1][$key] ?? [])) as $fact) {
+                if (str_starts_with($fact, self::COLUMN_FACT)) {
+                    $columns[] = substr($fact, strlen(self::COLUMN_FACT));
+                }
+            }
+            $node->setAttribute(self::EQUALITY_COLUMNS, array_values(array_unique($columns)));
         }
         foreach ([self::LIMITED, self::UNIQUE_FILTER] as $fact) {
             if ($this->establishes($node, $fact)) {
                 $this->record($key, $fact);
             }
+        }
+        $column = $this->equalityColumn($node);
+        // "$this->factory->create()->addFieldToFilter(...)" filters a new collection, not $this->factory.
+        if ($column !== null && !$this->makesANewObject($node->var)) {
+            $this->record($key, self::COLUMN_FACT . $column);
         }
         if (in_array($name, self::LOADING_METHODS, true)) {
             $this->record($key, self::LOADED);
@@ -247,7 +271,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         // A fact about all items, set in a function, holds in the closures it passes them to.
         foreach ($key === '*' ? $this->frames : [$this->frames[count($this->frames) - 1]] as $frame) {
             foreach ($frame[$key] ?? [] as $fact => $_) {
-                $node->setAttribute($fact, true);
+                if (!str_starts_with($fact, self::COLUMN_FACT)) {
+                    $node->setAttribute($fact, true);
+                }
             }
         }
     }
@@ -283,6 +309,72 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
                 return false;
             }
             $expr = $expr->var;
+        }
+
+        return false;
+    }
+
+    /**
+     * Main-table columns that the calls of this chain filter on with an equality.
+     *
+     * @return list<string>
+     */
+    private function chainColumns(Expr $expr): array
+    {
+        $columns = [];
+        for (; $expr instanceof Expr\MethodCall; $expr = $expr->var) {
+            $column = $this->equalityColumn($expr);
+            if ($column !== null) {
+                $columns[] = $column;
+            }
+        }
+
+        return $columns;
+    }
+
+    /**
+     * The column of addFieldToFilter()/addAttributeToFilter() with an equality condition, lower case, when it
+     * has no table alias or the main_table one; else null.
+     */
+    private function equalityColumn(Expr\MethodCall $call): ?string
+    {
+        $field = $this->equalityField($call);
+        if ($field === null || (str_contains($field, '.') && !str_starts_with($field, 'main_table.'))) {
+            return null;
+        }
+
+        return str_starts_with($field, 'main_table.') ? substr($field, strlen('main_table.')) : $field;
+    }
+
+    /**
+     * The field of addFieldToFilter()/addAttributeToFilter() with an equality condition, lower case and with
+     * any table alias, or null.
+     */
+    private function equalityField(Expr\MethodCall $call): ?string
+    {
+        if (!$call->name instanceof Node\Identifier
+            || !in_array($call->name->toLowerString(), ['addfieldtofilter', 'addattributetofilter'], true)
+        ) {
+            return null;
+        }
+        $args = CallArgs::of($call);
+        $field = $args[0]->value ?? null;
+        if (!$field instanceof Node\Scalar\String_ || !$this->isEquality($args[1]->value ?? null)) {
+            return null;
+        }
+
+        return strtolower($field->value);
+    }
+
+    /**
+     * Whether the chain calls create() or a getter, which hand over another object than its root.
+     */
+    private function makesANewObject(Expr $expr): bool
+    {
+        for (; $expr instanceof Expr\MethodCall; $expr = $expr->var) {
+            if ($this->isGetter($expr) || ($expr->name instanceof Node\Identifier && $expr->name->toLowerString() === 'create')) {
+                return true;
+            }
         }
 
         return false;
@@ -337,21 +429,13 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         if ($name === 'addidfilter' || $name === 'setidfilter') {
             return $this->isEquality(CallArgs::of($call)[0]->value ?? null);
         }
-        if ($name !== 'addfieldtofilter' && $name !== 'addattributetofilter') {
+        $column = $this->equalityField($call);
+        if ($column === null) {
             return false;
         }
-        $args = CallArgs::of($call);
-        $field = $args[0]->value ?? null;
-        if (!$field instanceof Node\Scalar\String_) {
-            return false;
-        }
-        $column = strtolower($field->value);
         $column = str_contains($column, '.') ? substr($column, (int) strrpos($column, '.') + 1) : $column;
-        if (!in_array($column, self::UNIQUE_COLUMNS, true)) {
-            return false;
-        }
 
-        return $this->isEquality($args[1]->value ?? null);
+        return in_array($column, self::UNIQUE_COLUMNS, true);
     }
 
     /**

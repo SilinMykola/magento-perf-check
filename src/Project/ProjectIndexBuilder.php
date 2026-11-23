@@ -404,6 +404,8 @@ final class ProjectIndexBuilder
         $observers = [];
         $views = [];
         $tables = [];
+        $constraints = [];
+        $disabledConstraints = [];
         $virtualTypes = [];
         $virtualProxies = [];
         $schemas = [];
@@ -503,6 +505,16 @@ final class ProjectIndexBuilder
                             if ($this->xsiType($constraint) === 'primary') {
                                 $tables[$table->getAttribute('name')] = true;
                             }
+                            if (in_array($this->xsiType($constraint), ['primary', 'unique'], true)) {
+                                // Modules merge a constraint by its referenceId: columns add up, and one may disable it.
+                                $id = $table->getAttribute('name') . '|' . $constraint->getAttribute('referenceId');
+                                if ($constraint->getAttribute('disabled') === 'true') {
+                                    $disabledConstraints[$id] = true;
+                                }
+                                foreach ($this->elements($xpath, 'column', $constraint) as $column) {
+                                    $constraints[$table->getAttribute('name')][$id][strtolower($column->getAttribute('name'))] = true;
+                                }
+                            }
                         }
                     }
                     break;
@@ -522,6 +534,15 @@ final class ProjectIndexBuilder
         foreach ($pluginsByName as $target => $byName) {
             foreach (array_diff_key($byName, $disabledPlugins[$target] ?? []) as $class) {
                 $pluginTargets[$class][] = $target;
+            }
+        }
+
+        $uniqueKeys = [];
+        foreach ($constraints as $table => $byId) {
+            foreach (array_diff_key($byId, $disabledConstraints) as $columns) {
+                $columns = array_keys($columns);
+                sort($columns);
+                $uniqueKeys[$table][] = $columns;
             }
         }
 
@@ -552,6 +573,7 @@ final class ProjectIndexBuilder
             array_map(static fn (array $classes): array => array_keys($classes), $preferences),
             $layout[0],
             $layout[1],
+            $uniqueKeys,
         );
     }
 

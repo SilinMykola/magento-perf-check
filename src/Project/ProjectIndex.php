@@ -25,6 +25,7 @@ final class ProjectIndex
      * @param array<string, list<string>> $webapiPreferences type => classes di.xml prefers for it in the global and web API areas
      * @param array<string, list<string>> $layoutPlacements block or view model class, as written => frontend layout handles that name it
      * @param array<string, true> $uncacheableHandles handles of $layoutPlacements that no cacheable page uses
+     * @param array<string, list<list<string>>> $uniqueKeys table => columns of each primary and unique constraint, lower case
      */
     public function __construct(
         public readonly int $moduleCount,
@@ -41,6 +42,7 @@ final class ProjectIndex
         private readonly array $webapiPreferences = [],
         private readonly array $layoutPlacements = [],
         private readonly array $uncacheableHandles = [],
+        private readonly array $uniqueKeys = [],
     ) {
         foreach (array_keys($layoutPlacements) as $class) {
             $this->placementKeys[self::normalizeClass((string) $class)] = (string) $class;
@@ -127,6 +129,16 @@ final class ProjectIndex
     }
 
     /**
+     * Columns of each primary and unique constraint that db_schema.xml declares on the table, lower case.
+     *
+     * @return list<list<string>>
+     */
+    public function uniqueKeysOf(string $table): array
+    {
+        return $this->uniqueKeys[$table] ?? [];
+    }
+
+    /**
      * Normalized classes that $class is a plugin on, outside the admin area.
      *
      * @return list<string>
@@ -193,6 +205,7 @@ final class ProjectIndex
             'webapiPreferences' => $this->webapiPreferences,
             'layoutPlacements' => $this->layoutPlacements,
             'uncacheableHandles' => $this->uncacheableHandles,
+            'uniqueKeys' => $this->uniqueKeys,
         ];
     }
 
@@ -201,7 +214,7 @@ final class ProjectIndex
      */
     public static function fromArray(array $data): self
     {
-        /** @var array{moduleCount: int, proxyArguments: array<string, array<string, true>>, pluginClasses: array<string, true>, observers: array<string, list<array{class: string, area: string, module: string}>>, mviewViews: array<string, true>, tablesWithPrimaryKey: array<string, true>, listFieldResolvers: array<string, string>, pluginTargets: array<string, list<string>>, consoleCommands: array<string, true>, cronJobs: array<string, true>, webapiMethods: array<string, list<string>>, webapiPreferences: array<string, list<string>>, layoutPlacements: array<string, list<string>>, uncacheableHandles: array<string, true>} $data */
+        /** @var array{moduleCount: int, proxyArguments: array<string, array<string, true>>, pluginClasses: array<string, true>, observers: array<string, list<array{class: string, area: string, module: string}>>, mviewViews: array<string, true>, tablesWithPrimaryKey: array<string, true>, listFieldResolvers: array<string, string>, pluginTargets: array<string, list<string>>, consoleCommands: array<string, true>, cronJobs: array<string, true>, webapiMethods: array<string, list<string>>, webapiPreferences: array<string, list<string>>, layoutPlacements: array<string, list<string>>, uncacheableHandles: array<string, true>, uniqueKeys: array<string, list<list<string>>>} $data */
         return new self(
             $data['moduleCount'],
             $data['proxyArguments'],
@@ -217,6 +230,7 @@ final class ProjectIndex
             $data['webapiPreferences'],
             $data['layoutPlacements'],
             $data['uncacheableHandles'],
+            $data['uniqueKeys'],
         );
     }
 }

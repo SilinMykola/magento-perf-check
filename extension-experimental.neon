@@ -3,6 +3,11 @@
 # includes it and enables these rules only when magento-perf-check.neon says so.
 services:
     -
+        class: Silin\MagentoPerfCheck\PhpStan\CollectionUniqueKeys
+        arguments:
+            # Not the analysis parser: for files outside the analyzed paths it drops method bodies.
+            parser: @currentPhpVersionSimpleDirectParser
+    -
         class: Silin\MagentoPerfCheck\PhpStan\Rule\GetFirstItemWithoutLimitRule
         arguments:
             reportUntypedReceivers: %magentoPerf.reportUntypedReceivers%

@@ -216,6 +216,19 @@ final class ProjectIndexBuilderTest extends TestCase
         self::assertFalse($index->tableHasPrimaryKey('acme_gift_log'));
     }
 
+    public function testUniqueAndPrimaryKeysFromSchema(): void
+    {
+        foreach ([false, true] as $cached) {
+            $index = $this->index(__DIR__ . '/../../PhpStan/Fixtures/unique-keys');
+
+            self::assertSame([['id'], ['label_id', 'order_id']], $index->uniqueKeysOf('acme_tag_order'), $cached ? 'cached' : 'built');
+            // Acme_Notes widens one constraint by its referenceId and disables the other.
+            self::assertSame([['code', 'store_id']], $index->uniqueKeysOf('acme_tag_note'));
+            self::assertSame([], $index->uniqueKeysOf('acme_tag_stock'));
+        }
+        self::assertSame([['entity_id']], $this->index()->uniqueKeysOf('sales_order'));
+    }
+
     public function testProjectWithoutModulesIsEmpty(): void
     {
         self::assertTrue($this->index(__DIR__)->isEmpty());

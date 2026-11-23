@@ -1,0 +1,4 @@
+- [x] Index: columns of `primary` and `unique` constraints per table from `db_schema.xml`, with a test
+- [x] Visitor: equality-filtered columns per collection
+- [x] P-COL-02: main table through `_init()`, unique keys from the index and from the module's setup scripts; fixtures for a full key, a partial key and a non-equality filter, which fail without the change
+- [x] Rule page and changelog

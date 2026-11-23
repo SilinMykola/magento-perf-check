@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
 use Silin\MagentoPerfCheck\PhpStan\CollectionStateVisitor;
+use Silin\MagentoPerfCheck\PhpStan\CollectionUniqueKeys;
 use Silin\MagentoPerfCheck\Report\NoticePrefix;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -32,6 +33,7 @@ final class GetFirstItemWithoutLimitRule implements Rule
 
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
+        private readonly CollectionUniqueKeys $uniqueKeys,
         private readonly bool $reportUntypedReceivers = false,
     ) {
     }
@@ -66,6 +68,12 @@ final class GetFirstItemWithoutLimitRule implements Rule
             return [];
         }
 
+        /** @var list<string> $columns */
+        $columns = $node->getAttribute(CollectionStateVisitor::EQUALITY_COLUMNS, []);
+        if ($this->filtersOnAUniqueKey($type->getObjectClassNames(), $columns)) {
+            return [];
+        }
+
         return [
             RuleErrorBuilder::message(sprintf(
                 '[%s] %s::getFirstItem() without setPageSize(): the query has no LIMIT and loads every matching row. '
@@ -74,6 +82,23 @@ final class GetFirstItemWithoutLimitRule implements Rule
                 $type->getObjectClassNames()[0] ?? self::DB_COLLECTION,
             ))->identifier(self::IDENTIFIER)->build(),
         ];
+    }
+
+    /**
+     * Whether the equality filters cover a unique key of the main table of every collection class.
+     *
+     * @param list<string> $classNames
+     * @param list<string> $columns
+     */
+    private function filtersOnAUniqueKey(array $classNames, array $columns): bool
+    {
+        foreach ($classNames as $className) {
+            if (!$this->uniqueKeys->coverAUniqueKey($className, $columns)) {
+                return false;
+            }
+        }
+
+        return $classNames !== [];
     }
 
     /**

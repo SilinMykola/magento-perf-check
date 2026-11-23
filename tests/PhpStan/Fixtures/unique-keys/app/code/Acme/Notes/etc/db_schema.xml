@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="acme_tag_note" resource="default">
+        <!-- The code is unique per store from now on. -->
+        <constraint xsi:type="unique" referenceId="ACME_TAG_NOTE_CODE">
+            <column name="store_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="ACME_TAG_NOTE_STORE" disabled="true"/>
+    </table>
+</schema>

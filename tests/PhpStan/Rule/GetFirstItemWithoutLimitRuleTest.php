@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Silin\MagentoPerfCheck\Tests\PhpStan\Rule;
 
+use Silin\MagentoPerfCheck\PhpStan\CollectionUniqueKeys;
+use Silin\MagentoPerfCheck\PhpStan\ProjectIndexProvider;
 use Silin\MagentoPerfCheck\PhpStan\Rule\GetFirstItemWithoutLimitRule;
+use PHPStan\Parser\Parser;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 
@@ -17,12 +20,16 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
 
     protected function getRule(): Rule
     {
-        return new GetFirstItemWithoutLimitRule($this->createReflectionProvider(), $this->reportUntyped);
+        $parser = self::getContainer()->getService('currentPhpVersionSimpleDirectParser');
+        self::assertInstanceOf(Parser::class, $parser);
+        $uniqueKeys = new CollectionUniqueKeys($this->createReflectionProvider(), $parser, self::getContainer()->getByType(ProjectIndexProvider::class));
+
+        return new GetFirstItemWithoutLimitRule($this->createReflectionProvider(), $uniqueKeys, $this->reportUntyped);
     }
 
     public static function getAdditionalConfigFiles(): array
     {
-        return [__DIR__ . '/../../../extension.neon'];
+        return [__DIR__ . '/../../../extension.neon', __DIR__ . '/../Fixtures/index/unique-keys-project.neon'];
     }
 
     public function testReportsOnlyUnlimitedDbCollections(): void
@@ -68,6 +75,24 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 218],
             // Only the first of two: it loads the rows.
             [$message, 224],
+        ]);
+    }
+
+    public function testFilterOnEveryColumnOfAUniqueKey(): void
+    {
+        $message = static fn (string $class): string => '[P-COL-02] Acme\\Tags\\Model\\ResourceModel\\' . $class . '\\Collection::getFirstItem() without setPageSize(): '
+            . 'the query has no LIMIT and loads every matching row. Call setPageSize(1) before getFirstItem().';
+
+        // Keys: etc/db_schema.xml and Setup/UpgradeSchema.php of the fixture module.
+        $this->analyse([__DIR__ . '/../Fixtures/unique-keys/app/code/Acme/Tags/Model/Tags.php'], [
+            // A new collection filtered on half of the key, after another one filtered on the other half.
+            [$message('Order'), 93],
+            // Part of the key, a non-equality, a joined table's column, plain indexes.
+            [$message('Order'), 106],
+            [$message('Order'), 116],
+            [$message('Order'), 130],
+            [$message('Stock'), 144],
+            [$message('Source'), 161],
         ]);
     }
 }
