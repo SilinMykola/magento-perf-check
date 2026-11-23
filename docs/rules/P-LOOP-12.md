@@ -19,6 +19,7 @@ A method call inside a loop when the called method runs a query on every call. T
 The rule does not report:
 - a query whose result the method keeps for later calls, unless the loop may call a new object each time. The kept query is the value stored in an element of a property (`$this->products[$id] = ...`, `self::$names[$id] ??= ...`) or with `??=` on a property, a query in the body of an `if` that tests a property and assigns it, or the value assigned to a property after an `if` on it that returns early (lazy getters). A new object is the foreach value or something reached from it (`$item->getOrderItem()`), `new` or a `create()` result: there, a kept result does not help, and the call is reported. An append, `$this->log[] = ...`, keeps nothing; other queries of the same method still count. An object held in a variable assigned inside the loop counts as the same object, so a kept result on it is missed;
 - a query inside a closure that the method returns or stores, since calling the method does not run it. A closure passed to `array_map()` and the like does count;
+- a query in the fallback of `$a ?: $b` or `$a ?? $b`, such as `return $attribute ?: $this->attributeFactory->create()->load($id);`: it runs only when the value before it is empty. A query on the left of `?:` or `??`, or in a branch of a full ternary, still counts;
 - a method that queries only through another method: the rule looks one call deep;
 - a call through an interface or to an abstract method, because there is no body to look at;
 - a call whose receiver may be one of several classes;
@@ -64,7 +65,8 @@ Put it on the line of the call in the loop.
 
 ## Known false positives
 
-- The query can sit in a branch that runs only for some items, or only once, for example when the loop returns on the first match.
+- The query can sit in an `if` branch that runs only for some items, or only once, for example when the loop returns on the first match. This includes a type guard such as `if (!$shipment instanceof Shipment) { $shipment = $this->shipment->load($shipment); }` when the caller passes a Shipment, and a load under `if ($id)` when the caller passes no id: the rule does not follow the caller's arguments into the branch.
+- An inline `@var` that names a model with a querying method, when the collection really holds another class whose method does not query: the rule trusts the `@var`, as PHPStan does.
 - Some core repositories cache by id: `QuoteRepository::get()` keeps loaded carts, and `GroupRepository::getById()` reads through a registry. Calling them for the same id again costs no query.
 - The caller can keep results itself, for example behind an `isset()` on a map it filled before the loop.
 - Loops with a small, fixed bound cost little, as for P-LOOP-01.

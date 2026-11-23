@@ -78,6 +78,15 @@ final class LoopCallQueryRuleTest extends RuleTestCase
         ]);
     }
 
+    public function testFallbackQueriesAreNotCounted(): void
+    {
+        $this->analyse([__DIR__ . '/../Fixtures/loop-call-query-fallback.php'], [
+            [self::message('FallbackReader::loadedFirst', 'Magento\\Catalog\\Model\\Product::load()', 60, 'loop-call-query-fallback.php'), 30],
+            [self::message('FallbackReader::fetchedFirst', 'Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()', 65, 'loop-call-query-fallback.php'), 31],
+            [self::message('FallbackReader::byId', 'Magento\\Catalog\\Model\\Product::load()', 70, 'loop-call-query-fallback.php'), 33],
+        ]);
+    }
+
     private static function message(string $method, string $query, int $line, string $file = 'loop-call-query.php'): string
     {
         return sprintf(
