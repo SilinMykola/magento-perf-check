@@ -168,6 +168,120 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertTrue($report['summary']['incomplete']);
     }
 
+    public function testFileThatExhaustsTheMemoryIsLeftOutAndTheRestIsReported(): void
+    {
+        $project = $this->project([
+            'app/code/Acme/Demo/Model/Small.php' => "<?php\n",
+            'app/code/Acme/Demo/Model/Huge.php' => "<?php\n",
+            'app/code/Acme/Other/Model/Foo.php' => "<?php\n",
+        ]);
+        $runner = new PhpStanRunner(new RuleRegistry(), __DIR__ . '/../Fixtures/Project/memory-hog-phpstan.php');
+
+        [$exitCode, $stdout, $stderr] = $this->runCommand($project, ['--format=json', '--fail-on=warning'], $runner);
+
+        self::assertSame(Application::EXIT_FINDINGS, $exitCode, $stderr);
+        self::assertSame(['P-DI-06 app/code/Acme/Demo/Model/Small.php'], $this->crashReport($stdout)['findings']);
+        self::assertSame([[
+            'message' => 'PHPStan died on this file, so it was left out of the analysis: PHPStan process crashed because it reached configured PHP memory limit: 2G',
+            'file' => 'app/code/Acme/Demo/Model/Huge.php',
+        ]], $this->crashReport($stdout)['crashes']);
+        self::assertFileExists($project . '/debug-ran');
+
+        // The next run leaves the file out from the start: no search, the same report.
+        unlink($project . '/debug-ran');
+        [, $again] = $this->runCommand($project, ['--format=json'], $runner);
+        self::assertSame($this->crashReport($stdout), $this->crashReport($again));
+        self::assertFileDoesNotExist($project . '/debug-ran');
+
+        // A run of other paths leaves it out quietly.
+        [, $other] = $this->runCommand($project, ['--format=json', '--paths=app/code/Acme/Other'], $runner);
+        self::assertSame([], $this->crashReport($other)['crashes']);
+        self::assertFileDoesNotExist($project . '/debug-ran');
+        [, $whole] = $this->runCommand($project, ['--format=json', '--paths=.'], $runner);
+        self::assertSame(['app/code/Acme/Demo/Model/Huge.php'], array_column($this->crashReport($whole)['crashes'], 'file'));
+
+        // Once the file changes, it is searched for again.
+        file_put_contents($project . '/app/code/Acme/Demo/Model/Huge.php', "<?php\n// changed\n");
+        [, $changed] = $this->runCommand($project, ['--format=json'], $runner);
+        self::assertSame($this->crashReport($stdout), $this->crashReport($changed));
+        self::assertFileExists($project . '/debug-ran');
+        unlink($project . '/debug-ran');
+
+        // Another memory limit may let PHPStan through: the file is searched for again.
+        [, $more] = $this->runCommand($project, ['--format=json', '--memory-limit=4G'], $runner);
+        self::assertSame($this->crashReport($stdout), $this->crashReport($more));
+        self::assertFileExists($project . '/debug-ran');
+        unlink($project . '/debug-ran');
+    }
+
+    public function testInternalErrorBeforeTheFileThatExhaustsTheMemoryDoesNotHideIt(): void
+    {
+        $project = $this->project([
+            'app/code/Acme/Demo/Model/Broken.php' => "<?php\n",
+            'app/code/Acme/Demo/Model/Small.php' => "<?php\n",
+            'app/code/Acme/Demo/Model/Huge.php' => "<?php\n",
+            'internal-error' => '',
+        ]);
+        $runner = new PhpStanRunner(new RuleRegistry(), __DIR__ . '/../Fixtures/Project/memory-hog-phpstan.php');
+
+        [, $stdout] = $this->runCommand($project, ['--format=json'], $runner);
+
+        // The internal error itself stays, so the report is still incomplete.
+        self::assertTrue($this->crashReport($stdout)['incomplete']);
+        self::assertSame(['P-DI-06 app/code/Acme/Demo/Model/Small.php'], $this->crashReport($stdout)['findings']);
+        self::assertSame(['app/code/Acme/Demo/Model/Huge.php'], array_column($this->crashReport($stdout)['crashes'], 'file'));
+    }
+
+    /**
+     * @return array{incomplete: bool, findings: list<string>, crashes: list<array{message: string, file: string|null}>}
+     */
+    private function crashReport(string $stdout): array
+    {
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        /** @var array{summary: array{incomplete: bool}, findings: list<array{ruleId: string, file: string}>, notices: list<array{source: string, message: string, file: string|null}>} $report */
+
+        return [
+            'incomplete' => $report['summary']['incomplete'],
+            'findings' => array_map(static fn (array $f): string => $f['ruleId'] . ' ' . $f['file'], $report['findings']),
+            'crashes' => array_values(array_map(
+                static fn (array $n): array => ['message' => $n['message'], 'file' => $n['file']],
+                array_filter($report['notices'], static fn (array $n): bool => $n['source'] === 'phpstan-crash'),
+            )),
+        ];
+    }
+
+    public function testFileThatAnalysesFineAloneIsNotLeftOut(): void
+    {
+        // The single process dies on Small.php, which alone analyses fine: nothing is left out.
+        $project = $this->project([
+            'app/code/Acme/Demo/Model/Small.php' => "<?php\n",
+            'app/code/Acme/Demo/Model/Huge.php' => "<?php\n",
+            'blame-small' => '',
+        ]);
+        $runner = new PhpStanRunner(new RuleRegistry(), __DIR__ . '/../Fixtures/Project/memory-hog-phpstan.php');
+
+        [$exitCode, $stdout] = $this->runCommand($project, ['--format=json'], $runner);
+
+        self::assertSame(Application::EXIT_ERROR, $exitCode);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        /** @var array{summary: array{incomplete: bool}, notices: list<array{source: string}>} $report */
+        self::assertTrue($report['summary']['incomplete']);
+        self::assertNotContains('phpstan-crash', array_column($report['notices'], 'source'));
+    }
+
+    public function testInternalErrorIsNotSearchedInOneProcess(): void
+    {
+        $project = $this->project(['app/code/Acme/Demo/Foo.php' => "<?php\n"]);
+        $runner = new PhpStanRunner(new RuleRegistry(), __DIR__ . '/../Fixtures/Project/internal-error-phpstan.php');
+
+        [$exitCode] = $this->runCommand($project, ['--format=json'], $runner);
+
+        self::assertSame(Application::EXIT_ERROR, $exitCode);
+        self::assertFileDoesNotExist($project . '/debug-ran');
+    }
+
     public function testIncompleteRunWritesNoBaseline(): void
     {
         $project = $this->project(['app/code/Acme/Demo/Foo.php' => "<?php\n"]);
@@ -851,6 +965,52 @@ final class AnalysisIntegrityTest extends TestCase
         self::assertIsArray($report);
         /** @var array{notices: list<array{source: string}>} $report */
         self::assertNotContains('disabled-module', array_column($report['notices'], 'source'));
+    }
+
+    public function testMagentoOneCodeIsNotAnalyzed(): void
+    {
+        $locator = static fn (string $namespace): string => "<?php\nnamespace {$namespace};\nclass Foo\n{\n"
+            . "    public function get(): object\n    {\n        return \\Magento\\Framework\\App\\ObjectManager::getInstance()->get(\\stdClass::class);\n    }\n}\n";
+        $createBlock = "<?php echo \$block->getLayout()->createBlock('Magento\\Framework\\View\\Element\\Template')->toHtml(); ?>\n";
+        $project = $this->project([
+            'app/code/Acme/Demo/etc/module.xml' => self::MODULE_XML,
+            'app/code/Acme/Demo/Model/Foo.php' => $locator('Acme\\Demo\\Model'),
+            // Magento 1 code pools and a Magento 1 theme, left over in a Magento 2 project.
+            'app/code/local/Acme/Old/Model/Foo.php' => $locator('Acme\\OldLocal'),
+            'app/code/community/Acme/Old/Model/Foo.php' => $locator('Acme\\OldCommunity'),
+            'app/code/core/Mage/Old/Model/Foo.php' => $locator('Mage\\Old'),
+            'app/design/frontend/base/default/template/page.phtml' => $createBlock,
+            // A Magento 2 theme is still analyzed, through theme.xml or registration.php.
+            'app/design/frontend/Acme/shop/theme.xml' => '<theme><title>Shop</title></theme>',
+            'app/design/frontend/Acme/shop/Magento_Theme/templates/page.phtml' => $createBlock,
+            'app/design/frontend/Acme/plain/registration.php' => "<?php\n",
+            'app/design/frontend/Acme/plain/Magento_Theme/templates/page.phtml' => $createBlock,
+        ]);
+
+        [, $stdout, $stderr] = $this->runCommand($project, ['--format=json']);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report, $stderr);
+        /** @var array{findings: list<array{ruleId: string, file: string}>, notices: list<array{source: string, message: string, file: string}>} $report */
+
+        self::assertSame([
+            'P-DI-06 app/code/Acme/Demo/Model/Foo.php',
+            'T-01 app/design/frontend/Acme/plain/Magento_Theme/templates/page.phtml',
+            'T-01 app/design/frontend/Acme/shop/Magento_Theme/templates/page.phtml',
+        ], array_map(static fn (array $f): string => $f['ruleId'] . ' ' . $f['file'], $report['findings']));
+        $magentoOne = array_values(array_filter($report['notices'], static fn (array $n): bool => $n['source'] === 'magento1-code'));
+        self::assertSame(
+            ['app/code/community', 'app/code/core', 'app/code/local', 'app/design/frontend/base/default'],
+            array_column($magentoOne, 'file'),
+        );
+        self::assertSame('app/code/local is Magento 1 code and was not analyzed.', $magentoOne[2]['message']);
+
+        // Only Magento 1 code asked for: a clean run that says why.
+        [$exitCode, $stdout] = $this->runCommand($project, ['--format=json', '--paths=app/code/local']);
+        self::assertSame(Application::EXIT_CLEAN, $exitCode, $stdout);
+        $report = json_decode($stdout, true);
+        self::assertIsArray($report);
+        /** @var array{notices: list<array{source: string}>} $report */
+        self::assertContains('magento1-code', array_column($report['notices'], 'source'));
     }
 
     public function testProxyConfiguredInADisabledModuleDoesNotCount(): void

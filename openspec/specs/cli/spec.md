@@ -149,6 +149,20 @@ The command SHALL exit with 0 when no finding is at or above the `--fail-on` sev
 - **WHEN** the project has neither `app/code` nor `app/design`, or the paths hold no PHP, template or XML file, or only a PHP file that does not parse
 - **THEN** the command says that there is nothing to analyze and exits with code 2
 
+#### Scenario: One file kills a worker
+- **WHEN** a PHPStan worker dies, a single PHPStan process with `--debug` dies on one file, and an analysis of that file alone also dies
+- **THEN** that file is left out with a `phpstan-crash` notice naming it, the rest is analyzed again and reported
+- **AND** the report is not incomplete
+- **AND** the next run leaves the file out from the start while its content is unchanged
+
+#### Scenario: Single process dies on a file that is fine alone
+- **WHEN** the single process dies on a file that an analysis of its own completes
+- **THEN** nothing is left out and the report is incomplete
+
+#### Scenario: Internal error
+- **WHEN** PHPStan reports an internal error and no worker died
+- **THEN** no single-process run is made and the report is incomplete
+
 ### Requirement: Paths stay in the project
 Paths from `--paths` or the configuration file SHALL be normalized and deduplicated. A path with a `..` segment SHALL be rejected with exit code 2.
 

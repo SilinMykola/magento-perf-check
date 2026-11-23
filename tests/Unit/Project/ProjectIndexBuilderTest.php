@@ -56,6 +56,25 @@ final class ProjectIndexBuilderTest extends TestCase
         self::assertSame(5, $this->index()->moduleCount);
     }
 
+    public function testComposerOneListWithoutInstallPaths(): void
+    {
+        $source = realpath(__DIR__ . '/../../Fixtures/Project/indexed');
+        self::assertIsString($source);
+        $copy = sys_get_temp_dir() . '/mpr-index-project-' . bin2hex(random_bytes(4));
+        exec('cp -R ' . escapeshellarg($source) . ' ' . escapeshellarg($copy));
+        // Composer 1 wrote a plain list and no install-path: packages lie in vendor/<name>.
+        file_put_contents($copy . '/vendor/composer/installed.json', '[{"name": "magento/module-sales"}, {"name": "acme/library"}, {"name": "acme/src-module"}, {"name": "acme/not-installed"}]');
+
+        try {
+            $index = (new ProjectIndexBuilder($this->cacheDir))->build($copy);
+
+            self::assertSame(5, $index->moduleCount);
+            self::assertTrue($index->tableHasPrimaryKey('sales_order'));
+        } finally {
+            exec('rm -rf ' . escapeshellarg($copy));
+        }
+    }
+
     public function testResolversOfFieldsOnListTypes(): void
     {
         $index = $this->index();

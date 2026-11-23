@@ -132,13 +132,18 @@ final class ProjectIndexBuilder
 
         $installed = $projectRoot . '/vendor/composer/installed.json';
         $data = is_file($installed) ? json_decode((string) file_get_contents($installed), true) : null;
-        // Composer 2 wraps the list in "packages"; Composer 1 stored the list itself.
+        // Composer 2 wraps the list in "packages"; Composer 1 stored the list itself
+        // and wrote no install-path, as each package lies in vendor/<name>.
         $packages = is_array($data) ? ($data['packages'] ?? $data) : [];
         foreach (is_array($packages) ? $packages : [] as $package) {
-            if (!is_array($package) || !is_string($package['install-path'] ?? null)) {
+            if (!is_array($package)) {
                 continue;
             }
-            $path = self::normalize($projectRoot . '/vendor/composer/' . $package['install-path']);
+            $installPath = $package['install-path'] ?? (is_string($package['name'] ?? null) ? '../' . $package['name'] : null);
+            if (!is_string($installPath)) {
+                continue;
+            }
+            $path = self::normalize($projectRoot . '/vendor/composer/' . $installPath);
             $root = realpath($path);
             if ($root === false) {
                 continue;

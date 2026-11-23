@@ -1,0 +1,2 @@
+- [x] appliesFrom on RuleDefinition, honoured by the version gate, with tests that fail without it
+- [x] J-DEP-01 applies from 2.3.3; rule page (English and Russian) and changelog

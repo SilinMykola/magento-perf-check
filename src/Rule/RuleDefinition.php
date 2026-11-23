@@ -10,6 +10,7 @@ final class RuleDefinition
      * @param non-empty-list<Source> $sources
      * @param array<string, Severity|null> $identifiers PHPStan identifiers of a PHP rule; null means the rule's severity
      * @param list<string> $changedIn for an upgrade rule: the first Magento version with the change it checks, one per release line
+     * @param ?string $appliesFrom the first Magento version where the rule's advice can be followed; below it the rule is silent
      */
     public function __construct(
         public readonly string $id,
@@ -19,6 +20,7 @@ final class RuleDefinition
         public readonly array $sources,
         public readonly array $identifiers = [],
         public readonly array $changedIn = [],
+        public readonly ?string $appliesFrom = null,
     ) {
     }
 

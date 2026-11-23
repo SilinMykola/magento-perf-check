@@ -183,7 +183,7 @@ return [
         $b('lib/web/jquery/compat.js#L1-L4', 'jquery/compat imports every jQuery UI widget: "Import every plugin under the sun. Bad for performance".'),
         $b('app/code/Magento/Theme/view/frontend/requirejs-config.js#L30', 'On the storefront core maps jquery/ui to jquery/compat.'),
         new Source(SourceLevel::B, 'https://github.com/magento/magento2/issues/22995', 'Measured in the issue: "jQueryUI is `227kb` of the shared bundle (unminified), even though only 11% of that is used on the homepage."'),
-    ]),
+    ], appliesFrom: '2.3.3'),
     new RuleDefinition('J-DEP-02', 'A module in the top-level deps of a storefront requirejs-config.js, loaded on every page', Severity::Info, RuleStatus::Experimental, [
         $a('https://developer.adobe.com/commerce/frontend-core/javascript/requirejs', '"Adding modules under an independent `deps` configuration will load the specified modules in all pages."'),
         $a('https://developer.adobe.com/commerce/frontend-core/javascript/custom', '"Additional dependencies demand more web requests, which can slow rendering."'),

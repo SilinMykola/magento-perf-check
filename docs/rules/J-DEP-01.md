@@ -12,6 +12,8 @@ The module ID `jquery/ui` as a string in storefront JavaScript: a dependency in 
 
 An object key is left out: core's own map entry `'jquery/ui': 'jquery/compat'` names the module but does not load it. So are comments and code in HTML comments of a template.
 
+The rule is silent on a project whose `vendor/magento/magento2-base` is older than 2.3.3: there `jquery/ui` is the single jQuery UI file and no per-widget module exists to depend on instead. When the version cannot be read, the rule runs.
+
 A script is reported whether Magento loads it now or not: a theme override for a module that the project does not have installed, or a `shim` entry of a library that nothing requires yet, still depends on the whole library once the module is installed or the library is required.
 
 Not read: `<script type="text/x-magento-init">` blocks and `data-mage-init` attributes, which name components as object keys; scripts that PHP builds as a string, for example for `$secureRenderer->renderTag()`; minified `x.min.js` files next to their `x.js`; `node_modules`; themes outside `app/design`. The storefront scripts are read only while J-DEP-01 or J-DEP-02 is enabled; on the Magento 2.4.9 core that took about 0.5 s with a warm PHPStan cache ([round 15](https://github.com/SilinMykola/magento-perf-check/blob/main/docs/calibration/round-15.md#timing)).
@@ -46,7 +48,7 @@ define(['jquery', 'jquery-ui-modules/slider'], function ($) {
 ## Known false positives
 
 - A script in `view/base` that only the admin loads: the admin keeps the whole library on purpose, as the Adobe page says.
-- A project on Magento older than 2.3.3, which has no `jquery-ui-modules`, and a fallback file that a module loads only on such versions.
+- A fallback file that a module loads only on Magento older than 2.3.3, which has no `jquery-ui-modules`.
 
 ## Basis
 
