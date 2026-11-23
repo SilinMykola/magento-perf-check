@@ -29,7 +29,8 @@ final class LayoutHandles
 
     /**
      * @param array<string, array<string, true>> $includedBy handle => handles whose layout files include it
-     * @param array<string, true> $accountPages handles with a layout file that includes customer_account
+     * @param array<string, true> $accountPages handles with a layout file that includes customer_account or defines its
+     *     navigation, or that includes such a handle
      * @param array<string, true> $pages handles of storefront controller actions: route id, controller path, action
      * @param array<string, bool> $routes storefront route ids => true when their controllers were not found, so each of
      *     their handles counts as a page
@@ -80,11 +81,30 @@ final class LayoutHandles
         $accountPages = [];
         foreach (self::layoutFiles($projectRoot, $modules) as $file) {
             $handle = basename($file, '.xml');
-            foreach (self::directUpdates($file) as $included) {
+            $document = new DOMDocument();
+            if (!@$document->load($file, LIBXML_NONET) || $document->documentElement === null) {
+                continue;
+            }
+            // A module's account page may copy the account navigation instead of including customer_account.
+            // default.xml is on every page, so a navigation defined there makes no page an account page.
+            if (self::withoutHyvaPrefix($handle) !== 'default' && self::definesAccountNavigation($document)) {
+                $accountPages[$handle] = true;
+            }
+            foreach (self::directUpdates($document->documentElement) as $included) {
                 if ($included === self::ACCOUNT_HANDLE) {
                     $accountPages[$handle] = true;
                 }
                 $includedBy[$included][$handle] = true;
+            }
+        }
+        // Magento merges included handles recursively, so a handle that includes an account layout is one too.
+        $queue = array_keys($accountPages);
+        while ($queue !== []) {
+            foreach (array_keys($includedBy[array_pop($queue)] ?? []) as $includer) {
+                if (!isset($accountPages[$includer])) {
+                    $accountPages[$includer] = true;
+                    $queue[] = $includer;
+                }
             }
         }
 
@@ -329,20 +349,30 @@ final class LayoutHandles
     /**
      * @return list<string>
      */
-    private static function directUpdates(string $file): array
+    private static function directUpdates(DOMElement $root): array
     {
-        $document = new DOMDocument();
-        if (!@$document->load($file, LIBXML_NONET) || $document->documentElement === null) {
-            return [];
-        }
         $handles = [];
-        foreach ($document->documentElement->childNodes as $child) {
+        foreach ($root->childNodes as $child) {
             if ($child instanceof DOMElement && strtolower($child->tagName) === 'update' && $child->hasAttribute('handle')) {
                 $handles[] = $child->getAttribute('handle');
             }
         }
 
         return $handles;
+    }
+
+    /**
+     * Whether the layout declares the block of the customer account navigation, as core's customer_account.xml does.
+     */
+    private static function definesAccountNavigation(DOMDocument $document): bool
+    {
+        foreach ($document->getElementsByTagName('block') as $block) {
+            if ($block->getAttribute('name') === 'customer_account_navigation') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

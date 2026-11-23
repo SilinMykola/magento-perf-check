@@ -309,7 +309,7 @@ final class ProjectIndexBuilder
 
     /**
      * Where frontend layouts place each block class and object argument (view models), and which of those handles
-     * no cacheable page uses: account pages that include customer_account, handles whose files hold a block with
+     * no cacheable page uses: account pages (LayoutHandles), handles whose files hold a block with
      * cacheable="false" that no ifconfig switches and no file of the handle removes, with the elements around it,
      * and handles only such handles include. Handles X-LAY-03 reports do not count that way: their cacheable="false"
      * block is an error to fix. A storefront controller action's handle is a page and decides for itself (LayoutHandles).

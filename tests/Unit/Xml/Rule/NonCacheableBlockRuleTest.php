@@ -97,11 +97,15 @@ final class NonCacheableBlockRuleTest extends TestCase
         // hyva_ copy that a public page includes or of a public handle, a route's own handle, a shop-wide handle (X-LAY-03 does not
         // follow includes), a nested include or account mark, cycles alone,
         // and an account mark in a theme folder of a disabled or missing module.
+        // A page that defines the customer account navigation itself, or includes a handle that does, is an account
+        // page; a page that only references the navigation is not, and neither is default.xml, which defines it on
+        // every page, so a handle that default.xml includes is reported.
         $layout = 'app/code/Acme/Fee/view/frontend/layout/';
         self::assertSame([
             'X-LAY-01 ' . $layout . 'acme_base_only.xml:4',
             'X-LAY-01 ' . $layout . 'acme_cycle_a.xml:5',
             'X-LAY-01 ' . $layout . 'acme_cycle_b.xml:5',
+            'X-LAY-01 ' . $layout . 'acme_header_links.xml:4',
             'X-LAY-01 ' . $layout . 'acme_loop.xml:5',
             'X-LAY-01 ' . $layout . 'acme_missing_account.xml:4',
             'X-LAY-01 ' . $layout . 'acme_nested.xml:4',
@@ -113,6 +117,7 @@ final class NonCacheableBlockRuleTest extends TestCase
             'X-LAY-01 ' . $layout . 'acme_widget.xml:4',
             'X-LAY-01 ' . $layout . 'acme_widget_catalog.xml:4',
             'X-LAY-01 ' . $layout . 'acmeroute_index_index.xml:4',
+            'X-LAY-01 ' . $layout . 'acmeroute_navref_index.xml:4',
             'X-LAY-01 ' . $layout . 'hyva_acme_hyva_pub.xml:4',
             'X-LAY-01 ' . $layout . 'hyva_acme_widget.xml:4',
             'X-LAY-01 ' . $layout . 'hyva_acmeroute_index_index.xml:4',
@@ -154,6 +159,6 @@ final class NonCacheableBlockRuleTest extends TestCase
         self::assertIsString($root);
         $result = (new XmlAnalyzer(new FileDiscovery($root), [new NonCacheableBlockRule()]))->analyze(['app/code', 'app/design']);
 
-        self::assertCount(32, $result->findings);
+        self::assertCount(36, $result->findings);
     }
 }
