@@ -6,7 +6,11 @@
             <column name="store_id"/>
         </constraint>
         <constraint xsi:type="unique" referenceId="ACME_TAG_NOTE_STORE" disabled="true"/>
+        <!-- xs:boolean: "1" disables as well as "true". -->
+        <constraint xsi:type="unique" referenceId="ACME_TAG_NOTE_SLUG" disabled="1"/>
     </table>
+    <!-- A disabled table is dropped with its keys. -->
+    <table name="acme_tag_legacy" resource="default" disabled="true"/>
     <table name="Acme_Tag_Case" resource="default">
         <column xsi:type="varchar" name="code" nullable="false" length="32"/>
         <constraint xsi:type="unique" referenceId="ACME_TAG_CASE_CODE">

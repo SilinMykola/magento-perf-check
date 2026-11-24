@@ -101,6 +101,34 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message('Order'), 217],
             [$message('Order'), 222],
             [$message('Order'), 232],
+            // A value that may be a list, which becomes IN (...).
+            [$message('Order'), 312],
+            [$message('Order'), 318],
+            // A property set to a new collection after the filter.
+            [$message('Order'), 330],
+            // A key filter in an arrow function, ?:, ??, &&, a match arm, a case, a catch or a loop.
+            [$message('Order'), 336],
+            [$message('Order'), 342],
+            [$message('Order'), 348],
+            [$message('Order'), 354],
+            [$message('Order'), 363],
+            [$message('Order'), 373],
+            [$message('Order'), 383],
+            [$message('Order'), 391],
+            // Another table through getSelect()->from() or union().
+            [$message('Order'), 404],
+            [$message('Order'), 410],
+            // A _construct() that does not call the parent's _init().
+            [$message('Order\\Archive'), 415],
+            // A setup-script key on a table that db_schema.xml declares without it.
+            [$message('Order'), 425],
+            // Keys dropped in the same script, by a name that cannot be tied to columns.
+            [$message('Queue'), 435],
+            [$message('Queue'), 440],
+            // A list variable reassigned to one value before getFirstItem().
+            [$message('Order'), 447],
+            // A _construct() that calls the parent's only in a branch.
+            [$message('Order\\Conditional'), 452],
         ]);
     }
 }

@@ -233,3 +233,239 @@ namespace Acme\Tags\Model {
         }
     }
 }
+
+namespace Acme\Tags\Model\ResourceModel {
+    class Queue extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
+    {
+        protected function _construct(): void
+        {
+            $this->_init('acme_tag_queue', 'queue_id');
+        }
+    }
+
+    class Rule extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
+    {
+        protected function _construct(): void
+        {
+            $this->_init('acme_tag_rule', 'rule_id');
+        }
+    }
+}
+
+namespace Acme\Tags\Model\ResourceModel\Queue {
+    class Collection extends \Magento\Framework\Data\Collection\AbstractDb
+    {
+        protected function _construct(): void
+        {
+            $this->_init(\Acme\Tags\Model\Queue::class, \Acme\Tags\Model\ResourceModel\Queue::class);
+        }
+    }
+}
+
+namespace Acme\Tags\Model\ResourceModel\Rule {
+    class Collection extends \Magento\Framework\Data\Collection\AbstractDb
+    {
+        protected function _construct(): void
+        {
+            $this->_init(\Acme\Tags\Model\Rule::class, \Acme\Tags\Model\ResourceModel\Rule::class);
+        }
+    }
+}
+
+namespace Acme\Tags\Model\ResourceModel\Order\Archive {
+    /** Reads another table: its _construct() replaces the parent's without calling it. */
+    class Collection extends \Acme\Tags\Model\ResourceModel\Order\Collection
+    {
+        protected function _construct(): void
+        {
+            $this->_setMainTable('acme_tag_archive');
+        }
+    }
+}
+
+namespace Acme\Tags\Model\ResourceModel\Order\Mapped {
+    class Collection extends \Acme\Tags\Model\ResourceModel\Order\Collection
+    {
+        protected function _construct(): void
+        {
+            parent::_construct();
+            $this->addFilterToMap('id', 'main_table.id');
+        }
+    }
+}
+
+namespace Acme\Tags\Model {
+    use Acme\Tags\Model\ResourceModel\Order\Collection as OrderCollection;
+
+    final class MoreTags
+    {
+        private OrderCollection $orderTags;
+
+        public function __construct(private readonly \Acme\Tags\Model\ResourceModel\Order\CollectionFactory $orderTagsFactory)
+        {
+            $this->orderTags = $orderTagsFactory->create();
+        }
+
+        public function listOfIds(OrderCollection $orderTags, array $ids): void
+        {
+            // A list becomes IN (...).
+            $orderTags->addFieldToFilter('id', $ids)->getFirstItem();
+        }
+
+        public function intOrListOfIds(OrderCollection $orderTags, int|array $id): void
+        {
+            $orderTags->addFieldToFilter('id', $id);
+            $orderTags->getFirstItem();
+        }
+
+        public function eqCondition(OrderCollection $orderTags, int $id): void
+        {
+            $orderTags->addFieldToFilter('id', ['eq' => $id])->getFirstItem();
+        }
+
+        public function propertyReplacedByANewCollection(int $id): void
+        {
+            $this->orderTags->addFieldToFilter('id', $id);
+            $this->orderTags = $this->orderTagsFactory->create();
+            $this->orderTags->getFirstItem();
+        }
+
+        public function keyFilterInAnArrowFunction(OrderCollection $orderTags, int $id): void
+        {
+            $filter = fn () => $orderTags->addFieldToFilter('id', $id);
+            $orderTags->getFirstItem();
+        }
+
+        public function keyFilterInAShortTernary(OrderCollection $orderTags, bool $skip, int $id): void
+        {
+            $skip ?: $orderTags->addFieldToFilter('id', $id);
+            $orderTags->getFirstItem();
+        }
+
+        public function keyFilterInACoalesce(OrderCollection $orderTags, ?OrderCollection $given, int $id): void
+        {
+            $given ?? $orderTags->addFieldToFilter('id', $id);
+            $orderTags->getFirstItem();
+        }
+
+        public function keyFilterInAnAnd(OrderCollection $orderTags, ?int $id): void
+        {
+            $id !== null && $orderTags->addFieldToFilter('id', $id);
+            $orderTags->getFirstItem();
+        }
+
+        public function keyFilterInAMatchArm(OrderCollection $orderTags, string $mode, int $id): void
+        {
+            match ($mode) {
+                'id' => $orderTags->addFieldToFilter('id', $id),
+                default => null,
+            };
+            $orderTags->getFirstItem();
+        }
+
+        public function keyFilterInASwitchCase(OrderCollection $orderTags, string $mode, int $id): void
+        {
+            switch ($mode) {
+                case 'id':
+                    $orderTags->addFieldToFilter('id', $id);
+                    break;
+            }
+            $orderTags->getFirstItem();
+        }
+
+        public function keyFilterInACatch(OrderCollection $orderTags, int $id): void
+        {
+            try {
+                $orderTags->setCurPage(1);
+            } catch (\RuntimeException $e) {
+                $orderTags->addFieldToFilter('id', $id);
+            }
+            $orderTags->getFirstItem();
+        }
+
+        public function keyFilterInALoop(OrderCollection $orderTags, int $times, int $id): void
+        {
+            for ($i = 0; $i < $times; $i++) {
+                $orderTags->addFieldToFilter('id', $id);
+            }
+            $orderTags->getFirstItem();
+        }
+
+        public function keyThroughAddAttributeToFilter(OrderCollection $orderTags, int $id): void
+        {
+            $orderTags->addAttributeToFilter('id', $id);
+            $orderTags->getFirstItem();
+        }
+
+        public function keyWithAnotherFrom(OrderCollection $orderTags, int $id): void
+        {
+            $orderTags->addFieldToFilter('id', $id);
+            $orderTags->getSelect()->from(['label' => 'acme_label'], []);
+            $orderTags->getFirstItem();
+        }
+
+        public function keyWithAUnion(OrderCollection $orderTags, int $id): void
+        {
+            $orderTags->addFieldToFilter('id', $id)->getSelect()->union(['SELECT 1']);
+            $orderTags->getFirstItem();
+        }
+
+        public function collectionWithItsOwnMainTable(\Acme\Tags\Model\ResourceModel\Order\Archive\Collection $archive, int $id): void
+        {
+            $archive->addFieldToFilter('id', $id)->getFirstItem();
+        }
+
+        public function collectionThatCallsTheParentConstruct(\Acme\Tags\Model\ResourceModel\Order\Mapped\Collection $mapped, int $id): void
+        {
+            $mapped->addFieldToFilter('id', $id)->getFirstItem();
+        }
+
+        public function setupKeyOnADeclaredTable(OrderCollection $orderTags, int $labelId): void
+        {
+            $orderTags->addFieldToFilter('label_id', $labelId)->getFirstItem();
+        }
+
+        public function keyFromInstallSchema(\Acme\Tags\Model\ResourceModel\Rule\Collection $rules, string $code): void
+        {
+            $rules->addFieldToFilter('code', $code)->getFirstItem();
+        }
+
+        public function primaryKeyDroppedInTheSameScript(\Acme\Tags\Model\ResourceModel\Queue\Collection $queue, int $id): void
+        {
+            $queue->addFieldToFilter('queue_id', $id)->getFirstItem();
+        }
+
+        public function uniqueKeyDroppedByAnUnreadableName(\Acme\Tags\Model\ResourceModel\Queue\Collection $queue, string $code): void
+        {
+            $queue->addFieldToFilter('code', $code)->getFirstItem();
+        }
+
+        public function listReassignedBeforeGetFirstItem(OrderCollection $orderTags, array $ids): void
+        {
+            $orderTags->addFieldToFilter('id', $ids);
+            $ids = 5;
+            $orderTags->getFirstItem();
+        }
+
+        public function collectionThatCallsTheParentConstructOnlySometimes(\Acme\Tags\Model\ResourceModel\Order\Conditional\Collection $conditional, int $id): void
+        {
+            $conditional->addFieldToFilter('id', $id)->getFirstItem();
+        }
+    }
+}
+
+namespace Acme\Tags\Model\ResourceModel\Order\Conditional {
+    class Collection extends \Acme\Tags\Model\ResourceModel\Order\Collection
+    {
+        private bool $archived = false;
+
+        protected function _construct(): void
+        {
+            if ($this->archived) {
+                $this->_setMainTable('acme_tag_archive');
+            } else {
+                parent::_construct();
+            }
+        }
+    }
+}

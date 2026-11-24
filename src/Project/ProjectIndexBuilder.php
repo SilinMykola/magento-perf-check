@@ -412,6 +412,7 @@ final class ProjectIndexBuilder
         $tables = [];
         $constraints = [];
         $disabledConstraints = [];
+        $disabledTables = [];
         $virtualTypes = [];
         $virtualProxies = [];
         $schemas = [];
@@ -508,6 +509,10 @@ final class ProjectIndexBuilder
                 case 'db_schema.xml':
                     foreach ($this->elements($xpath, '/schema/table') as $table) {
                         $tableName = strtolower($table->getAttribute('name'));
+                        $constraints[$tableName] ??= [];
+                        if ($this->isDisabled($table)) {
+                            $disabledTables[$tableName] = true;
+                        }
                         foreach ($this->elements($xpath, 'constraint', $table) as $constraint) {
                             if ($this->xsiType($constraint) === 'primary') {
                                 $tables[$table->getAttribute('name')] = true;
@@ -515,7 +520,7 @@ final class ProjectIndexBuilder
                             if (in_array($this->xsiType($constraint), ['primary', 'unique'], true)) {
                                 // Modules merge a constraint by its referenceId: columns add up, and one may disable it.
                                 $id = $tableName . '|' . $constraint->getAttribute('referenceId');
-                                if ($constraint->getAttribute('disabled') === 'true') {
+                                if ($this->isDisabled($constraint)) {
                                     $disabledConstraints[$id] = true;
                                 }
                                 foreach ($this->elements($xpath, 'column', $constraint) as $column) {
@@ -546,7 +551,9 @@ final class ProjectIndexBuilder
 
         $uniqueKeys = [];
         foreach ($constraints as $table => $byId) {
-            foreach (array_diff_key($byId, $disabledConstraints) as $columns) {
+            // A disabled table is dropped with its keys; it stays declared.
+            $uniqueKeys[$table] = [];
+            foreach (isset($disabledTables[$table]) ? [] : array_diff_key($byId, $disabledConstraints) as $columns) {
                 $columns = array_keys($columns);
                 sort($columns);
                 $uniqueKeys[$table][] = $columns;
@@ -634,5 +641,13 @@ final class ProjectIndexBuilder
         $type = $element->getAttributeNS(self::XSI, 'type');
 
         return $type !== '' ? $type : $element->getAttribute('xsi:type');
+    }
+
+    /**
+     * disabled="true" or "1": the schema types it as xs:boolean.
+     */
+    private function isDisabled(DOMElement $element): bool
+    {
+        return in_array(strtolower(trim($element->getAttribute('disabled'))), ['true', '1'], true);
     }
 }

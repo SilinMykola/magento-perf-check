@@ -24,5 +24,14 @@
         <constraint xsi:type="unique" referenceId="ACME_TAG_NOTE_STORE">
             <column name="store_id"/>
         </constraint>
+        <constraint xsi:type="unique" referenceId="ACME_TAG_NOTE_SLUG">
+            <column name="slug"/>
+        </constraint>
+    </table>
+    <table name="acme_tag_legacy" resource="default">
+        <column xsi:type="int" name="id" unsigned="true" nullable="false" identity="true"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
     </table>
 </schema>

@@ -68,8 +68,15 @@ final class GetFirstItemWithoutLimitRule implements Rule
             return [];
         }
 
-        /** @var list<string> $columns */
-        $columns = $node->getAttribute(CollectionStateVisitor::EQUALITY_COLUMNS, []);
+        /** @var list<array{string, Node\Expr}> $filters */
+        $filters = $node->getAttribute(CollectionStateVisitor::EQUALITY_COLUMNS, []);
+        $columns = [];
+        foreach ($filters as [$column, $value]) {
+            // Magento turns a list into IN (...), which may match many rows.
+            if ($scope->getType($value)->isArray()->no()) {
+                $columns[] = $column;
+            }
+        }
         if ($this->filtersOnAUniqueKey($type->getObjectClassNames(), $columns)) {
             return [];
         }

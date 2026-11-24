@@ -1,0 +1,7 @@
+- [x] Visitor: value expression per filtered column; P-COL-02 drops a column whose value may be an array; fixtures for an `array` and an `int|array` value, and for `['eq' => $id]`
+- [x] Visitor: assignment to `$this->prop` resets its facts; arrow function body is a branch; `from()` and `union()` on `getSelect()` count as a join; fixtures for each
+- [x] Unique keys: stop at a `_construct()` without `_init()` and without `parent::_construct()`; ignore setup-script keys on a declared table; `dropIndex()` removes earlier `primary` columns of the same script; cached `null` main table; fixtures for each
+- [x] Index: `disabled` as `xs:boolean`, disabled tables, declared tables; index version bumped; test
+- [x] Fixtures for branch kinds (`?:`, `??`, `&&`, `match`, `case`, `catch`, loop), `addAttributeToFilter()`, a key from `Setup/InstallSchema.php`, and `dropIndex()` with an unreadable name; each checked with a mutant
+- [x] A filter whose value variable is reassigned does not count; only a top-level `parent::_construct()` follows the parent; fixtures for both, checked with mutants
+- [x] Rule page and changelog

@@ -60,6 +60,34 @@ class UpgradeSchema implements UpgradeSchemaInterface
             );
         }
 
+        if (version_compare($context->getVersion(), '1.0.5', '<')) {
+            // acme_tag_order is declared in db_schema.xml, which does not have this key.
+            $setup->getConnection()->addIndex(
+                $setup->getTable('acme_tag_order'),
+                $setup->getIdxName('acme_tag_order', ['label_id'], AdapterInterface::INDEX_TYPE_UNIQUE),
+                ['label_id'],
+                AdapterInterface::INDEX_TYPE_UNIQUE
+            );
+        }
+
+        if (version_compare($context->getVersion(), '1.0.6', '<')) {
+            $queue = $setup->getConnection()
+                ->newTable($setup->getTable('acme_tag_queue'))
+                ->addColumn('queue_id', Table::TYPE_INTEGER, null, ['nullable' => false, 'primary' => true], 'Id')
+                ->addColumn('code', Table::TYPE_TEXT, 32, [], 'Code')
+                ->addIndex(
+                    $setup->getIdxName('acme_tag_queue', ['code'], AdapterInterface::INDEX_TYPE_UNIQUE),
+                    ['code'],
+                    ['type' => AdapterInterface::INDEX_TYPE_UNIQUE]
+                );
+            $setup->getConnection()->createTable($queue);
+        }
+
+        if (version_compare($context->getVersion(), '1.0.7', '<')) {
+            // A name that is not a getIdxName() call: no key of the table from the setup scripts counts.
+            $setup->getConnection()->dropIndex($setup->getTable('acme_tag_queue'), 'PRIMARY');
+        }
+
         $setup->endSetup();
     }
 }

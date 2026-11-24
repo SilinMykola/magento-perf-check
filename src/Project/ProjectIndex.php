@@ -25,7 +25,7 @@ final class ProjectIndex
      * @param array<string, list<string>> $webapiPreferences type => classes di.xml prefers for it in the global and web API areas
      * @param array<string, list<string>> $layoutPlacements block or view model class, as written => frontend layout handles that name it
      * @param array<string, true> $uncacheableHandles handles of $layoutPlacements that no cacheable page uses
-     * @param array<string, list<list<string>>> $uniqueKeys table => columns of each primary and unique constraint, lower case
+     * @param array<string, list<list<string>>> $uniqueKeys table => columns of each primary and unique constraint, lower case, for every table db_schema.xml declares
      */
     public function __construct(
         public readonly int $moduleCount,
@@ -136,6 +136,14 @@ final class ProjectIndex
     public function uniqueKeysOf(string $table): array
     {
         return $this->uniqueKeys[$table] ?? [];
+    }
+
+    /**
+     * Whether any db_schema.xml declares the table, lower case, even without keys or disabled.
+     */
+    public function declaresTable(string $table): bool
+    {
+        return array_key_exists($table, $this->uniqueKeys);
     }
 
     /**

@@ -27,7 +27,8 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
 
     /**
      * Set on getFirstItem(): the main-table columns the collection is filtered on with an
-     * equality, lower case, for a rule that knows the table's unique keys.
+     * equality, lower case, each with the value it is compared with, for a rule that knows
+     * the table's unique keys and can tell whether the value may be a list.
      */
     public const EQUALITY_COLUMNS = 'magentoPerfCollectionEqualityColumns';
 
@@ -64,7 +65,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     /** Methods after which the collection holds its items in memory. */
     private const LOADING_METHODS = ['load', 'getitems', 'count', 'getfirstitem', 'getlastitem'];
 
-    /** @var list<array<string, array<string, true>>> root key => facts, one frame per function */
+    /** @var list<array<string, array<string, true|Expr>>> root key => facts (a column fact holds its value), one frame per function */
     private array $frames = [];
 
     /** @var list<array<string, int>> root key => number of row-using operations, one frame per function */
@@ -102,9 +103,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             return null;
         }
 
-        // "$c = <chain>": $c is a new collection; it inherits only what the chain establishes.
-        if ($node instanceof Expr\Assign && $node->var instanceof Expr\Variable && is_string($node->var->name)) {
-            $key = '$' . $node->var->name;
+        // "$c = <chain>" or "$this->c = <chain>": $c is a new collection; it inherits only what the chain establishes.
+        if ($node instanceof Expr\Assign && ($key = $this->rootKey($node->var)) !== null) {
+            $this->forgetValuesOf($key);
             // "$c = $c->addFieldToFilter(...)" keeps working on the same collection.
             if ($this->rootKey($node->expr) !== $key) {
                 unset($this->frames[count($this->frames) - 1][$key]);
@@ -117,8 +118,8 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
                     $this->record($key, $fact);
                 }
             }
-            foreach ($this->chainColumns($node->expr) as $column) {
-                $this->recordColumn($key, $column);
+            foreach ($this->chainColumns($node->expr) as [$column, $value]) {
+                $this->recordColumn($key, $column, $value);
             }
             if ($this->chainJoins($node->expr)) {
                 $this->record($key, self::JOINED);
@@ -205,20 +206,20 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             }
             $columns = $this->chainColumns($node->var);
             $facts = $key === null ? [] : ($this->frames[count($this->frames) - 1][$key] ?? []);
-            foreach (array_keys($facts) as $fact) {
-                if (!str_starts_with($fact, self::COLUMN_FACT)) {
+            foreach ($facts as $fact => $value) {
+                if (!str_starts_with($fact, self::COLUMN_FACT) || !$value instanceof Expr) {
                     continue;
                 }
                 // A filter set in a branch counts only within that branch: "if ($id) { filter }" may not run.
                 [$column, $branch] = explode('@', substr($fact, strlen(self::COLUMN_FACT)), 2);
                 if ($branch === '0' || in_array((int) $branch, $this->branches, true)) {
-                    $columns[] = $column;
+                    $columns[] = [$column, $value];
                 }
             }
             if (isset($facts[self::JOINED]) || $this->chainJoins($node->var)) {
                 $columns = [];
             }
-            $node->setAttribute(self::EQUALITY_COLUMNS, array_values(array_unique($columns)));
+            $node->setAttribute(self::EQUALITY_COLUMNS, $columns);
         }
         foreach ([self::LIMITED, self::UNIQUE_FILTER] as $fact) {
             if ($this->establishes($node, $fact)) {
@@ -228,10 +229,10 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         $column = $this->equalityColumn($node);
         // "$this->factory->create()->addFieldToFilter(...)" filters a new collection, not $this->factory.
         if ($column !== null && !$this->makesANewObject($node->var)) {
-            $this->recordColumn($key, $column);
+            $this->recordColumn($key, ...$column);
         }
         // "$c->getSelect()->joinLeft(...)" joins on $c's query; "$factory->create()->join(...)" on a new one.
-        if (str_starts_with($name, 'join') && !$this->callsCreate($node->var)) {
+        if ($this->joins($node) && !$this->callsCreate($node->var)) {
             $this->record($key, self::JOINED);
         }
         if (in_array($name, self::LOADING_METHODS, true)) {
@@ -315,21 +316,38 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         }
     }
 
-    private function record(?string $key, string $fact): void
+    private function record(?string $key, string $fact, ?Expr $value = null): void
     {
         if ($key !== null) {
-            $this->frames[count($this->frames) - 1][$key][$fact] = true;
+            $this->frames[count($this->frames) - 1][$key][$fact] = $value ?? true;
         }
     }
 
-    private function recordColumn(?string $key, string $column): void
+    private function recordColumn(?string $key, string $column, Expr $value): void
     {
-        $this->record($key, self::COLUMN_FACT . $column . '@' . ($this->branches === [] ? 0 : $this->branches[count($this->branches) - 1]));
+        $this->record($key, self::COLUMN_FACT . $column . '@' . ($this->branches === [] ? 0 : $this->branches[count($this->branches) - 1]), $value);
+    }
+
+    /**
+     * Drops the column facts whose value reads $key: the rule checks the value's type where getFirstItem() is
+     * called, so after "$ids = 5" a filter on the list "$ids" would look like a filter on one value.
+     */
+    private function forgetValuesOf(string $key): void
+    {
+        $frame = &$this->frames[count($this->frames) - 1];
+        foreach ($frame as $root => $facts) {
+            foreach ($facts as $fact => $value) {
+                if ($value instanceof Expr && (new NodeFinder())->findFirst($value, fn (Node $n): bool => $n instanceof Expr && $this->rootKey($n) === $key) !== null) {
+                    unset($frame[$root][$fact]);
+                }
+            }
+        }
     }
 
     /**
      * Gives each body that runs only on a condition its own branch id: the statements of if, elseif,
-     * else, case, catch and loops, the operands of ?: and ?? that may not run, and match arms.
+     * else, case, catch and loops, the operands of ?: and ?? that may not run, match arms, and the
+     * body of an arrow function, which runs only when it is called.
      */
     private function markBranches(Node $node): void
     {
@@ -342,6 +360,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             $node instanceof Expr\BinaryOp\BooleanOr, $node instanceof Expr\BinaryOp\LogicalAnd,
             $node instanceof Expr\BinaryOp\LogicalOr => [[$node->right]],
             $node instanceof Expr\Match_ => array_map(static fn (Node\MatchArm $arm): array => [$arm->body], $node->arms),
+            $node instanceof Expr\ArrowFunction => [[$node->expr]],
             default => [],
         };
         foreach ($bodies as $body) {
@@ -369,7 +388,31 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     private function chainJoins(Expr $expr): bool
     {
         for (; $expr instanceof Expr\MethodCall; $expr = $expr->var) {
-            if ($expr->name instanceof Node\Identifier && str_starts_with($expr->name->toLowerString(), 'join')) {
+            if ($this->joins($expr)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * join*(), or from() or union() on getSelect(), which add rows of another table or query.
+     */
+    private function joins(Expr\MethodCall $call): bool
+    {
+        if (!$call->name instanceof Node\Identifier) {
+            return false;
+        }
+        $name = $call->name->toLowerString();
+
+        return str_starts_with($name, 'join') || (in_array($name, ['from', 'union'], true) && $this->callsGetSelect($call->var));
+    }
+
+    private function callsGetSelect(Expr $expr): bool
+    {
+        for (; $expr instanceof Expr\MethodCall; $expr = $expr->var) {
+            if ($expr->name instanceof Node\Identifier && $expr->name->toLowerString() === 'getselect') {
                 return true;
             }
         }
@@ -407,9 +450,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * Main-table columns that the calls of this chain filter on with an equality.
+     * Main-table columns that the calls of this chain filter on with an equality, with their values.
      *
-     * @return list<string>
+     * @return list<array{string, Expr}>
      */
     private function chainColumns(Expr $expr): array
     {
@@ -426,16 +469,19 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
 
     /**
      * The column of addFieldToFilter()/addAttributeToFilter() with an equality condition, lower case, when it
-     * has no table alias or the main_table one; else null.
+     * has no table alias or the main_table one, with the value it is compared with; else null.
+     *
+     * @return ?array{string, Expr}
      */
-    private function equalityColumn(Expr\MethodCall $call): ?string
+    private function equalityColumn(Expr\MethodCall $call): ?array
     {
         $field = $this->equalityField($call);
-        if ($field === null || (str_contains($field, '.') && !str_starts_with($field, 'main_table.'))) {
+        $value = $this->equalityValue(CallArgs::of($call)[1]->value ?? null);
+        if ($field === null || $value === null || (str_contains($field, '.') && !str_starts_with($field, 'main_table.'))) {
             return null;
         }
 
-        return str_starts_with($field, 'main_table.') ? substr($field, strlen('main_table.')) : $field;
+        return [str_starts_with($field, 'main_table.') ? substr($field, strlen('main_table.')) : $field, $value];
     }
 
     /**
@@ -451,7 +497,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         }
         $args = CallArgs::of($call);
         $field = $args[0]->value ?? null;
-        if (!$field instanceof Node\Scalar\String_ || !$this->isEquality($args[1]->value ?? null)) {
+        if (!$field instanceof Node\Scalar\String_ || $this->equalityValue($args[1]->value ?? null) === null) {
             return null;
         }
 
@@ -509,17 +555,12 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             if ($name !== 'limit' && $name !== 'limitpage') {
                 return false;
             }
-            for ($on = $call->var; $on instanceof Expr\MethodCall; $on = $on->var) {
-                if ($on->name instanceof Node\Identifier && $on->name->toLowerString() === 'getselect') {
-                    return true;
-                }
-            }
 
-            return false;
+            return $this->callsGetSelect($call->var);
         }
 
         if ($name === 'addidfilter' || $name === 'setidfilter') {
-            return $this->isEquality(CallArgs::of($call)[0]->value ?? null);
+            return $this->equalityValue(CallArgs::of($call)[0]->value ?? null) !== null;
         }
         $column = $this->equalityField($call);
         if ($column === null) {
@@ -531,17 +572,17 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * A plain value (not an array literal), or ['eq' => value]. A variable counts as a
-     * plain value: if it holds an array at runtime, the rule misses a finding, it does
-     * not report a false one.
+     * The value compared with, for a plain value (not an array literal) or ['eq' => value]; else null.
+     * A variable counts as a plain value: if it holds an array at runtime, the rule misses a finding,
+     * it does not report a false one. P-COL-02 checks the type of the value for a declared unique key.
      */
-    private function isEquality(?Expr $condition): bool
+    private function equalityValue(?Expr $condition): ?Expr
     {
         if ($condition === null) {
-            return false;
+            return null;
         }
         if (!$condition instanceof Expr\Array_) {
-            return true;
+            return $condition;
         }
         $items = array_values(array_filter(
             $condition->items,
@@ -551,7 +592,8 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
 
         return count($items) === 1
             && $items[0]->key instanceof Node\Scalar\String_
-            && strtolower($items[0]->key->value) === 'eq';
+            && strtolower($items[0]->key->value) === 'eq'
+            ? $items[0]->value : null;
     }
 
     /**

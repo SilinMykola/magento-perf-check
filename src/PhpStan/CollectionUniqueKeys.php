@@ -46,12 +46,18 @@ final class CollectionUniqueKeys
         if ($columns === []) {
             return false;
         }
-        $table = $this->tables[strtolower($collectionClass)] ??= $this->mainTable($collectionClass);
+        $class = strtolower($collectionClass);
+        if (!array_key_exists($class, $this->tables)) {
+            $this->tables[$class] = $this->mainTable($collectionClass);
+        }
+        $table = $this->tables[$class];
         if ($table === null) {
             return false;
         }
         [$name, $resourceFile] = $table;
-        $keys = [...$this->index->get()->uniqueKeysOf($name), ...$this->keysFromSetupScripts($resourceFile)[$name] ?? []];
+        $index = $this->index->get();
+        // db_schema.xml describes the whole table: keys that only setup scripts add do not count on it.
+        $keys = $index->declaresTable($name) ? $index->uniqueKeysOf($name) : $this->keysFromSetupScripts($resourceFile)[$name] ?? [];
         foreach ($keys as $key) {
             if ($key !== [] && array_diff($key, $columns) === []) {
                 return true;
@@ -77,7 +83,8 @@ final class CollectionUniqueKeys
 
     /**
      * The string at $position of the first $this->_init() call in _construct() of the class or its
-     * nearest parent that has one, with the file of that class.
+     * nearest parent that has one, with the file of that class. A _construct() without _init() that
+     * does not call parent::_construct() replaces the parent's: then the string is unknown.
      *
      * @return ?array{string, string}
      */
@@ -106,9 +113,27 @@ final class CollectionUniqueKeys
                     return $value === null ? null : [ltrim($value, '\\'), $file];
                 }
             }
+            if (!$this->callsParentConstruct($construct)) {
+                return null;
+            }
         }
 
         return null;
+    }
+
+    private function callsParentConstruct(Stmt\ClassMethod $construct): bool
+    {
+        // Only a call that always runs: one inside an "if" may not.
+        foreach ($construct->stmts ?? [] as $statement) {
+            $call = $statement instanceof Stmt\Expression ? $statement->expr : null;
+            if ($call instanceof Expr\StaticCall && $call->class instanceof Node\Name && $call->class->toLowerString() === 'parent'
+                && $call->name instanceof Node\Identifier && $call->name->toLowerString() === '_construct'
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -227,6 +252,11 @@ final class CollectionUniqueKeys
                 }
             } elseif ($name === 'dropindex' && ($dropped = $this->tableName($args[0]->value ?? null)) !== null) {
                 // AdapterInterface::dropIndex($tableName, $keyName), the name usually from getIdxName($table, $fields, ...)
+                // A primary key built earlier in this script can be dropped too.
+                if (isset($primary[$dropped])) {
+                    $keys[$dropped][] = array_keys($primary[$dropped]);
+                    unset($primary[$dropped]);
+                }
                 $index = $args[1]->value ?? null;
                 $fields = $index instanceof Expr\MethodCall && $index->name instanceof Node\Identifier && $index->name->toLowerString() === 'getidxname'
                     ? $this->columns(CallArgs::of($index)[1]->value ?? null) : null;

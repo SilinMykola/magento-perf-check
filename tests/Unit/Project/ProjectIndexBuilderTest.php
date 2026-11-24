@@ -235,9 +235,15 @@ final class ProjectIndexBuilderTest extends TestCase
             $index = $this->index(__DIR__ . '/../../PhpStan/Fixtures/unique-keys');
 
             self::assertSame([['id'], ['label_id', 'order_id']], $index->uniqueKeysOf('acme_tag_order'), $cached ? 'cached' : 'built');
-            // Acme_Notes widens one constraint by its referenceId and disables the other.
+            // Acme_Notes widens one constraint by its referenceId and disables the other two, with "true" and "1".
             self::assertSame([['code', 'store_id']], $index->uniqueKeysOf('acme_tag_note'));
             self::assertSame([], $index->uniqueKeysOf('acme_tag_stock'));
+            // Acme_Notes disables the whole table.
+            self::assertSame([], $index->uniqueKeysOf('acme_tag_legacy'));
+            // A declared table owns its keys: setup scripts do not add any to it.
+            self::assertTrue($index->declaresTable('acme_tag_order'));
+            self::assertTrue($index->declaresTable('acme_tag_legacy'));
+            self::assertFalse($index->declaresTable('acme_tag_stock'));
             // Table names are case-insensitive, as MySQL on macOS and Windows treats them, and rules look them up in lower case.
             self::assertSame([['code']], $index->uniqueKeysOf('acme_tag_case'));
         }
