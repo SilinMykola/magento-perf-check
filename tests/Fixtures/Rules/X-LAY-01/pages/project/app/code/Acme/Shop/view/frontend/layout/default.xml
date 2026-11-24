@@ -8,5 +8,6 @@
     <update handle="acmeshop_commented_cart_index"/>
     <update handle="acmeempty_index_index"/>
     <update handle="acmeshop_index_attributed"/>
+    <update handle="acmeshop_order_print_nav"/>
     <body/>
 </page>

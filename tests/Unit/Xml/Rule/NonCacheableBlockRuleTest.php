@@ -101,7 +101,9 @@ final class NonCacheableBlockRuleTest extends TestCase
         // page; a page that only references the navigation is not, and neither is default.xml, which defines it and
         // includes a handle that defines it: X-LAY-03 reports its block, and a handle that default.xml includes is reported.
         // So is acme_account_dropdown, which defines the navigation but is no page and default.xml includes, and
-        // contact_index_index, which includes it through acme_header.
+        // contact_index_index, which includes it through acme_header. The hyva_ copy of a page that declares the navigation
+        // is an account page, and so is acme_hyva_menu, which declares it and which only a page's hyva_ copy includes.
+        // acmeroute_header_nav, a handle of a route without controllers that declares it, is reported: default.xml includes it.
         $layout = 'app/code/Acme/Fee/view/frontend/layout/';
         self::assertSame([
             'X-LAY-01 ' . $layout . 'acme_account_dropdown.xml:4',
@@ -119,6 +121,7 @@ final class NonCacheableBlockRuleTest extends TestCase
             'X-LAY-01 ' . $layout . 'acme_vendor_theme_only.xml:4',
             'X-LAY-01 ' . $layout . 'acme_widget.xml:4',
             'X-LAY-01 ' . $layout . 'acme_widget_catalog.xml:4',
+            'X-LAY-01 ' . $layout . 'acmeroute_header_nav.xml:4',
             'X-LAY-01 ' . $layout . 'acmeroute_index_index.xml:4',
             'X-LAY-01 ' . $layout . 'acmeroute_navref_index.xml:4',
             'X-LAY-01 ' . $layout . 'contact_index_index.xml:8',
@@ -127,7 +130,7 @@ final class NonCacheableBlockRuleTest extends TestCase
             'X-LAY-01 ' . $layout . 'hyva_acmeroute_index_index.xml:4',
             'X-LAY-01 ' . $layout . 'hyva_acmeroute_shared_index.xml:4',
             'X-LAY-03 ' . $layout . 'catalog_product_view_type_simple.xml:4',
-            'X-LAY-03 ' . $layout . 'default.xml:7',
+            'X-LAY-03 ' . $layout . 'default.xml:8',
         ], $reported);
     }
 
@@ -164,6 +167,6 @@ final class NonCacheableBlockRuleTest extends TestCase
         self::assertIsString($root);
         $result = (new XmlAnalyzer(new FileDiscovery($root), [new NonCacheableBlockRule()]))->analyze(['app/code', 'app/design']);
 
-        self::assertCount(39, $result->findings);
+        self::assertCount(42, $result->findings);
     }
 }

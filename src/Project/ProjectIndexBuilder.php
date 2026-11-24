@@ -21,7 +21,7 @@ final class ProjectIndexBuilder
 
     /** Indexed files, relative to a module's etc/ directory; * is one area directory. */
     /** Part of the cache key: raise it when the same files start to give a different index. */
-    private const INDEX_VERSION = 9;
+    private const INDEX_VERSION = 10;
 
     private const MODULE_CONFIG = 'app/etc/config.php';
 

@@ -245,14 +245,10 @@ final class LayoutHandles
      */
     private function state(string $handle, callable $personalPage, callable $personalHandle, array $visiting): ?bool
     {
-        $page = self::withoutHyvaPrefix($handle);
-        if (isset($this->accountPages[$handle]) || $personalHandle($handle) || $personalHandle($page)) {
+        if (isset($this->accountPages[$handle]) || $personalHandle($handle) || $personalHandle(self::withoutHyvaPrefix($handle))) {
             return true;
         }
-        // A route whose id starts with hyva_, such as Hyvä Admin's, has handles of its own: they are no hyva_ copies.
-        if ($this->routeOf($handle) !== null && str_starts_with((string) $this->routeOf($handle), 'hyva_')) {
-            $page = $handle;
-        }
+        $page = $this->copiedHandle($handle);
         $owner = $this->pageOf($page);
         if ($owner !== null && !($personalPage($handle) || $personalPage($owner) || $personalHandle($owner) || isset($this->accountPages[$owner]))) {
             return false;
@@ -290,7 +286,10 @@ final class LayoutHandles
 
     /**
      * Whether the handle is a page that is not shop-wide, or every layout that includes it, directly or through other
-     * handles, is one. A handle that no layout includes is added by code, so it is on pages that are not known.
+     * handles, is one. A controller action's own handle decides for itself. The hyva_ copy of a handle, a handle that
+     * extends a page's name and a handle of a route whose controllers were not found count as pages only when no
+     * layout includes them or the layouts that do are such pages too: default.xml may include any of them. Another
+     * handle that no layout includes is added by code, so it is on pages that are not known.
      *
      * @param array<string, true> $visiting handles on the current include path
      */
@@ -299,9 +298,10 @@ final class LayoutHandles
         if (NonCacheableBlockRule::isShopWide($handle)) {
             return false;
         }
-        if ($this->pageOf($handle) !== null) {
+        if (isset($this->pages[$handle])) {
             return true;
         }
+        $isPage = $this->pageOf($this->copiedHandle($handle)) !== null;
         $visiting[$handle] = true;
         $found = false;
         foreach (array_keys($this->includedBy[$handle] ?? []) as $includer) {
@@ -314,7 +314,7 @@ final class LayoutHandles
             $found = true;
         }
 
-        return $found;
+        return $found || $isPage;
     }
 
     /**
@@ -381,6 +381,15 @@ final class LayoutHandles
         }
 
         return $routes;
+    }
+
+    /**
+     * The handle that a hyva_ handle copies, as a Hyvä theme adds hyva_<handle> next to every handle of the page. A
+     * route whose id starts with hyva_, such as Hyvä Admin's, has handles of its own: they are no hyva_ copies.
+     */
+    private function copiedHandle(string $handle): string
+    {
+        return str_starts_with((string) $this->routeOf($handle), 'hyva_') ? $handle : self::withoutHyvaPrefix($handle);
     }
 
     private static function withoutHyvaPrefix(string $handle): string

@@ -181,6 +181,24 @@ namespace Acme\Placed\Block {
             return (int) $this->customerSession->getCustomerId();
         }
     }
+
+    // In acme_reward_account, no page, which declares the account navigation and which only the page acmepromo_reward_index, a controller action, includes.
+    final class CopiedAccountOnly extends SessionBlock
+    {
+        public function id(): int
+        {
+            return (int) $this->customerSession->getCustomerId();
+        }
+    }
+
+    // In acme_account_menu, no page, which declares the account navigation and which default.xml includes.
+    final class HeaderMenuOnly extends SessionBlock
+    {
+        public function id(): int
+        {
+            return (int) $this->customerSession->getCustomerId();
+        }
+    }
 }
 
 namespace Acme\Placed\ViewModel {

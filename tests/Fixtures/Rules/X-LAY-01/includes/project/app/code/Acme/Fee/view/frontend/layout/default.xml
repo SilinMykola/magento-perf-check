@@ -3,6 +3,7 @@
     <update handle="acme_header_links"/>
     <update handle="acme_account_dropdown"/>
     <update handle="acme_account_menu"/>
+    <update handle="acmeroute_header_nav"/>
     <body>
         <block class="Magento\Framework\View\Element\Template" name="header.promo" cacheable="false"/>
         <referenceContainer name="header.panel">
