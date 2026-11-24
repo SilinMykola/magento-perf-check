@@ -36,6 +36,10 @@ final class CollectionCountRuleTest extends RuleTestCase
             ['[P-COL-01] count()' . $suffix, 105],
             // count($this) outside _afterLoad() may run before the rows are loaded; the same call inside it is not reported.
             ['[P-COL-01] count() on CollectionCountFixture\\LoadedInHook loads every row of the collection to count it. Use getSize(), which runs a COUNT query.', 118],
+            // Rows or a count of another new collection from the same factory say nothing about this one.
+            ['[P-COL-01] count()' . $suffix, 134],
+            ['[P-COL-01] count()' . $suffix, 139],
+            ['[P-COL-01] count()' . $suffix, 141],
         ]);
     }
 }

@@ -118,3 +118,26 @@ abstract class LoadedInHook extends Collection
         return count($this);
     }
 }
+
+final class NewCollections
+{
+    public function __construct(private readonly \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $collectionFactory)
+    {
+    }
+
+    public function rowsOfAnotherNewCollection(): int
+    {
+        $items = $this->collectionFactory->create()->getItems();
+        foreach ($this->collectionFactory->create() as $item) {
+        }
+
+        return count($this->collectionFactory->create());
+    }
+
+    public function countedOnAnotherNewCollection(): int
+    {
+        count($this->collectionFactory->create());
+
+        return count($this->collectionFactory->create());
+    }
+}

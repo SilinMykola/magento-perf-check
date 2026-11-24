@@ -160,7 +160,10 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
                     && in_array($call->name->toLowerString(), ['getsize', 'gettotalcount'], true)
                     && $value instanceof Node\Scalar\LNumber && $value->value === 1
                 ) {
-                    $this->record($this->rootKey($call), self::LIMITED);
+                    // "$this->factory->create()->getSize() === 1" is about a new collection, not $this->factory.
+                    if (!$this->callsCreate($call->var)) {
+                        $this->record($this->rootKey($call), self::LIMITED);
+                    }
                 }
             }
 
@@ -177,7 +180,10 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
                     $node->setAttribute($fact, true);
                 }
             }
-            $this->record($key, self::LOADED);
+            // "foreach ($this->factory->create() as ...)" loads a new collection, not $this->factory.
+            if (!$this->callsCreate($node->expr)) {
+                $this->record($key, self::LOADED);
+            }
             // The loop assigns new values to these variables.
             $this->forgetValuesIn($node->keyVar);
             $this->forgetValuesIn($node->valueVar);
@@ -193,12 +199,16 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         if ($node instanceof Expr\FuncCall && $node->name instanceof Node\Name
             && in_array($node->name->toLowerString(), ['count', 'sizeof'], true)
         ) {
-            $key = $this->rootKey(CallArgs::of($node)[0]->value ?? null);
+            $argument = CallArgs::of($node)[0]->value ?? null;
+            $key = $this->rootKey($argument);
             $this->mark($node, $key);
             if ($key !== null && ($this->functionRowUses()[$key] ?? 0) > 0) {
                 $node->setAttribute(self::ROWS_USED_ELSEWHERE, true);
             }
-            $this->record($key, self::LOADED);
+            // "count($this->factory->create())" loads a new collection, not $this->factory.
+            if ($argument === null || !$this->callsCreate($argument)) {
+                $this->record($key, self::LOADED);
+            }
 
             return null;
         }
@@ -309,10 +319,12 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         $finder = new NodeFinder();
         foreach ($finder->find($statements, static fn (Node $n): bool => $n instanceof Stmt\Foreach_ || $n instanceof Expr\MethodCall) as $node) {
             $key = null;
-            if ($node instanceof Stmt\Foreach_) {
+            // "$this->factory->create()->getItems()" uses the rows of a new collection, not of $this->factory.
+            if ($node instanceof Stmt\Foreach_ && !$this->callsCreate($node->expr)) {
                 $key = $this->rootKey($node->expr);
             } elseif ($node instanceof Expr\MethodCall && $node->name instanceof Node\Identifier
                 && in_array($node->name->toLowerString(), self::ROW_USING_METHODS, true)
+                && !$this->callsCreate($node->var)
             ) {
                 $key = $this->rootKey($node->var);
             }
@@ -411,19 +423,23 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
      */
     private function forgetValuesIn(?Expr $target): void
     {
-        if ($target === null) {
+        if ($target instanceof Expr\List_ || $target instanceof Expr\Array_) {
+            foreach ($target->items as $item) {
+                // A skipped item, as in "[, $b] = ...", is null.
+                if ($item !== null) {
+                    $this->forgetValuesIn($item->value);
+                }
+            }
+
             return;
+        }
+        // "$map[$id] = ..." writes $map, not $id.
+        while ($target instanceof Expr\ArrayDimFetch) {
+            $target = $target->var;
         }
         $key = $this->rootKey($target);
         if ($key !== null) {
             $this->forgetValuesOf($key);
-
-            return;
-        }
-        foreach ((new NodeFinder())->findInstanceOf($target, Expr\Variable::class) as $variable) {
-            if (is_string($variable->name)) {
-                $this->forgetValuesOf('$' . $variable->name);
-            }
         }
     }
 

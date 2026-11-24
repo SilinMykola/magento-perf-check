@@ -360,6 +360,47 @@ final class Example
         $n += 1;
         $e->getFirstItem();
     }
+
+    public function iteratedOnAnotherNewCollection(): void
+    {
+        foreach ($this->collectionFactory->create() as $row) {
+        }
+        $this->collectionFactory->create()->getFirstItem();
+    }
+
+    public function countedOnAnotherNewCollection(): void
+    {
+        count($this->collectionFactory->create());
+        $this->collectionFactory->create()->getFirstItem();
+    }
+
+    public function sizeComparedOnAnotherNewCollection(): void
+    {
+        if ($this->collectionFactory->create()->getSize() === 1) {
+        }
+        $this->collectionFactory->create()->getFirstItem();
+    }
+
+    public function rowsOfAnotherNewCollection(string $name): void
+    {
+        $all = $this->collectionFactory->create()->getItems();
+        $one = $this->collectionFactory->create()->addFieldToFilter('name', $name)->getFirstItem();
+    }
+
+    /** @var array<string, int> */
+    private array $hits = [];
+
+    public function uniqueColumnValueUsedAsAKey(Collection $a, Collection $b, string $sku): void
+    {
+        // Writing an element keyed by the value does not change the value.
+        $a->addFieldToFilter('sku', $sku);
+        $this->hits[$sku] ??= 0;
+        $a->getFirstItem();
+        $count = [$sku => 0];
+        $b->addFieldToFilter('sku', $sku);
+        $count[$sku] += 1;
+        $b->getFirstItem();
+    }
 }
 
 final class Unrelated
