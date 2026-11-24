@@ -1,0 +1,5 @@
+- [x] Fixtures: the `hyva_` copy of a page that declares the navigation, and a handle that declares it and that only a page's `hyva_` copy includes, each with a `cacheable="false"` block, are not reported; tests fail before the change
+- [x] Fixtures: a handle of a route without controllers and a handle that extends a page's name, each declaring the navigation and included by `default.xml`, are no account pages; tests fail before the change
+- [x] LayoutHandles: strip the `hyva_` prefix and walk the includers of a handle that is a page only by its name
+- [x] P-FPC-02 rule test: a block only in a copied account layout is silent, one only in a header dropdown that `default.xml` includes is reported
+- [x] Rule page and changelog

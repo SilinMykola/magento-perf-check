@@ -19,6 +19,7 @@ A method call inside a loop when the called method runs a query on every call. T
 The rule does not report:
 - a query whose result the method keeps for later calls, unless the loop may call a new object each time. The kept query is the value stored in an element of a property (`$this->products[$id] = ...`, `self::$names[$id] ??= ...`) or with `??=` on a property, a query in the body of an `if` that tests a property and assigns it, or the value assigned to a property after an `if` on it that returns early (lazy getters). A new object is the foreach value or something reached from it (`$item->getOrderItem()`), `new` or a `create()` result: there, a kept result does not help, and the call is reported. An append, `$this->log[] = ...`, keeps nothing; other queries of the same method still count. An object held in a variable assigned inside the loop counts as the same object, so a kept result on it is missed;
 - a query inside a closure that the method returns or stores, since calling the method does not run it. A closure passed to `array_map()` and the like does count;
+- a query in the fallback of `$a ?: $b` or `$a ?? $b`, such as `return $attribute ?: $this->attributeFactory->create()->load($id);`: it runs only when the value before it is empty. A query on the left of `?:` or `??`, or in a branch of a full ternary, still counts. So does a fallback after a property, or an element of one, that the class declares `private` and never fills, as in `return $this->names[$id] ?? $this->repository->getById($id)->getName();` when the class gives `$names` no default other than `[]` or `null`, assigns it nothing else and assigns no element of it: the fallback runs on every call. The property may be written as `$this->names`, `self::$names`, `static::$names` or with the class's own name; a static property of another class, such as `Registry::$names`, is not one of the class. `++` and `--` on the property count as filling it. A property of a trait, or one that is `protected` or `public`, counts as filled, since another class may fill it, and so does every property of a class that uses a trait, since a method of the trait may fill it;
 - a method that queries only through another method: the rule looks one call deep;
 - a call through an interface or to an abstract method, because there is no body to look at;
 - a call whose receiver may be one of several classes;
@@ -64,12 +65,20 @@ Put it on the line of the call in the loop.
 
 ## Known false positives
 
-- The query can sit in a branch that runs only for some items, or only once, for example when the loop returns on the first match.
+- The query can sit in an `if` branch that runs only for some items, or only once, for example when the loop returns on the first match. This includes a type guard such as `if (!$shipment instanceof Shipment) { $shipment = $this->shipment->load($shipment); }` when the caller passes a Shipment, and a load under `if ($id)` when the caller passes no id: the rule does not follow the caller's arguments into the branch.
+- An inline `@var` that names a model with a querying method, when the collection really holds another class whose method does not query: the rule trusts the `@var`, as PHPStan does.
 - Some core repositories cache by id: `QuoteRepository::get()` keeps loaded carts, and `GroupRepository::getById()` reads through a registry. Calling them for the same id again costs no query.
 - The caller can keep results itself, for example behind an `isset()` on a map it filled before the loop.
+- A fallback after a private property that the class fills only in a way the rule does not see as an assignment, such as `array_push($this->names, ...)`, a reference (`$names = &$this->names`), `foreach (... as $this->names[...])`, destructuring (`[$this->names] = ...`), a dynamic name (`$this->$name = ...`) or a write through another instance (`$other->names[$id] = ...`), is reported.
 - Loops with a small, fixed bound cost little, as for P-LOOP-01.
 
 Suppress with a reason.
+
+## Known false negatives
+
+- A query in the fallback of `?:` or `??` after a parameter, a local variable or a method result, as in `return $product ?: $this->repository->getById($id);`, is not counted, even when every caller in the loop passes no value and the fallback runs each time. The rule does not follow what the caller passes.
+- A fallback after a property is not counted when the class assigns the property anywhere, even if that assignment never runs before the loop, or stores a value that does not cover the ids the loop asks for. A property that is `protected` or `public`, or declared in a trait, counts as filled even when no class fills it, since the rule cannot see a child class or the class that uses the trait; so does every property of a class that uses a trait, even when the trait fills none of them.
+- `$x ??= $this->repository->getById($id)` on a local variable is still counted as a query on every call.
 
 ## Basis
 

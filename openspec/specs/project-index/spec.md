@@ -42,7 +42,7 @@ The index SHALL provide at least:
 - **DI:** per class, the constructor arguments configured with an object type ending in `\Proxy`, in any area, including through virtual types; the plugin classes declared in `di.xml`; and the `preference` elements of the global, `webapi_rest` and `webapi_soap` areas, including `app/etc/di.xml`.
 - **Events:** observer classes per event and area.
 - **Mview:** view IDs declared in `mview.xml`.
-- **Schema:** table names that have a primary key constraint in any `db_schema.xml`.
+- **Schema:** table names that have a primary key constraint in any `db_schema.xml`, and per table the columns of each `primary` and `unique` constraint. Declarations of one constraint (same `referenceId`) in several modules add up their columns; a constraint or a table that any module declares disabled (`disabled="true"` or `disabled="1"`, as `xs:boolean` allows) does not count. The index also tells which tables any `db_schema.xml` declares, disabled or without keys included. Table names are kept in lower case. `Setup/InstallSchema.php` and `Setup/UpgradeSchema.php` of every module are part of the fingerprint that invalidates cached PHP results.
 - **Web API:** the service class and method of every route in `webapi.xml`.
 
 #### Scenario: Plugin class known
@@ -60,6 +60,18 @@ The index SHALL provide at least:
 #### Scenario: Web API route
 - **WHEN** a `webapi.xml` route has `<service class="Acme\Promo\Api\CouponManagementInterface" method="apply"/>`
 - **THEN** the index records `apply` as a web API method of that class
+
+#### Scenario: Composite unique key
+- **WHEN** a `db_schema.xml` declares `<constraint xsi:type="unique" referenceId="ACME_TAG_ORDER_COLUMN">` with the columns `label_id` and `order_id` on `acme_tag_order`
+- **THEN** the index reports `label_id`, `order_id` as a unique key of `acme_tag_order`, beside its primary key
+
+#### Scenario: Constraint disabled with 1
+- **WHEN** one module declares a `unique` constraint on `acme_tag_note` and another declares the same `referenceId` with `disabled="1"`
+- **THEN** the index does not report that constraint as a unique key of `acme_tag_note`
+
+#### Scenario: Disabled table
+- **WHEN** one module declares `acme_tag_legacy` with a primary key and another declares `<table name="acme_tag_legacy" disabled="true"/>`
+- **THEN** the index reports no unique key of `acme_tag_legacy`, and reports the table as declared
 
 ### Requirement: Index is read-only and cached
 Building the index SHALL NOT write into the project. The index MAY be cached in the system temp directory, keyed by project path. The cache SHALL be rebuilt when any indexed file changes.

@@ -1,0 +1,9 @@
+- [x] P-COL-02: unique-column and id filter values carry their branch and are read through the same helper as column filters; fixture with the filter in an `if` and in an arrow function, and in the same branch
+- [x] P-COL-02: a value PHPStan cannot type counts as one value, as mixed does; fixture
+- [x] P-COL-02: no filter value, limit or load recorded on the factory of a `create()` chain; fixture with `addIdFilter(5)->getSize()`, `addIdFilter(5)->getFirstItem()` and `setPageSize(1)->getFirstItem()` before another `create()`
+- [x] P-COL-02: filter values dropped after `=&`, `+=`, list destructuring and a `foreach` key or value; fixture for each
+- [x] P-COL-02: `return parent::_construct();` and setup-script keys on a table that `db_schema.xml` only extends; fixtures
+- [x] Project index: tables with a primary key kept in lower case and looked up in any case; fixture with a mixed-case table whose setup-script key does not count
+- [x] P-LOOP-12: a class that uses a trait fills all its properties; `++`/`--` and the class's own name fill; a static property of another class is not the class's; fixtures
+- [x] Each fix broken on purpose: the fixture fails, then the fix is restored
+- [x] Rule pages and changelog

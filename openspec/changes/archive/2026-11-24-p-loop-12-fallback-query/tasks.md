@@ -1,0 +1,3 @@
+- [x] Mark the fallback of `?:` and `??` in ConditionalContextVisitor and leave queries there out of QueryCallCollector, with a fixture that fails without it
+- [x] Fixture: a query on the left of `?:` or `??`, and in a full ternary, is still reported
+- [x] Rule page and changelog

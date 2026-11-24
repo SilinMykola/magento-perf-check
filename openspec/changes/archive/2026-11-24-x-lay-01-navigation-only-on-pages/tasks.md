@@ -1,0 +1,6 @@
+- [x] Fixtures: `acme_account_dropdown`, which `default.xml` includes, with a `cacheable="false"` block, and `contact_index_index` including it through `acme_header`, both reported; tests fail before the change
+- [x] Fixtures: a navigation handle that a shop-wide page includes, and one that only a handle added by code includes, are no account pages
+- [x] Project index test: account pages from a copied navigation are uncacheable, a header dropdown that `default.xml` includes is not
+- [x] LayoutHandles: the navigation makes a page an account page, and a handle that is no page only when pages alone include it
+- [x] Rule pages and changelog
+- [x] fpc-rules spec: P-FPC-02 names the account pages X-LAY-01 defines

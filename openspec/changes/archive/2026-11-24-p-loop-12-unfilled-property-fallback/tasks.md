@@ -1,0 +1,3 @@
+- [x] ConditionalContextVisitor leaves the fallback unmarked when the value before it reads a property that the class declares and never fills, with a fixture that fails without it
+- [x] Fixture: a property filled in another method or in the fallback itself, an element set to `[]`, a static property filled elsewhere, a non-empty default, constructor promotion, a property of the parent class, a `protected` property and a property of a trait keep the fallback left out; a property assigned only `null` is reported
+- [x] Rule page and changelog

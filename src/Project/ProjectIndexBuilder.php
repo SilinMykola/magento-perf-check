@@ -21,7 +21,7 @@ final class ProjectIndexBuilder
 
     /** Indexed files, relative to a module's etc/ directory; * is one area directory. */
     /** Part of the cache key: raise it when the same files start to give a different index. */
-    private const INDEX_VERSION = 7;
+    private const INDEX_VERSION = 11;
 
     private const MODULE_CONFIG = 'app/etc/config.php';
 
@@ -214,7 +214,13 @@ final class ProjectIndexBuilder
     {
         $modules = $this->moduleRoots($projectRoot);
 
-        return $this->fingerprintOf($modules, $this->indexedFiles($projectRoot, $modules), [...LayoutHandles::layoutFiles($projectRoot, $modules), ...self::routeFiles($modules), ...self::stylesheetFiles($projectRoot, $modules)]);
+        // P-COL-02 reads unique keys from the setup scripts of a module, present or not.
+        $setupScripts = [];
+        foreach (array_keys($modules) as $root) {
+            array_push($setupScripts, $root . '/Setup/InstallSchema.php', $root . '/Setup/UpgradeSchema.php');
+        }
+
+        return $this->fingerprintOf($modules, $this->indexedFiles($projectRoot, $modules), [...LayoutHandles::layoutFiles($projectRoot, $modules), ...self::routeFiles($modules), ...self::stylesheetFiles($projectRoot, $modules), ...$setupScripts]);
     }
 
     /**
@@ -309,7 +315,7 @@ final class ProjectIndexBuilder
 
     /**
      * Where frontend layouts place each block class and object argument (view models), and which of those handles
-     * no cacheable page uses: account pages that include customer_account, handles whose files hold a block with
+     * no cacheable page uses: account pages (LayoutHandles), handles whose files hold a block with
      * cacheable="false" that no ifconfig switches and no file of the handle removes, with the elements around it,
      * and handles only such handles include. Handles X-LAY-03 reports do not count that way: their cacheable="false"
      * block is an error to fix. A storefront controller action's handle is a page and decides for itself (LayoutHandles).
@@ -404,6 +410,9 @@ final class ProjectIndexBuilder
         $observers = [];
         $views = [];
         $tables = [];
+        $constraints = [];
+        $disabledConstraints = [];
+        $disabledTables = [];
         $virtualTypes = [];
         $virtualProxies = [];
         $schemas = [];
@@ -499,9 +508,24 @@ final class ProjectIndexBuilder
                     break;
                 case 'db_schema.xml':
                     foreach ($this->elements($xpath, '/schema/table') as $table) {
+                        $tableName = strtolower($table->getAttribute('name'));
+                        $constraints[$tableName] ??= [];
+                        if ($this->isDisabled($table)) {
+                            $disabledTables[$tableName] = true;
+                        }
                         foreach ($this->elements($xpath, 'constraint', $table) as $constraint) {
                             if ($this->xsiType($constraint) === 'primary') {
-                                $tables[$table->getAttribute('name')] = true;
+                                $tables[$tableName] = true;
+                            }
+                            if (in_array($this->xsiType($constraint), ['primary', 'unique'], true)) {
+                                // Modules merge a constraint by its referenceId: columns add up, and one may disable it.
+                                $id = $tableName . '|' . $constraint->getAttribute('referenceId');
+                                if ($this->isDisabled($constraint)) {
+                                    $disabledConstraints[$id] = true;
+                                }
+                                foreach ($this->elements($xpath, 'column', $constraint) as $column) {
+                                    $constraints[$tableName][$id][strtolower($column->getAttribute('name'))] = true;
+                                }
                             }
                         }
                     }
@@ -522,6 +546,17 @@ final class ProjectIndexBuilder
         foreach ($pluginsByName as $target => $byName) {
             foreach (array_diff_key($byName, $disabledPlugins[$target] ?? []) as $class) {
                 $pluginTargets[$class][] = $target;
+            }
+        }
+
+        $uniqueKeys = [];
+        foreach ($constraints as $table => $byId) {
+            // A disabled table is dropped with its keys; it stays declared.
+            $uniqueKeys[$table] = [];
+            foreach (isset($disabledTables[$table]) ? [] : array_diff_key($byId, $disabledConstraints) as $columns) {
+                $columns = array_keys($columns);
+                sort($columns);
+                $uniqueKeys[$table][] = $columns;
             }
         }
 
@@ -552,6 +587,7 @@ final class ProjectIndexBuilder
             array_map(static fn (array $classes): array => array_keys($classes), $preferences),
             $layout[0],
             $layout[1],
+            $uniqueKeys,
         );
     }
 
@@ -605,5 +641,13 @@ final class ProjectIndexBuilder
         $type = $element->getAttributeNS(self::XSI, 'type');
 
         return $type !== '' ? $type : $element->getAttribute('xsi:type');
+    }
+
+    /**
+     * disabled="true" or "1": the schema types it as xs:boolean.
+     */
+    private function isDisabled(DOMElement $element): bool
+    {
+        return in_array(strtolower(trim($element->getAttribute('disabled'))), ['true', '1'], true);
     }
 }

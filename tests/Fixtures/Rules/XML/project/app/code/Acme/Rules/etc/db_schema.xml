@@ -43,4 +43,8 @@
             <column name="id"/>
         </index>
     </table>
+    <!-- Acme_Other declares the primary key, as Acme_Audit: MySQL table names compare in any case. -->
+    <table name="acme_audit" resource="default">
+        <column xsi:type="text" name="note"/>
+    </table>
 </schema>

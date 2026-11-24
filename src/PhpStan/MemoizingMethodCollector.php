@@ -48,7 +48,7 @@ final class MemoizingMethodCollector implements Collector
                 continue;
             }
             $assigns = $finder->findFirst($if->stmts, static fn (Node $node): bool => $node instanceof Expr\Assign
-                && isset($read[(string) self::property($node->var)])) !== null;
+                && isset($read[(string) self::property($node->var, null)])) !== null;
             if ($assigns) {
                 $kept[] = [$if->stmts[0]->getStartLine(), $if->stmts[count($if->stmts) - 1]->getEndLine()];
             } elseif ($finder->findFirstInstanceOf($if->stmts, Stmt\Return_::class) !== null) {
@@ -58,7 +58,7 @@ final class MemoizingMethodCollector implements Collector
         foreach ($finder->find($stmts, static fn (Node $node): bool => $node instanceof Expr\Assign || $node instanceof Expr\AssignOp\Coalesce) as $assign) {
             /** @var Expr\Assign|Expr\AssignOp\Coalesce $assign */
             $target = $assign->var;
-            $property = self::property($target);
+            $property = self::property($target, null);
             if ($property === null) {
                 continue;
             }
@@ -79,15 +79,19 @@ final class MemoizingMethodCollector implements Collector
     private static function readProperties(Expr $expr): array
     {
         $read = [];
-        foreach ((new NodeFinder())->find($expr, static fn (Node $node): bool => self::property($node) !== null) as $fetch) {
-            $read[(string) self::property($fetch)] = true;
+        foreach ((new NodeFinder())->find($expr, static fn (Node $node): bool => self::property($node, null) !== null) as $fetch) {
+            $read[(string) self::property($fetch, null)] = true;
         }
 
         return $read;
     }
 
-    /** "$name" for `$this->name` and "::name" for `self::$name` or `static::$name`, also under array offsets. */
-    private static function property(Node $node): ?string
+    /**
+     * "$name" for `$this->name` and "::name" for `self::$name`, `static::$name` or `$class::$name`, also under
+     * array offsets. With a null $class, "::name" for a static property of any class: a value kept there
+     * outlives the call all the same.
+     */
+    public static function property(Node $node, ?string $class): ?string
     {
         while ($node instanceof Expr\ArrayDimFetch) {
             $node = $node->var;
@@ -97,10 +101,27 @@ final class MemoizingMethodCollector implements Collector
         ) {
             return $node->name->toString();
         }
-        if ($node instanceof Expr\StaticPropertyFetch && $node->name instanceof Node\VarLikeIdentifier) {
+        if ($node instanceof Expr\StaticPropertyFetch && $node->name instanceof Node\VarLikeIdentifier
+            && ($class === null
+                || ($node->class instanceof Node\Name
+                    && (in_array($node->class->toLowerString(), ['self', 'static'], true) || self::names($node->class, $class))))
+        ) {
             return '::' . $node->name->toString();
         }
 
         return null;
+    }
+
+    /**
+     * Whether the name is the class. A name that is not fully qualified, as before PHPStan resolves it, is
+     * read in the class's namespace: a file cannot import another class under the name of one it declares.
+     */
+    private static function names(Node\Name $name, string $class): bool
+    {
+        $class = ltrim($class, '\\');
+        $position = strrpos($class, '\\');
+        $written = $name->isFullyQualified() || $position === false ? $name->toString() : substr($class, 0, $position) . '\\' . $name->toString();
+
+        return strcasecmp($written, $class) === 0;
     }
 }

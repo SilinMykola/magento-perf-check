@@ -1,0 +1,3 @@
+- [x] Fixtures: a page that includes a handle declaring the account navigation, a page that declares it itself, a page that only references it (still reported), and a handle that `default.xml` includes while declaring the navigation (still reported); tests fail before the change
+- [x] LayoutHandles: account navigation as an account mark, outside `default`; account pages follow includes recursively
+- [x] Rule page and changelog

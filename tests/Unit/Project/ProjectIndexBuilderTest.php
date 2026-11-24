@@ -50,6 +50,19 @@ final class ProjectIndexBuilderTest extends TestCase
         self::assertContains('Acme\\Placed\\Block\\CartChild', $this->index()->classesOnCacheablePages());
     }
 
+    public function testAccountPagesFromACopiedNavigationAreUncacheable(): void
+    {
+        $uncacheable = $this->index(__DIR__ . '/../../Fixtures/Rules/X-LAY-01/includes/project')->toArray()['uncacheableHandles'];
+
+        // A page that defines the customer account navigation, and a page that includes a handle defining it that only
+        // pages include, are account pages, with that handle; none of them has a cacheable="false" block.
+        self::assertArrayHasKey('acmeroute_navpage_index', $uncacheable);
+        self::assertArrayHasKey('acmeroute_rewardpage_index', $uncacheable);
+        self::assertArrayHasKey('acme_reward_account', $uncacheable);
+        // A handle that defines the navigation for a header dropdown that default.xml includes is on every page.
+        self::assertArrayNotHasKey('acme_account_menu', $uncacheable);
+    }
+
     public function testModulesFromAppCodeAndComposerPackages(): void
     {
         // Acme_Core, Acme_Gift, Acme_Promo, Magento_Sales, Acme_SrcLayout (in src/); acme/library is not a module.
@@ -216,6 +229,33 @@ final class ProjectIndexBuilderTest extends TestCase
         self::assertFalse($index->tableHasPrimaryKey('acme_gift_log'));
     }
 
+    public function testUniqueAndPrimaryKeysFromSchema(): void
+    {
+        foreach ([false, true] as $cached) {
+            $index = $this->index(__DIR__ . '/../../PhpStan/Fixtures/unique-keys');
+
+            self::assertSame([['id'], ['label_id', 'order_id']], $index->uniqueKeysOf('acme_tag_order'), $cached ? 'cached' : 'built');
+            // Acme_Notes widens one constraint by its referenceId and disables the other two, with "true" and "1".
+            self::assertSame([['code', 'store_id']], $index->uniqueKeysOf('acme_tag_note'));
+            self::assertSame([], $index->uniqueKeysOf('acme_tag_stock'));
+            // Acme_Notes disables the whole table.
+            self::assertSame([], $index->uniqueKeysOf('acme_tag_legacy'));
+            // A table declared with a primary key owns its keys: setup scripts do not add any to it.
+            self::assertTrue($index->tableHasPrimaryKey('acme_tag_order'));
+            self::assertTrue($index->tableHasPrimaryKey('acme_tag_legacy'));
+            self::assertFalse($index->tableHasPrimaryKey('acme_tag_stock'));
+            // Acme_Notes only adds a column to a table that a setup script creates.
+            self::assertFalse($index->tableHasPrimaryKey('acme_tag_rule'));
+            // Acme_Notes declares Acme_Tag_Mixed with a primary key.
+            self::assertTrue($index->tableHasPrimaryKey('acme_tag_mixed'));
+            self::assertTrue($index->tableHasPrimaryKey('ACME_TAG_MIXED'));
+            self::assertSame([], $index->uniqueKeysOf('acme_tag_rule'));
+            // Table names are case-insensitive, as MySQL on macOS and Windows treats them, and rules look them up in lower case.
+            self::assertSame([['code']], $index->uniqueKeysOf('acme_tag_case'));
+        }
+        self::assertSame([['entity_id']], $this->index()->uniqueKeysOf('sales_order'));
+    }
+
     public function testProjectWithoutModulesIsEmpty(): void
     {
         self::assertTrue($this->index(__DIR__)->isEmpty());
@@ -257,6 +297,26 @@ final class ProjectIndexBuilderTest extends TestCase
 
         file_put_contents($less, ".banner img { width: 20px; height: 10px; }\n");
         touch($less, time() + 5);
+        self::assertNotSame($added, $builder->fingerprint($copy));
+        exec('rm -rf ' . escapeshellarg($copy));
+    }
+
+    public function testFingerprintFollowsSetupScripts(): void
+    {
+        $source = realpath(__DIR__ . '/../../PhpStan/Fixtures/unique-keys');
+        self::assertIsString($source);
+        $copy = sys_get_temp_dir() . '/mpr-index-project-' . bin2hex(random_bytes(4));
+        exec('cp -R ' . escapeshellarg($source) . ' ' . escapeshellarg($copy));
+        $builder = new ProjectIndexBuilder($this->cacheDir);
+        $before = $builder->fingerprint($copy);
+
+        // P-COL-02 reads unique keys from setup scripts: a new or changed one makes cached PHP results out of date.
+        $install = $copy . '/app/code/Acme/Tags/Setup/InstallSchema.php';
+        file_put_contents($install, "<?php\n");
+        $added = $builder->fingerprint($copy);
+        self::assertNotSame($before, $added);
+
+        file_put_contents($copy . '/app/code/Acme/Tags/Setup/UpgradeSchema.php', "<?php\n// changed\n", FILE_APPEND);
         self::assertNotSame($added, $builder->fingerprint($copy));
         exec('rm -rf ' . escapeshellarg($copy));
     }

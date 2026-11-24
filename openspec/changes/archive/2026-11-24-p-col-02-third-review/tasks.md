@@ -1,0 +1,5 @@
+- [x] No load, limit or row use recorded on the factory for `foreach`, `count()` and `getSize() === 1` on a `create()` chain; P-COL-02 and P-COL-01 fixtures that fail without it
+- [x] Element writes forget only the array, not the key; fixture with `$this->hits[$sku] ??= 0` and `$count[$sku] += 1`
+- [x] X-DB-01: mixed-case table pair in the XML golden fixture
+- [x] Each fix broken on purpose: the fixture fails, then the fix is restored
+- [x] Rule pages and changelog

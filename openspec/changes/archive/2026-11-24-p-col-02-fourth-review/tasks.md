@@ -1,0 +1,5 @@
+- [x] Plain `=` on an element or another object's property forgets the filter values that read it; fixtures in the rule test and the visitor unit test
+- [x] Element and property writes walk to the variable they go through, never a key or `$this`; visitor unit test
+- [x] `UNIQUE_FILTER` guarded like the filter values
+- [x] Each fix broken on purpose: the tests fail, then the fix is restored
+- [x] Rule page and changelog

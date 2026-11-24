@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Silin\MagentoPerfCheck\PhpStan\Rule;
 
 use Silin\MagentoPerfCheck\PhpStan\CollectionStateVisitor;
+use Silin\MagentoPerfCheck\PhpStan\CollectionUniqueKeys;
 use Silin\MagentoPerfCheck\Report\NoticePrefix;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
@@ -12,6 +13,7 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
+use PHPStan\Type\MixedType;
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 
 /**
@@ -32,6 +34,7 @@ final class GetFirstItemWithoutLimitRule implements Rule
 
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
+        private readonly CollectionUniqueKeys $uniqueKeys,
         private readonly bool $reportUntypedReceivers = false,
     ) {
     }
@@ -47,10 +50,16 @@ final class GetFirstItemWithoutLimitRule implements Rule
             || $node->name->toLowerString() !== 'getfirstitem'
             || $node->getAttribute(CollectionStateVisitor::LIMITED) === true
             || $node->getAttribute(CollectionStateVisitor::LOADED) === true
-            || $node->getAttribute(CollectionStateVisitor::UNIQUE_FILTER) === true
             || $node->getAttribute(CollectionStateVisitor::ROWS_USED_ELSEWHERE) === true
         ) {
             return [];
+        }
+        /** @var list<Node\Expr> $uniqueValues */
+        $uniqueValues = $node->getAttribute(CollectionStateVisitor::UNIQUE_FILTER_VALUES, []);
+        foreach ($uniqueValues as $value) {
+            if ($this->isOneValue($scope, $value)) {
+                return [];
+            }
         }
         $type = $scope->getType($node->var);
 
@@ -66,6 +75,18 @@ final class GetFirstItemWithoutLimitRule implements Rule
             return [];
         }
 
+        /** @var list<array{string, Node\Expr}> $filters */
+        $filters = $node->getAttribute(CollectionStateVisitor::EQUALITY_COLUMNS, []);
+        $columns = [];
+        foreach ($filters as [$column, $value]) {
+            if ($this->isOneValue($scope, $value)) {
+                $columns[] = $column;
+            }
+        }
+        if ($this->filtersOnAUniqueKey($type->getObjectClassNames(), $columns)) {
+            return [];
+        }
+
         return [
             RuleErrorBuilder::message(sprintf(
                 '[%s] %s::getFirstItem() without setPageSize(): the query has no LIMIT and loads every matching row. '
@@ -74,6 +95,35 @@ final class GetFirstItemWithoutLimitRule implements Rule
                 $type->getObjectClassNames()[0] ?? self::DB_COLLECTION,
             ))->identifier(self::IDENTIFIER)->build(),
         ];
+    }
+
+    /**
+     * Whether a filter value stands for one value. Magento turns a plain list into IN (...), which may match many
+     * rows. A value of unknown type (mixed, as from a magic getter or request params, or a call PHPStan cannot
+     * resolve in old code) is taken for a single value.
+     */
+    private function isOneValue(Scope $scope, Node\Expr $value): bool
+    {
+        $valueType = $scope->getType($value);
+
+        return $valueType instanceof MixedType || $valueType->isArray()->no();
+    }
+
+    /**
+     * Whether the equality filters cover a unique key of the main table of every collection class.
+     *
+     * @param list<string> $classNames
+     * @param list<string> $columns
+     */
+    private function filtersOnAUniqueKey(array $classNames, array $columns): bool
+    {
+        foreach ($classNames as $className) {
+            if (!$this->uniqueKeys->coverAUniqueKey($className, $columns)) {
+                return false;
+            }
+        }
+
+        return $classNames !== [];
     }
 
     /**

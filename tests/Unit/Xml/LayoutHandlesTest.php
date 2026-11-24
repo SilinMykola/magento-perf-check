@@ -58,5 +58,13 @@ final class LayoutHandlesTest extends TestCase
         // An abstract controller serves no page, and a route in an XML comment is no route: default.xml includes both.
         self::assertFalse($handles->isPersonal('acmeshop_abstractcontroller_view', $named('acmeshop_abstractcontroller_view')));
         self::assertFalse($handles->isPersonal('acmeshop_commented_cart_index', $named('acmeshop_commented_cart_index')));
+        // A handle that defines the customer account navigation is no account page when a shop-wide page includes it.
+        self::assertFalse($handles->isPersonal('acme_product_menu', $never));
+        // Nor when only a handle that is no page includes it, as no layout includes that one: code adds it to pages not known.
+        self::assertFalse($handles->isPersonal('acme_code_menu', $never));
+        // The hyva_ copy of a page that declares the navigation is an account page, as the page would be.
+        self::assertTrue($handles->isPersonal('hyva_acmeshop_order_print', $never));
+        // A handle that extends a page's name and declares the navigation is no account page when default.xml includes it.
+        self::assertFalse($handles->isPersonal('acmeshop_order_print_nav', $never));
     }
 }

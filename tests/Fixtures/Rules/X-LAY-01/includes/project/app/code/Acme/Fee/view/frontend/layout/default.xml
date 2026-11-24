@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="acme_header_links"/>
+    <update handle="acme_account_dropdown"/>
+    <update handle="acme_account_menu"/>
+    <update handle="acmeroute_header_nav"/>
+    <body>
+        <block class="Magento\Framework\View\Element\Template" name="header.promo" cacheable="false"/>
+        <referenceContainer name="header.panel">
+            <block class="Magento\Framework\View\Element\Html\Links" name="customer_account_navigation"/>
+        </referenceContainer>
+    </body>
+</page>

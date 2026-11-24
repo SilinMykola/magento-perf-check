@@ -3,6 +3,8 @@
     <update handle="acme_widget"/>
     <update handle="hyva_acme_hyva_pub"/>
     <update handle="hyva_acmeroute_shared_index"/>
+    <update handle="acme_header"/>
     <body>
+        <block class="Magento\Framework\View\Element\Template" name="contact.form.extra" cacheable="false"/>
     </body>
 </page>

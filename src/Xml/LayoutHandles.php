@@ -6,6 +6,7 @@ namespace Silin\MagentoPerfCheck\Xml;
 
 use DOMDocument;
 use DOMElement;
+use Silin\MagentoPerfCheck\Xml\Rule\NonCacheableBlockRule;
 
 /**
  * The storefront layout handles of a project and how they include each other. Magento merges every layout
@@ -29,7 +30,9 @@ final class LayoutHandles
 
     /**
      * @param array<string, array<string, true>> $includedBy handle => handles whose layout files include it
-     * @param array<string, true> $accountPages handles with a layout file that includes customer_account
+     * @param array<string, true> $accountPages handles with a layout file that includes customer_account, pages with
+     *     one that defines its navigation, handles that define it and that only pages include, and handles that include
+     *     such a handle; for a shop-wide handle only the include of customer_account counts
      * @param array<string, true> $pages handles of storefront controller actions: route id, controller path, action
      * @param array<string, bool> $routes storefront route ids => true when their controllers were not found, so each of
      *     their handles counts as a page
@@ -78,13 +81,43 @@ final class LayoutHandles
 
         $includedBy = [];
         $accountPages = [];
+        $navigations = [];
         foreach (self::layoutFiles($projectRoot, $modules) as $file) {
             $handle = basename($file, '.xml');
-            foreach (self::directUpdates($file) as $included) {
+            $document = new DOMDocument();
+            if (!@$document->load($file, LIBXML_NONET) || $document->documentElement === null) {
+                continue;
+            }
+            // A module's account page may copy the account navigation instead of including customer_account.
+            // A shop-wide handle (X-LAY-03), such as default, is on many pages, so a navigation there, as in a header
+            // dropdown, makes none of them an account page.
+            if (!NonCacheableBlockRule::isShopWide($handle) && self::definesAccountNavigation($document)) {
+                $navigations[$handle] = true;
+            }
+            foreach (self::directUpdates($document->documentElement) as $included) {
                 if ($included === self::ACCOUNT_HANDLE) {
                     $accountPages[$handle] = true;
                 }
                 $includedBy[$included][$handle] = true;
+            }
+        }
+        // The navigation makes a page an account page, and a handle that is no page only when pages alone include
+        // it: a header dropdown that default.xml includes is on every page.
+        $layout = new self($includedBy, [], $pages, $opaque);
+        foreach (array_keys($navigations) as $handle) {
+            if ($layout->onlyPagesInclude((string) $handle, [])) {
+                $accountPages[$handle] = true;
+            }
+        }
+        // Magento merges included handles recursively, so a handle that includes an account layout is one too;
+        // a shop-wide handle only when it includes customer_account itself.
+        $queue = array_keys($accountPages);
+        while ($queue !== []) {
+            foreach (array_keys($includedBy[array_pop($queue)] ?? []) as $includer) {
+                if (!isset($accountPages[$includer]) && !NonCacheableBlockRule::isShopWide((string) $includer)) {
+                    $accountPages[$includer] = true;
+                    $queue[] = $includer;
+                }
             }
         }
 
@@ -212,14 +245,10 @@ final class LayoutHandles
      */
     private function state(string $handle, callable $personalPage, callable $personalHandle, array $visiting): ?bool
     {
-        $page = self::withoutHyvaPrefix($handle);
-        if (isset($this->accountPages[$handle]) || $personalHandle($handle) || $personalHandle($page)) {
+        if (isset($this->accountPages[$handle]) || $personalHandle($handle) || $personalHandle(self::withoutHyvaPrefix($handle))) {
             return true;
         }
-        // A route whose id starts with hyva_, such as Hyvä Admin's, has handles of its own: they are no hyva_ copies.
-        if ($this->routeOf($handle) !== null && str_starts_with((string) $this->routeOf($handle), 'hyva_')) {
-            $page = $handle;
-        }
+        $page = $this->copiedHandle($handle);
         $owner = $this->pageOf($page);
         if ($owner !== null && !($personalPage($handle) || $personalPage($owner) || $personalHandle($owner) || isset($this->accountPages[$owner]))) {
             return false;
@@ -253,6 +282,39 @@ final class LayoutHandles
         }
 
         return $counted > 0 || $owner !== null || $page !== $handle ? true : null;
+    }
+
+    /**
+     * Whether the handle is a page that is not shop-wide, or every layout that includes it, directly or through other
+     * handles, is one. A controller action's own handle decides for itself. The hyva_ copy of a handle, a handle that
+     * extends a page's name and a handle of a route whose controllers were not found count as pages only when no
+     * layout includes them or the layouts that do are such pages too: default.xml may include any of them. Another
+     * handle that no layout includes is added by code, so it is on pages that are not known.
+     *
+     * @param array<string, true> $visiting handles on the current include path
+     */
+    private function onlyPagesInclude(string $handle, array $visiting): bool
+    {
+        if (NonCacheableBlockRule::isShopWide($handle)) {
+            return false;
+        }
+        if (isset($this->pages[$handle])) {
+            return true;
+        }
+        $isPage = $this->pageOf($this->copiedHandle($handle)) !== null;
+        $visiting[$handle] = true;
+        $found = false;
+        foreach (array_keys($this->includedBy[$handle] ?? []) as $includer) {
+            if (isset($visiting[$includer])) {
+                continue;
+            }
+            if (!$this->onlyPagesInclude((string) $includer, $visiting)) {
+                return false;
+            }
+            $found = true;
+        }
+
+        return $found || $isPage;
     }
 
     /**
@@ -321,6 +383,15 @@ final class LayoutHandles
         return $routes;
     }
 
+    /**
+     * The handle that a hyva_ handle copies, as a Hyvä theme adds hyva_<handle> next to every handle of the page. A
+     * route whose id starts with hyva_, such as Hyvä Admin's, has handles of its own: they are no hyva_ copies.
+     */
+    private function copiedHandle(string $handle): string
+    {
+        return str_starts_with((string) $this->routeOf($handle), 'hyva_') ? $handle : self::withoutHyvaPrefix($handle);
+    }
+
     private static function withoutHyvaPrefix(string $handle): string
     {
         return str_starts_with($handle, 'hyva_') ? substr($handle, strlen('hyva_')) : $handle;
@@ -329,20 +400,30 @@ final class LayoutHandles
     /**
      * @return list<string>
      */
-    private static function directUpdates(string $file): array
+    private static function directUpdates(DOMElement $root): array
     {
-        $document = new DOMDocument();
-        if (!@$document->load($file, LIBXML_NONET) || $document->documentElement === null) {
-            return [];
-        }
         $handles = [];
-        foreach ($document->documentElement->childNodes as $child) {
+        foreach ($root->childNodes as $child) {
             if ($child instanceof DOMElement && strtolower($child->tagName) === 'update' && $child->hasAttribute('handle')) {
                 $handles[] = $child->getAttribute('handle');
             }
         }
 
         return $handles;
+    }
+
+    /**
+     * Whether the layout declares the block of the customer account navigation, as core's customer_account.xml does.
+     */
+    private static function definesAccountNavigation(DOMDocument $document): bool
+    {
+        foreach ($document->getElementsByTagName('block') as $block) {
+            if ($block->getAttribute('name') === 'customer_account_navigation') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

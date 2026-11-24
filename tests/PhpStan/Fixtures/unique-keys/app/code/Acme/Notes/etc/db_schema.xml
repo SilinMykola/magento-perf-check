@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="acme_tag_note" resource="default">
+        <!-- The code is unique per store from now on. -->
+        <constraint xsi:type="unique" referenceId="ACME_TAG_NOTE_CODE">
+            <column name="store_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="ACME_TAG_NOTE_STORE" disabled="true"/>
+        <!-- xs:boolean: "1" disables as well as "true". -->
+        <constraint xsi:type="unique" referenceId="ACME_TAG_NOTE_SLUG" disabled="1"/>
+    </table>
+    <!-- A disabled table is dropped with its keys. -->
+    <table name="acme_tag_legacy" resource="default" disabled="true"/>
+    <!-- Only adds a column to a table that Setup/InstallSchema.php of Acme_Tags creates, which keeps its unique key. -->
+    <table name="acme_tag_rule" resource="default">
+        <column xsi:type="varchar" name="note" nullable="true" length="255"/>
+    </table>
+    <!-- Declared with a primary key under another case: it owns the table, so setup-script keys do not count. -->
+    <table name="Acme_Tag_Mixed" resource="default">
+        <column xsi:type="int" name="id" unsigned="true" nullable="false" identity="true"/>
+        <column xsi:type="varchar" name="code" nullable="false" length="32"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+    </table>
+    <table name="Acme_Tag_Case" resource="default">
+        <column xsi:type="varchar" name="code" nullable="false" length="32"/>
+        <constraint xsi:type="unique" referenceId="ACME_TAG_CASE_CODE">
+            <column name="code"/>
+        </constraint>
+    </table>
+</schema>

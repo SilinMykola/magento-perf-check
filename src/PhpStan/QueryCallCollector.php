@@ -15,7 +15,8 @@ use PHPStan\Reflection\ReflectionProvider;
  * For P-LOOP-12: a call in a class method that runs one query (QueryCall), with the method it is in.
  * `list` marks a getList(), which P-LOOP-09 reports only once per item, not in a paging loop.
  * A query in a closure counts only when the closure runs in the method's own loop: a closure that
- * the method returns or stores runs no query when the method is called.
+ * the method returns or stores runs no query when the method is called. A query in the fallback of
+ * `?:` or `??` runs only when the value before it is empty, so it does not count either.
  *
  * @implements Collector<MethodCall, array{class: string, method: string, query: string, line: int, file: string, list: bool}>
  */
@@ -39,6 +40,7 @@ final class QueryCallCollector implements Collector
         $class = $scope->getClassReflection();
         if (!$method instanceof MethodReflection || $class === null
             || ($scope->isInAnonymousFunction() && $node->getAttribute(LoopContextVisitor::IN_LOOP) !== true)
+            || $node->getAttribute(ConditionalContextVisitor::IN_FALLBACK) === true
         ) {
             return null;
         }
