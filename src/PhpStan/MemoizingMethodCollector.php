@@ -87,7 +87,7 @@ final class MemoizingMethodCollector implements Collector
     }
 
     /** "$name" for `$this->name` and "::name" for `self::$name` or `static::$name`, also under array offsets. */
-    private static function property(Node $node): ?string
+    public static function property(Node $node): ?string
     {
         while ($node instanceof Expr\ArrayDimFetch) {
             $node = $node->var;

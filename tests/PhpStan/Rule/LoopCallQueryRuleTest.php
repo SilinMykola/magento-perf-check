@@ -84,6 +84,11 @@ final class LoopCallQueryRuleTest extends RuleTestCase
             [self::message('FallbackReader::loadedFirst', 'Magento\\Catalog\\Model\\Product::load()', 60, 'loop-call-query-fallback.php'), 30],
             [self::message('FallbackReader::fetchedFirst', 'Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()', 65, 'loop-call-query-fallback.php'), 31],
             [self::message('FallbackReader::byId', 'Magento\\Catalog\\Model\\Product::load()', 70, 'loop-call-query-fallback.php'), 33],
+            // The fallback after a property that the class never fills runs on every call.
+            [self::message('PropertyFallbackReader::name', 'Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()', 220, 'loop-call-query-fallback.php'), 154],
+            [self::message('PropertyFallbackReader::fromSeen', 'Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()', 225, 'loop-call-query-fallback.php'), 155],
+            [self::message('PropertyFallbackReader::parentId', 'Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()', 230, 'loop-call-query-fallback.php'), 156],
+            [self::message('PropertyFallbackReader::fromLoaded', 'Magento\\Catalog\\Api\\ProductRepositoryInterface::getById()', 215, 'loop-call-query-fallback.php'), 157],
         ]);
     }
 

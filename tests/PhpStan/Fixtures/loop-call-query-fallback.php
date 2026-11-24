@@ -70,3 +70,163 @@ final class FallbackReader
         return $id <= 0 ? null : $this->product->load($id);
     }
 }
+
+abstract class FallbackBase
+{
+    /** @var array<int, Product> */
+    protected array $inherited = [];
+}
+
+trait FallbackNames
+{
+    /** @var array<int, Product> */
+    private array $traitProducts = [];
+
+    private function fromTrait(int $id): mixed
+    {
+        return $this->traitProducts[$id] ?? $this->productRepository->getById($id);
+    }
+}
+
+final class PropertyFallbackReader extends FallbackBase
+{
+    use FallbackNames;
+
+    /** @var array<int, string> */
+    private array $names = [];
+
+    /** @var array<int, Product> */
+    private array $cache = [];
+
+    /** @var array<int, Product> */
+    private array $products = [];
+
+    /** @var array<int, Product> */
+    private array $seen;
+
+    /** @var array<int, string> */
+    private array $labels = [1 => 'Default'];
+
+    /** @var array<int, list<int>> */
+    private array $groups = [];
+
+    /** @var array<int, Product> */
+    protected array $shared = [];
+
+    /** @var array<int, Product>|null */
+    private ?array $loaded = null;
+
+    /** @var array<int, int> */
+    private static array $parents = [];
+
+    /** @var array<int, Product> */
+    private static array $byKey = [];
+
+    /**
+     * @param array<int, Product> $injected
+     */
+    public function __construct(
+        private readonly ProductRepositoryInterface $productRepository,
+        private readonly array $injected = [],
+    ) {
+        $this->seen = [];
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function run(array $ids): void
+    {
+        foreach ($ids as $id) {
+            // A property that the class fills, a default or injected map, or a property of the parent class.
+            $this->cached($id);
+            $this->memoized($id);
+            $this->labelled($id);
+            $this->fromInjected($id);
+            $this->fromInherited($id);
+            // A static property or an element filled elsewhere, an element set to [], a protected
+            // property or one of a trait.
+            $this->fromStatic($id);
+            $this->fromGroups($id);
+            $this->fromShared($id);
+            $this->fromTrait($id);
+            // A property that the class never fills: the fallback runs on every call.
+            $this->name($id);
+            $this->fromSeen($id);
+            $this->parentId($id);
+            $this->fromLoaded($id);
+        }
+    }
+
+    public function remember(Product $product): void
+    {
+        $this->cache[(int) $product->getId()] = $product;
+        self::$byKey[(int) $product->getId()] = $product;
+        $this->groups[(int) $product->getId()] = [];
+    }
+
+    public function reset(): void
+    {
+        $this->loaded = null;
+    }
+
+    private function cached(int $id): mixed
+    {
+        return $this->cache[$id] ?? $this->productRepository->getById($id);
+    }
+
+    private function memoized(int $id): mixed
+    {
+        return $this->products[$id] ?? ($this->products[$id] = $this->productRepository->getById($id));
+    }
+
+    private function labelled(int $id): mixed
+    {
+        return $this->labels[$id] ?? $this->productRepository->getById($id)->getName();
+    }
+
+    private function fromInjected(int $id): mixed
+    {
+        return $this->injected[$id] ?? $this->productRepository->getById($id);
+    }
+
+    private function fromInherited(int $id): mixed
+    {
+        return $this->inherited[$id] ?? $this->productRepository->getById($id);
+    }
+
+    private function fromStatic(int $id): mixed
+    {
+        return self::$byKey[$id] ?? $this->productRepository->getById($id);
+    }
+
+    private function fromGroups(int $id): mixed
+    {
+        return $this->groups[$id] ?? $this->productRepository->getById($id);
+    }
+
+    private function fromShared(int $id): mixed
+    {
+        return $this->shared[$id] ?? $this->productRepository->getById($id);
+    }
+
+    private function fromLoaded(int $id): mixed
+    {
+        return $this->loaded[$id] ?? $this->productRepository->getById($id);
+    }
+
+    private function name(int $id): mixed
+    {
+        return $this->names[$id] ?? $this->productRepository->getById($id)->getName();
+    }
+
+    private function fromSeen(int $id): mixed
+    {
+        return $this->seen[$id] ?? $this->productRepository->getById($id);
+    }
+
+    private function parentId(int $id): mixed
+    {
+        return self::$parents[$id] ?: $this->productRepository->getById($id)->getId();
+    }
+}

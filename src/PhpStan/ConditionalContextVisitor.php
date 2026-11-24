@@ -7,6 +7,7 @@ namespace Silin\MagentoPerfCheck\PhpStan;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt;
+use PhpParser\NodeFinder;
 use PhpParser\NodeVisitorAbstract;
 
 /**
@@ -14,7 +15,11 @@ use PhpParser\NodeVisitorAbstract;
  * the if is not marked, because it always runs; the condition of an elseif may not run, so it is.
  *
  * Marks every node in the fallback of `$a ?: $b` or `$a ?? $b`, the `$b` that runs only when `$a`
- * is empty, with IN_FALLBACK.
+ * is empty, with IN_FALLBACK. Not when `$a` reads a property (or an element of one) that the class
+ * declares private and never fills: no default other than `[]` or `null`, no assignment of another
+ * value to the property and none to an element of it. Such a property stays empty, so its fallback
+ * runs on every call. Any other property may be filled where the rule does not look, by a parent
+ * or child class or by the class that uses a trait, so its fallback is marked.
  */
 final class ConditionalContextVisitor extends NodeVisitorAbstract
 {
@@ -30,6 +35,9 @@ final class ConditionalContextVisitor extends NodeVisitorAbstract
 
     private int $fallbackDepth = 0;
 
+    /** @var list<array<string, true>> the unfilled properties of each enclosing class, innermost last */
+    private array $unfilled = [];
+
     /**
      * @param Node[] $nodes
      */
@@ -37,6 +45,7 @@ final class ConditionalContextVisitor extends NodeVisitorAbstract
     {
         $this->depth = 0;
         $this->fallbackDepth = 0;
+        $this->unfilled = [];
 
         return null;
     }
@@ -60,9 +69,12 @@ final class ConditionalContextVisitor extends NodeVisitorAbstract
         if ($this->fallbackDepth > 0) {
             $node->setAttribute(self::IN_FALLBACK, true);
         }
-        if ($node instanceof Expr\BinaryOp\Coalesce) {
+        if ($node instanceof Stmt\ClassLike) {
+            $this->unfilled[] = self::unfilledProperties($node);
+        }
+        if ($node instanceof Expr\BinaryOp\Coalesce && !$this->readsUnfilled($node->left)) {
             $node->right->setAttribute(self::FALLBACK, true);
-        } elseif ($node instanceof Expr\Ternary && $node->if === null) {
+        } elseif ($node instanceof Expr\Ternary && $node->if === null && !$this->readsUnfilled($node->cond)) {
             $node->else->setAttribute(self::FALLBACK, true);
         }
 
@@ -77,7 +89,59 @@ final class ConditionalContextVisitor extends NodeVisitorAbstract
         if ($node->getAttribute(self::FALLBACK) === true) {
             --$this->fallbackDepth;
         }
+        if ($node instanceof Stmt\ClassLike) {
+            array_pop($this->unfilled);
+        }
 
         return null;
+    }
+
+    private function readsUnfilled(Expr $expr): bool
+    {
+        $property = MemoizingMethodCollector::property($expr);
+
+        $class = end($this->unfilled);
+
+        return $property !== null && $class !== false && isset($class[$property]);
+    }
+
+    /**
+     * @return array<string, true> the private properties a class declares and never fills, keyed as
+     *                             MemoizingMethodCollector::property() names them
+     */
+    private static function unfilledProperties(Stmt\ClassLike $class): array
+    {
+        $unfilled = [];
+        if ($class instanceof Stmt\Trait_) {
+            return $unfilled;
+        }
+        foreach ($class->getProperties() as $declaration) {
+            if (!$declaration->isPrivate()) {
+                continue;
+            }
+            foreach ($declaration->props as $property) {
+                if ($property->default === null || self::isEmpty($property->default)) {
+                    $unfilled[($declaration->isStatic() ? '::' : '') . $property->name->toString()] = true;
+                }
+            }
+        }
+        $assigns = (new NodeFinder())->find($class->stmts, static fn (Node $node): bool => $node instanceof Expr\Assign
+            || $node instanceof Expr\AssignRef || $node instanceof Expr\AssignOp);
+        foreach ($assigns as $assign) {
+            /** @var Expr\Assign|Expr\AssignRef|Expr\AssignOp $assign */
+            $property = MemoizingMethodCollector::property($assign->var);
+            $empties = $assign instanceof Expr\Assign && !$assign->var instanceof Expr\ArrayDimFetch && self::isEmpty($assign->expr);
+            if ($property !== null && !$empties) {
+                unset($unfilled[$property]);
+            }
+        }
+
+        return $unfilled;
+    }
+
+    private static function isEmpty(Expr $expr): bool
+    {
+        return ($expr instanceof Expr\Array_ && $expr->items === [])
+            || ($expr instanceof Expr\ConstFetch && $expr->name->toLowerString() === 'null');
     }
 }
