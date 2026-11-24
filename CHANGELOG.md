@@ -8,7 +8,7 @@ A rule added to or removed from the default set, or a changed default severity, 
 
 ### Fixed
 
-- T-05 and the experimental T-06 no longer check templates under a `templates/email` folder of a module or a theme, such as `Magento_Sales::email/items.phtml` and its theme overrides: they render part of an email, where no script runs and layout shift does not apply. On three private Magento 2.1 and 2.2 stores this removes <!-- measure --> findings, among them a T-06 image in a theme's shipment email graded false. **This can change a CI result.**
+- T-05 and the experimental T-06 no longer check templates under a `templates/email` folder of a module or a theme, such as `Magento_Sales::email/items.phtml` and its theme overrides: they render part of an email, where no script runs and layout shift does not apply. On the calibration corpus and eight private stores this removes 9 T-06 findings, 3 in the corpus and 6 in four private stores, among them a T-06 image in a theme's shipment email graded false; no T-05 finding changes. **This can change a CI result.**
 
 ## [0.12.0] - 2026-11-23
 
