@@ -51,6 +51,15 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 218],
             // Only the first of two: it loads the rows.
             [$message, 224],
+            // A fixed unique column or addIdFilter() with a value that may be a list.
+            [$message, 250],
+            [$message, 252],
+            [$message, 265],
+            // The value variable assigned again before getFirstItem().
+            [$message, 275],
+            [$message, 278],
+            // A value declared as one or many.
+            [$message, 293],
         ]);
     }
 
@@ -75,6 +84,15 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 218],
             // Only the first of two: it loads the rows.
             [$message, 224],
+            // A fixed unique column or addIdFilter() with a value that may be a list.
+            [$message, 250],
+            [$message, 252],
+            [$message, 265],
+            // The value variable assigned again before getFirstItem().
+            [$message, 275],
+            [$message, 278],
+            // A value declared as one or many.
+            [$message, 293],
         ]);
     }
 

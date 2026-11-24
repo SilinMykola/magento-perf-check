@@ -50,10 +50,16 @@ final class GetFirstItemWithoutLimitRule implements Rule
             || $node->name->toLowerString() !== 'getfirstitem'
             || $node->getAttribute(CollectionStateVisitor::LIMITED) === true
             || $node->getAttribute(CollectionStateVisitor::LOADED) === true
-            || $node->getAttribute(CollectionStateVisitor::UNIQUE_FILTER) === true
             || $node->getAttribute(CollectionStateVisitor::ROWS_USED_ELSEWHERE) === true
         ) {
             return [];
+        }
+        /** @var list<Node\Expr> $uniqueValues */
+        $uniqueValues = $node->getAttribute(CollectionStateVisitor::UNIQUE_FILTER_VALUES, []);
+        foreach ($uniqueValues as $value) {
+            if ($this->isOneValue($scope, $value)) {
+                return [];
+            }
         }
         $type = $scope->getType($node->var);
 
@@ -73,10 +79,7 @@ final class GetFirstItemWithoutLimitRule implements Rule
         $filters = $node->getAttribute(CollectionStateVisitor::EQUALITY_COLUMNS, []);
         $columns = [];
         foreach ($filters as [$column, $value]) {
-            // Magento turns a plain list into IN (...), which may match many rows. A value of unknown type
-            // (mixed, as from a magic getter or request params) is taken for a single value.
-            $valueType = $scope->getType($value);
-            if ($valueType instanceof MixedType || $valueType->isArray()->no()) {
+            if ($this->isOneValue($scope, $value)) {
                 $columns[] = $column;
             }
         }
@@ -92,6 +95,17 @@ final class GetFirstItemWithoutLimitRule implements Rule
                 $type->getObjectClassNames()[0] ?? self::DB_COLLECTION,
             ))->identifier(self::IDENTIFIER)->build(),
         ];
+    }
+
+    /**
+     * Whether a filter value stands for one value. Magento turns a plain list into IN (...), which may match many
+     * rows. A value of unknown type (mixed, as from a magic getter or request params) is taken for a single value.
+     */
+    private function isOneValue(Scope $scope, Node\Expr $value): bool
+    {
+        $valueType = $scope->getType($value);
+
+        return $valueType instanceof MixedType || $valueType->isArray()->no();
     }
 
     /**

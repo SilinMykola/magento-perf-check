@@ -23,7 +23,17 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
 {
     public const LIMITED = 'magentoPerfCollectionLimited';
     public const LOADED = 'magentoPerfCollectionLoaded';
+    /**
+     * Set when the collection is filtered on a fixed unique column or by id, whatever the value.
+     * P-COL-04 reads it on a foreach; P-COL-02 reads UNIQUE_FILTER_VALUES instead.
+     */
     public const UNIQUE_FILTER = 'magentoPerfCollectionUniqueFilter';
+
+    /**
+     * Set on getFirstItem(): the values of the filters on a fixed unique column or by id, for a rule
+     * that can tell whether a value may be a list.
+     */
+    public const UNIQUE_FILTER_VALUES = 'magentoPerfCollectionUniqueFilterValues';
 
     /**
      * Set on getFirstItem(): the main-table columns the collection is filtered on with an
@@ -55,6 +65,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
 
     /** Prefix of the facts that name a column filtered with an equality, followed by "@" and its branch. */
     private const COLUMN_FACT = 'column:';
+
+    /** Prefix of the facts that hold the value of a filter on a fixed unique column or by id. */
+    private const UNIQUE_VALUE_FACT = 'unique:';
 
     /** Fact: the collection joins another table, so a key of its main table no longer identifies one row. */
     private const JOINED = 'joined';
@@ -120,6 +133,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             }
             foreach ($this->chainColumns($node->expr) as [$column, $value]) {
                 $this->recordColumn($key, $column, $value);
+            }
+            foreach ($this->chainUniqueValues($node->expr) as $value) {
+                $this->recordUniqueValue($key, $value);
             }
             if ($this->chainJoins($node->expr)) {
                 $this->record($key, self::JOINED);
@@ -199,13 +215,18 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             if ($key !== null && ($uses[$key] ?? 0) - ($uses[$key . self::FIRST_ITEM_USES] ?? 0) > 0) {
                 $node->setAttribute(self::ROWS_USED_ELSEWHERE, true);
             }
-            foreach ([self::LIMITED, self::UNIQUE_FILTER] as $fact) {
-                if ($this->chainHas($node->var, $fact)) {
-                    $node->setAttribute($fact, true);
-                }
+            if ($this->chainHas($node->var, self::LIMITED)) {
+                $node->setAttribute(self::LIMITED, true);
             }
             $columns = $this->chainColumns($node->var);
+            $uniqueValues = $this->chainUniqueValues($node->var);
             $facts = $key === null ? [] : ($this->frames[count($this->frames) - 1][$key] ?? []);
+            foreach ($facts as $fact => $value) {
+                if (str_starts_with($fact, self::UNIQUE_VALUE_FACT) && $value instanceof Expr) {
+                    $uniqueValues[] = $value;
+                }
+            }
+            $node->setAttribute(self::UNIQUE_FILTER_VALUES, $uniqueValues);
             foreach ($facts as $fact => $value) {
                 if (!str_starts_with($fact, self::COLUMN_FACT) || !$value instanceof Expr) {
                     continue;
@@ -225,6 +246,10 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             if ($this->establishes($node, $fact)) {
                 $this->record($key, $fact);
             }
+        }
+        $uniqueValue = $this->uniqueFilterValue($node);
+        if ($uniqueValue !== null) {
+            $this->recordUniqueValue($key, $uniqueValue);
         }
         $column = $this->equalityColumn($node);
         // "$this->factory->create()->addFieldToFilter(...)" filters a new collection, not $this->factory.
@@ -309,7 +334,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         // A fact about all items, set in a function, holds in the closures it passes them to.
         foreach ($key === '*' ? $this->frames : [$this->frames[count($this->frames) - 1]] as $frame) {
             foreach ($frame[$key] ?? [] as $fact => $_) {
-                if (!str_starts_with($fact, self::COLUMN_FACT) && $fact !== self::JOINED) {
+                if (!str_starts_with($fact, self::COLUMN_FACT) && !str_starts_with($fact, self::UNIQUE_VALUE_FACT) && $fact !== self::JOINED) {
                     $node->setAttribute($fact, true);
                 }
             }
@@ -328,9 +353,14 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         $this->record($key, self::COLUMN_FACT . $column . '@' . ($this->branches === [] ? 0 : $this->branches[count($this->branches) - 1]), $value);
     }
 
+    private function recordUniqueValue(?string $key, Expr $value): void
+    {
+        $this->record($key, self::UNIQUE_VALUE_FACT . spl_object_id($value), $value);
+    }
+
     /**
-     * Drops the column facts whose value reads $key: the rule checks the value's type where getFirstItem() is
-     * called, so after "$ids = 5" a filter on the list "$ids" would look like a filter on one value.
+     * Drops the column and unique filter facts whose value reads $key: the rule checks the value's type where
+     * getFirstItem() is called, so after "$ids = 5" a filter on the list "$ids" would look like a filter on one value.
      */
     private function forgetValuesOf(string $key): void
     {
@@ -468,6 +498,24 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     }
 
     /**
+     * Values of the filters on a fixed unique column or by id in the calls of this chain.
+     *
+     * @return list<Expr>
+     */
+    private function chainUniqueValues(Expr $expr): array
+    {
+        $values = [];
+        for (; $expr instanceof Expr\MethodCall; $expr = $expr->var) {
+            $value = $this->uniqueFilterValue($expr);
+            if ($value !== null) {
+                $values[] = $value;
+            }
+        }
+
+        return $values;
+    }
+
+    /**
      * The column of addFieldToFilter()/addAttributeToFilter() with an equality condition, lower case, when it
      * has no table alias or the main_table one, with the value it is compared with; else null.
      *
@@ -559,23 +607,34 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             return $this->callsGetSelect($call->var);
         }
 
+        return $this->uniqueFilterValue($call) !== null;
+    }
+
+    /**
+     * The value of addIdFilter()/setIdFilter(), or of an equality filter on a fixed unique column; else null.
+     */
+    private function uniqueFilterValue(Expr\MethodCall $call): ?Expr
+    {
+        if (!$call->name instanceof Node\Identifier) {
+            return null;
+        }
+        $name = $call->name->toLowerString();
         if ($name === 'addidfilter' || $name === 'setidfilter') {
-            return $this->equalityValue(CallArgs::of($call)[0]->value ?? null) !== null;
+            return $this->equalityValue(CallArgs::of($call)[0]->value ?? null);
         }
         $column = $this->equalityField($call);
         if ($column === null) {
-            return false;
+            return null;
         }
         $column = str_contains($column, '.') ? substr($column, (int) strrpos($column, '.') + 1) : $column;
 
-        return in_array($column, self::UNIQUE_COLUMNS, true);
+        return in_array($column, self::UNIQUE_COLUMNS, true) ? $this->equalityValue(CallArgs::of($call)[1]->value ?? null) : null;
     }
 
     /**
      * The value compared with, for a plain value (not an array literal), a single value for ['eq' => value];
      * else null.
-     * A variable counts as a plain value: if it holds an array at runtime, the rule misses a finding,
-     * it does not report a false one. P-COL-02 checks the type of the value for a declared unique key.
+     * A variable counts as a plain value: P-COL-02 checks its type where getFirstItem() is called.
      */
     private function equalityValue(?Expr $condition): ?Expr
     {

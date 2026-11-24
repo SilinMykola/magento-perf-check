@@ -1,0 +1,3 @@
+- [x] Visitor: value facts for filters on a fixed unique column and for `addIdFilter()`/`setIdFilter()`, set on `getFirstItem()`; dropped when a variable they read is assigned again
+- [x] P-COL-02: skip only when one of these values counts as one value, through the check shared with the declared-key filters; fixtures for `array` values with `entity_id`, `sku` and `addIdFilter()`, an `int|array` value, an `int` value, an untyped value, `['eq' => $id]` and `['eq' => $skus]`, two filters of which one has a single value, an assigned chain, and a reassigned value; each checked with a mutant
+- [x] Rule page and changelog

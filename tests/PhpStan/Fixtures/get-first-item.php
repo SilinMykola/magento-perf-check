@@ -240,6 +240,58 @@ final class Example
     {
         $unrelated->getFirstItem();
     }
+
+    /**
+     * @param list<int> $ids
+     * @param list<string> $skus
+     */
+    public function uniqueColumnWithAList(Collection $a, Collection $b, Collection $c, Collection $d, Collection $e, Collection $f, array $ids, array $skus, int $id): void
+    {
+        $a->addFieldToFilter('entity_id', $ids)->getFirstItem();
+        $b->addAttributeToFilter('sku', ['eq' => $skus])->getFirstItem();
+        $c->addIdFilter($ids)->getFirstItem();
+        $d->addFieldToFilter('entity_id', $id)->getFirstItem();
+        $e->addFieldToFilter('entity_id', ['eq' => $id])->getFirstItem();
+        // One of two filters on a single value is enough.
+        $f->addFieldToFilter('entity_id', $id)->addFieldToFilter('sku', $skus)->getFirstItem();
+    }
+
+    /**
+     * @param list<string> $skus
+     */
+    public function uniqueColumnWithAListEarlier(Collection $collection, array $skus): void
+    {
+        $collection->addFieldToFilter('sku', $skus);
+        $collection->getFirstItem();
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function uniqueColumnValueReassigned(Collection $collection, Collection $other, array $ids, int $id): void
+    {
+        $collection->addFieldToFilter('entity_id', $id);
+        $id = $ids;
+        $collection->getFirstItem();
+        $other->addIdFilter($ids);
+        $ids = 5;
+        $other->getFirstItem();
+    }
+
+    public function uniqueColumnInAssignedChain(int $id): void
+    {
+        $collection = $this->collectionFactory->create()->addFieldToFilter('entity_id', $id);
+        $collection->getFirstItem();
+    }
+
+    /**
+     * @param int|list<int> $idOrIds
+     */
+    public function uniqueColumnWithAnUntypedValue(Collection $a, Collection $b, $untyped, int|array $idOrIds): void
+    {
+        $a->addFieldToFilter('entity_id', $untyped)->getFirstItem();
+        $b->addIdFilter($idOrIds)->getFirstItem();
+    }
 }
 
 final class Unrelated
