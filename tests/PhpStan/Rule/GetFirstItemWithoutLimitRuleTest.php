@@ -105,30 +105,30 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message('Order'), 312],
             [$message('Order'), 318],
             // A property set to a new collection after the filter.
-            [$message('Order'), 330],
+            [$message('Order'), 341],
             // A key filter in an arrow function, ?:, ??, &&, a match arm, a case, a catch or a loop.
-            [$message('Order'), 336],
-            [$message('Order'), 342],
-            [$message('Order'), 348],
-            [$message('Order'), 354],
-            [$message('Order'), 363],
-            [$message('Order'), 373],
-            [$message('Order'), 383],
-            [$message('Order'), 391],
+            [$message('Order'), 347],
+            [$message('Order'), 353],
+            [$message('Order'), 359],
+            [$message('Order'), 365],
+            [$message('Order'), 374],
+            [$message('Order'), 384],
+            [$message('Order'), 394],
+            [$message('Order'), 402],
             // Another table through getSelect()->from() or union().
-            [$message('Order'), 404],
-            [$message('Order'), 410],
+            [$message('Order'), 415],
+            [$message('Order'), 421],
             // A _construct() that does not call the parent's _init().
-            [$message('Order\\Archive'), 415],
+            [$message('Order\\Archive'), 426],
             // A setup-script key on a table that db_schema.xml declares without it.
-            [$message('Order'), 425],
+            [$message('Order'), 436],
             // Keys dropped in the same script, by a name that cannot be tied to columns.
-            [$message('Queue'), 435],
-            [$message('Queue'), 440],
+            [$message('Queue'), 446],
+            [$message('Queue'), 451],
             // A list variable reassigned to one value before getFirstItem().
-            [$message('Order'), 447],
+            [$message('Order'), 458],
             // A _construct() that calls the parent's only in a branch.
-            [$message('Order\\Conditional'), 452],
+            [$message('Order\\Conditional'), 463],
         ]);
     }
 }

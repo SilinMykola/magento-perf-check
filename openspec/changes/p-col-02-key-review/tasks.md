@@ -5,3 +5,4 @@
 - [x] Fixtures for branch kinds (`?:`, `??`, `&&`, `match`, `case`, `catch`, loop), `addAttributeToFilter()`, a key from `Setup/InstallSchema.php`, and `dropIndex()` with an unreadable name; each checked with a mutant
 - [x] A filter whose value variable is reassigned does not count; only a top-level `parent::_construct()` follows the parent; fixtures for both, checked with mutants
 - [x] Rule page and changelog
+- [x] A value of type mixed, and any value in eq, counts as one value: the review measurement brought back 10 false positives of magic getters and request parameters

@@ -323,6 +323,17 @@ namespace Acme\Tags\Model {
             $orderTags->addFieldToFilter('id', ['eq' => $id])->getFirstItem();
         }
 
+        public function eqConditionWithAList(OrderCollection $orderTags, array $ids): void
+        {
+            // ['eq' => $ids] renders "= 1, 2", never IN (...).
+            $orderTags->addFieldToFilter('id', ['eq' => $ids])->getFirstItem();
+        }
+
+        public function valueOfUnknownType(OrderCollection $orderTags, $id): void
+        {
+            $orderTags->addFieldToFilter('id', $id)->getFirstItem();
+        }
+
         public function propertyReplacedByANewCollection(int $id): void
         {
             $this->orderTags->addFieldToFilter('id', $id);

@@ -13,6 +13,7 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
+use PHPStan\Type\MixedType;
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 
 /**
@@ -72,8 +73,10 @@ final class GetFirstItemWithoutLimitRule implements Rule
         $filters = $node->getAttribute(CollectionStateVisitor::EQUALITY_COLUMNS, []);
         $columns = [];
         foreach ($filters as [$column, $value]) {
-            // Magento turns a list into IN (...), which may match many rows.
-            if ($scope->getType($value)->isArray()->no()) {
+            // Magento turns a plain list into IN (...), which may match many rows. A value of unknown type
+            // (mixed, as from a magic getter or request params) is taken for a single value.
+            $valueType = $scope->getType($value);
+            if ($valueType instanceof MixedType || $valueType->isArray()->no()) {
                 $columns[] = $column;
             }
         }

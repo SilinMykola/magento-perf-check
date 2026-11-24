@@ -572,7 +572,8 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     }
 
     /**
-     * The value compared with, for a plain value (not an array literal) or ['eq' => value]; else null.
+     * The value compared with, for a plain value (not an array literal), a single value for ['eq' => value];
+     * else null.
      * A variable counts as a plain value: if it holds an array at runtime, the rule misses a finding,
      * it does not report a false one. P-COL-02 checks the type of the value for a declared unique key.
      */
@@ -590,10 +591,15 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             static fn ($item): bool => $item !== null,
         ));
 
-        return count($items) === 1
-            && $items[0]->key instanceof Node\Scalar\String_
-            && strtolower($items[0]->key->value) === 'eq'
-            ? $items[0]->value : null;
+        if (count($items) !== 1
+            || !$items[0]->key instanceof Node\Scalar\String_
+            || strtolower($items[0]->key->value) !== 'eq'
+        ) {
+            return null;
+        }
+
+        // ['eq' => $list] renders "= 1, 2", not IN (...): it never matches many rows, so stand for one value.
+        return new Node\Scalar\String_('eq');
     }
 
     /**
