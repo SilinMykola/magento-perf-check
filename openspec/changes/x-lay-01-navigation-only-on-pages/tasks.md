@@ -3,3 +3,4 @@
 - [x] Project index test: account pages from a copied navigation are uncacheable, a header dropdown that `default.xml` includes is not
 - [x] LayoutHandles: the navigation makes a page an account page, and a handle that is no page only when pages alone include it
 - [x] Rule pages and changelog
+- [x] fpc-rules spec: P-FPC-02 names the account pages X-LAY-01 defines

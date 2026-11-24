@@ -1,0 +1,42 @@
+## MODIFIED Requirements
+
+### Requirement: P-FPC-02 customer data from session in blocks
+P-FPC-02 SHALL report, as `warning`, calls to `getCustomer`, `getCustomerId` or `getQuote` on a subtype of `Magento\Framework\Session\SessionManagerInterface`. The call must be made in a frontend block (an `AbstractBlock` subclass not under a `Block\Adminhtml` namespace) or a view model (implements `Magento\Framework\View\Element\Block\ArgumentInterface` and is not a collection). A call on a backend session (`Magento\Backend\Model\Session`, `Magento\Backend\Model\Session\Quote`, `Magento\Backend\Model\Auth\Session` or a subtype) SHALL NOT be reported: Magento core sets their customer and quote only while an order is created in the admin. `getCustomerGroupId()` SHALL NOT be reported: page cache depersonalization keeps the customer group, and it is part of the cache key. A class that the project's frontend layouts name (`<block class>`, `<referenceBlock class>`, an `<argument>` or `<item>` of type `object`) only on handles no cacheable page uses SHALL NOT be reported, unless a subclass of it is named on a handle a cacheable page may use. Handles no cacheable page uses are those whose layout files hold a `cacheable="false"` block that neither it nor an element around it has an `ifconfig` and that no layout file of the handle removes, except shop-wide handles X-LAY-03 reports (`default`, `catalog_*`, `cms_*` outside its allowlist); account pages, as X-LAY-01 defines them (a handle that includes `customer_account`, a page that declares the block `customer_account_navigation` itself or through a handle that pages alone include, and a handle that includes such an account page); and handles only such handles include, unless the handle is a page of a storefront controller action, which may be cached.
+
+#### Scenario: Block reads customer
+- **WHEN** a block method calls `$this->customerSession->getCustomerId()`
+- **THEN** P-FPC-02 reports a warning
+
+#### Scenario: Controller reads customer
+- **WHEN** a controller calls the same method
+- **THEN** P-FPC-02 reports nothing
+
+#### Scenario: Customer group
+- **WHEN** a block calls `$this->customerSession->getCustomerGroupId()`
+- **THEN** P-FPC-02 reports nothing
+
+#### Scenario: Admin block
+- **WHEN** a block under `Block\Adminhtml` calls `$this->backendQuoteSession->getQuote()`
+- **THEN** P-FPC-02 reports nothing
+
+#### Scenario: Backend session outside Block\Adminhtml
+- **WHEN** a block under `Block\Form` calls `getQuote()` on a `Magento\Backend\Model\Session\Quote`
+- **THEN** P-FPC-02 reports nothing
+
+#### Scenario: Block only on uncacheable pages
+- **WHEN** a block that reads `getCustomerId()` is placed only on a handle whose layout holds a `cacheable="false"` block, as Magento's `checkout_cart_index.xml` does, or that includes `customer_account`
+- **THEN** P-FPC-02 reports nothing
+- **WHEN** the same block is also placed in `catalog_product_view.xml`, or only in `default.xml` although a `default.xml` holds a `cacheable="false"` block, or the `cacheable="false"` block has an `ifconfig` or is removed, or a subclass of it is placed in `catalog_product_view.xml`, or no layout places it
+- **THEN** P-FPC-02 reports the call
+
+#### Scenario: Block of the account sidebar
+- **WHEN** a block that reads `getCustomerId()` is placed only in `acmepromo_account.xml`, a handle of the route `acmepromo` without a controller action, which only an account page includes
+- **THEN** P-FPC-02 reports nothing
+
+#### Scenario: Block of a copied account layout
+- **WHEN** a block that reads `getCustomerId()` is placed only in `acme_reward_account.xml`, which declares `customer_account_navigation` and which only storefront pages include
+- **THEN** P-FPC-02 reports nothing
+
+#### Scenario: Block of a header dropdown with the account navigation
+- **WHEN** a block that reads `getCustomerId()` is placed only in `acme_account_menu.xml`, which declares `customer_account_navigation` and which `default.xml` includes
+- **THEN** P-FPC-02 reports a warning
