@@ -37,7 +37,7 @@ P-COL-02 SHALL report a call to `getFirstItem()` on an object whose type is a da
 - **THEN** P-COL-02 reports an error
 
 ### Requirement: P-COL-02 scope
-P-COL-02 SHALL NOT report `getFirstItem()` on a receiver that is not a database collection: an in-memory `Magento\Framework\Data\Collection`, a receiver whose type PHPStan cannot resolve, or an unrelated class that merely has a method named `getFirstItem`. It SHALL NOT report a collection filtered, with an equality on the main table, on every column of a unique or primary key of its main table: a key declared in any `db_schema.xml` of the project, or added with `addIndex()` and `INDEX_TYPE_UNIQUE` or `INDEX_TYPE_PRIMARY` (or a `primary` column of `newTable()`) in `Setup/InstallSchema.php` or `Setup/UpgradeSchema.php` of the module that holds the collection's resource model, unless a later `dropIndex()` there removes it (when the dropped index cannot be tied to its columns, no setup-script key of that table counts). The main table is the first argument of `_init()` in the resource model's `_construct()`, as a string literal or a string constant of that class; the resource model is the second argument of `_init()` in the collection's `_construct()` or a parent's. When either cannot be read this way, the filter does not count. A key filter set in a conditional branch (a body of `if`, `elseif`, `else`, `case`, `catch` or a loop, an operand of `?:`, `??`, `&&` or `||` that may not run, or a `match` arm) counts only for a `getFirstItem()` in that branch or one nested in it. A collection on which the function calls a method whose name starts with `join`, directly or on its `getSelect()`, does not count as filtered on a key of its main table.
+P-COL-02 SHALL NOT report `getFirstItem()` on a receiver that is not a database collection: an in-memory `Magento\Framework\Data\Collection`, a receiver whose type PHPStan cannot resolve, or an unrelated class that merely has a method named `getFirstItem`. It SHALL NOT report a collection filtered, with an equality on the main table whose value cannot be an array (Magento turns a plain list into `IN (...)`; a value of type `mixed`, and any value in `['eq' => ...]`, counts as one value), on every column of a unique or primary key of its main table: a key declared in any `db_schema.xml` of the project, or, on a table that no `db_schema.xml` declares, added with `addIndex()` and `INDEX_TYPE_UNIQUE` or `INDEX_TYPE_PRIMARY` (or a `primary` column of `newTable()`) in `Setup/InstallSchema.php` or `Setup/UpgradeSchema.php` of the module that holds the collection's resource model, unless a later `dropIndex()` there removes it (when the dropped index cannot be tied to its columns, no setup-script key of that table counts). The main table is the first argument of `_init()` in the resource model's `_construct()`, as a string literal or a string constant of that class; the resource model is the second argument of `_init()` in the collection's `_construct()`, or a parent's when the collection declares no `_construct()` or its `_construct()` calls `parent::_construct()` as a top-level statement. When either cannot be read this way, the filter does not count. A key filter set in a conditional branch (a body of `if`, `elseif`, `else`, `case`, `catch` or a loop, an operand of `?:`, `??`, `&&` or `||` that may not run, a `match` arm, or the body of an arrow function) counts only for a `getFirstItem()` in that branch or one nested in it. A collection on which the function calls a method whose name starts with `join`, directly or on its `getSelect()`, or `from()` or `union()` on its `getSelect()`, does not count as filtered on a key of its main table. Assigning a new value to the variable or `$this` property that holds the collection drops its earlier filters, and assigning a new value to a variable drops the filters whose value reads it.
 
 #### Scenario: In-memory collection
 - **WHEN** `getFirstItem()` is called on a `Magento\Framework\Data\Collection` that is not an `AbstractDb`
@@ -95,6 +95,54 @@ P-COL-02 SHALL NOT report `getFirstItem()` on a receiver that is not a database 
 - **WHEN** `$collection->getFirstItem()` is followed in the same function by `$collection->getColumnValues('entity_id')` or `foreach ($collection as $item)`
 - **THEN** P-COL-02 reports nothing
 
+#### Scenario: Key value that may be a list
+- **WHEN** code calls `$collection->addFieldToFilter('id', $ids)->getFirstItem()` and `$ids` is an `array`, or a declared type that may be one such as `int|array`
+- **THEN** P-COL-02 reports an error
+
+#### Scenario: Key value that is a single value
+- **WHEN** code calls `$collection->addFieldToFilter('id', ['eq' => $id])->getFirstItem()` or `$collection->addAttributeToFilter('id', $id)` before `$collection->getFirstItem()`, and `$id` is an `int`
+- **THEN** P-COL-02 reports nothing
+
+#### Scenario: Key value of unknown type or inside eq
+- **WHEN** code calls `$collection->addFieldToFilter('id', $id)->getFirstItem()` with an untyped `$id`, or `$collection->addFieldToFilter('id', ['eq' => $ids])->getFirstItem()` with an `array $ids`
+- **THEN** P-COL-02 reports nothing
+
+#### Scenario: Key filter in other conditional code
+- **WHEN** the key filter is in an operand of `?:`, `??` or `&&`, a `match` arm, a `case`, a `catch`, a loop body or the body of an arrow function, and `getFirstItem()` follows outside it
+- **THEN** P-COL-02 reports an error
+
+#### Scenario: Property replaced after the filter
+- **WHEN** code calls `$this->collection->addFieldToFilter('id', $id); $this->collection = $this->factory->create(); $this->collection->getFirstItem();`
+- **THEN** P-COL-02 reports an error
+
+#### Scenario: Collection with its own _construct()
+- **WHEN** the collection extends one whose `_construct()` calls `_init()`, and overrides `_construct()` with one that calls `_setMainTable('acme_tag_archive')` and not `parent::_construct()`
+- **THEN** P-COL-02 reports an error for a filter on a key of the parent's main table
+
+#### Scenario: Filter value reassigned
+- **WHEN** code calls `$collection->addFieldToFilter('id', $ids); $ids = 5; $collection->getFirstItem();` with an `array $ids`
+- **THEN** P-COL-02 reports an error
+
+#### Scenario: Parent _construct() called only in a branch
+- **WHEN** the collection's `_construct()` calls `parent::_construct()` only inside an `if` or `else`
+- **THEN** P-COL-02 reports an error for a filter on a key of the parent's main table
+
+#### Scenario: Collection that calls the parent _construct()
+- **WHEN** the collection's `_construct()` calls `parent::_construct()`, whose `_init()` names the resource model
+- **THEN** P-COL-02 reports nothing for a filter on every column of a key of that resource model's main table
+
+#### Scenario: Setup-script key on a declared table
+- **WHEN** `Setup/UpgradeSchema.php` adds a unique index on `label_id` of `acme_tag_order`, a `db_schema.xml` declares `acme_tag_order` without that key, and code calls `$collection->addFieldToFilter('label_id', $labelId)->getFirstItem()`
+- **THEN** P-COL-02 reports an error
+
+#### Scenario: Another table through from() or union()
+- **WHEN** code filters on every column of a unique key and calls `$collection->getSelect()->from(...)` or `$collection->getSelect()->union(...)` before `getFirstItem()`
+- **THEN** P-COL-02 reports an error
+
+#### Scenario: Keys dropped in the same setup script
+- **WHEN** a setup script builds a table with `newTable()`, a `primary` column `queue_id` and a unique index on `code`, and later in the same script calls `dropIndex($setup->getTable('acme_tag_queue'), 'PRIMARY')`
+- **THEN** P-COL-02 reports an error for a filter on `queue_id`, and for a filter on `code`
+
 ### Requirement: P-COL-01 count() on a collection
 P-COL-01 SHALL report, as `warning`, `count($x)` where `$x` is a database collection that is not loaded anyway in the same function: not loaded before the call (as in P-COL-02), and not loaded after it either (`load()`, `getItems()`, `getColumnValues()`, `->count()` or `foreach` on the same variable later in the function). `count()` loads every row, while `getSize()` runs a `COUNT` query. It SHALL NOT report a collection that lives on the object: a `$this` property, or the result of a method called directly on `$this`. These are usually memoized and their rows are read elsewhere.
 
@@ -134,11 +182,35 @@ P-COL-02 SHALL NOT report `getFirstItem()` when the same collection was already 
 - **THEN** P-COL-02 reports nothing
 
 ### Requirement: P-COL-02 unique key filter
-P-COL-02 SHALL NOT report `getFirstItem()` when the chain, or an earlier statement on the same collection, filters for equality on a unique key: `addIdFilter()`, `setIdFilter()`, or `addFieldToFilter()`/`addAttributeToFilter()` on `entity_id`, `sku`, `increment_id` or `username`. A table alias prefix such as `main_table.` is allowed; the value must be a scalar or an `eq` condition.
+P-COL-02 SHALL NOT report `getFirstItem()` when the chain, or an earlier statement on the same collection, filters for equality on a unique key: `addIdFilter()`, `setIdFilter()`, or `addFieldToFilter()`/`addAttributeToFilter()` on `entity_id`, `sku`, `increment_id` or `username`. A table alias prefix such as `main_table.` is allowed; the value must be a scalar or an `eq` condition, and its type where `getFirstItem()` is called must not be an array or possibly one, since Magento turns a plain list into `IN (...)`. A value of unknown type (`mixed`) counts as one value, and so does any value inside `['eq' => ...]`, which Magento renders as `= ...`. Assigning a new value to a variable drops the filters whose value reads it. When several such filters are set, one whose value cannot be an array is enough.
 
 #### Scenario: Increment ID earlier
 - **WHEN** `$collection->addFieldToFilter('increment_id', $incrementId);` precedes `$collection->getFirstItem();`
 - **THEN** P-COL-02 reports nothing
+
+#### Scenario: Fixed unique column with a list
+- **WHEN** code calls `$collection->addFieldToFilter('entity_id', $ids)->getFirstItem()`, or `$collection->addFieldToFilter('sku', $skus)` before `$collection->getFirstItem()`, with an `array` value
+- **THEN** P-COL-02 reports an error
+
+#### Scenario: Id filter with a list
+- **WHEN** code calls `$collection->addIdFilter($ids)->getFirstItem()` with an `array $ids` or an `int|array $ids`
+- **THEN** P-COL-02 reports an error
+
+#### Scenario: Fixed unique column with a single value
+- **WHEN** code calls `$collection->addFieldToFilter('entity_id', $id)->getFirstItem()` or `$collection->addFieldToFilter('entity_id', ['eq' => $id])->getFirstItem()` with an `int $id`, or with an untyped `$id`, or `$collection = $factory->create()->addFieldToFilter('entity_id', $id);` before `$collection->getFirstItem();`
+- **THEN** P-COL-02 reports nothing
+
+#### Scenario: Fixed unique column with a list inside eq
+- **WHEN** code calls `$collection->addAttributeToFilter('sku', ['eq' => $skus])->getFirstItem()` with an `array $skus`
+- **THEN** P-COL-02 reports nothing
+
+#### Scenario: One of two filters with a single value
+- **WHEN** code calls `$collection->addFieldToFilter('entity_id', $id)->addFieldToFilter('sku', $skus)->getFirstItem()` with an `int $id` and an `array $skus`
+- **THEN** P-COL-02 reports nothing
+
+#### Scenario: Fixed unique column value reassigned
+- **WHEN** code calls `$collection->addIdFilter($ids); $ids = 5; $collection->getFirstItem();` with an `array $ids`
+- **THEN** P-COL-02 reports an error
 
 ### Requirement: P-COL-03 all attributes selected
 P-COL-03 SHALL report, as `info`, `addAttributeToSelect('*')` on an EAV collection. It is off by default.
