@@ -78,6 +78,15 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 374],
             [$message, 381],
             [$message, 387],
+            // A value written again through an element, a property, a skipped or nested destructuring item, or foreach.
+            [$message, 415],
+            [$message, 418],
+            [$message, 421],
+            [$message, 424],
+            [$message, 428],
+            [$message, 433],
+            [$message, 441],
+            [$message, 445],
         ]);
     }
 
@@ -129,6 +138,15 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 374],
             [$message, 381],
             [$message, 387],
+            // A value written again through an element, a property, a skipped or nested destructuring item, or foreach.
+            [$message, 415],
+            [$message, 418],
+            [$message, 421],
+            [$message, 424],
+            [$message, 428],
+            [$message, 433],
+            [$message, 441],
+            [$message, 445],
         ]);
     }
 

@@ -116,9 +116,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             return null;
         }
 
-        // "$a = &$b", "$a += 1" and "[$a] = $list" give their variables new values as well.
+        // "$a = &$b", "$a += 1", "[$a] = $list", "$map[$k] = 1" and "$o->ids = 1" give their variables new values as well.
         if ($node instanceof Expr\AssignRef || $node instanceof Expr\AssignOp
-            || ($node instanceof Expr\Assign && ($node->var instanceof Expr\List_ || $node->var instanceof Expr\Array_))
+            || ($node instanceof Expr\Assign && $this->rootKey($node->var) === null)
         ) {
             $this->forgetValuesIn($node->var);
         }
@@ -256,7 +256,8 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         if ($this->establishes($node, self::LIMITED) && !$this->callsCreate($node->var)) {
             $this->record($key, self::LIMITED);
         }
-        if ($this->establishes($node, self::UNIQUE_FILTER)) {
+        // As for the values below: a create() chain or a getter filters another object.
+        if ($this->establishes($node, self::UNIQUE_FILTER) && !$this->makesANewObject($node->var)) {
             $this->record($key, self::UNIQUE_FILTER);
         }
         $uniqueValue = $this->uniqueFilterValue($node);
@@ -433,12 +434,13 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
 
             return;
         }
-        // "$map[$id] = ..." writes $map, not $id.
-        while ($target instanceof Expr\ArrayDimFetch) {
+        // "$map[$id] = ..." writes $map, not $id; "$o->items[$k] = ..." goes through $o.
+        while (($key = $this->rootKey($target)) === null
+            && ($target instanceof Expr\ArrayDimFetch || $target instanceof Expr\PropertyFetch || $target instanceof Expr\NullsafePropertyFetch)
+        ) {
             $target = $target->var;
         }
-        $key = $this->rootKey($target);
-        if ($key !== null) {
+        if ($key !== null && $key !== '$this') {
             $this->forgetValuesOf($key);
         }
     }

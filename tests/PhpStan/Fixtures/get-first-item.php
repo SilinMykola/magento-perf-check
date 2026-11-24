@@ -401,6 +401,58 @@ final class Example
         $count[$sku] += 1;
         $b->getFirstItem();
     }
+
+    /**
+     * @param array{id: list<int>} $m
+     * @param array{id: list<int>} $n
+     * @param list<int> $ids
+     * @param list<int> $more
+     */
+    public function uniqueColumnValueWrittenThroughAnElementOrAProperty(Collection $a, Collection $b, Collection $c, Collection $d, Collection $e, Collection $f, array $m, array $n, array $ids, array $more, IdHolder $o, IdHolder $p): void
+    {
+        $a->addIdFilter($m['id']);
+        $m['id'] = 5;
+        $a->getFirstItem();
+        $b->addIdFilter($n['id']);
+        $n['id'] ??= 5;
+        $b->getFirstItem();
+        $c->addIdFilter($ids);
+        [, $ids] = [0, 5];
+        $c->getFirstItem();
+        $d->addIdFilter($more);
+        [[$more]] = [[5]];
+        $d->getFirstItem();
+        $o->ids = [1, 2];
+        $e->addIdFilter($o->ids);
+        [$o->ids] = [5];
+        $e->getFirstItem();
+        $p->ids = [1, 2];
+        $f->addIdFilter($p->ids);
+        foreach ([5] as $p->ids) {
+        }
+        $f->getFirstItem();
+    }
+
+    public function uniqueColumnValueWrittenThroughAnotherObject(Collection $a, Collection $b, IdHolder $o, IdHolder $p): void
+    {
+        $o->byKey = ['id' => [1, 2]];
+        $a->addIdFilter($o->byKey['id']);
+        $o->byKey['id'] = 5;
+        $a->getFirstItem();
+        $p->ids = [1, 2];
+        $b->addIdFilter($p->ids);
+        $p->ids = 5;
+        $b->getFirstItem();
+    }
+}
+
+final class IdHolder
+{
+    /** @var int|list<int> */
+    public int|array $ids = [];
+
+    /** @var array{id: int|list<int>} */
+    public array $byKey = ['id' => []];
 }
 
 final class Unrelated
