@@ -86,15 +86,21 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
         // Keys: etc/db_schema.xml and Setup/UpgradeSchema.php of the fixture module.
         $this->analyse([__DIR__ . '/../Fixtures/unique-keys/app/code/Acme/Tags/Model/Tags.php'], [
             // A new collection filtered on half of the key, after another one filtered on the other half.
-            [$message('Order'), 93],
+            [$message('Order'), 103],
             // Part of the key, a non-equality, a joined table's column, plain indexes.
-            [$message('Order'), 106],
             [$message('Order'), 116],
-            [$message('Order'), 130],
-            [$message('Stock'), 144],
+            [$message('Order'), 126],
+            [$message('Order'), 140],
+            [$message('Stock'), 154],
             // A unique index that a later version drops.
-            [$message('Source'), 161],
-            [$message('Source'), 166],
+            [$message('Source'), 171],
+            [$message('Source'), 176],
+            // A key filter in a branch that may not run, in the other branch, or with a joined table.
+            [$message('Order'), 185],
+            [$message('Order'), 209],
+            [$message('Order'), 217],
+            [$message('Order'), 222],
+            [$message('Order'), 232],
         ]);
     }
 }

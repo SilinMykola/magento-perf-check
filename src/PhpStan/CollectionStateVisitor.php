@@ -52,8 +52,14 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     /** Columns that identify at most one row. */
     private const UNIQUE_COLUMNS = ['entity_id', 'sku', 'increment_id', 'username'];
 
-    /** Prefix of the facts that name a column filtered with an equality. */
+    /** Prefix of the facts that name a column filtered with an equality, followed by "@" and its branch. */
     private const COLUMN_FACT = 'column:';
+
+    /** Fact: the collection joins another table, so a key of its main table no longer identifies one row. */
+    private const JOINED = 'joined';
+
+    /** Node attribute: the id of the conditional branch the node opens (a body of if, else, a loop, ?:, ...). */
+    private const BRANCH = 'magentoPerfCollectionBranch';
 
     /** Methods after which the collection holds its items in memory. */
     private const LOADING_METHODS = ['load', 'getitems', 'count', 'getfirstitem', 'getlastitem'];
@@ -64,6 +70,11 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     /** @var list<array<string, int>> root key => number of row-using operations, one frame per function */
     private array $rowUses = [];
 
+    /** @var list<int> ids of the conditional branches the current node is in, outermost first */
+    private array $branches = [];
+
+    private int $lastBranch = 0;
+
     /**
      * @param Node[] $nodes
      */
@@ -71,12 +82,19 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     {
         $this->frames = [[]];
         $this->rowUses = [$this->countRowUses($nodes)];
+        $this->branches = [];
 
         return null;
     }
 
     public function enterNode(Node $node): ?Node
     {
+        $this->markBranches($node);
+        $branch = $node->getAttribute(self::BRANCH);
+        if (is_int($branch)) {
+            $this->branches[] = $branch;
+        }
+
         if ($node instanceof FunctionLike && !$node instanceof Expr\ArrowFunction) {
             $this->frames[] = [];
             $this->rowUses[] = $this->countRowUses($node->getStmts() ?? []);
@@ -100,7 +118,10 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
                 }
             }
             foreach ($this->chainColumns($node->expr) as $column) {
-                $this->record($key, self::COLUMN_FACT . $column);
+                $this->recordColumn($key, $column);
+            }
+            if ($this->chainJoins($node->expr)) {
+                $this->record($key, self::JOINED);
             }
 
             return null;
@@ -183,10 +204,19 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
                 }
             }
             $columns = $this->chainColumns($node->var);
-            foreach (array_keys($key === null ? [] : ($this->frames[count($this->frames) - 1][$key] ?? [])) as $fact) {
-                if (str_starts_with($fact, self::COLUMN_FACT)) {
-                    $columns[] = substr($fact, strlen(self::COLUMN_FACT));
+            $facts = $key === null ? [] : ($this->frames[count($this->frames) - 1][$key] ?? []);
+            foreach (array_keys($facts) as $fact) {
+                if (!str_starts_with($fact, self::COLUMN_FACT)) {
+                    continue;
                 }
+                // A filter set in a branch counts only within that branch: "if ($id) { filter }" may not run.
+                [$column, $branch] = explode('@', substr($fact, strlen(self::COLUMN_FACT)), 2);
+                if ($branch === '0' || in_array((int) $branch, $this->branches, true)) {
+                    $columns[] = $column;
+                }
+            }
+            if (isset($facts[self::JOINED]) || $this->chainJoins($node->var)) {
+                $columns = [];
             }
             $node->setAttribute(self::EQUALITY_COLUMNS, array_values(array_unique($columns)));
         }
@@ -198,7 +228,11 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         $column = $this->equalityColumn($node);
         // "$this->factory->create()->addFieldToFilter(...)" filters a new collection, not $this->factory.
         if ($column !== null && !$this->makesANewObject($node->var)) {
-            $this->record($key, self::COLUMN_FACT . $column);
+            $this->recordColumn($key, $column);
+        }
+        // "$c->getSelect()->joinLeft(...)" joins on $c's query; "$factory->create()->join(...)" on a new one.
+        if (str_starts_with($name, 'join') && !$this->callsCreate($node->var)) {
+            $this->record($key, self::JOINED);
         }
         if (in_array($name, self::LOADING_METHODS, true)) {
             $this->record($key, self::LOADED);
@@ -209,6 +243,9 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
 
     public function leaveNode(Node $node): ?Node
     {
+        if (is_int($node->getAttribute(self::BRANCH))) {
+            array_pop($this->branches);
+        }
         if ($node instanceof FunctionLike && !$node instanceof Expr\ArrowFunction) {
             array_pop($this->frames);
             array_pop($this->rowUses);
@@ -271,7 +308,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         // A fact about all items, set in a function, holds in the closures it passes them to.
         foreach ($key === '*' ? $this->frames : [$this->frames[count($this->frames) - 1]] as $frame) {
             foreach ($frame[$key] ?? [] as $fact => $_) {
-                if (!str_starts_with($fact, self::COLUMN_FACT)) {
+                if (!str_starts_with($fact, self::COLUMN_FACT) && $fact !== self::JOINED) {
                     $node->setAttribute($fact, true);
                 }
             }
@@ -283,6 +320,61 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         if ($key !== null) {
             $this->frames[count($this->frames) - 1][$key][$fact] = true;
         }
+    }
+
+    private function recordColumn(?string $key, string $column): void
+    {
+        $this->record($key, self::COLUMN_FACT . $column . '@' . ($this->branches === [] ? 0 : $this->branches[count($this->branches) - 1]));
+    }
+
+    /**
+     * Gives each body that runs only on a condition its own branch id: the statements of if, elseif,
+     * else, case, catch and loops, the operands of ?: and ?? that may not run, and match arms.
+     */
+    private function markBranches(Node $node): void
+    {
+        $bodies = match (true) {
+            $node instanceof Stmt\If_, $node instanceof Stmt\ElseIf_, $node instanceof Stmt\Else_,
+            $node instanceof Stmt\Case_, $node instanceof Stmt\Catch_, $node instanceof Stmt\Foreach_,
+            $node instanceof Stmt\For_, $node instanceof Stmt\While_, $node instanceof Stmt\Do_ => [$node->stmts],
+            $node instanceof Expr\Ternary => [[$node->if], [$node->else]],
+            $node instanceof Expr\BinaryOp\Coalesce, $node instanceof Expr\BinaryOp\BooleanAnd,
+            $node instanceof Expr\BinaryOp\BooleanOr, $node instanceof Expr\BinaryOp\LogicalAnd,
+            $node instanceof Expr\BinaryOp\LogicalOr => [[$node->right]],
+            $node instanceof Expr\Match_ => array_map(static fn (Node\MatchArm $arm): array => [$arm->body], $node->arms),
+            default => [],
+        };
+        foreach ($bodies as $body) {
+            $id = ++$this->lastBranch;
+            foreach ($body as $child) {
+                $child?->setAttribute(self::BRANCH, $id);
+            }
+        }
+    }
+
+    private function callsCreate(Expr $expr): bool
+    {
+        for (; $expr instanceof Expr\MethodCall; $expr = $expr->var) {
+            if ($expr->name instanceof Node\Identifier && $expr->name->toLowerString() === 'create') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Whether a call of this chain joins another table: join(), joinLeft(), getSelect()->join(), ...
+     */
+    private function chainJoins(Expr $expr): bool
+    {
+        for (; $expr instanceof Expr\MethodCall; $expr = $expr->var) {
+            if ($expr->name instanceof Node\Identifier && str_starts_with($expr->name->toLowerString(), 'join')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

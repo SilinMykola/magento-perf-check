@@ -39,6 +39,16 @@ namespace Acme\Tags\Model\ResourceModel\Order {
         {
             $this->_init(\Acme\Tags\Model\Order::class, \Acme\Tags\Model\ResourceModel\Order::class);
         }
+
+        /**
+         * Joins the labels table, like Order\Status\Collection::joinStates().
+         *
+         * @return $this
+         */
+        public function joinLabels()
+        {
+            return $this;
+        }
     }
 }
 
@@ -164,6 +174,62 @@ namespace Acme\Tags\Model {
         public function plainIndexAddedOnTheConnection(SourceCollection $sources, int $productId): void
         {
             $sources->addFieldToFilter('product_id', $productId)->getFirstItem();
+        }
+
+        public function keyFilteredOnlyInABranch(OrderCollection $orderTags, ?int $id, int $orderId): void
+        {
+            if ($id !== null) {
+                $orderTags->addFieldToFilter('id', $id);
+            }
+            $orderTags->addFieldToFilter('order_id', $orderId);
+            $orderTags->getFirstItem();
+        }
+
+        public function keyFilteredInTheSameBranch(OrderCollection $orderTags, ?int $id): void
+        {
+            if ($id !== null) {
+                $orderTags->addFieldToFilter('id', $id);
+                $orderTags->getFirstItem();
+            }
+        }
+
+        public function keyFilteredBeforeTheBranch(OrderCollection $orderTags, int $id, bool $load): void
+        {
+            $orderTags->addFieldToFilter('id', $id);
+            if ($load) {
+                $orderTags->getFirstItem();
+            }
+        }
+
+        public function keyFilteredInTheOtherBranch(OrderCollection $orderTags, ?int $id): void
+        {
+            if ($id !== null) {
+                $orderTags->addFieldToFilter('id', $id);
+            } else {
+                $orderTags->getFirstItem();
+            }
+        }
+
+        public function keyWithAJoin(OrderCollection $orderTags, int $id): void
+        {
+            $orderTags->addFieldToFilter('id', $id);
+            $orderTags->getSelect()->joinLeft(['label' => 'acme_label'], 'label.order_tag_id = main_table.id', []);
+            $orderTags->getFirstItem();
+        }
+
+        public function keyWithAJoinInTheChain(OrderCollection $orderTags, int $id): void
+        {
+            $orderTags->addFieldToFilter('id', $id)->joinLabels()->getFirstItem();
+        }
+
+        public function keyFilteredOnlyInTheElseBranch(OrderCollection $orderTags, ?int $id, int $orderId): void
+        {
+            if ($id === null) {
+                $orderTags->addFieldToFilter('order_id', $orderId);
+            } else {
+                $orderTags->addFieldToFilter('id', $id);
+            }
+            $orderTags->getFirstItem();
         }
     }
 }
