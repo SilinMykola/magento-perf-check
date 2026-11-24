@@ -326,9 +326,10 @@ final class Example
         $this->collectionFactory->create()->getFirstItem();
     }
 
-    public function uniqueColumnWithAnUndefinedValue(Collection $collection): void
+    public function uniqueColumnWithAnUnresolvedValue(Collection $collection, \Acme\Missing\Transfer $transfer): void
     {
-        $collection->addIdFilter($undefined)->getFirstItem();
+        // A value from a class PHPStan cannot find, as in old code with missing modules, counts as one value.
+        $collection->addIdFilter($transfer->getWarehouseId())->getFirstItem();
     }
 
     /**

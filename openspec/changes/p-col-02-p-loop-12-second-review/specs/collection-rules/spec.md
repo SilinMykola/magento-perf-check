@@ -166,7 +166,7 @@ P-COL-02 SHALL NOT report `getFirstItem()` on a receiver that is not a database 
 - **THEN** P-COL-02 reports nothing for a filter on every column of a key of that resource model's main table
 
 ### Requirement: P-COL-02 unique key filter
-P-COL-02 SHALL NOT report `getFirstItem()` when the chain, or an earlier statement on the same collection, filters for equality on a unique key: `addIdFilter()`, `setIdFilter()`, or `addFieldToFilter()`/`addAttributeToFilter()` on `entity_id`, `sku`, `increment_id` or `username`. A table alias prefix such as `main_table.` is allowed; the value must be a scalar or an `eq` condition, and its type where `getFirstItem()` is called must not be an array or possibly one, since Magento turns a plain list into `IN (...)`. A value of unknown type (`mixed`) counts as one value, and so does any value inside `['eq' => ...]`, which Magento renders as `= ...`; a value PHPStan cannot type at all, such as an undefined variable, does not. Assigning a new value to a variable drops the filters whose value reads it: with `=`, `=&`, a compound operator such as `+=`, list destructuring, or as the key or value of a `foreach`. A filter set in a conditional branch, as listed under P-COL-02 scope for a key filter, counts only for a `getFirstItem()` in that branch or one nested in it. A filter on a new collection from `create()`, as in `$this->collectionFactory->create()->addIdFilter(5)`, does not count for the collection of a later `create()`. When several such filters are set, one whose value cannot be an array is enough.
+P-COL-02 SHALL NOT report `getFirstItem()` when the chain, or an earlier statement on the same collection, filters for equality on a unique key: `addIdFilter()`, `setIdFilter()`, or `addFieldToFilter()`/`addAttributeToFilter()` on `entity_id`, `sku`, `increment_id` or `username`. A table alias prefix such as `main_table.` is allowed; the value must be a scalar or an `eq` condition, and its type where `getFirstItem()` is called must not be an array or possibly one, since Magento turns a plain list into `IN (...)`. A value of unknown type (`mixed`) counts as one value, and so does any value inside `['eq' => ...]`, which Magento renders as `= ...` and so does a value PHPStan cannot type, such as a call on a class it cannot find. Assigning a new value to a variable drops the filters whose value reads it: with `=`, `=&`, a compound operator such as `+=`, list destructuring, or as the key or value of a `foreach`. A filter set in a conditional branch, as listed under P-COL-02 scope for a key filter, counts only for a `getFirstItem()` in that branch or one nested in it. A filter on a new collection from `create()`, as in `$this->collectionFactory->create()->addIdFilter(5)`, does not count for the collection of a later `create()`. When several such filters are set, one whose value cannot be an array is enough.
 
 #### Scenario: Increment ID earlier
 - **WHEN** `$collection->addFieldToFilter('increment_id', $incrementId);` precedes `$collection->getFirstItem();`
@@ -208,9 +208,9 @@ P-COL-02 SHALL NOT report `getFirstItem()` when the chain, or an earlier stateme
 - **WHEN** `$this->collectionFactory->create()->addIdFilter(5)->getSize();` precedes `$this->collectionFactory->create()->getFirstItem();`
 - **THEN** P-COL-02 reports an error on the second call
 
-#### Scenario: Fixed unique column with an undefined value
-- **WHEN** code calls `$collection->addIdFilter($undefined)->getFirstItem()` and `$undefined` is not defined in the function
-- **THEN** P-COL-02 reports an error
+#### Scenario: Fixed unique column with a value PHPStan cannot type
+- **WHEN** code calls `$collection->addIdFilter($transfer->getWarehouseId())->getFirstItem()` and the class of `$transfer` cannot be found
+- **THEN** P-COL-02 reports nothing
 
 #### Scenario: Fixed unique column value reassigned in other ways
 - **WHEN** code calls `$collection->addIdFilter($ids)` with an `array $ids` and then, before `$collection->getFirstItem()`, `$ids = &$id;`, `[$ids] = [5];`, `foreach ([5] as $ids) {}` or `foreach ([5 => true] as $ids => $_) {}`; or filters on `$values[$n]` and then `$n += 1;`

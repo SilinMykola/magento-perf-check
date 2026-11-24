@@ -5,7 +5,7 @@
 A second review of the P-COL-02 unique-key change and the P-LOOP-12 unfilled-property change found inputs where a rule stays silent although the query can return many rows or run on every call, and inputs where P-LOOP-12 reports a fallback that a trait may fill:
 
 - P-COL-02 keeps the value of a filter on a fixed unique column (`entity_id`, `sku`, `increment_id`, `username`) or of `addIdFilter()` without the branch it was set in, so `if ($sku) { $collection->addFieldToFilter('sku', $sku); } return $collection->getFirstItem();` and a filter inside `array_map(fn ($id) => ...)` silence a `getFirstItem()` that may run without them. The filters on columns of a declared key already count only within their branch.
-- An undefined variable has PHPStan's error type, which extends `mixed`, so it counted as one value.
+- A value PHPStan cannot type (its error type) keeps counting as one value, as `mixed` does: treating it as a possible list brought back four false findings in an old private store, on calls to classes PHPStan could not find. An undefined variable from an arrow function is already left out by the branch check.
 - `$this->factory->create()->addIdFilter(5)` kept its value on `$this->factory`, so a later `$this->factory->create()->getFirstItem()` looked filtered. The same chain ending in `getFirstItem()` or with `setPageSize(1)` marked `$this->factory` as loaded or limited.
 - A filter value was dropped only after `$a = ...`; `$a = &$b`, `$a += 1`, `[$a] = ...` and a `foreach` key or value give the variable a new value too.
 - `return parent::_construct();` in a collection's `_construct()` was not seen as a call of the parent's.

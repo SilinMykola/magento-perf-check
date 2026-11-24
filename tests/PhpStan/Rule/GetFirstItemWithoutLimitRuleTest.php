@@ -68,12 +68,11 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 322],
             [$message, 324],
             [$message, 326],
-            [$message, 331],
-            [$message, 342],
-            [$message, 345],
-            [$message, 350],
-            [$message, 355],
-            [$message, 360],
+            [$message, 343],
+            [$message, 346],
+            [$message, 351],
+            [$message, 356],
+            [$message, 361],
         ]);
     }
 
@@ -115,12 +114,11 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 322],
             [$message, 324],
             [$message, 326],
-            [$message, 331],
-            [$message, 342],
-            [$message, 345],
-            [$message, 350],
-            [$message, 355],
-            [$message, 360],
+            [$message, 343],
+            [$message, 346],
+            [$message, 351],
+            [$message, 356],
+            [$message, 361],
         ]);
     }
 
