@@ -90,8 +90,6 @@ trait FallbackNames
 
 final class PropertyFallbackReader extends FallbackBase
 {
-    use FallbackNames;
-
     /** @var array<int, string> */
     private array $names = [];
 
@@ -144,12 +142,10 @@ final class PropertyFallbackReader extends FallbackBase
             $this->labelled($id);
             $this->fromInjected($id);
             $this->fromInherited($id);
-            // A static property or an element filled elsewhere, an element set to [], a protected
-            // property or one of a trait.
+            // A static property or an element filled elsewhere, an element set to [] or a protected property.
             $this->fromStatic($id);
             $this->fromGroups($id);
             $this->fromShared($id);
-            $this->fromTrait($id);
             // A property that the class never fills: the fallback runs on every call.
             $this->name($id);
             $this->fromSeen($id);
@@ -228,5 +224,120 @@ final class PropertyFallbackReader extends FallbackBase
     private function parentId(int $id): mixed
     {
         return self::$parents[$id] ?: $this->productRepository->getById($id)->getId();
+    }
+}
+
+trait FallbackFiller
+{
+    public function fill(Product $product): void
+    {
+        $this->filled[(int) $product->getId()] = $product;
+    }
+}
+
+final class TraitFallbackReader
+{
+    use FallbackNames;
+    use FallbackFiller;
+
+    /** @var array<int, Product> */
+    private array $filled = [];
+
+    public function __construct(
+        private readonly ProductRepositoryInterface $productRepository,
+    ) {
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function run(array $ids): void
+    {
+        foreach ($ids as $id) {
+            // A property of a trait, or one that a method of a trait fills.
+            $this->fromTrait($id);
+            $this->fromFilled($id);
+        }
+    }
+
+    private function fromFilled(int $id): mixed
+    {
+        return $this->filled[$id] ?? $this->productRepository->getById($id);
+    }
+}
+
+final class FallbackRegistry
+{
+    /** @var array<int, Product> */
+    public static array $items = [];
+}
+
+final class CountedFallbackReader
+{
+    /** @var array<int, Product> */
+    private static array $items = [];
+
+    /** @var array<int, Product> */
+    private static array $own = [];
+
+    /** @var array<int, Product> */
+    private static array $named = [];
+
+    private ?int $hits = null;
+
+    private ?int $misses = null;
+
+    public function __construct(
+        private readonly ProductRepositoryInterface $productRepository,
+    ) {
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function run(array $ids): void
+    {
+        foreach ($ids as $id) {
+            // A static property of another class with the same name, one filled through the class name,
+            // and properties changed with ++ or --.
+            $this->fromRegistry($id);
+            $this->fromOwn($id);
+            $this->counted($id);
+            $this->uncounted($id);
+            // A property the class never fills, read through the class name.
+            $this->fromNamed($id);
+        }
+    }
+
+    public function remember(Product $product): void
+    {
+        CountedFallbackReader::$own[(int) $product->getId()] = $product;
+        $this->hits++;
+        --$this->misses;
+    }
+
+    private function fromRegistry(int $id): mixed
+    {
+        return FallbackRegistry::$items[$id] ?? $this->productRepository->getById($id);
+    }
+
+    private function fromOwn(int $id): mixed
+    {
+        return self::$own[$id] ?? $this->productRepository->getById($id);
+    }
+
+    private function counted(int $id): mixed
+    {
+        return $this->hits ?: $this->productRepository->getById($id);
+    }
+
+    private function uncounted(int $id): mixed
+    {
+        return $this->misses ?: $this->productRepository->getById($id);
+    }
+
+    private function fromNamed(int $id): mixed
+    {
+        return CountedFallbackReader::$named[$id] ?? $this->productRepository->getById($id);
     }
 }
