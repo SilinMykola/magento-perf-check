@@ -6,7 +6,7 @@ Rules on Magento collections and database fetches that catch code loading far mo
 ## Requirements
 
 ### Requirement: P-COL-02 getFirstItem without limit
-P-COL-02 SHALL report a call to `getFirstItem()` on an object whose type is a database collection (a subtype of `Magento\Framework\Data\Collection\AbstractDb`) when no limit is set. A limit is set when `setPageSize()`, `setPage()` or `getSelect()->limit()` is called on the same collection, either earlier in the same method call chain or in an earlier statement of the same function or method. A limit set on a new collection from `create()`, as in `$this->collectionFactory->create()->setPageSize(1)`, does not count for the collection of a later `$this->collectionFactory->create()`. A comparison of `getSize()` or `getTotalCount()` with `1`, using `===`, `!==`, `==` or `!=`, earlier in the function counts as a limit too. Severity: `error`.
+P-COL-02 SHALL report a call to `getFirstItem()` on an object whose type is a database collection (a subtype of `Magento\Framework\Data\Collection\AbstractDb`) when no limit is set. A limit is set when `setPageSize()`, `setPage()` or `getSelect()->limit()` is called on the same collection, either earlier in the same method call chain or in an earlier statement of the same function or method. A limit set on a new collection from `create()`, as in `$this->collectionFactory->create()->setPageSize(1)`, or a comparison of its `getSize()` with `1`, does not count for the collection of a later `$this->collectionFactory->create()`. A comparison of `getSize()` or `getTotalCount()` with `1`, using `===`, `!==`, `==` or `!=`, earlier in the function counts as a limit too. Severity: `error`.
 
 #### Scenario: No limit
 - **WHEN** code calls `$collection->addFieldToFilter('sku', $sku)->getFirstItem()` and `$collection` is a product collection
@@ -39,6 +39,10 @@ P-COL-02 SHALL report a call to `getFirstItem()` on an object whose type is a da
 #### Scenario: Limit on another new collection
 - **WHEN** `$this->collectionFactory->create()->setPageSize(1)->getFirstItem();` precedes `$this->collectionFactory->create()->getFirstItem();`
 - **THEN** P-COL-02 reports an error on the second call
+
+#### Scenario: Size of another new collection
+- **WHEN** `if ($this->collectionFactory->create()->getSize() === 1) {}` precedes `$this->collectionFactory->create()->getFirstItem();`
+- **THEN** P-COL-02 reports an error on `getFirstItem()`
 
 ### Requirement: P-COL-02 scope
 P-COL-02 SHALL NOT report `getFirstItem()` on a receiver that is not a database collection: an in-memory `Magento\Framework\Data\Collection`, a receiver whose type PHPStan cannot resolve, or an unrelated class that merely has a method named `getFirstItem`. It SHALL NOT report a collection filtered, with an equality on the main table whose value cannot be an array (Magento turns a plain list into `IN (...)`; a value of type `mixed`, and any value in `['eq' => ...]`, counts as one value), on every column of a unique or primary key of its main table: a key declared in any `db_schema.xml` of the project, or, on a table that no `db_schema.xml` declares with a `primary` constraint, the table name compared in any case (such as a table that a setup script creates and a `db_schema.xml` only adds columns to), added with `addIndex()` and `INDEX_TYPE_UNIQUE` or `INDEX_TYPE_PRIMARY` (or a `primary` column of `newTable()`) in `Setup/InstallSchema.php` or `Setup/UpgradeSchema.php` of the module that holds the collection's resource model, unless a later `dropIndex()` there removes it (when the dropped index cannot be tied to its columns, no setup-script key of that table counts). The main table is the first argument of `_init()` in the resource model's `_construct()`, as a string literal or a string constant of that class; the resource model is the second argument of `_init()` in the collection's `_construct()`, or a parent's when the collection declares no `_construct()` or its `_construct()` calls `parent::_construct()`, or returns it, as a top-level statement. When either cannot be read this way, the filter does not count. A key filter set in a conditional branch (a body of `if`, `elseif`, `else`, `case`, `catch` or a loop, an operand of `?:`, `??`, `&&` or `||` that may not run, a `match` arm, or the body of an arrow function) counts only for a `getFirstItem()` in that branch or one nested in it. A collection on which the function calls a method whose name starts with `join`, directly or on its `getSelect()`, or `from()` or `union()` on its `getSelect()`, does not count as filtered on a key of its main table. Assigning a new value to the variable or `$this` property that holds the collection drops its earlier filters, and assigning a new value to a variable, in any of the ways listed under P-COL-02 unique key filter, drops the filters whose value reads it.
@@ -160,7 +164,7 @@ P-COL-02 SHALL NOT report `getFirstItem()` on a receiver that is not a database 
 - **THEN** P-COL-02 reports nothing for a filter on every column of a key of that resource model's main table
 
 ### Requirement: P-COL-01 count() on a collection
-P-COL-01 SHALL report, as `warning`, `count($x)` where `$x` is a database collection that is not loaded anyway in the same function: not loaded before the call (as in P-COL-02), and not loaded after it either (`load()`, `getItems()`, `getColumnValues()`, `->count()` or `foreach` on the same variable later in the function). `count()` loads every row, while `getSize()` runs a `COUNT` query. It SHALL NOT report a collection that lives on the object: a `$this` property, or the result of a method called directly on `$this`. These are usually memoized and their rows are read elsewhere.
+P-COL-01 SHALL report, as `warning`, `count($x)` where `$x` is a database collection that is not loaded anyway in the same function: not loaded before the call (as in P-COL-02), and not loaded after it either (`load()`, `getItems()`, `getColumnValues()`, `->count()` or `foreach` on the same variable later in the function). A load or a use of the rows of a new collection from `create()` says nothing about the collection of another `create()`. `count()` loads every row, while `getSize()` runs a `COUNT` query. It SHALL NOT report a collection that lives on the object: a `$this` property, or the result of a method called directly on `$this`. These are usually memoized and their rows are read elsewhere.
 
 #### Scenario: Count before loading
 - **WHEN** `if (count($collection) > 0)` is the first and only use of a product collection in a method
@@ -190,8 +194,12 @@ P-COL-01 SHALL report, as `warning`, `count($x)` where `$x` is a database collec
 - **WHEN** `count($other->getRows())` is called on a collection and its rows are not used in the function
 - **THEN** P-COL-01 reports a warning
 
+#### Scenario: Count of a new collection after another one
+- **WHEN** a function calls `$this->collectionFactory->create()->getItems()` or `count($this->collectionFactory->create())`, and then `count($this->collectionFactory->create())`
+- **THEN** P-COL-01 reports the later `count()`
+
 ### Requirement: P-COL-02 already loaded collection
-P-COL-02 SHALL NOT report `getFirstItem()` when the same collection was already loaded earlier in the function: `load()`, `getItems()`, `count()`, `count($collection)`, or iteration with `foreach`. A load of a new collection from `create()` does not count for the collection of a later `create()`.
+P-COL-02 SHALL NOT report `getFirstItem()` when the same collection was already loaded earlier in the function: `load()`, `getItems()`, `count()`, `count($collection)`, or iteration with `foreach`. A load of a new collection from `create()`, including a `foreach` over it or `count()` of it, does not count for the collection of a later `create()`, and neither does a use of its rows anywhere in the function.
 
 #### Scenario: Loaded by getItems
 - **WHEN** `$items = $collection->getItems();` precedes `$collection->getFirstItem();`
@@ -201,8 +209,16 @@ P-COL-02 SHALL NOT report `getFirstItem()` when the same collection was already 
 - **WHEN** `$this->collectionFactory->create()->addIdFilter(5)->getFirstItem();` precedes `$this->collectionFactory->create()->getFirstItem();`
 - **THEN** P-COL-02 reports an error on the second call
 
+#### Scenario: Another new collection iterated or counted
+- **WHEN** `foreach ($this->collectionFactory->create() as $row) {}` or `count($this->collectionFactory->create());` precedes `$this->collectionFactory->create()->getFirstItem();`
+- **THEN** P-COL-02 reports an error on `getFirstItem()`
+
+#### Scenario: Rows of another new collection
+- **WHEN** a function calls `$this->collectionFactory->create()->getItems()` and `$this->collectionFactory->create()->addFieldToFilter('name', $name)->getFirstItem()`
+- **THEN** P-COL-02 reports an error on `getFirstItem()`
+
 ### Requirement: P-COL-02 unique key filter
-P-COL-02 SHALL NOT report `getFirstItem()` when the chain, or an earlier statement on the same collection, filters for equality on a unique key: `addIdFilter()`, `setIdFilter()`, or `addFieldToFilter()`/`addAttributeToFilter()` on `entity_id`, `sku`, `increment_id` or `username`. A table alias prefix such as `main_table.` is allowed; the value must be a scalar or an `eq` condition, and its type where `getFirstItem()` is called must not be an array or possibly one, since Magento turns a plain list into `IN (...)`. A value of unknown type (`mixed`) counts as one value, and so does any value inside `['eq' => ...]`, which Magento renders as `= ...` and so does a value PHPStan cannot type, such as a call on a class it cannot find. Assigning a new value to a variable drops the filters whose value reads it: with `=`, `=&`, a compound operator such as `+=`, list destructuring, or as the key or value of a `foreach`. A filter set in a conditional branch, as listed under P-COL-02 scope for a key filter, counts only for a `getFirstItem()` in that branch or one nested in it. A filter on a new collection from `create()`, as in `$this->collectionFactory->create()->addIdFilter(5)`, does not count for the collection of a later `create()`. When several such filters are set, one whose value cannot be an array is enough.
+P-COL-02 SHALL NOT report `getFirstItem()` when the chain, or an earlier statement on the same collection, filters for equality on a unique key: `addIdFilter()`, `setIdFilter()`, or `addFieldToFilter()`/`addAttributeToFilter()` on `entity_id`, `sku`, `increment_id` or `username`. A table alias prefix such as `main_table.` is allowed; the value must be a scalar or an `eq` condition, and its type where `getFirstItem()` is called must not be an array or possibly one, since Magento turns a plain list into `IN (...)`. A value of unknown type (`mixed`) counts as one value, and so does any value inside `['eq' => ...]`, which Magento renders as `= ...`. A value PHPStan cannot type, such as a call on a class it cannot find, counts as one value too. Assigning a new value to a variable drops the filters whose value reads it: with `=`, `=&`, a compound operator such as `+=`, list destructuring, or as the key or value of a `foreach`. A write to an element, as in `$map[$sku] = ...` or `$this->hits[$sku] ??= 0`, gives a new value to the array only, not to the key. A filter set in a conditional branch, as listed under P-COL-02 scope for a key filter, counts only for a `getFirstItem()` in that branch or one nested in it. A filter on a new collection from `create()`, as in `$this->collectionFactory->create()->addIdFilter(5)`, does not count for the collection of a later `create()`. When several such filters are set, one whose value cannot be an array is enough.
 
 #### Scenario: Increment ID earlier
 - **WHEN** `$collection->addFieldToFilter('increment_id', $incrementId);` precedes `$collection->getFirstItem();`
@@ -251,6 +267,10 @@ P-COL-02 SHALL NOT report `getFirstItem()` when the chain, or an earlier stateme
 #### Scenario: Fixed unique column value reassigned in other ways
 - **WHEN** code calls `$collection->addIdFilter($ids)` with an `array $ids` and then, before `$collection->getFirstItem()`, `$ids = &$id;`, `[$ids] = [5];`, `foreach ([5] as $ids) {}` or `foreach ([5 => true] as $ids => $_) {}`; or filters on `$values[$n]` and then `$n += 1;`
 - **THEN** P-COL-02 reports an error
+
+#### Scenario: Fixed unique column value used as a key
+- **WHEN** code calls `$collection->addFieldToFilter('sku', $sku); $this->hits[$sku] ??= 0; $collection->getFirstItem();`, or the same with `$count[$sku] += 1;`, and `$sku` is a `string`
+- **THEN** P-COL-02 reports nothing
 
 ### Requirement: P-COL-03 all attributes selected
 P-COL-03 SHALL report, as `info`, `addAttributeToSelect('*')` on an EAV collection. It is off by default.
