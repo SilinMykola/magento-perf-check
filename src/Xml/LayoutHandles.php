@@ -30,8 +30,9 @@ final class LayoutHandles
 
     /**
      * @param array<string, array<string, true>> $includedBy handle => handles whose layout files include it
-     * @param array<string, true> $accountPages handles with a layout file that includes customer_account or defines its
-     *     navigation, or that includes such a handle; for a shop-wide handle only the include of customer_account counts
+     * @param array<string, true> $accountPages handles with a layout file that includes customer_account, pages with
+     *     one that defines its navigation, handles that define it and that only pages include, and handles that include
+     *     such a handle; for a shop-wide handle only the include of customer_account counts
      * @param array<string, true> $pages handles of storefront controller actions: route id, controller path, action
      * @param array<string, bool> $routes storefront route ids => true when their controllers were not found, so each of
      *     their handles counts as a page
@@ -80,6 +81,7 @@ final class LayoutHandles
 
         $includedBy = [];
         $accountPages = [];
+        $navigations = [];
         foreach (self::layoutFiles($projectRoot, $modules) as $file) {
             $handle = basename($file, '.xml');
             $document = new DOMDocument();
@@ -90,13 +92,21 @@ final class LayoutHandles
             // A shop-wide handle (X-LAY-03), such as default, is on many pages, so a navigation there, as in a header
             // dropdown, makes none of them an account page.
             if (!NonCacheableBlockRule::isShopWide($handle) && self::definesAccountNavigation($document)) {
-                $accountPages[$handle] = true;
+                $navigations[$handle] = true;
             }
             foreach (self::directUpdates($document->documentElement) as $included) {
                 if ($included === self::ACCOUNT_HANDLE) {
                     $accountPages[$handle] = true;
                 }
                 $includedBy[$included][$handle] = true;
+            }
+        }
+        // The navigation makes a page an account page, and a handle that is no page only when pages alone include
+        // it: a header dropdown that default.xml includes is on every page.
+        $layout = new self($includedBy, [], $pages, $opaque);
+        foreach (array_keys($navigations) as $handle) {
+            if ($layout->onlyPagesInclude((string) $handle, [])) {
+                $accountPages[$handle] = true;
             }
         }
         // Magento merges included handles recursively, so a handle that includes an account layout is one too;
@@ -276,6 +286,35 @@ final class LayoutHandles
         }
 
         return $counted > 0 || $owner !== null || $page !== $handle ? true : null;
+    }
+
+    /**
+     * Whether the handle is a page that is not shop-wide, or every layout that includes it, directly or through other
+     * handles, is one. A handle that no layout includes is added by code, so it is on pages that are not known.
+     *
+     * @param array<string, true> $visiting handles on the current include path
+     */
+    private function onlyPagesInclude(string $handle, array $visiting): bool
+    {
+        if (NonCacheableBlockRule::isShopWide($handle)) {
+            return false;
+        }
+        if ($this->pageOf($handle) !== null) {
+            return true;
+        }
+        $visiting[$handle] = true;
+        $found = false;
+        foreach (array_keys($this->includedBy[$handle] ?? []) as $includer) {
+            if (isset($visiting[$includer])) {
+                continue;
+            }
+            if (!$this->onlyPagesInclude((string) $includer, $visiting)) {
+                return false;
+            }
+            $found = true;
+        }
+
+        return $found;
     }
 
     /**

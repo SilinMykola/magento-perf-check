@@ -50,6 +50,19 @@ final class ProjectIndexBuilderTest extends TestCase
         self::assertContains('Acme\\Placed\\Block\\CartChild', $this->index()->classesOnCacheablePages());
     }
 
+    public function testAccountPagesFromACopiedNavigationAreUncacheable(): void
+    {
+        $uncacheable = $this->index(__DIR__ . '/../../Fixtures/Rules/X-LAY-01/includes/project')->toArray()['uncacheableHandles'];
+
+        // A page that defines the customer account navigation, and a page that includes a handle defining it that only
+        // pages include, are account pages, with that handle; none of them has a cacheable="false" block.
+        self::assertArrayHasKey('acmeroute_navpage_index', $uncacheable);
+        self::assertArrayHasKey('acmeroute_rewardpage_index', $uncacheable);
+        self::assertArrayHasKey('acme_reward_account', $uncacheable);
+        // A handle that defines the navigation for a header dropdown that default.xml includes is on every page.
+        self::assertArrayNotHasKey('acme_account_menu', $uncacheable);
+    }
+
     public function testModulesFromAppCodeAndComposerPackages(): void
     {
         // Acme_Core, Acme_Gift, Acme_Promo, Magento_Sales, Acme_SrcLayout (in src/); acme/library is not a module.
