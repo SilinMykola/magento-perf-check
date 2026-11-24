@@ -175,6 +175,8 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message('Order'), 458],
             // A _construct() that calls the parent's only in a branch.
             [$message('Order\\Conditional'), 463],
+            // A setup-script key on a table that db_schema.xml declares with a primary key, in another case.
+            [$message('Mixed'), 468],
         ]);
     }
 }

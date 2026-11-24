@@ -515,7 +515,7 @@ final class ProjectIndexBuilder
                         }
                         foreach ($this->elements($xpath, 'constraint', $table) as $constraint) {
                             if ($this->xsiType($constraint) === 'primary') {
-                                $tables[$table->getAttribute('name')] = true;
+                                $tables[$tableName] = true;
                             }
                             if (in_array($this->xsiType($constraint), ['primary', 'unique'], true)) {
                                 // Modules merge a constraint by its referenceId: columns add up, and one may disable it.

@@ -8,7 +8,7 @@
 
 ## What it catches
 
-A `<table>` in `db_schema.xml` (not `disabled="true"`) when no module in the project, core included, declares a `<constraint xsi:type="primary">` for that table name. A module that only adds columns to a core table such as `sales_order` is therefore not reported. Without any Magento configuration in the project, the rule reports nothing.
+A `<table>` in `db_schema.xml` (not `disabled="true"`) when no module in the project, core included, declares a `<constraint xsi:type="primary">` for that table name, in any case. A module that only adds columns to a core table such as `sales_order` is therefore not reported. Without any Magento configuration in the project, the rule reports nothing.
 
 ## Why it hurts performance
 

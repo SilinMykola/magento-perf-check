@@ -88,6 +88,16 @@ class UpgradeSchema implements UpgradeSchemaInterface
             $setup->getConnection()->dropIndex($setup->getTable('acme_tag_queue'), 'PRIMARY');
         }
 
+        if (version_compare($context->getVersion(), '1.0.8', '<')) {
+            // db_schema.xml declares this table, as Acme_Tag_Mixed, without this key.
+            $setup->getConnection()->addIndex(
+                $setup->getTable('acme_tag_mixed'),
+                $setup->getIdxName('acme_tag_mixed', ['code'], AdapterInterface::INDEX_TYPE_UNIQUE),
+                ['code'],
+                AdapterInterface::INDEX_TYPE_UNIQUE
+            );
+        }
+
         $setup->endSetup();
     }
 }

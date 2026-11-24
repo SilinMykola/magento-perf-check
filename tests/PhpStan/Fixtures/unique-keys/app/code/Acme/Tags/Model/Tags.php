@@ -463,6 +463,11 @@ namespace Acme\Tags\Model {
             $conditional->addFieldToFilter('id', $id)->getFirstItem();
         }
 
+        public function setupKeyOnATableDeclaredInAnotherCase(\Acme\Tags\Model\ResourceModel\Mixed\Collection $mixed, string $code): void
+        {
+            $mixed->addFieldToFilter('code', $code)->getFirstItem();
+        }
+
         public function collectionThatReturnsTheParentConstruct(\Acme\Tags\Model\ResourceModel\Order\Returning\Collection $returning, int $id): void
         {
             $returning->addFieldToFilter('id', $id)->getFirstItem();
@@ -482,6 +487,26 @@ namespace Acme\Tags\Model\ResourceModel\Order\Conditional {
             } else {
                 parent::_construct();
             }
+        }
+    }
+}
+
+namespace Acme\Tags\Model\ResourceModel {
+    class Mixed extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
+    {
+        protected function _construct(): void
+        {
+            $this->_init('acme_tag_mixed', 'id');
+        }
+    }
+}
+
+namespace Acme\Tags\Model\ResourceModel\Mixed {
+    class Collection extends \Magento\Framework\Data\Collection\AbstractDb
+    {
+        protected function _construct(): void
+        {
+            $this->_init(\Acme\Tags\Model\Mixed::class, \Acme\Tags\Model\ResourceModel\Mixed::class);
         }
     }
 }

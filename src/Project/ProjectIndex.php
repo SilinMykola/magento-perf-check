@@ -16,7 +16,7 @@ final class ProjectIndex
      * @param array<string, true> $pluginClasses
      * @param array<string, list<array{class: string, area: string, module: string}>> $observers event => observers
      * @param array<string, true> $mviewViews
-     * @param array<string, true> $tablesWithPrimaryKey
+     * @param array<string, true> $tablesWithPrimaryKey lower case
      * @param array<string, string> $listFieldResolvers resolver class => a field on a list type it resolves
      * @param array<string, list<string>> $pluginTargets plugin class => classes it is configured on, outside the admin area
      * @param array<string, true> $consoleCommands classes in the commands argument of CommandList
@@ -123,9 +123,13 @@ final class ProjectIndex
         return isset($this->mviewViews[$viewId]);
     }
 
+    /**
+     * Whether any db_schema.xml declares a primary key on the table, in any case, as MySQL on macOS and Windows
+     * treats table names.
+     */
     public function tableHasPrimaryKey(string $table): bool
     {
-        return isset($this->tablesWithPrimaryKey[$table]);
+        return isset($this->tablesWithPrimaryKey[strtolower($table)]);
     }
 
     /**

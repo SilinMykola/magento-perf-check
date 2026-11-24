@@ -246,6 +246,9 @@ final class ProjectIndexBuilderTest extends TestCase
             self::assertFalse($index->tableHasPrimaryKey('acme_tag_stock'));
             // Acme_Notes only adds a column to a table that a setup script creates.
             self::assertFalse($index->tableHasPrimaryKey('acme_tag_rule'));
+            // Acme_Notes declares Acme_Tag_Mixed with a primary key.
+            self::assertTrue($index->tableHasPrimaryKey('acme_tag_mixed'));
+            self::assertTrue($index->tableHasPrimaryKey('ACME_TAG_MIXED'));
             self::assertSame([], $index->uniqueKeysOf('acme_tag_rule'));
             // Table names are case-insensitive, as MySQL on macOS and Windows treats them, and rules look them up in lower case.
             self::assertSame([['code']], $index->uniqueKeysOf('acme_tag_case'));
