@@ -104,7 +104,7 @@ final class Example
     {
         $collection->addFieldToFilter('sku', $sku)->getFirstItem();
         $this->collectionFactory->create()->addAttributeToFilter('main_table.entity_id', ['eq' => 5])->getFirstItem();
-        $this->collectionFactory->create()->addIdFilter(5)->getFirstItem();
+        $this->collectionFactory->create()->addIdFilter(5)->getSize();
     }
 
     public function uniqueKeyFilterEarlier(Collection $collection, string $sku): void
@@ -291,6 +291,73 @@ final class Example
     {
         $a->addFieldToFilter('entity_id', $untyped)->getFirstItem();
         $b->addIdFilter($idOrIds)->getFirstItem();
+    }
+
+    /**
+     * @param list<int> $ids
+     */
+    public function uniqueColumnInConditionalCode(Collection $a, Collection $b, Collection $c, Collection $d, string $sku, ?int $id, array $ids): void
+    {
+        // Filters that may not run.
+        if ($sku) {
+            $a->addFieldToFilter('sku', $sku);
+        }
+        $a->getFirstItem();
+        if ($id !== null) {
+            $b->addIdFilter($id);
+        }
+        $b->getFirstItem();
+        array_map(fn ($id) => $c->addFieldToFilter('entity_id', $id), $ids);
+        $c->getFirstItem();
+        // In the same branch.
+        if ($id !== null) {
+            $d->addIdFilter($id);
+            $d->getFirstItem();
+        }
+    }
+
+    public function uniqueColumnOnAnotherNewCollection(): void
+    {
+        $this->collectionFactory->create()->addIdFilter(5)->getSize();
+        $this->collectionFactory->create()->getFirstItem();
+        $this->collectionFactory->create()->addIdFilter(5)->getFirstItem();
+        $this->collectionFactory->create()->getFirstItem();
+        $this->collectionFactory->create()->setPageSize(1)->getFirstItem();
+        $this->collectionFactory->create()->getFirstItem();
+    }
+
+    public function uniqueColumnWithAnUndefinedValue(Collection $collection): void
+    {
+        $collection->addIdFilter($undefined)->getFirstItem();
+    }
+
+    /**
+     * @param list<int> $ids
+     * @param list<int> $more
+     */
+    public function uniqueColumnValueReassignedOtherwise(Collection $a, Collection $b, Collection $c, Collection $d, Collection $e, array $ids, array $more, int $id): void
+    {
+        $a->addIdFilter($ids);
+        $ids = &$id;
+        $a->getFirstItem();
+        $b->addIdFilter($more);
+        [$more] = [5];
+        $b->getFirstItem();
+        $list = [1, 2];
+        $c->addFieldToFilter('entity_id', $list);
+        foreach ([5] as $list) {
+        }
+        $c->getFirstItem();
+        $keys = [1, 2];
+        $d->addFieldToFilter('entity_id', $keys);
+        foreach ([5 => true] as $keys => $_) {
+        }
+        $d->getFirstItem();
+        $values = [[1, 2], 5];
+        $n = 0;
+        $e->addFieldToFilter('entity_id', $values[$n]);
+        $n += 1;
+        $e->getFirstItem();
     }
 }
 

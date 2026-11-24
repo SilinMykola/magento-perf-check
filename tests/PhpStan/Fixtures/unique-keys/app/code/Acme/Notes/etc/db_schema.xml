@@ -11,6 +11,10 @@
     </table>
     <!-- A disabled table is dropped with its keys. -->
     <table name="acme_tag_legacy" resource="default" disabled="true"/>
+    <!-- Only adds a column to a table that Setup/InstallSchema.php of Acme_Tags creates, which keeps its unique key. -->
+    <table name="acme_tag_rule" resource="default">
+        <column xsi:type="varchar" name="note" nullable="true" length="255"/>
+    </table>
     <table name="Acme_Tag_Case" resource="default">
         <column xsi:type="varchar" name="code" nullable="false" length="32"/>
         <constraint xsi:type="unique" referenceId="ACME_TAG_CASE_CODE">

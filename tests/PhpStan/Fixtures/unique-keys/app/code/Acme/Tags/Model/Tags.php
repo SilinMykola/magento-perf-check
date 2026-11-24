@@ -462,6 +462,11 @@ namespace Acme\Tags\Model {
         {
             $conditional->addFieldToFilter('id', $id)->getFirstItem();
         }
+
+        public function collectionThatReturnsTheParentConstruct(\Acme\Tags\Model\ResourceModel\Order\Returning\Collection $returning, int $id): void
+        {
+            $returning->addFieldToFilter('id', $id)->getFirstItem();
+        }
     }
 }
 
@@ -477,6 +482,24 @@ namespace Acme\Tags\Model\ResourceModel\Order\Conditional {
             } else {
                 parent::_construct();
             }
+        }
+    }
+}
+
+namespace Acme\Tags\Model\ResourceModel\Order\Returning {
+    abstract class BaseCollection extends \Magento\Framework\Data\Collection\AbstractDb
+    {
+        protected function _construct()
+        {
+            $this->_init(\Acme\Tags\Model\Order::class, \Acme\Tags\Model\ResourceModel\Order::class);
+        }
+    }
+
+    class Collection extends BaseCollection
+    {
+        protected function _construct()
+        {
+            return parent::_construct();
         }
     }
 }

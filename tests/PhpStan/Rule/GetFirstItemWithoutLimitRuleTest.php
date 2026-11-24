@@ -60,6 +60,20 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 278],
             // A value declared as one or many.
             [$message, 293],
+            // A fixed unique column or addIdFilter() in a branch or an arrow function, on a new collection after another one,
+            // with an undefined value, or with a value reassigned by reference, destructuring, foreach or +=.
+            [$message, 305],
+            [$message, 309],
+            [$message, 311],
+            [$message, 322],
+            [$message, 324],
+            [$message, 326],
+            [$message, 331],
+            [$message, 342],
+            [$message, 345],
+            [$message, 350],
+            [$message, 355],
+            [$message, 360],
         ]);
     }
 
@@ -93,6 +107,20 @@ final class GetFirstItemWithoutLimitRuleTest extends RuleTestCase
             [$message, 278],
             // A value declared as one or many.
             [$message, 293],
+            // A fixed unique column or addIdFilter() in a branch or an arrow function, on a new collection after another one,
+            // with an undefined value, or with a value reassigned by reference, destructuring, foreach or +=.
+            [$message, 305],
+            [$message, 309],
+            [$message, 311],
+            [$message, 322],
+            [$message, 324],
+            [$message, 326],
+            [$message, 331],
+            [$message, 342],
+            [$message, 345],
+            [$message, 350],
+            [$message, 355],
+            [$message, 360],
         ]);
     }
 

@@ -240,10 +240,13 @@ final class ProjectIndexBuilderTest extends TestCase
             self::assertSame([], $index->uniqueKeysOf('acme_tag_stock'));
             // Acme_Notes disables the whole table.
             self::assertSame([], $index->uniqueKeysOf('acme_tag_legacy'));
-            // A declared table owns its keys: setup scripts do not add any to it.
-            self::assertTrue($index->declaresTable('acme_tag_order'));
-            self::assertTrue($index->declaresTable('acme_tag_legacy'));
-            self::assertFalse($index->declaresTable('acme_tag_stock'));
+            // A table declared with a primary key owns its keys: setup scripts do not add any to it.
+            self::assertTrue($index->tableHasPrimaryKey('acme_tag_order'));
+            self::assertTrue($index->tableHasPrimaryKey('acme_tag_legacy'));
+            self::assertFalse($index->tableHasPrimaryKey('acme_tag_stock'));
+            // Acme_Notes only adds a column to a table that a setup script creates.
+            self::assertFalse($index->tableHasPrimaryKey('acme_tag_rule'));
+            self::assertSame([], $index->uniqueKeysOf('acme_tag_rule'));
             // Table names are case-insensitive, as MySQL on macOS and Windows treats them, and rules look them up in lower case.
             self::assertSame([['code']], $index->uniqueKeysOf('acme_tag_case'));
         }

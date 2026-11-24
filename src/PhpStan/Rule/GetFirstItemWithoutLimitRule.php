@@ -13,6 +13,7 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
+use PHPStan\Type\ErrorType;
 use PHPStan\Type\MixedType;
 use Silin\MagentoPerfCheck\PhpStan\MagentoTypes;
 
@@ -99,13 +100,14 @@ final class GetFirstItemWithoutLimitRule implements Rule
 
     /**
      * Whether a filter value stands for one value. Magento turns a plain list into IN (...), which may match many
-     * rows. A value of unknown type (mixed, as from a magic getter or request params) is taken for a single value.
+     * rows. A value of unknown type (mixed, as from a magic getter or request params) is taken for a single value;
+     * a value PHPStan cannot type at all, such as an undefined variable, is not.
      */
     private function isOneValue(Scope $scope, Node\Expr $value): bool
     {
         $valueType = $scope->getType($value);
 
-        return $valueType instanceof MixedType || $valueType->isArray()->no();
+        return ($valueType instanceof MixedType && !$valueType instanceof ErrorType) || $valueType->isArray()->no();
     }
 
     /**

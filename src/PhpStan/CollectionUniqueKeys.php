@@ -19,7 +19,8 @@ use PHPStan\Reflection\ReflectionProvider;
  * The main table is read from code, never guessed: the collection's _construct() (or a parent's) calls
  * _init($model, $resourceModel), and the resource model's _construct() calls _init('table', 'id').
  * Keys come from db_schema.xml through the project index, and from Setup/InstallSchema.php and
- * Setup/UpgradeSchema.php of the module that holds the resource model, as Magento before 2.3 declared them.
+ * Setup/UpgradeSchema.php of the module that holds the resource model, as Magento before 2.3 declared them,
+ * unless a db_schema.xml declares the table with a primary key.
  */
 final class CollectionUniqueKeys
 {
@@ -56,8 +57,13 @@ final class CollectionUniqueKeys
         }
         [$name, $resourceFile] = $table;
         $index = $this->index->get();
-        // db_schema.xml describes the whole table: keys that only setup scripts add do not count on it.
-        $keys = $index->declaresTable($name) ? $index->uniqueKeysOf($name) : $this->keysFromSetupScripts($resourceFile)[$name] ?? [];
+        // A db_schema.xml that creates the table, with its primary key, describes the whole table: keys that only
+        // setup scripts add do not count on it. One that only adds columns to a table a setup script creates keeps
+        // that script's keys.
+        $keys = $index->uniqueKeysOf($name);
+        if (!$index->tableHasPrimaryKey($name)) {
+            $keys = [...$keys, ...$this->keysFromSetupScripts($resourceFile)[$name] ?? []];
+        }
         foreach ($keys as $key) {
             if ($key !== [] && array_diff($key, $columns) === []) {
                 return true;
@@ -125,7 +131,7 @@ final class CollectionUniqueKeys
     {
         // Only a call that always runs: one inside an "if" may not.
         foreach ($construct->stmts ?? [] as $statement) {
-            $call = $statement instanceof Stmt\Expression ? $statement->expr : null;
+            $call = $statement instanceof Stmt\Expression || $statement instanceof Stmt\Return_ ? $statement->expr : null;
             if ($call instanceof Expr\StaticCall && $call->class instanceof Node\Name && $call->class->toLowerString() === 'parent'
                 && $call->name instanceof Node\Identifier && $call->name->toLowerString() === '_construct'
             ) {

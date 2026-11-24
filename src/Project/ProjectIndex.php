@@ -139,14 +139,6 @@ final class ProjectIndex
     }
 
     /**
-     * Whether any db_schema.xml declares the table, lower case, even without keys or disabled.
-     */
-    public function declaresTable(string $table): bool
-    {
-        return array_key_exists($table, $this->uniqueKeys);
-    }
-
-    /**
      * Normalized classes that $class is a plugin on, outside the admin area.
      *
      * @return list<string>

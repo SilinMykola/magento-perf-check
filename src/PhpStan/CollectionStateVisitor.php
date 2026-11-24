@@ -66,7 +66,7 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
     /** Prefix of the facts that name a column filtered with an equality, followed by "@" and its branch. */
     private const COLUMN_FACT = 'column:';
 
-    /** Prefix of the facts that hold the value of a filter on a fixed unique column or by id. */
+    /** Prefix of the facts that hold the value of a filter on a fixed unique column or by id, followed by "@" and its branch. */
     private const UNIQUE_VALUE_FACT = 'unique:';
 
     /** Fact: the collection joins another table, so a key of its main table no longer identifies one row. */
@@ -114,6 +114,13 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             $this->rowUses[] = $this->countRowUses($node->getStmts() ?? []);
 
             return null;
+        }
+
+        // "$a = &$b", "$a += 1" and "[$a] = $list" give their variables new values as well.
+        if ($node instanceof Expr\AssignRef || $node instanceof Expr\AssignOp
+            || ($node instanceof Expr\Assign && ($node->var instanceof Expr\List_ || $node->var instanceof Expr\Array_))
+        ) {
+            $this->forgetValuesIn($node->var);
         }
 
         // "$c = <chain>" or "$this->c = <chain>": $c is a new collection; it inherits only what the chain establishes.
@@ -172,6 +179,8 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             }
             $this->record($key, self::LOADED);
             // The loop assigns new values to these variables.
+            $this->forgetValuesIn($node->keyVar);
+            $this->forgetValuesIn($node->valueVar);
             foreach ((new NodeFinder())->findInstanceOf($node->valueVar, Expr\Variable::class) as $variable) {
                 if (is_string($variable->name)) {
                     unset($this->frames[count($this->frames) - 1]['$' . $variable->name]);
@@ -221,34 +230,28 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
             $columns = $this->chainColumns($node->var);
             $uniqueValues = $this->chainUniqueValues($node->var);
             $facts = $key === null ? [] : ($this->frames[count($this->frames) - 1][$key] ?? []);
-            foreach ($facts as $fact => $value) {
-                if (str_starts_with($fact, self::UNIQUE_VALUE_FACT) && $value instanceof Expr) {
-                    $uniqueValues[] = $value;
-                }
+            foreach ($this->factsInBranch($facts, self::UNIQUE_VALUE_FACT) as [, $value]) {
+                $uniqueValues[] = $value;
             }
             $node->setAttribute(self::UNIQUE_FILTER_VALUES, $uniqueValues);
-            foreach ($facts as $fact => $value) {
-                if (!str_starts_with($fact, self::COLUMN_FACT) || !$value instanceof Expr) {
-                    continue;
-                }
-                // A filter set in a branch counts only within that branch: "if ($id) { filter }" may not run.
-                [$column, $branch] = explode('@', substr($fact, strlen(self::COLUMN_FACT)), 2);
-                if ($branch === '0' || in_array((int) $branch, $this->branches, true)) {
-                    $columns[] = [$column, $value];
-                }
+            foreach ($this->factsInBranch($facts, self::COLUMN_FACT) as $column) {
+                $columns[] = $column;
             }
             if (isset($facts[self::JOINED]) || $this->chainJoins($node->var)) {
                 $columns = [];
             }
             $node->setAttribute(self::EQUALITY_COLUMNS, $columns);
         }
-        foreach ([self::LIMITED, self::UNIQUE_FILTER] as $fact) {
-            if ($this->establishes($node, $fact)) {
-                $this->record($key, $fact);
-            }
+        // "$this->factory->create()->setPageSize(1)" limits a new collection, not $this->factory.
+        if ($this->establishes($node, self::LIMITED) && !$this->callsCreate($node->var)) {
+            $this->record($key, self::LIMITED);
+        }
+        if ($this->establishes($node, self::UNIQUE_FILTER)) {
+            $this->record($key, self::UNIQUE_FILTER);
         }
         $uniqueValue = $this->uniqueFilterValue($node);
-        if ($uniqueValue !== null) {
+        // "$this->factory->create()->addIdFilter(...)" filters a new collection, not $this->factory.
+        if ($uniqueValue !== null && !$this->makesANewObject($node->var)) {
             $this->recordUniqueValue($key, $uniqueValue);
         }
         $column = $this->equalityColumn($node);
@@ -260,7 +263,8 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
         if ($this->joins($node) && !$this->callsCreate($node->var)) {
             $this->record($key, self::JOINED);
         }
-        if (in_array($name, self::LOADING_METHODS, true)) {
+        // "$this->factory->create()->getFirstItem()" loads a new collection, not $this->factory.
+        if (in_array($name, self::LOADING_METHODS, true) && !$this->callsCreate($node->var)) {
             $this->record($key, self::LOADED);
         }
 
@@ -350,12 +354,40 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
 
     private function recordColumn(?string $key, string $column, Expr $value): void
     {
-        $this->record($key, self::COLUMN_FACT . $column . '@' . ($this->branches === [] ? 0 : $this->branches[count($this->branches) - 1]), $value);
+        $this->record($key, self::COLUMN_FACT . $column . '@' . $this->currentBranch(), $value);
     }
 
     private function recordUniqueValue(?string $key, Expr $value): void
     {
-        $this->record($key, self::UNIQUE_VALUE_FACT . spl_object_id($value), $value);
+        $this->record($key, self::UNIQUE_VALUE_FACT . spl_object_id($value) . '@' . $this->currentBranch(), $value);
+    }
+
+    private function currentBranch(): int
+    {
+        return $this->branches === [] ? 0 : $this->branches[count($this->branches) - 1];
+    }
+
+    /**
+     * The facts with this prefix that hold where the current node is, as [name, value]: a filter set in a
+     * branch counts only within that branch, since "if ($id) { filter }" may not run.
+     *
+     * @param array<string, true|Expr> $facts
+     * @return list<array{string, Expr}>
+     */
+    private function factsInBranch(array $facts, string $prefix): array
+    {
+        $found = [];
+        foreach ($facts as $fact => $value) {
+            if (!str_starts_with($fact, $prefix) || !$value instanceof Expr) {
+                continue;
+            }
+            [$name, $branch] = explode('@', substr($fact, strlen($prefix)), 2);
+            if ($branch === '0' || in_array((int) $branch, $this->branches, true)) {
+                $found[] = [$name, $value];
+            }
+        }
+
+        return $found;
     }
 
     /**
@@ -370,6 +402,27 @@ final class CollectionStateVisitor extends NodeVisitorAbstract
                 if ($value instanceof Expr && (new NodeFinder())->findFirst($value, fn (Node $n): bool => $n instanceof Expr && $this->rootKey($n) === $key) !== null) {
                     unset($frame[$root][$fact]);
                 }
+            }
+        }
+    }
+
+    /**
+     * Drops the filter facts whose value reads a variable that this assignment target writes.
+     */
+    private function forgetValuesIn(?Expr $target): void
+    {
+        if ($target === null) {
+            return;
+        }
+        $key = $this->rootKey($target);
+        if ($key !== null) {
+            $this->forgetValuesOf($key);
+
+            return;
+        }
+        foreach ((new NodeFinder())->findInstanceOf($target, Expr\Variable::class) as $variable) {
+            if (is_string($variable->name)) {
+                $this->forgetValuesOf('$' . $variable->name);
             }
         }
     }
